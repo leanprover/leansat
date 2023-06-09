@@ -1,92 +1,27 @@
 # LeanSAT
 
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.aws.dev/leomoura/leansat.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.aws.dev/leomoura/leansat/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
 ## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+The LeanSAT package is meant to provide an interface and foundation for verified SAT reasoning. The primary contribution it contains is a verified LRAT checker, as well as an incremental version of the same checker. Both of these are included in `LRAT.LRATChecker.lean`, and both of their soundness theorems are included in `LRAT.LRATCheckerSound.lean`.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+This is a Lean 4 project.
+- If you already have Lean 4 installed, with an up-to-date version of `elan`, this project can be built by running `lake build`.
+- If you already have Lean 4 installed, but `elan` is not up to date (and in particular, is old enough to not be able to access `lean4:nightly-2023-07-31`), then first run `elan self update`. After this command is run once, the project can be built by running `lake build`.
+- If you do not have Lean 4 installed, first run `curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh`, then the project can be built by running `lake build`.
+- If you do not have Lean 4 installed and the above `curl` command fails, follow the instructions under `Regular install` [here](https://leanprover-community.github.io/get_started.html).
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+The LRAT checker can be used in a couple of different ways:
+- At the end of `LRAT.LRATChecker.lean`, there is a command `lratCheck` that takes in the path to a CNF file and a path to an LRAT file and uses the checker to confirm that the LRAT file certifies the unsatisfiability of the provided CNF formula. For this command, the standard `lratChecker` is used so the LRAT file must be fully written prior to calling the command in order for the command to work as intended.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- The `main` function in `Main.lean` takes in a list of strings that is expected to contain the path to a CNF file and a path to an LRAT file. Unlike the `lratCheck` command, `main` uses the `incrementalLRATChecker` and adopts a strategy of interweaving parsing and LRAT verification (specifically, each LRAT line is verified before the next LRAT line is parsed). The benefit of this approach is that `main` can be run on a CNF file and LRAT file in parallel to a SAT solver that is writing to the LRAT file. The downside of this approach is that `main` will loop indefinitely on incomplete LRAT proofs (to accommodate the possibility that there is more LRAT proof to come that has not yet been written by the SAT solver). Of course, if need be, `main` can be modified to add a custom timeout that will trigger an exit if elapsed, though the current `main` code does not do this. To turn `main` into a standalone executable, it is sufficient to run `lake build`. The `main` function will then be expressed as an executable in `build/bin/defaultExe`.
+
+- In `PHPDemo.Formula.lean`, `load_php3_lrat_proof` provides an example of an IO function that takes a default formula `php3_formula` (defined earlier in the file), writes the dimacs representation of that formula to `php3.cnf`, calls Cadical with `satQuery` to produce and write an LRAT proof to `php3.lrat`, and parses that LRAT proof to produce a list of default clause actions. That list is used to initialize `certified_php3_lrat_proof` in `PHPDemo.Formula.lean`, and the LRAT checker is used to verify this LRAT proof at the end of `PHPDemo.Theorem.lean`. More generally, the `PHPDemo` directory serves as an example of how LeanSAT formulas can be generated, reasoned about, and verified as unsatisfiable all within Lean.
 
 ## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+There are a couple of ways in which this project can be improved.
+- Currently, there are no specific optimizations for RAT additions. In particular, the function `ratHintsExhaustive` in `LRAT.Formula.Implementation.lean` is used to check that the negative RAT hints provided by a RAT addition are exhaustive. However, the current implementation of `ratHintsExhaustive` simply filters the totality of the default formula's `clauses` field and verifies that the ordered list of indices containing clauses is identical to the list of negative RAT hints provided by the RAT addition. This is inefficient because it involves a linear check over all indices in `clauses` including those that have been set to `none` due to a clause deletion. One way to improve on this would be to adopt an optimization used by cake_lpr and maintain a list of indices containing non-deleted clauses. Then, it would only be necessary to iterate over this list, rather than over all the indices in the `clauses` field. If such a change would be made, the resulting changes to the soundness proof should largely be localized to `existsRatHint_of_ratHintsExhaustive` in `LRAT.Formula.RatAddSound.lean`, though it would probably also be necessary to add additional requirements to `readyForRupAdd` and `readyForRatAdd`.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- Currently, the LRAT parser only supports the human readable format. Given the extent to which the parser poses a bottleneck, it is extremely desirable to find a way to either improve or bypass the parser. There are two avenues that might be explored to this end:
+    1. In addition to having a human readable format, LRAT has a compressed binary format that is designed to be significantly shorter than the human readable format. Supporting this compressed binary format would likely make efficiently reading significantly long LRAT proofs more feasible. This improvement could benefit the LRAT checker both when it is used within Lean and when it is used as a standalone executable.
+    2. To bypass LRAT parsing entirely, it may be possible to modify Cadical (or whichever SAT solver one desires to use) to use Lean's [Foreign Function Interface](https://leanprover.github.io/lean4/doc/dev/ffi.html) to have the SAT solver transform its LRAT proof into a datastructure that Lean can interact with directly. Then, rather than have the SAT solver write to a file and have the LRAT checker subsequently parse that file (slowly), the FFI could be used to send the LRAT proof to Lean directly. This would only be of benefit when the checker is being used within Lean, but I would expect it to yield greater performance benefits than the compressed binary format.
