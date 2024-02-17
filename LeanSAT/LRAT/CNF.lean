@@ -20,7 +20,6 @@ theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ negate
   . intro h pl
     rw [sat_iff] at pl
     rw [h] at pl
-    simp only at pl
     rw [not] at pl
     split at pl
     . next heq => simp only [heq] at pl

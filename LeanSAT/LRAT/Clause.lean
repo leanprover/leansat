@@ -56,7 +56,6 @@ instance [Clause α β] : HSat α β :=
 instance [Clause α β] (p : α → Bool) (c : β) : Decidable (p ⊨ c) := by
   rw [HSat.eval, instHSat]
   simp only [decide_eq_true_eq, Prod.exists, Bool.exists_bool]
-  rw [List.any]
   exact Bool.decEq _ _
 
 instance [Clause α β] : Inhabited β where
@@ -162,27 +161,6 @@ def negate {n : Nat} (c : DefaultClause n) : List (Literal (PosFin n)) := c.clau
 
 theorem negate_iff {n : Nat} (c : DefaultClause n) : negate c = (toList c).map negateLiteral := by rfl
 
-theorem instBEq_rw {n : Nat} : (instBEq : BEq (Literal (PosFin n))) = instBEqProd := by
-  simp only [instBEq, instBEqProd]
-  have beq_rw :
-    (fun (l1 : Literal (PosFin n)) (l2 : Literal (PosFin n)) => decide (l1 = l2)) =
-    (fun (l1 : Literal (PosFin n)) (l2 : Literal (PosFin n)) => l1.1 == l2.1 && decide (l1.2 = l2.2)) := by
-    funext
-    next a b =>
-    by_cases a.1 == b.1
-    . next h1 =>
-      simp only [h1, beq_self_eq_true, Bool.true_and, decide_eq_decide]
-      constructor
-      . intro h; rw [h]
-      . intro h2
-        simp only [beq_iff_eq] at h1
-        rw [← @Prod.mk.eta (PosFin n) Bool a, h1, h2]
-    . next h1 =>
-      simp only [h1, Bool.false_and, decide_eq_false_iff_not]
-      intro h
-      simp only [h, beq_self_eq_true, not_true] at h1
-  rw [beq_rw]
-
 /-- Attempts to add the literal (idx, b) to clause c. Returns none if doing so would make c a tautology -/
 def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClause n) :=
   if heq1 : c.clause.contains (l.1, not l.2) then none -- Adding l would make c a tautology
@@ -192,8 +170,7 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
     have nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
       intro l'
       simp only [List.contains, Bool.not_eq_true] at heq1
-      rw [← instBEq_rw] at heq1
-      have heq1 := @List.not_mem_of_elem_eq_false (Literal (PosFin n)) _ (l.1, !l.2) c.clause heq1
+      have heq1 := List.not_mem_of_elem_eq_false heq1
       simp only [List.find?, List.mem_cons, not_or]
       by_cases l' = l.1
       . next l'_eq_l =>
@@ -224,8 +201,7 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
     have nodup : List.Nodup clause := by
       simp only [List.nodup_cons, c.nodup, and_true]
       simp only [List.contains, Bool.not_eq_true] at heq2
-      rw [← instBEq_rw] at heq2
-      exact @List.not_mem_of_elem_eq_false (Literal (PosFin n)) _ l c.clause heq2
+      exact List.not_mem_of_elem_eq_false heq2
     some ⟨clause, nodupkey, nodup⟩
 
 def ofArray {n : Nat} (ls : Array (Literal (PosFin n))) : Option (DefaultClause n) :=
@@ -281,7 +257,6 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
         . next h_dup =>
           exfalso -- h_dup contradicts arrNodup
           simp only [List.contains] at h_dup
-          rw [← instBEq_rw] at h_dup
           rcases List.get_of_mem $ List.mem_of_elem_eq_true h_dup with ⟨j, hj⟩
           specialize ih j
           rw [hj] at ih
@@ -294,7 +269,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
                 (id (Nat.add_comm (idx.val + 1) j.val ▸ Eq.refl (idx.val + 1 + j.val < List.length acc.clause + (idx.val + 1))))
                 (Nat.add_lt_add_right j.isLt (idx.val + 1)))
           have idx_ne_idx_add_one_add_j_in_bounds : idx.1 ≠ idx.1 + 1 + j.1 :=
-            Nat.ne_of_lt ∘ Nat.lt_add_right idx.val (idx.val + 1) j.val $ Nat.lt_succ_self idx.1
+            Nat.ne_of_lt ∘ Nat.lt_add_right j.val $ Nat.lt_succ_self idx.1
           exact arrNodup idx ⟨idx.1 + 1 + j.1, idx_add_one_add_j_in_bounds⟩ idx_ne_idx_add_one_add_j_in_bounds ih
         . simp only [Option.some.injEq] at heq
           have hsize' : c'.clause.length = arr.size - idx.1 := by
@@ -348,7 +323,6 @@ def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultCla
   let nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
     intro l'
     simp only
-    rw [← instBEq_rw]
     rcases c.nodupkey l' with ih | ih
     . apply Or.inl
       intro h
@@ -358,7 +332,6 @@ def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultCla
       exact ih $ List.mem_of_mem_erase h
   have nodup := by
     simp only
-    rw [← instBEq_rw]
     exact List.Nodup.erase l c.nodup
   ⟨clause, nodupkey, nodup⟩
 
@@ -366,10 +339,8 @@ theorem delete_iff (c : DefaultClause n) (l l' : Literal (PosFin n)) : l' ∈ to
   simp only [toList, delete, ne_eq]
   by_cases hl : l' = l
   . simp only [hl, not_true, false_and, iff_false]
-    rw [← instBEq_rw]
     exact List.Nodup.not_mem_erase c.nodup
   . simp only [hl, not_false_eq_true, true_and]
-    rw [← instBEq_rw]
     exact List.mem_erase_of_ne hl
 
 def contains {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Bool := c.clause.contains l
@@ -377,7 +348,6 @@ def contains {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Bool := 
 theorem contains_iff : ∀ (c : DefaultClause n) (l : Literal (PosFin n)), contains c l = true ↔ l ∈ toList c := by
   intro c l
   simp only [contains, List.contains]
-  rw [← instBEq_rw]
   constructor
   . exact List.mem_of_elem_eq_true
   . exact List.elem_eq_true_of_mem

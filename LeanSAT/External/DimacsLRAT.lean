@@ -5,19 +5,14 @@ Authors: Josh Clune
 -/
 import Lean.Elab.Command
 import LeanSAT.LRAT.Clause
+import Std.Tactic.Omega
 
 open LRAT Lean Parser Elab Command DefaultClause
 
 namespace Dimacs
 
 theorem natAbs_is_pos_of_ne_zero {x : Int} (x_ne_zero : x ≠ 0) : 0 < Int.natAbs x := by
-  unfold Int.natAbs
-  split
-  . next n =>
-    unfold instOfNatInt at x_ne_zero
-    simp only [ne_eq, Int.ofNat.injEq] at x_ne_zero
-    exact Nat.zero_lt_of_ne_zero x_ne_zero
-  . next n => apply Nat.zero_lt_succ
+  omega
 
 def intToLiteral [Monad M] [MonadError M] {n : Nat} (x : Int) (x_ne_zero : x ≠ 0) : M (Literal (PosFin n)) :=
   if h : x.natAbs < n then
