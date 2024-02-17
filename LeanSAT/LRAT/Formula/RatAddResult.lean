@@ -57,7 +57,7 @@ theorem insertRatUnits_nodup {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits =
       have j_ne_k : j ≠ k := by rw [← i_eq_k]; exact i_ne_j.symm
       specialize h4 j j_ne_k
       rw [hj, li_eq_lj] at h4
-      simp only at h4
+      simp (config := { decide := true }) only at h4
     . next i_ne_k =>
       specialize h4 i i_ne_k
       rw [hi] at h4
@@ -74,7 +74,7 @@ theorem insertRatUnits_nodup {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits =
         . next j_ne_k2 =>
           specialize h5 j j_ne_k1 j_ne_k2
           rw [hj, li_eq_lj] at h5
-          simp only at h5
+          simp (config := { decide := true }) only at h5
       . next i_ne_k1 =>
         by_cases i = k2
         . next i_eq_k2 =>
@@ -96,7 +96,7 @@ theorem insertRatUnits_nodup {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits =
         . next j_ne_k1 =>
           specialize h5 j j_ne_k1 j_ne_k2
           rw [hj, li_eq_lj] at h5
-          simp only at h5
+          simp (config := { decide := true }) only at h5
       . next i_ne_k2 =>
         by_cases i = k1
         . next i_eq_k1 =>

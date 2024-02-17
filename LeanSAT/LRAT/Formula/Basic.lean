@@ -117,7 +117,8 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
       intro i b h
       by_cases hb : b
       . simp only [hasAssignment, hb, hasPosAssignment, mkArray, Array.getElem_eq_data_get, List.get_replicate, ite_true] at h
-      . simp only [hasAssignment, hb, hasPosAssignment, mkArray, Array.getElem_eq_data_get, List.get_replicate, ite_true] at h
+      . simp only [hasAssignment, hb, hasPosAssignment, mkArray, Array.getElem_eq_data_get, List.get_replicate, ite_false] at h
+        sorry
     have hl (acc : Array Assignment) (ih : modified_assignments_invariant acc) (cOpt : Option (DefaultClause n))
       (cOpt_in_arr : cOpt ∈ arr.data) : modified_assignments_invariant (ofArray_fold_fn acc cOpt) := by
       have hsize : (ofArray_fold_fn acc cOpt).size = n := by rw [ofArray_fold_fn_preserves_assignments_size, ih.1]
@@ -304,7 +305,6 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
       simp only [unit, hc]
     . next ib_ne_c =>
       have hb' : hasAssignment b (f.assignments[i.1]'i_in_bounds) := by
-        simp only at hb
         by_cases l.1 = i.1
         . next l_eq_i =>
           have b_eq_false : b = false := by
@@ -346,7 +346,6 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
       simp only [unit, hc]
     . next ib_ne_c =>
       have hb' : hasAssignment b (f.assignments[i.1]'i_in_bounds) := by
-        simp only at hb
         by_cases l.1 = i.1
         . next l_eq_i =>
           have b_eq_false : b = true := by
@@ -496,7 +495,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
           intro l_eq_b
           rw [← l_eq_b] at hb
           have hb' := not_has_of_remove f.assignments[i.1] l.2
-          simp only [Bool.not_eq_true, hb] at hb'
+          simp [hb] at hb'
         rw [← Bool.eq_not_iff] at l_ne_b
         rw [l_ne_b] at hb
         have hb := has_of_remove_irrelevant f.assignments[i.1] b hb

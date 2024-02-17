@@ -105,9 +105,9 @@ theorem removePos_addPos_cancel {assignment : Assignment} (h : ¬(hasPosAssignme
   . next h' =>
     split at h'
     . split at h
-      . simp only at h
+      . simp (config := { decide := true }) only at h
       . next h'' => simp only at h''
-      . simp only at h
+      . simp (config := { decide := true }) only at h
       . next h'' => rw [h'']
     . simp only at h'
     . simp only at h'
@@ -118,7 +118,7 @@ theorem removePos_addPos_cancel {assignment : Assignment} (h : ¬(hasPosAssignme
     . rfl
     . rw [h']
     . split at h
-      . simp only at h
+      . simp (config := { decide := true }) only at h
       . next h'' => rw [h'']
       . next h'' => simp only at h''
       . simp only at h'
@@ -129,7 +129,7 @@ theorem removePos_addPos_cancel {assignment : Assignment} (h : ¬(hasPosAssignme
     . split at h
       . next h'' => simp only at h''
       . next h'' => rw [h'']
-      . simp only at h
+      . simp (config := { decide := true }) only at h
       . next h'' => simp only at h''
     . simp only at h'
   . next h' =>
@@ -155,7 +155,7 @@ theorem removeNeg_addNeg_cancel {assignment : Assignment} (h : ¬(hasNegAssignme
     . simp only at h'
     . split at h
       . next h'' => simp only at h''
-      . simp only at h
+      . simp (config := { decide := true }) only at h
       . next h'' => simp only at h''
       . next h'' => rw [h'']
     . simp only at h'
@@ -166,8 +166,8 @@ theorem removeNeg_addNeg_cancel {assignment : Assignment} (h : ¬(hasNegAssignme
     . simp only at h'
     . split at h
       . next h'' => rw [h'']
-      . simp only at h
-      . simp only at h
+      . simp (config := { decide := true }) only at h
+      . simp (config := { decide := true }) only at h
       . next h'' => simp only at h''
     . simp only at h'
   . next h' =>
@@ -190,14 +190,14 @@ theorem remove_add_cancel {assignment : Assignment} {b : Bool} (h : ¬(hasAssign
 theorem add_of_both_eq_both (b : Bool) : addAssignment b both = both := by
   rw [addAssignment]
   split
-  . simp only
-  . simp only
+  . decide
+  . decide
 
 theorem has_of_both (b : Bool) : hasAssignment b both = true := by
   rw [hasAssignment]
   split
-  . simp only
-  . simp only
+  . decide
+  . decide
 
 theorem has_of_add (assignment : Assignment) (b : Bool) : hasAssignment b (addAssignment b assignment) := by
   rw [addAssignment, hasAssignment]
@@ -274,25 +274,17 @@ theorem has_of_remove_irrelevant (assignment : Assignment) (b : Bool) :
   hasAssignment b (removeAssignment (!b) assignment) → hasAssignment b assignment := by
   by_cases hb : b
   . simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment._eq_1, ite_true]
-    match heq : assignment with
-    | unassigned => simp only
-    | pos => simp only
-    | neg => simp only
-    | both => simp only
+    cases assignment <;> decide
   . simp only [Bool.not_eq_true] at hb
     simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment._eq_1, ite_true]
-    match heq : assignment with
-    | unassigned => simp only
-    | pos => simp only
-    | neg => simp only
-    | both => simp only
+    cases assignment <;> decide
 
 theorem unassigned_of_has_neither (assignment : Assignment) (lacks_pos : ¬(hasPosAssignment assignment))
   (lacks_neg : ¬(hasNegAssignment assignment)) : assignment = unassigned := by
   simp only [hasPosAssignment, Bool.not_eq_true] at lacks_pos
   split at lacks_pos
   . simp only at lacks_pos
-  . simp only at lacks_neg
+  . simp (config := { decide := true }) at lacks_neg
   . simp only at lacks_pos
   . rfl
 
@@ -308,14 +300,14 @@ theorem hasPos_of_addNeg (assignment : Assignment) : hasPosAssignment (addNegAss
   . next heq =>
     split at heq
     . simp only at heq
-    . simp only
+    . decide
     . simp only at heq
-    . simp only
+    . decide
   . next heq =>
     split at heq
-    . simp only
+    . decide
     . simp only at heq
-    . simp only
+    . decide
     . simp only at heq
   . next heq =>
     split at heq
@@ -329,21 +321,21 @@ theorem hasNeg_of_addPos (assignment : Assignment) : hasNegAssignment (addPosAss
   split
   . next heq =>
     split at heq
-    . simp only
+    . decide
     . simp only at heq
     . simp only at heq
-    . simp only
+    . decide
   . next heq =>
     split at heq
     . simp only at heq
-    . simp only
+    . decide
     . simp only at heq
     . simp only at heq
   . next heq =>
     split at heq
     . simp only at heq
-    . simp only
-    . simp only
+    . decide
+    . decide
     . simp only at heq
   . next heq =>
     split at heq
@@ -357,7 +349,8 @@ theorem has_iff_has_of_add_complement (assignment : Assignment) (b : Bool) :
   by_cases hb : b
   . simp only [hb, hasAssignment._eq_1, ite_true, not_true, decide_False, addAssignment._eq_1, ite_false, hasPos_of_addNeg]
   . simp only [Bool.not_eq_true] at hb
-    simp only [hb, hasAssignment._eq_1, ite_true, not_true, decide_False, addAssignment._eq_1, ite_false, hasNeg_of_addPos]
+    simp [hb, hasAssignment._eq_1, ite_true, not_true, decide_False, addAssignment._eq_1, ite_false, hasNeg_of_addPos]
+
 
 theorem addPos_of_addNeg_eq_both (assignment : Assignment) : addPosAssignment (addNegAssignment assignment) = both := by
   rw [addPosAssignment, addNegAssignment]
