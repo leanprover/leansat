@@ -21,7 +21,7 @@ theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f 
   intro p pf
   specialize f_liff_f' p
   rw [f_liff_f', sat_iff_forall] at pf
-  have empty_in_f' : empty ∈ toList (insert f empty) := by
+  have empty_in_f' : empty ∈ toList (Formula.insert f empty) := by
     rw [Formula.insert_iff]
     exact Or.inl (by rfl)
   specialize pf empty empty_in_f'
@@ -99,7 +99,7 @@ theorem lratCheckerSound [DecidableEq α] [Clause α β] [Formula α β σ] (f :
       exfalso
       simp only at h
     . next id rupHints restPrf' _ =>
-      simp only [Misc.ite_eq_left_iff, Bool.not_eq_true]
+      simp only [ite_eq_left_iff, Bool.not_eq_true]
       intro rupAddSuccess
       rw [← Bool.not_eq_true, imp_false, Classical.not_not] at rupAddSuccess
       exact addEmptyCaseSound f f_readyForRupAdd rupHints rupAddSuccess
@@ -143,17 +143,14 @@ theorem incrementalLRATCheckerSound [DecidableEq α] [Clause α β] [Formula α 
     simp only at incrementalChecker_success
     split at incrementalChecker_success
     . next rupHints =>
-      simp only at incrementalChecker_success
       by_cases performRupAdd_success : (performRupAdd f empty rupHints).2
       . exact addEmptyCaseSound f f_readyForRupAdd rupHints performRupAdd_success p pf
       . simp only [performRupAdd_success, ite_false] at incrementalChecker_success
     . next c rupHints =>
-      simp only at incrementalChecker_success
       by_cases performRupAdd_success : (performRupAdd f c rupHints).2
       . simp only [performRupAdd_success, ite_true] at incrementalChecker_success
       . simp only [performRupAdd_success, ite_false] at incrementalChecker_success
     . next c pivot rupHints ratHints =>
-      simp only at incrementalChecker_success
       by_cases performRatAdd_success : (performRatAdd f c pivot rupHints ratHints).2
       . simp only [performRatAdd_success, ite_true] at incrementalChecker_success
       . simp only [performRatAdd_success, ite_false] at incrementalChecker_success

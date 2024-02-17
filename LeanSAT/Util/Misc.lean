@@ -7,6 +7,7 @@ import Std.Logic
 import Std.Data.List.Basic
 import Std.Data.List.Lemmas
 import Std.Data.Array.Lemmas
+import Std.Tactic.SimpTrace
 
 -- Various helper theorems/definitions copied from mathlib
 namespace Misc -- Adding this namespace to avoid naming conflicts with the actual mathlib theorems
@@ -48,9 +49,6 @@ theorem forall_prop_of_false {p : Prop} {q : p → Prop} (hn : ¬p) : (∀ h' : 
 @[simp] theorem dite_eq_right_iff [Decidable P] : (dite P A fun _ => b) = b ↔ ∀ h, A h = b := by
   by_cases P <;> simp [*, forall_prop_of_true, forall_prop_of_false]
 
-@[simp] theorem ite_eq_left_iff [Decidable P] : ite P a b = a ↔ ¬P → b = a := dite_eq_left_iff
-@[simp] theorem ite_eq_right_iff [Decidable P] : ite P a b = b ↔ P → a = b := dite_eq_right_iff
-
 @[simp]
 theorem Bool.exists_bool {p : Bool → Prop} : (∃ b, p b) ↔ p false ∨ p true :=
   ⟨fun ⟨b, h⟩ => by cases b; exact Or.inl h; exact Or.inr h,
@@ -74,10 +72,10 @@ theorem Bool.of_decide_iff {p : Prop} [Decidable p] : decide p ↔ p := Bool.coe
 theorem Bool.eq_not_iff : ∀ {a b : Bool}, a = !b ↔ a ≠ b := by
   intro a b
   match a, b with
-  | true, true => simp only
-  | true, false => simp only
-  | false, true => simp only
-  | false, false => simp only
+  | true, true => decide
+  | true, false => decide
+  | false, true => decide
+  | false, false => decide
 
 @[simp]
 theorem Prod.mk.eta : ∀ {p : α × β}, (p.1, p.2) = p
@@ -116,7 +114,7 @@ theorem List.Nodup.cons (ha : a ∉ l) (hl : Nodup l) : Nodup (a :: l) :=
 theorem List.nodup_append {l₁ l₂ : List α} : Nodup (l₁ ++ l₂) ↔ Nodup l₁ ∧ Nodup l₂ ∧ Disjoint l₁ l₂ :=
   by simp only [Nodup, pairwise_append, disjoint_iff_ne]
 
-theorem List.Nodup.erase_eq_filter [DecidableEq α] {l} (d : Nodup l) (a : α) : l.erase a = l.filter (· ≠ a) := by
+theorem List.Nodup.erase_eq_filter [BEq α] [LawfulBEq α] {l} (d : Nodup l) (a : α) : l.erase a = l.filter (· != a) := by
   induction d -- with b l m _ IH; · rfl
   . rfl
   . next b l m _ IH =>
@@ -126,19 +124,20 @@ theorem List.Nodup.erase_eq_filter [DecidableEq α] {l} (d : Nodup l) (a : α) :
       apply Eq.symm
       rw [filter_eq_self]
       simpa [@eq_comm α] using m
-    · rw [erase_cons_tail _ h, filter_cons_of_pos, IH]
-      simp [h]
+    · simp [beq_false_of_ne h, erase_cons_tail _ , filter_cons_of_pos, IH, h]
 
-theorem List.Nodup.mem_erase_iff [DecidableEq α] {a : α} (d : Nodup l) : a ∈ l.erase b ↔ a ≠ b ∧ a ∈ l := by
-  rw [List.Nodup.erase_eq_filter d, mem_filter, and_comm, decide_eq_true_iff]
+theorem List.Nodup.mem_erase_iff [BEq α] [LawfulBEq α] {a : α} (d : Nodup l) : a ∈ l.erase b ↔ a != b ∧ a ∈ l := by
+  rw [List.Nodup.erase_eq_filter d, mem_filter, and_comm]
 
-theorem List.Nodup.not_mem_erase [DecidableEq α] {a : α} (h : Nodup l) : a ∉ l.erase a := fun H =>
-  ((List.Nodup.mem_erase_iff h).1 H).1 rfl
+
+theorem List.Nodup.not_mem_erase [BEq α] [LawfulBEq α] {a : α} (h : Nodup l) : a ∉ l.erase a := fun H => by
+  have h := ((List.Nodup.mem_erase_iff h).mp H).left
+  simp only [bne_self_eq_false] at h
 
 theorem List.Nodup.sublist : l₁ <+ l₂ → Nodup l₂ → Nodup l₁ :=
   Pairwise.sublist
 
-theorem List.Nodup.erase [DecidableEq α] (a : α) : Nodup l → Nodup (l.erase a) :=
+theorem List.Nodup.erase [BEq α] [LawfulBEq α] (a : α) : Nodup l → Nodup (l.erase a) :=
   List.Nodup.sublist <| erase_sublist _ _
 
 def List.Pairwise_iff.{u_1} {α : Type u_1} (R : α → α → Prop) (l : List α) : List.Pairwise R l ↔
@@ -189,7 +188,7 @@ def List.foldlRecOn {C : β → Sort _} (l : List α) (op : β → α → β) (b
     · intro y hy x hx
       exact hl y hy x (List.mem_cons_of_mem hd hx)
 
-theorem List.not_mem_of_elem_eq_false {α : Type u} [DecidableEq α] {a : α} {as : List α} :
+theorem List.not_mem_of_elem_eq_false {α : Type u} [BEq α] [LawfulBEq α] {a : α} {as : List α} :
   List.elem a as = false → a ∉ as := by
   intro h1 h2
   have h3 := List.elem_eq_true_of_mem h2
@@ -270,7 +269,7 @@ theorem Nat.le_mul_of_pos_left (h : 0 < n) : m ≤ n * m := by
   conv =>
     lhs
     rw [← Nat.one_mul m]
-  exact Nat.mul_le_mul_of_nonneg_right $ Nat.succ_le_of_lt h
+  exact Nat.mul_le_mul_right _ $ Nat.succ_le_of_lt h
 
 @[simp]
 theorem mul_eq_mul_right_iff : a * c = b * c ↔ a = b ∨ c = 0 := by
@@ -325,8 +324,8 @@ theorem Nat.two_div_iff_even : 2 ∣ n ↔ Even n := by
 
 theorem Nat.mod_two_ne_zero : ¬n % 2 = 0 ↔ n % 2 = 1 := by
   rcases Nat.mod_two_eq_zero_or_one n with h | h
-  . simp only [h, not_true]
-  . simp only [h, not_true]
+  . simp (config := { decide := true}) only [h]
+  . simp (config := { decide := true}) only [h]
 
 theorem Nat.mul_div_cancel_left' {a b : Nat} (Hd : a ∣ b) : a * (b / a) = b := by
   rw [Nat.mul_comm, Nat.div_mul_cancel Hd]
@@ -366,7 +365,7 @@ theorem Nat.sub_mod_eq_zero_of_mod_eq {m n k : Nat} (h : m % k = n % k) : (m - n
 
 theorem Array.range_size {n : Nat} : (Array.range n).size = n := by
   induction n
-  . simp only
+  . decide
   . next n ih =>
     simp only [Array.range, Nat.fold, flip, Array.size_push, Nat.succ.injEq]
     simp only [Array.range, flip] at ih
