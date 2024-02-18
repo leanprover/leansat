@@ -117,8 +117,7 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
       intro i b h
       by_cases hb : b
       . simp only [hasAssignment, hb, hasPosAssignment, mkArray, Array.getElem_eq_data_get, List.get_replicate, ite_true] at h
-      . simp only [hasAssignment, hb, hasPosAssignment, mkArray, Array.getElem_eq_data_get, List.get_replicate, ite_false] at h
-        sorry
+      . simp only [hasAssignment, hb, hasPosAssignment, mkArray, Array.getElem_eq_data_get, List.get_replicate, ite_false, hasNegAssignment] at h
     have hl (acc : Array Assignment) (ih : modified_assignments_invariant acc) (cOpt : Option (DefaultClause n))
       (cOpt_in_arr : cOpt ∈ arr.data) : modified_assignments_invariant (ofArray_fold_fn acc cOpt) := by
       have hsize : (ofArray_fold_fn acc cOpt).size = n := by rw [ofArray_fold_fn_preserves_assignments_size, ih.1]
