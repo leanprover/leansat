@@ -70,8 +70,6 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
   specialize h i
   have i_in_bounds : i.1 < assignments.size := by rw [assignments_size]; exact i.2
   have l_in_bounds : l.1.1 < assignments.size := by rw [assignments_size]; exact l.1.2.2
-  sorry
-  /-
   rcases h with ⟨h1, h2⟩ | ⟨j, b, i_gt_zero, h1, h2, h3, h4⟩ | ⟨j1, j2, i_gt_zero, h1, h2, h3, h4, h5⟩
   . by_cases hasAssignment l.2 assignments[l.1.1]!
     . next h3 =>
@@ -83,8 +81,6 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
         have hsize : (insertUnit (units, assignments, foundContradiction) l).1.size = units.size := by
           simp only [insertUnit, h3, Prod.mk.eta, ite_true]
         let j' : Fin (Array.size units) := ⟨j.1, by rw [← hsize]; exact j.2⟩
-        have j'_eq_j : j'.1 = j.1 := by rfl
-        simp only [← j'_eq_j]
         exact h2 j'
     . next h3 =>
       by_cases i.1 = l.1.1
@@ -119,6 +115,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                   exact k_property
                 . intro h
                   simp only [← h, not_true] at hk
+                  exact hk rfl
               rw [Array.get_push_lt _ _ _ k_in_bounds]
               rw [i_eq_l] at h2
               exact h2 ⟨k.1, k_in_bounds⟩
@@ -153,6 +150,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
       have k_ne_j : { val := k.val, isLt := k_size } ≠ j := by
         intro k_eq_j
         simp only [← Fin.val_eq_of_eq k_eq_j, not_true] at k_ne_j
+        exact k_ne_j rfl
       exact h4 ⟨k.1, k_size⟩ k_ne_j
     . next h5 =>
       by_cases i.1 = l.1.1
@@ -191,12 +189,12 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
               . constructor
                 . match h : assignments0[i.val]'_ with
                   | unassigned => rfl
-                  | pos => simp only [h] at h3
+                  | pos => simp (config := {decide := true}) [h] at h3
                   | neg =>
                     simp only [addAssignment, addPosAssignment, h, ite_true] at h2
                     simp only [i_eq_l] at h2
-                    simp only [hasAssignment, hl, getElem!, l_in_bounds, h2, dite_true, ite_false, not_true] at h5
-                  | both => simp only [h] at h3
+                    simp only [hasAssignment, hl, getElem!, l_in_bounds, h2, dite_true, ite_false, not_true, Bool.not_eq_true, hasNegAssignment] at h5
+                  | both => simp (config := {decide := true}) only [h] at h3
                 . intro k k_ne_j k_ne_l
                   rw [Array.get_push]
                   by_cases h : k.1 < units.size
@@ -204,6 +202,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                     have k_ne_j : ⟨k.1, h⟩ ≠ j := by
                       intro k_eq_j
                       simp only [← k_eq_j, not_true] at k_ne_j
+                      exact k_ne_j rfl
                     exact h4 ⟨k.1, h⟩ k_ne_j
                   . exfalso
                     have k_property := k.2
@@ -211,6 +210,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                     rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
                     . exact h k_lt_units_size
                     . simp only [← k_eq_units_size, not_true] at k_ne_l
+                      exact k_ne_l rfl
         | false, true =>
           apply Exists.intro mostRecentUnitIdx ∘ Exists.intro ⟨j.1, j_lt_updatedUnits_size⟩
           apply Exists.intro i_gt_zero
@@ -229,11 +229,11 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                 . match h : assignments0[i.val]'_ with
                   | unassigned => rfl
                   | pos =>
-                    simp only [addAssignment, addPosAssignment, h, ite_true] at h2
+                    simp only [addAssignment, h, ite_false, addNegAssignment] at h2
                     simp only [i_eq_l] at h2
-                    simp only [hasAssignment, hl, getElem!, l_in_bounds, h2, dite_true, ite_false, not_true] at h5
-                  | neg => simp only [h] at h3
-                  | both => simp only [h] at h3
+                    simp only [hasAssignment, hl, getElem!, l_in_bounds, h2, dite_true, ite_true, Bool.not_eq_true, hasPosAssignment, not_true] at h5
+                  | neg  => simp (config := {decide := true}) only [h] at h3
+                  | both => simp (config := {decide := true}) only [h] at h3
                 . intro k k_ne_l k_ne_j
                   rw [Array.get_push]
                   by_cases h : k.1 < units.size
@@ -241,6 +241,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                     have k_ne_j : ⟨k.1, h⟩ ≠ j := by
                       intro k_eq_j
                       simp only [← k_eq_j, not_true] at k_ne_j
+                      exact k_ne_j rfl
                     exact h4 ⟨k.1, h⟩ k_ne_j
                   . exfalso
                     have k_property := k.2
@@ -248,6 +249,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                     rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
                     . exact h k_lt_units_size
                     . simp only [← k_eq_units_size, not_true] at k_ne_l
+                      exact k_ne_l rfl
         | false, false =>
           exfalso
           have assignments_i_rw : assignments[i.1]! = assignments[i.1] := by simp only [getElem!, i_in_bounds, dite_true]
@@ -274,6 +276,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                 have k_ne_j : ⟨k.1, h⟩ ≠ j := by
                   intro k_eq_j
                   simp only [← Fin.val_eq_of_eq k_eq_j, not_true] at k_ne_j
+                  exact k_ne_j rfl
                 exact h4 ⟨k.1, h⟩ k_ne_j
               . simp only [h, dite_false]
                 exact Ne.symm i_ne_l
@@ -319,9 +322,11 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
               have k_ne_j1 : ⟨k.1, k_in_bounds⟩ ≠ j1 := by
                 intro k_eq_j1
                 simp only [← k_eq_j1, not_true] at k_ne_j1
+                exact k_ne_j1 rfl
               have k_ne_j2 : ⟨k.1, k_in_bounds⟩ ≠ j2 := by
                 intro k_eq_j2
                 simp only [← k_eq_j2, not_true] at k_ne_j2
+                exact k_ne_j2 rfl
               split
               . exact h5 ⟨k.1, k_in_bounds⟩ k_ne_j1 k_ne_j2
               . simp only [ne_eq]
@@ -346,7 +351,8 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                 simp only [k_eq_units_size, Array.get_push_eq, ne_eq]
                 intro l_eq_i
                 simp only [getElem!, l_eq_i, i_in_bounds, h3, dite_true, Bool.not_eq_true, has_of_both] at h
--/
+                exact h ⟨⟩
+
 theorem insertUnit_fold_preserves_invariant {n : Nat} (assignments0 : Array Assignment)
   (assignments0_size : assignments0.size = n) (rupUnits : Array (Literal (PosFin n)))
   (assignments : Array Assignment) (assignments_size : assignments.size = n) (b : Bool)
@@ -798,9 +804,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
   (ih : derivedLits_invariant f f_assignments_size acc.1 hsize acc.2.1) (h : ¬hasAssignment l.snd acc.fst[l.fst.val]! = true) :
   have hsize' : (Array.modify acc.1 l.1.1 (addAssignment l.snd)).size = n := by rw [Array.modify_preserves_size]; exact hsize
   derivedLits_invariant f f_assignments_size (Array.modify acc.fst l.1.1 (addAssignment l.snd)) hsize' (l :: acc.2.fst) := by
-  intro i
-  sorry
-  /-
+  intro _ i
   have i_in_bounds : i.1 < acc.1.size := by rw [hsize]; exact i.2
   have l_in_bounds : l.1.1 < acc.1.size := by rw [hsize]; exact l.1.2.2
   rcases ih i with ⟨h1, h2⟩ | ⟨j, j_eq_i, h1, h2, h3⟩ | ⟨j1, j2, j1_eq_i, j2_eq_i, j1_eq_true, j2_eq_false, h1, h2, h3⟩
@@ -889,8 +893,9 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
                   have k_val_ne_zero : k.1 ≠ 0 := by
                     intro k_eq_zero
                     simp only [List.length_cons, ← k_eq_zero, ne_eq, not_true] at k_ne_zero
+                    exact k_ne_zero rfl
                   rcases Nat.exists_eq_succ_of_ne_zero k_val_ne_zero with ⟨k', k_eq_k'_succ⟩
-                  rw [Nat.succ_eq_add_one] at k_eq_k'_succ
+                  rw [Nat.succ_eq_add_one k'] at k_eq_k'_succ
                   have k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length := by rw [← k_eq_k'_succ]; exact k.2
                   apply Exists.intro k' ∘ Exists.intro k'_succ_in_bounds
                   apply Fin.eq_of_val_eq
@@ -902,7 +907,6 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
                   simp only [List.length_cons, Nat.succ_eq_add_one] at k'_succ_in_bounds
                   exact Nat.lt_of_succ_lt_succ k'_succ_in_bounds
                 have k'_ne_j : ⟨k', k'_in_bounds⟩ ≠ j := by
-                  simp only [List.length_cons] at k_eq_succ
                   simp only [k_eq_succ, List.length_cons, Fin.mk.injEq, Nat.succ.injEq] at k_ne_j_succ
                   exact Fin.ne_of_val_ne k_ne_j_succ
                 exact h3 ⟨k', k'_in_bounds⟩ k'_ne_j
@@ -937,8 +941,9 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
                   have k_val_ne_zero : k.1 ≠ 0 := by
                     intro k_eq_zero
                     simp only [List.length_cons, ← k_eq_zero, ne_eq, not_true] at k_ne_zero
+                    exact k_ne_zero rfl
                   rcases Nat.exists_eq_succ_of_ne_zero k_val_ne_zero with ⟨k', k_eq_k'_succ⟩
-                  rw [Nat.succ_eq_add_one] at k_eq_k'_succ
+                  rw [Nat.succ_eq_add_one k'] at k_eq_k'_succ
                   have k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length := by rw [← k_eq_k'_succ]; exact k.2
                   apply Exists.intro k' ∘ Exists.intro k'_succ_in_bounds
                   apply Fin.eq_of_val_eq
@@ -950,7 +955,6 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
                   simp only [List.length_cons, Nat.succ_eq_add_one] at k'_succ_in_bounds
                   exact Nat.lt_of_succ_lt_succ k'_succ_in_bounds
                 have k'_ne_j : ⟨k', k'_in_bounds⟩ ≠ j := by
-                  simp only [List.length_cons] at k_eq_succ
                   simp only [k_eq_succ, List.length_cons, Fin.mk.injEq, Nat.succ.injEq] at k_ne_j_succ
                   exact Fin.ne_of_val_ne k_ne_j_succ
                 exact h3 ⟨k', k'_in_bounds⟩ k'_ne_j
@@ -1009,8 +1013,8 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
       intro l_eq_i
       simp only [hasAssignment, Bool.not_eq_true] at h
       split at h
-      . simp only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
-      . simp only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
+      . simp (config := {decide := true}) only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
+      . simp (config := {decide := true}) only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
     constructor
     . rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i]
       exact h1
@@ -1030,7 +1034,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
               intro k_eq_zero
               simp only [List.length_cons, ← k_eq_zero, ne_eq, not_true] at k_ne_zero
             rcases Nat.exists_eq_succ_of_ne_zero k_val_ne_zero with ⟨k', k_eq_k'_succ⟩
-            rw [Nat.succ_eq_add_one] at k_eq_k'_succ
+            rw [Nat.succ_eq_add_one k'] at k_eq_k'_succ
             have k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length := by rw [← k_eq_k'_succ]; exact k.2
             apply Exists.intro k' ∘ Exists.intro k'_succ_in_bounds
             apply Fin.eq_of_val_eq
@@ -1042,15 +1046,12 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
             simp only [List.length_cons, Nat.succ_eq_add_one] at k'_succ_in_bounds
             exact Nat.lt_of_succ_lt_succ k'_succ_in_bounds
           have k'_ne_j1 : ⟨k', k'_in_bounds⟩ ≠ j1 := by
-            simp only [List.length_cons] at k_eq_succ
             simp only [List.length_cons, k_eq_succ, ne_eq, Fin.mk.injEq, Nat.succ.injEq] at k_ne_j1_succ
             exact Fin.ne_of_val_ne k_ne_j1_succ
           have k'_ne_j2 : ⟨k', k'_in_bounds⟩ ≠ j2 := by
-            simp only [List.length_cons] at k_eq_succ
             simp only [List.length_cons, k_eq_succ, ne_eq, Fin.mk.injEq, Nat.succ.injEq] at k_ne_j2_succ
             exact Fin.ne_of_val_ne k_ne_j2_succ
           exact h3 ⟨k', k'_in_bounds⟩ k'_ne_j1 k'_ne_j2
-          -/
 
 theorem confirmRupHint_preserves_invariant {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
   (rupHints : Array Nat) (i : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool)

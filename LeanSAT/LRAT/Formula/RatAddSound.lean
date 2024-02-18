@@ -246,16 +246,12 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
         rw [Clause.unit_eq] at p_unsat_c
         simp only [List.mem_singleton, forall_const, Prod.mk.injEq, and_false, false_implies, and_true] at p_unsat_c
         simp only [Literal.instHSatLiteral, Bool.not_eq_false] at p_unsat_c
-        sorry
-        /-
-        simp only [Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, not_exists,
-          not_or, not_and] at pc
         specialize pc v
         rw [v'_eq_v] at v'_in_c
         have pv := pc.2 v'_in_c
         simp only [Literal.instHSatLiteral, Bool.not_eq_true] at pv
         simp only [p_unsat_c] at pv
-        -/
+        cases pv
     . simp only [negate_iff, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨v'_in_c, v'_eq_v⟩ | ⟨v'_in_c, v'_eq_v⟩⟩
       . simp only [negateLiteral, Bool.not_false, Prod.mk.injEq, and_true] at v'_eq_v
@@ -265,16 +261,12 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
         rw [Clause.unit_eq] at p_unsat_c
         simp only [List.mem_singleton, forall_const, Prod.mk.injEq, and_false, false_implies, and_true] at p_unsat_c
         simp only [Literal.instHSatLiteral, Bool.not_eq_false] at p_unsat_c
-        sorry
-        /-
-        simp only [Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, not_exists,
-          not_or, not_and] at pc
         specialize pc v
         rw [v'_eq_v] at v'_in_c
         have pv := pc.1 v'_in_c
         simp only [Literal.instHSatLiteral, Bool.not_eq_true] at pv
         simp only [p_unsat_c] at pv
-        -/
+        cases pv
       . simp only [negateLiteral, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
     . simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at pf
       exact p_unsat_c $ pf unsat_c unsat_c_in_f
@@ -484,13 +476,10 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
       conv => rhs; rw [f_clauses_rw, Array.size]
       exact i.2
     rw [i_eq_range_i]
-    sorry
-    /-
-    apply Array.mem_filter i.1 i_in_bounds
+    apply Misc.Array.mem_filter i.1 i_in_bounds
     simp only [getElem!, Array.range_idx i_lt_f_clauses_size, i_lt_f_clauses_size, dite_true, c'_in_f, DefaultClause.contains_iff]
     rw [Clause.toList, instClausePosFinDefaultClause] at negPivot_in_c'
     exact negPivot_in_c'
-    -/
   rcases List.get_of_mem h with ⟨j, h'⟩
   have j_in_bounds : j < ratHints.size := by
     have j_property := j.2
