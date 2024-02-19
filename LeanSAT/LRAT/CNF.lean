@@ -11,28 +11,22 @@ open Literal Clause Formula Misc Sat
 
 namespace Literal
 
-theorem sat_iff (p : α → Bool) (a : α) (b : Bool) : p ⊨ (a, b) ↔ (p a) = b :=
-  by simp only [HSat.eval]
+theorem sat_iff (p : α → Bool) (a : α) (b : Bool) : p ⊨ (a, b) ↔ (p a) = b := by
+  simp only [HSat.eval]
 
 theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ negateLiteral l ↔ p ⊭ l := by
   simp only [negateLiteral, sat_iff]
   constructor
   . intro h pl
-    rw [sat_iff] at pl
-    rw [h] at pl
-    rw [not] at pl
-    split at pl
-    . next heq => simp only [heq] at pl
-    . next heq => simp only [heq] at pl
+    rw [sat_iff, h, not] at pl
+    split at pl <;> simp_all
   . intro h
     rw [sat_iff] at h
     rw [not]
-    split
-    . next heq => simp only [heq, Bool.not_eq_true] at h; exact h
-    . next heq => simp only [heq, Bool.not_eq_false] at h; exact h
+    split <;> simp_all
 
 theorem unsat_of_limplies_complement [HSat α t] (x : t) (l : Literal α) :
-  limplies α x l → limplies α x (negateLiteral l) → unsatisfiable α x := by
+    limplies α x l → limplies α x (negateLiteral l) → unsatisfiable α x := by
   intro h1 h2 p px
   specialize h1 p px
   specialize h2 p px
@@ -89,10 +83,10 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
       exact ⟨h, pl⟩
 
 theorem entails_of_entails_delete [DecidableEq α] [Clause α β] {p : α → Bool} {c : β} {l : Literal α} :
-  p ⊨ delete c l → p ⊨ c := by
+    p ⊨ delete c l → p ⊨ c := by
   intro h
-  simp only [instHSat._eq_1, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
-  simp only [instHSat._eq_1, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
+  simp only [instHSat, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
+  simp only [instHSat, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
   rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
   . simp only [delete_iff, ne_eq] at h1
     exact Exists.intro v $ Or.inl ⟨h1.2, h2⟩
@@ -104,7 +98,7 @@ end Clause
 namespace Formula
 
 theorem sat_iff_forall [Clause α β] [Formula α β σ] (p : α → Bool) (f : σ) :
-  p ⊨ f ↔ ∀ c : β, c ∈ toList f → p ⊨ c := by
+    p ⊨ f ↔ ∀ c : β, c ∈ toList f → p ⊨ c := by
   rw [instHSat, formulaHSat_def p f]
   simp only [List.all_eq_true, decide_eq_true_eq]
 
