@@ -100,81 +100,13 @@ theorem removePos_addPos_cancel {assignment : Assignment} (h : ¬(hasPosAssignme
   removePosAssignment (addPosAssignment assignment) = assignment := by
   rw [removePosAssignment, addPosAssignment]
   rw [hasPosAssignment] at h
-  split
-  . next h' =>
-    split at h'
-    . split at h
-      . simp (config := { decide := true }) only at h
-      . next h'' => simp only at h''
-      . simp (config := { decide := true }) only at h
-      . next h'' => rw [h'']
-    . simp only at h'
-    . simp only at h'
-    . rfl
-  . next h' =>
-    split at h'
-    . rw [h']
-    . rfl
-    . rw [h']
-    . split at h
-      . simp (config := { decide := true }) only at h
-      . next h'' => rw [h'']
-      . next h'' => simp only at h''
-      . simp only at h'
-  . next h' =>
-    split at h'
-    . simp only at h'
-    . rfl
-    . split at h
-      . next h'' => simp only at h''
-      . next h'' => rw [h'']
-      . simp (config := { decide := true }) only at h
-      . next h'' => simp only at h''
-    . simp only at h'
-  . next h' =>
-    split at h'
-    . rw [h']
-    . simp only at h'
-    . rw [h']
-    . rfl
+  cases assignment <;> simp_all
 
 theorem removeNeg_addNeg_cancel {assignment : Assignment} (h : ¬(hasNegAssignment assignment)) :
   removeNegAssignment (addNegAssignment assignment) = assignment := by
   rw [removeNegAssignment, addNegAssignment]
   rw [hasNegAssignment] at h
-  split
-  . next h' =>
-    split at h'
-    . rfl
-    . rw [h']
-    . rw [h']
-    . simp only at h'
-  . next h' =>
-    split at h'
-    . simp only at h'
-    . split at h
-      . next h'' => simp only at h''
-      . simp (config := { decide := true }) only at h
-      . next h'' => simp only at h''
-      . next h'' => rw [h'']
-    . simp only at h'
-    . rfl
-  . next h' =>
-    split at h'
-    . rfl
-    . simp only at h'
-    . split at h
-      . next h'' => rw [h'']
-      . simp (config := { decide := true }) only at h
-      . simp (config := { decide := true }) only at h
-      . next h'' => simp only at h''
-    . simp only at h'
-  . next h' =>
-    split at h'
-    . simp only at h'
-    . rw [h']
-    . rw [h']
-    . rfl
+  cases assignment <;> simp_all
 
 theorem remove_add_cancel {assignment : Assignment} {b : Bool} (h : ¬(hasAssignment b assignment)) :
   removeAssignment b (addAssignment b assignment) = assignment := by
@@ -188,204 +120,68 @@ theorem remove_add_cancel {assignment : Assignment} {b : Bool} (h : ¬(hasAssign
 
 theorem add_of_both_eq_both (b : Bool) : addAssignment b both = both := by
   rw [addAssignment]
-  split
-  . decide
-  . decide
+  split <;> decide
 
 theorem has_of_both (b : Bool) : hasAssignment b both = true := by
   rw [hasAssignment]
-  split
-  . decide
-  . decide
+  split <;> decide
 
 theorem has_of_add (assignment : Assignment) (b : Bool) : hasAssignment b (addAssignment b assignment) := by
   rw [addAssignment, hasAssignment]
   split
   . rw [hasPosAssignment, addPosAssignment]
-    split
-    . rfl
-    . next heq =>
-      split at heq
-      repeat { simp only at heq }
-    . rfl
-    . next heq =>
-      split at heq
-      repeat { simp only at heq }
+    cases assignment <;> simp
   . rw [hasNegAssignment, addNegAssignment]
-    split
-    . next heq =>
-      split at heq
-      repeat { simp only at heq }
-    . rfl
-    . rfl
-    . next heq =>
-      split at heq
-      repeat { simp only at heq }
+    cases assignment <;> simp
 
 theorem not_hasPos_of_removePos (assignment : Assignment) : ¬hasPosAssignment (removePosAssignment assignment) := by
-  simp only [removePosAssignment._eq_1, hasPosAssignment._eq_1, Bool.not_eq_true]
-  split
-  . next h =>
-    split at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-  . rfl
-  . next h =>
-    split at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-  . rfl
+  simp only [removePosAssignment, hasPosAssignment, Bool.not_eq_true]
+  cases assignment <;> simp
 
 theorem not_hasNeg_of_removeNeg (assignment : Assignment) : ¬hasNegAssignment (removeNegAssignment assignment) := by
-  simp only [removeNegAssignment._eq_1, hasNegAssignment._eq_1, Bool.not_eq_true]
-  split
-  . rfl
-  . next h =>
-    split at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-  . next h =>
-    split at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-    . simp only at h
-  . rfl
+  simp only [removeNegAssignment, hasNegAssignment, Bool.not_eq_true]
+  cases assignment <;> simp
 
 theorem not_has_of_remove (assignment : Assignment) (b : Bool) : ¬hasAssignment b (removeAssignment b assignment) := by
   by_cases hb : b
-  . simp only [hb, removeAssignment, ite_true, hasAssignment._eq_1, Bool.not_eq_true]
-    have h := not_hasPos_of_removePos assignment
-    simp only [Bool.not_eq_true] at h
-    exact h
-  . simp only [hb, removeAssignment, ite_false, hasAssignment._eq_1, Bool.not_eq_true]
-    have h := not_hasNeg_of_removeNeg assignment
-    simp only [Bool.not_eq_true] at h
-    exact h
+  . have h := not_hasPos_of_removePos assignment
+    simp [hb, h, removeAssignment, hasAssignment]
+  . have h := not_hasNeg_of_removeNeg assignment
+    simp [hb, h, removeAssignment, hasAssignment]
 
 theorem has_of_remove_irrelevant (assignment : Assignment) (b : Bool) :
   hasAssignment b (removeAssignment (!b) assignment) → hasAssignment b assignment := by
   by_cases hb : b
-  . simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment._eq_1, ite_true]
+  . simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment, ite_true]
     cases assignment <;> decide
   . simp only [Bool.not_eq_true] at hb
-    simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment._eq_1, ite_true]
+    simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment, ite_true]
     cases assignment <;> decide
 
 theorem unassigned_of_has_neither (assignment : Assignment) (lacks_pos : ¬(hasPosAssignment assignment))
   (lacks_neg : ¬(hasNegAssignment assignment)) : assignment = unassigned := by
   simp only [hasPosAssignment, Bool.not_eq_true] at lacks_pos
-  split at lacks_pos
-  . simp only at lacks_pos
-  . simp (config := { decide := true }) at lacks_neg
-  . simp only at lacks_pos
-  . rfl
+  split at lacks_pos <;> simp_all (config := { decide := true })
 
 theorem hasPos_of_addNeg (assignment : Assignment) : hasPosAssignment (addNegAssignment assignment) = hasPosAssignment assignment := by
   rw [hasPosAssignment, addNegAssignment]
-  split
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . decide
-    . simp only at heq
-    . decide
-  . next heq =>
-    split at heq
-    . decide
-    . simp only at heq
-    . decide
-    . simp only at heq
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
+  cases assignment <;> simp (config := { decide := true })
 
 theorem hasNeg_of_addPos (assignment : Assignment) : hasNegAssignment (addPosAssignment assignment) = hasNegAssignment assignment := by
   rw [hasNegAssignment, addPosAssignment]
-  split
-  . next heq =>
-    split at heq
-    . decide
-    . simp only at heq
-    . simp only at heq
-    . decide
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . decide
-    . simp only at heq
-    . simp only at heq
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . decide
-    . decide
-    . simp only at heq
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
+  cases assignment <;> simp (config := { decide := true })
 
 theorem has_iff_has_of_add_complement (assignment : Assignment) (b : Bool) :
   hasAssignment b assignment ↔ hasAssignment b (addAssignment (¬b) assignment) := by
-  by_cases hb : b
-  . simp only [hb, hasAssignment._eq_1, ite_true, not_true, decide_False, addAssignment._eq_1, ite_false, hasPos_of_addNeg]
-  . simp only [Bool.not_eq_true] at hb
-    simp [hb, hasAssignment._eq_1, ite_true, not_true, decide_False, addAssignment._eq_1, ite_false, hasNeg_of_addPos]
-
+  by_cases hb : b <;> simp [hb, hasAssignment, addAssignment, hasPos_of_addNeg, hasNeg_of_addPos]
 
 theorem addPos_of_addNeg_eq_both (assignment : Assignment) : addPosAssignment (addNegAssignment assignment) = both := by
   rw [addPosAssignment, addNegAssignment]
-  split
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-  . rfl
-  . rfl
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
+  cases assignment <;> simp
 
 theorem addNeg_of_addPos_eq_both (assignment : Assignment) : addNegAssignment (addPosAssignment assignment) = both := by
   rw [addNegAssignment, addPosAssignment]
-  split
-  . rfl
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-  . rfl
-  . next heq =>
-    split at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
-    . simp only at heq
+  cases assignment <;> simp
 
 instance {n : Nat} : HSat (PosFin n) (Array Assignment) where
   eval := fun p arr => ∀ i : PosFin n, ¬(hasAssignment (¬p i) arr[i.1]!)
