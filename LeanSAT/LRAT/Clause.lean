@@ -8,6 +8,7 @@ import LeanSAT.Sat.Literal
 import LeanSAT.Util.PosFin
 import LeanSAT.Util.Misc
 import Std.Data.Array.Lemmas
+import Std.Tactic.Omega
 import LeanSAT.LRAT.Assignment
 
 namespace LRAT
@@ -93,16 +94,16 @@ theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
   have h := c.nodupkey l.1
   by_cases hl : l.2
   . simp only [hl, Bool.not_true]
+    rw [← hl] at h
     rcases h with h | h
-    . rw [← hl] at h
-      exact Or.inl h
+    . exact Or.inl h
     . exact Or.inr h
   . simp only [hl, Bool.not_false]
     simp only [Bool.not_eq_true] at hl
+    rw [← hl] at h
     rcases h with h | h
     . exact Or.inr h
-    . rw [← hl] at h
-      exact Or.inl h
+    . exact Or.inl h
 
 def empty {n : Nat} : DefaultClause n :=
   let clause := []
@@ -114,21 +115,16 @@ theorem empty_eq {n : Nat} : toList (empty : DefaultClause n) = [] := by rfl
 
 def unit {n : Nat} (l : Literal (PosFin n)) : DefaultClause n :=
   let clause := [l]
-  have nodupkey := by
+  have nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
     intro l'
     by_cases l.2
-    . next hl =>
-      apply Or.inr
-      simp only [List.mem_singleton]
-      rw [← @Prod.mk.eta (PosFin n) Bool l, hl]
-      simp only [Prod.mk.injEq, and_false, not_false_eq_true]
-    . next hl =>
-      apply Or.inl
-      simp only [List.mem_singleton]
-      simp only [Bool.not_eq_true] at hl
-      rw [← @Prod.mk.eta (PosFin n) Bool l, hl]
-      simp only [Prod.mk.injEq, and_false, not_false_eq_true]
-  have nodup := by simp only [List.nodup_cons, List.find?, List.not_mem_nil, not_false_eq_true, List.nodup_nil, and_self]
+    . apply Or.inr
+      cases l
+      simp_all
+    . apply Or.inl
+      cases l
+      simp_all
+  have nodup : List.Nodup clause:= by simp
   ⟨clause, nodupkey, nodup⟩
 
 theorem unit_eq {n : Nat} (l : Literal (PosFin n)) : toList (unit l) = [l] := by rfl
@@ -142,16 +138,7 @@ theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
   isUnit c = some l ↔ toList c = [l] := by
   simp only [isUnit, Prod.forall, toList]
   split
-  . next l' heq =>
-    simp only [Option.some.injEq]
-    constructor
-    . intro h
-      rw [← h]
-      exact heq
-    . intro h
-      rw [h] at heq
-      simp only [List.cons.injEq, and_true] at heq
-      exact heq.symm
+  . next l' heq => simp [heq]
   . next hne =>
     simp only [false_iff]
     intro heq
@@ -199,9 +186,7 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
           intro heq
           simp only [← heq, not_true] at l'_ne_l
     have nodup : List.Nodup clause := by
-      simp only [List.nodup_cons, c.nodup, and_true]
-      simp only [List.contains, Bool.not_eq_true] at heq2
-      exact List.not_mem_of_elem_eq_false heq2
+      simp [c.nodup, List.not_mem_of_elem_eq_false, heq2]
     some ⟨clause, nodupkey, nodup⟩
 
 def ofArray {n : Nat} (ls : Array (Literal (PosFin n))) : Option (DefaultClause n) :=
@@ -220,16 +205,14 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
     ∃ idx_le_arr_size : idx ≤ arr.size, ∀ c' : DefaultClause n, acc = some c' →
       ∃ hsize : c'.clause.length = arr.size - idx, ∀ i : Fin c'.clause.length,
       have idx_in_bounds : idx + i.1 < arr.size := by
-        rw [Nat.eq_add_of_sub_eq idx_le_arr_size (Eq.symm hsize), Nat.add_comm]
-        apply Nat.add_lt_add_right
-        exact i.2
+        omega
       List.get c'.clause i = arr[idx + i]'idx_in_bounds
   have h_base : motive arr.size (some empty) := by
     apply Exists.intro $ Nat.le_refl arr.size
     intro c' heq
     simp only [Option.some.injEq] at heq
     have hsize : List.length c'.clause = arr.size- arr.size := by
-      simp only [← heq, empty, List.length_nil, Nat.sub_self]
+      simp [← heq, empty]
     apply Exists.intro hsize
     intro i
     simp only [← heq, empty, List.length_nil] at i
@@ -261,15 +244,9 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
           specialize ih j
           rw [hj] at ih
           have idx_add_one_add_j_in_bounds : idx.1 + 1 + j.1 < arr.size := by
-            simp only [getElem] at ih
-            -- The following proof term was obtained by examining the proof state of ih
-            exact @Eq.mpr (idx.val + 1 + j.val < Array.size arr) (idx.val + 1 + j.val < List.length acc.clause + (idx.val + 1))
-              (id (Nat.eq_add_of_sub_eq idx_add_one_le_arr_size (Eq.symm hsize) ▸ Eq.refl (idx.val + 1 + j.val < Array.size arr)))
-              (Eq.mpr
-                (id (Nat.add_comm (idx.val + 1) j.val ▸ Eq.refl (idx.val + 1 + j.val < List.length acc.clause + (idx.val + 1))))
-                (Nat.add_lt_add_right j.isLt (idx.val + 1)))
-          have idx_ne_idx_add_one_add_j_in_bounds : idx.1 ≠ idx.1 + 1 + j.1 :=
-            Nat.ne_of_lt ∘ Nat.lt_add_right j.val $ Nat.lt_succ_self idx.1
+            omega
+          have idx_ne_idx_add_one_add_j_in_bounds : idx.1 ≠ idx.1 + 1 + j.1 := by
+            omega
           exact arrNodup idx ⟨idx.1 + 1 + j.1, idx_add_one_add_j_in_bounds⟩ idx_ne_idx_add_one_add_j_in_bounds ih
         . simp only [Option.some.injEq] at heq
           have hsize' : c'.clause.length = arr.size - idx.1 := by
@@ -290,12 +267,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
             rcases Nat.exists_eq_succ_of_ne_zero i_ne_zero with ⟨j, hj⟩
             simp only [List.length_cons, hj, List.get, Nat.succ_eq_add_one]
             simp only [Nat.add_comm j 1, ← Nat.add_assoc]
-            have j_in_bounds : j < acc.clause.length := by
-              have i_property := i.2
-              rw [hj, hsize'] at i_property
-              rw [hsize, Nat.sub_add_eq]
-              exact Nat.lt_sub_of_add_lt i_property
-            exact ih ⟨j, j_in_bounds⟩
+            exact ih ⟨j, by omega⟩
   rcases (Array.foldr_induction motive h_base h_inductive).2 c h with ⟨hsize, h⟩
   ext
   next i l =>
@@ -303,19 +275,12 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
   . specialize h ⟨i, i_in_bounds⟩
     simp only at h
     have i_in_bounds' : i < arr.data.length := by
-      simp only [Nat.sub_zero] at hsize
-      rw [← Array.size_mk, ← hsize]
-      exact i_in_bounds
+      omega
     rw [List.get?_eq_get i_in_bounds, List.get?_eq_get i_in_bounds']
     simp only [h, Nat.zero_add, Array.getElem_eq_data_get, Option.mem_def, Option.some.injEq]
-  . simp only [Nat.not_lt] at i_in_bounds
-    have arr_data_length_le_i : arr.data.length ≤ i := by
-      simp only [Nat.sub_zero] at hsize
-      rw [hsize] at i_in_bounds
-      rw [← Array.size_mk]
-      exact i_in_bounds
-    rw [← List.get?_eq_none] at i_in_bounds
-    rw [← List.get?_eq_none] at arr_data_length_le_i
+  . have arr_data_length_le_i : arr.data.length ≤ i := by
+      omega
+    simp only [Nat.not_lt, ← List.get?_eq_none] at i_in_bounds arr_data_length_le_i
     rw [i_in_bounds, arr_data_length_le_i]
 
 def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultClause n :=
