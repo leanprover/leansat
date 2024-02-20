@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Scott Morrison
+-/
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.CNF.Decidable -- This import is not used directly, but without it the tactic fails.
 import LeanSAT.Reflect.BoolExpr.Tseitin
