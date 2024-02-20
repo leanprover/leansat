@@ -149,7 +149,7 @@ theorem performRatCheck_preserves_formula {n : Nat} (f : DefaultFormula n) (hf :
         ⟨(insertRatUnits f (negate (DefaultClause.delete c p))).1.clauses,
          (insertRatUnits f (negate (DefaultClause.delete c p))).1.rupUnits,
          (insertRatUnits f (negate (DefaultClause.delete c p))).1.ratUnits,
-         (insertRatUnits f (negate (DefaultClause.delete c p))).1.assignments⟩ := by rfl
+         (insertRatUnits f (negate (DefaultClause.delete c p))).1.assignments⟩ := rfl
       simp only [performRupCheck_preserves_clauses, performRupCheck_preserves_rupUnits, performRupCheck_preserves_ratUnits]
       rw [restoreAssignments_performRupCheck fc fc_assignments_size ratHint.2, ← insertRatUnits_rw,
         clear_insertRat f hf (negate (DefaultClause.delete c p))]
@@ -165,7 +165,7 @@ theorem performRatCheck_fold_preserves_formula {n : Nat} (f : DefaultFormula n) 
             else (x.1, false)) (f, true) 0 ratHints.size
       performRatCheck_fold_res.1 = f := by
   let motive (_idx : Nat) (acc : DefaultFormula n × Bool) := acc.1 = f
-  have h_base : motive 0 (f, true) := by rfl
+  have h_base : motive 0 (f, true) := rfl
   have h_inductive (idx : Fin ratHints.size) (acc : DefaultFormula n × Bool) :
     motive idx.1 acc → motive (idx.1 + 1) (if acc.2 then performRatCheck acc.1 p ratHints[idx] else (acc.1, false)) := by
     intro ih
@@ -207,7 +207,7 @@ theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p 
               exact And.intro f_readyForRatAdd.1 hsize
             have insertRupUnits_rw : (insertRupUnits f (negate c)).1 =
               ⟨(insertRupUnits f (negate c)).1.clauses, (insertRupUnits f (negate c)).1.rupUnits,
-               (insertRupUnits f (negate c)).1.ratUnits, (insertRupUnits f (negate c)).1.assignments⟩ := by rfl
+               (insertRupUnits f (negate c)).1.ratUnits, (insertRupUnits f (negate c)).1.assignments⟩ := rfl
             simp only [performRatCheck_fold_preserves_formula performRupCheck_res h_performRupCheck_res (negateLiteral p) ratHints,
               performRupCheck_preserves_clauses, performRupCheck_preserves_rupUnits, performRupCheck_preserves_ratUnits,
               restoreAssignments_performRupCheck fc fc_assignments_size, ← insertRupUnits_rw,

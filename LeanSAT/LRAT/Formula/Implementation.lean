@@ -61,7 +61,7 @@ instance {n : Nat} : Inhabited (DefaultFormula n) where
 def toList {n : Nat} (f : DefaultFormula n) : List (DefaultClause n) :=
   (f.clauses.toList.filterMap id) ++ (f.rupUnits.toList.map unit) ++ (f.ratUnits.toList.map unit)
 
-def ofArray_fold_fn : Array Assignment → Option (DefaultClause n) → Array Assignment := fun assignments cOpt =>
+def ofArray_fold_fn (assignments : Array Assignment) (cOpt : Option (DefaultClause n)) : Array Assignment :=
   match cOpt with
   | none => assignments
   | some c =>
@@ -77,17 +77,14 @@ def ofArray {n : Nat} (clauses : Array (Option (DefaultClause n))) : DefaultForm
   ⟨clauses, #[], #[], assignments⟩
 
 def insert {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) : DefaultFormula n :=
-  match f with
-  | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-    match isUnit c with
+  let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+  match isUnit c with
     | none => ⟨clauses.push c, rupUnits, ratUnits, assignments⟩
     | some (l, true) => ⟨clauses.push c, rupUnits, ratUnits, assignments.modify l addPosAssignment⟩
     | some (l, false) => ⟨clauses.push c, rupUnits, ratUnits, assignments.modify l addNegAssignment⟩
-
 def deleteOne {n : Nat} (f : DefaultFormula n) (id : Nat) : DefaultFormula n :=
-  match f with
-  | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-    match clauses[id]! with
+  let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+  match clauses[id]! with
     | none => ⟨clauses, rupUnits, ratUnits, assignments⟩
     | some ⟨[l], _, _⟩ => ⟨clauses.set! id none, rupUnits, ratUnits, assignments.modify l.1 (removeAssignment l.2)⟩
     | some _ => ⟨clauses.set! id none, rupUnits, ratUnits, assignments⟩
@@ -112,32 +109,28 @@ def insertUnit : Array (Literal (PosFin n)) × Array Assignment × Bool →
 
 /-- Returns an updated formula f and a bool which indicates whether a contradiction was found in the process of updating f -/
 def insertRupUnits {n : Nat} (f : DefaultFormula n) (ls : List (Literal (PosFin n))) : DefaultFormula n × Bool :=
-  match f with
-  | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-    let (rupUnits, assignments, foundContradiction) := ls.foldl insertUnit (rupUnits, assignments, false)
-    (⟨clauses, rupUnits, ratUnits, assignments⟩, foundContradiction)
+  let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+  let (rupUnits, assignments, foundContradiction) := ls.foldl insertUnit (rupUnits, assignments, false)
+  (⟨clauses, rupUnits, ratUnits, assignments⟩, foundContradiction)
 
 /-- Returns an updated formula f and a bool which indicates whether a contradiction was found in the process of updating f -/
 def insertRatUnits {n : Nat} (f : DefaultFormula n) (ls : List (Literal (PosFin n))) : DefaultFormula n × Bool :=
-  match f with
-  | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-    let (ratUnits, assignments, foundContradiction) := ls.foldl insertUnit (ratUnits, assignments, false)
-    (⟨clauses, rupUnits, ratUnits, assignments⟩, foundContradiction)
+  let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+  let (ratUnits, assignments, foundContradiction) := ls.foldl insertUnit (ratUnits, assignments, false)
+  (⟨clauses, rupUnits, ratUnits, assignments⟩, foundContradiction)
 
 def clearUnit : Array Assignment → Literal (PosFin n) → Array Assignment
   | assignments, (l, b) => assignments.modify l (removeAssignment b)
 
 def clearRupUnits {n : Nat} (f : DefaultFormula n) : DefaultFormula n :=
-  match f with
-  | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-    let assignments := rupUnits.foldl clearUnit assignments
-    ⟨clauses, #[], ratUnits, assignments⟩
+  let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+  let assignments := rupUnits.foldl clearUnit assignments
+  ⟨clauses, #[], ratUnits, assignments⟩
 
 def clearRatUnits {n : Nat} (f : DefaultFormula n) : DefaultFormula n :=
-  match f with
-  | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-    let assignments := ratUnits.foldl clearUnit assignments
-    ⟨clauses, rupUnits, #[], assignments⟩
+  let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+  let assignments := ratUnits.foldl clearUnit assignments
+  ⟨clauses, rupUnits, #[], assignments⟩
 
 /-- Reverts assignments to the array it was prior to adding derivedLits -/
 def restoreAssignments {n : Nat} (assignments : Array Assignment) (derivedLits : List (PosFin n × Bool)) :
@@ -174,10 +167,9 @@ def confirmRupHint {n : Nat} (clauses : Array (Option (DefaultClause n))) : Arra
     Note: This function assumes that any rupUnits and ratUnits corresponding to this rup check have already been added to f. -/
 def performRupCheck {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat) :
   DefaultFormula n × List (Literal (PosFin n)) × Bool × Bool :=
-  match f with
-  | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-    let (assignments, derivedLits, derivedEmpty, encounteredError) := rupHints.foldl (confirmRupHint clauses) (assignments, [], false, false)
-    (⟨clauses, rupUnits, ratUnits, assignments⟩, derivedLits, derivedEmpty, encounteredError)
+  let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+  let (assignments, derivedLits, derivedEmpty, encounteredError) := rupHints.foldl (confirmRupHint clauses) (assignments, [], false, false)
+  (⟨clauses, rupUnits, ratUnits, assignments⟩, derivedLits, derivedEmpty, encounteredError)
 
 /-- Attempts to verify that c can be added to f via unit propagation. If it can, it returns ((f.insert c), true). If it can't,
     it returns false as the second part of the tuple (and no guarantees are made about what formula is returned) -/
@@ -192,13 +184,12 @@ def performRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHin
     if encounteredError then (f, false)
     else if not derivedEmpty then (f, false)
     else -- derivedEmpty is true and encounteredError is false
-      match f with
-      | ⟨clauses, rupUnits, ratUnits, assignments⟩ =>
-        let assignments := restoreAssignments assignments derivedLits
-        -- assignments should now be the same as it was before the performRupCheck call
-        let f := clearRupUnits ⟨clauses, rupUnits, ratUnits, assignments⟩
-        -- f should now be the same as it was before insertRupUnits
-        (f.insert c, true)
+      let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
+      let assignments := restoreAssignments assignments derivedLits
+      -- assignments should now be the same as it was before the performRupCheck call
+      let f := clearRupUnits ⟨clauses, rupUnits, ratUnits, assignments⟩
+      -- f should now be the same as it was before insertRupUnits
+      (f.insert c, true)
 
 /-- Returns an array of indices corresponding to clauses that contain the negation of l -/
 def getRatClauseIndices {n : Nat} (clauses : Array (Option (DefaultClause n))) (l : Literal (PosFin n)) : Array Nat :=
