@@ -7,6 +7,7 @@ package LeanSAT {
   precompileModules := true
 }
 
+@[default_target]
 lean_lib LeanSAT
 
 @[default_target]
