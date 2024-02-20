@@ -12,13 +12,21 @@ inductive Result
   | success
   | out_of_proof
   | rup_failure
-deriving Inhabited, DecidableEq
+deriving Inhabited, DecidableEq, BEq
 
 instance : ToString Result where
   toString := fun
     | Result.success => "success"
     | Result.out_of_proof => "out of proof"
     | Result.rup_failure => "rup failure"
+
+instance : LawfulBEq Result where
+  eq_of_beq := by
+    intro a b h
+    cases a <;> cases b <;> first | rfl | cases h
+  rfl := by
+    intro a
+    cases a <;> decide
 
 open List Clause Formula Result Action Formula Literal
 

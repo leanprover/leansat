@@ -253,10 +253,13 @@ theorem php3_formula_unsat : lratChecker php3_formula php3_lrat_proof = success 
   have php3_formula_readyForRatAdd : readyForRatAdd php3_formula := ofArray_readyForRatAdd _
   exact lratCheckerSound php3_formula php3_formula_readyForRupAdd php3_formula_readyForRatAdd php3_lrat_proof php3_lrat_proof_wellFormed
 
-theorem php3 : lratChecker php3_formula php3_lrat_proof = success → ∃ x1 : pigeon, ∃ x2 : pigeon, x1 ≠ x2 ∧ (f x1) = (f x2) := by
+theorem php3 : lratChecker php3_formula php3_lrat_proof == success → ∃ x1 : pigeon, ∃ x2 : pigeon, x1 ≠ x2 ∧ (f x1) = (f x2) := by
   intro lratChecker_success
   apply php3_of_php3_formula_unsat
   apply php3_formula_unsat
+  apply eq_of_beq
   exact lratChecker_success
 
-#eval lratChecker php3_formula php3_lrat_proof  -- Outputs success
+theorem php3_ofReduceBool : ∃ x1 : pigeon, ∃ x2 : pigeon, x1 ≠ x2 ∧ (f x1) = (f x2) := by
+  apply php3
+  native_decide
