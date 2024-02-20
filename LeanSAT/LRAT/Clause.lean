@@ -111,7 +111,7 @@ def empty {n : Nat} : DefaultClause n :=
   have nodup := by simp only [List.nodup_nil]
   ⟨clause, nodupkey, nodup⟩
 
-theorem empty_eq {n : Nat} : toList (empty : DefaultClause n) = [] := by rfl
+theorem empty_eq {n : Nat} : toList (empty : DefaultClause n) = [] := rfl
 
 def unit {n : Nat} (l : Literal (PosFin n)) : DefaultClause n :=
   let clause := [l]
@@ -127,7 +127,7 @@ def unit {n : Nat} (l : Literal (PosFin n)) : DefaultClause n :=
   have nodup : List.Nodup clause:= by simp
   ⟨clause, nodupkey, nodup⟩
 
-theorem unit_eq {n : Nat} (l : Literal (PosFin n)) : toList (unit l) = [l] := by rfl
+theorem unit_eq {n : Nat} (l : Literal (PosFin n)) : toList (unit l) = [l] := rfl
 
 def isUnit {n : Nat} (c : DefaultClause n) : Option (Literal (PosFin n)) :=
   match c.clause with
@@ -146,7 +146,7 @@ theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
 
 def negate {n : Nat} (c : DefaultClause n) : List (Literal (PosFin n)) := c.clause.map negateLiteral
 
-theorem negate_iff {n : Nat} (c : DefaultClause n) : negate c = (toList c).map negateLiteral := by rfl
+theorem negate_iff {n : Nat} (c : DefaultClause n) : negate c = (toList c).map negateLiteral := rfl
 
 /-- Attempts to add the literal (idx, b) to clause c. Returns none if doing so would make c a tautology -/
 def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClause n) :=
@@ -230,7 +230,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
     split at heq
     . simp only at heq
     . next acc =>
-      specialize ih acc (by rfl)
+      specialize ih acc rfl
       rcases ih with ⟨hsize, ih⟩
       simp only at ih
       simp only [insert] at heq

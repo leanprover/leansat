@@ -140,7 +140,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
   . simp only [HSat.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe]
     apply Exists.intro i
     have ib_in_insertUnit_fold : (i, b) ∈ (List.foldl insertUnit (f.rupUnits, f.assignments, false) (negate c)).1.data := by
-      have i_rw : i = ⟨i.1, i.2⟩ := by rfl
+      have i_rw : i = ⟨i.1, i.2⟩ := rfl
       rw [i_rw, ← h1]
       apply List.get_mem
     have ib_in_insertUnit_fold := mem_insertUnit_fold_units f.rupUnits f.assignments false (negate c) (i, b) ib_in_insertUnit_fold
@@ -187,11 +187,11 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
       . simp only at h2
   . exfalso
     have i_true_in_insertUnit_fold : (i, true) ∈ (List.foldl insertUnit (f.rupUnits, f.assignments, false) (negate c)).1.data := by
-      have i_rw : i = ⟨i.1, i.2⟩ := by rfl
+      have i_rw : i = ⟨i.1, i.2⟩ := rfl
       rw [i_rw, ← h1]
       apply List.get_mem
     have i_false_in_insertUnit_fold : (i, false) ∈ (List.foldl insertUnit (f.rupUnits, f.assignments, false) (negate c)).1.data := by
-      have i_rw : i = ⟨i.1, i.2⟩ := by rfl
+      have i_rw : i = ⟨i.1, i.2⟩ := rfl
       rw [i_rw, ← h2]
       apply List.get_mem
     simp only [f_readyForRupAdd.1, negate, negateLiteral] at i_true_in_insertUnit_fold i_false_in_insertUnit_fold
@@ -249,7 +249,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
     by_cases b = b'
     . next b_eq_b' =>
       let j_unit := unit (insertRupUnits f units).1.rupUnits[j]
-      have j_unit_def : j_unit = unit (insertRupUnits f units).1.rupUnits[j] := by rfl
+      have j_unit_def : j_unit = unit (insertRupUnits f units).1.rupUnits[j] := rfl
       have j_unit_in_insertRupUnits_res :
         ∃ i : PosFin n,
           (i, false) ∈ (insertRupUnits f units).1.rupUnits.data ∧ unit (i, false) = j_unit ∨
@@ -302,7 +302,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
         cases b <;> cases b' <;> simp at *
       rw [has_iff_has_of_add_complement, ← b'_def, hb]
   . let j1_unit := unit (insertRupUnits f units).1.rupUnits[j1]
-    have j1_unit_def : j1_unit = unit (insertRupUnits f units).1.rupUnits[j1] := by rfl
+    have j1_unit_def : j1_unit = unit (insertRupUnits f units).1.rupUnits[j1] := rfl
     have j1_unit_in_insertRupUnits_res :
       ∃ i : PosFin n,
         (i, false) ∈ (insertRupUnits f units).1.rupUnits.data ∧ unit (i, false) = j1_unit ∨
@@ -319,7 +319,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
         apply Array.getElem_mem_data
       . rfl
     let j2_unit := unit (insertRupUnits f units).1.rupUnits[j2]
-    have j2_unit_def : j2_unit = unit (insertRupUnits f units).1.rupUnits[j2] := by rfl
+    have j2_unit_def : j2_unit = unit (insertRupUnits f units).1.rupUnits[j2] := rfl
     have j2_unit_in_insertRupUnits_res :
       ∃ i : PosFin n,
         (i, false) ∈ (insertRupUnits f units).1.rupUnits.data ∧ unit (i, false) = j2_unit ∨
@@ -362,7 +362,7 @@ theorem encounteredBoth_entails_unsat {n : Nat} (c : DefaultClause n) (assignmen
     rw [reduce_fold_fn] at h
     split at h <;>
       [
-        exact ih (by rfl);
+        exact ih rfl;
         skip;
         skip;
         simp only at h
@@ -400,7 +400,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
         . exact False.elim h
         . next c_arr_idx_eq_false =>
           simp only [Bool.not_eq_true] at c_arr_idx_eq_false
-          rcases ih.1 (by rfl) p with ih1 | ih1
+          rcases ih.1 rfl p with ih1 | ih1
           . by_cases p ⊨ assignment
             . next p_entails_assignment =>
               apply Or.inl
@@ -419,7 +419,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
         . exact False.elim h
         . next c_arr_idx_eq_false =>
           simp only [Bool.not_eq_true', Bool.not_eq_false] at c_arr_idx_eq_false
-          rcases ih.1 (by rfl) p with ih1 | ih1
+          rcases ih.1 rfl p with ih1 | ih1
           . by_cases p ⊨ assignment
             . next p_entails_assignment =>
               apply Or.inl
@@ -484,7 +484,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
         rw [← h]
         rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ j_lt_idx_add_one with j_lt_idx | j_eq_idx
         . exfalso
-          rcases ih.1 (by rfl) p with ih1 | ih1
+          rcases ih.1 rfl p with ih1 | ih1
           . exact ih1 j j_lt_idx p_entails_c_arr_j
           . exact ih1 hp
         . simp only [j_eq_idx] at p_entails_c_arr_j
@@ -501,7 +501,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
           . rw [← h]
             have ih2_precondition : ∃ i : Fin c_arr.size, i.val < idx.val ∧ (p ⊨ c_arr[i]) :=
               (Exists.intro j ∘ And.intro j_lt_idx) p_entails_c_arr_j
-            exact ih.2 l (by rfl) p hp ih2_precondition
+            exact ih.2 l rfl p hp ih2_precondition
           . simp only [j_eq_idx, HSat.eval, Literal.instHSatLiteral, c_arr_idx_eq_false] at p_entails_c_arr_j
             simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at hp
             specialize hp c_arr[idx.1].1
@@ -516,7 +516,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
           . rw [← h]
             have ih2_precondition : ∃ i : Fin c_arr.size, i.val < idx.val ∧ (p ⊨ c_arr[i]) :=
               (Exists.intro j ∘ And.intro j_lt_idx) p_entails_c_arr_j
-            exact ih.2 l (by rfl) p hp ih2_precondition
+            exact ih.2 l rfl p hp ih2_precondition
           . simp only [j_eq_idx, HSat.eval, Literal.instHSatLiteral, c_arr_idx_eq_true] at p_entails_c_arr_j
             simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at hp
             specialize hp c_arr[idx.1].1
@@ -529,7 +529,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
     (reduce c assignment = reducedToEmpty → incompatible (PosFin n) c assignment) ∧
     (∀ l : Literal (PosFin n), reduce c assignment = reducedToUnit l → ∀ (p : (PosFin n) → Bool), p ⊨ assignment → p ⊨ c → p ⊨ l) := by
   let c_arr := Array.mk c.clause
-  have c_clause_rw : c.clause = c_arr.data := by rfl
+  have c_clause_rw : c.clause = c_arr.data := rfl
   rw [reduce, c_clause_rw, ← Array.foldl_eq_foldl_data]
   let motive := reduce_postcondition_induction_motive c_arr assignment
   have h_base : motive 0 reducedToEmpty := by

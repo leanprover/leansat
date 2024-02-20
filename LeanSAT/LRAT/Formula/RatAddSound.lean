@@ -84,7 +84,7 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
     by_cases b = b'
     . next b_eq_b' =>
       let j_unit := unit (insertRatUnits f units).1.ratUnits[j]
-      have j_unit_def : j_unit = unit (insertRatUnits f units).1.ratUnits[j] := by rfl
+      have j_unit_def : j_unit = unit (insertRatUnits f units).1.ratUnits[j] := rfl
       have j_unit_in_insertRatUnits_res :
         ∃ i : PosFin n,
           (i, false) ∈ (insertRatUnits f units).1.ratUnits.data ∧ unit (i, false) = j_unit ∨
@@ -132,7 +132,7 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       have b'_def : b' = (decide ¬b = true) := by cases b <;> cases b' <;> simp at *
       rw [has_iff_has_of_add_complement, ← b'_def, hb]
   . let j1_unit := unit (insertRatUnits f units).1.ratUnits[j1]
-    have j1_unit_def : j1_unit = unit (insertRatUnits f units).1.ratUnits[j1] := by rfl
+    have j1_unit_def : j1_unit = unit (insertRatUnits f units).1.ratUnits[j1] := rfl
     have j1_unit_in_insertRatUnits_res :
       ∃ i : PosFin n,
         (i, false) ∈ (insertRatUnits f units).1.ratUnits.data ∧ unit (i, false) = j1_unit ∨
@@ -149,7 +149,7 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
         apply Array.getElem_mem_data
       . rfl
     let j2_unit := unit (insertRatUnits f units).1.ratUnits[j2]
-    have j2_unit_def : j2_unit = unit (insertRatUnits f units).1.ratUnits[j2] := by rfl
+    have j2_unit_def : j2_unit = unit (insertRatUnits f units).1.ratUnits[j2] := rfl
     have j2_unit_in_insertRatUnits_res :
       ∃ i : PosFin n,
         (i, false) ∈ (insertRatUnits f units).1.ratUnits.data ∧ unit (i, false) = j2_unit ∨
@@ -252,7 +252,7 @@ theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits
     simp only [getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
     apply Or.inl
     intro j
-    simp only [hf.1, Array.size_toArray, List.length_nil] at j
+    rw [hf.1] at j
     exact Fin.elim0 j
   have insertUnit_fold_satisfies_invariant := insertUnit_fold_preserves_invariant f.assignments hf.2.1 f.ratUnits
     f.assignments hf.2.1 false (negate c) h0
@@ -269,7 +269,7 @@ theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits
   . simp only [HSat.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe]
     apply Exists.intro i
     have ib_in_insertUnit_fold : (i, b) ∈ (List.foldl insertUnit (f.ratUnits, f.assignments, false) (negate c)).1.data := by
-      have i_rw : i = ⟨i.1, i.2⟩ := by rfl
+      have i_rw : i = ⟨i.1, i.2⟩ := rfl
       rw [i_rw, ← h1]
       apply List.get_mem
     have ib_in_insertUnit_fold := mem_insertUnit_fold_units f.ratUnits f.assignments false (negate c) (i, b) ib_in_insertUnit_fold
@@ -314,11 +314,11 @@ theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits
       . simp only at h2
   . exfalso
     have i_true_in_insertUnit_fold : (i, true) ∈ (List.foldl insertUnit (f.ratUnits, f.assignments, false) (negate c)).1.data := by
-      have i_rw : i = ⟨i.1, i.2⟩ := by rfl
+      have i_rw : i = ⟨i.1, i.2⟩ := rfl
       rw [i_rw, ← h1]
       apply List.get_mem
     have i_false_in_insertUnit_fold : (i, false) ∈ (List.foldl insertUnit (f.ratUnits, f.assignments, false) (negate c)).1.data := by
-      have i_rw : i = ⟨i.1, i.2⟩ := by rfl
+      have i_rw : i = ⟨i.1, i.2⟩ := rfl
       rw [i_rw, ← h2]
       apply List.get_mem
     simp only [hf.1, negate, negateLiteral] at i_true_in_insertUnit_fold i_false_in_insertUnit_fold
@@ -411,7 +411,7 @@ theorem performRatCheck_success_entails_c_without_negPivot {n : Nat} (f : Defaul
         Bool.decide_coe, List.all_eq_true] at pfc
       have c_negPivot_in_fc : (DefaultClause.delete c negPivot) ∈ toList (insert f (DefaultClause.delete c negPivot)) := by
         rw [insert_iff]
-        exact Or.inl (by rfl)
+        exact Or.inl rfl
       exact of_decide_eq_true $ pfc (DefaultClause.delete c negPivot) c_negPivot_in_fc
 
 theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_readyForRatAdd : readyForRatAdd f)
@@ -434,7 +434,7 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   have h : i.1 ∈ (ratHints.map (fun x => x.1)).data := by
     rw [← of_decide_eq_true ratHintsExhaustive_eq_true]
     have i_eq_range_i : i.1 = (Array.range f.clauses.size)[i.1]'i_in_bounds := by
-      have f_clauses_rw : f.clauses = { data := f.clauses.data } := by rfl
+      have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
       rw [Array.range_idx]
       conv => rhs; rw [f_clauses_rw, Array.size]
       exact i.2
@@ -470,7 +470,7 @@ theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : D
   let fold_fn (acc : DefaultFormula n × Bool) (ratHint : Nat × Array Nat) :=
     if acc.2 = true then performRatCheck acc.1 p ratHint else (acc.1, false)
   have fold_fn_def (acc : DefaultFormula n × Bool) (ratHint : Nat × Array Nat) :
-    fold_fn acc ratHint = if acc.2 = true then performRatCheck acc.1 p ratHint else (acc.1, false) := by rfl
+    fold_fn acc ratHint = if acc.2 = true then performRatCheck acc.1 p ratHint else (acc.1, false) := rfl
   have h_inductive (idx : Fin ratHints.size) (acc : DefaultFormula n × Bool) (ih : motive idx.1 acc) :
     motive (idx.1 + 1) (fold_fn acc ratHints[idx]) := by
     constructor
@@ -526,7 +526,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
         exact pc' $ pf c' c'_in_f
     . rw [← Clause.limplies_iff_mem] at pivot_in_c
       let p' : (PosFin n) → Bool := fun a => if a = pivot.1 then pivot.2 else p a
-      have p'_rw : p' = (fun a => if a = pivot.1 then pivot.2 else p a) := by rfl
+      have p'_rw : p' = (fun a => if a = pivot.1 then pivot.2 else p a) := rfl
       have p'_entails_c : p' ⊨ c := by
         specialize pivot_in_c p'
         simp only [instHSatLiteral._eq_1, HSat.eval._eq_1, ite_eq_left_iff, not_true, false_implies, forall_const] at pivot_in_c

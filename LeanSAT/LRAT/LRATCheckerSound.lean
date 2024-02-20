@@ -13,17 +13,17 @@ theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f 
   let f' := (performRupAdd f empty rupHints).1
   have f'_def := rupAdd_result f empty rupHints f' f_readyForRupAdd
   rw [← rupAddSuccess] at f'_def
-  specialize f'_def (by rfl)
+  specialize f'_def rfl
   have f_liff_f' := rupAdd_sound f empty rupHints f' f_readyForRupAdd
   rw [← rupAddSuccess] at f_liff_f'
-  specialize f_liff_f' (by rfl)
+  specialize f_liff_f' rfl
   rw [f'_def] at f_liff_f'
   intro p pf
   specialize f_liff_f' p
   rw [f_liff_f', sat_iff_forall] at pf
   have empty_in_f' : empty ∈ toList (Formula.insert f empty) := by
     rw [Formula.insert_iff]
-    exact Or.inl (by rfl)
+    exact Or.inl rfl
   specialize pf empty empty_in_f'
   simp only [HSat.eval, Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool,
     empty_eq, List.any_nil] at pf
