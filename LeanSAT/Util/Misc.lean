@@ -71,11 +71,7 @@ theorem Bool.of_decide_iff {p : Prop} [Decidable p] : decide p ↔ p := Bool.coe
 
 theorem Bool.eq_not_iff : ∀ {a b : Bool}, a = !b ↔ a ≠ b := by
   intro a b
-  match a, b with
-  | true, true => decide
-  | true, false => decide
-  | false, true => decide
-  | false, false => decide
+  cases a <;> cases b <;> decide
 
 @[simp]
 theorem Prod.mk.eta : ∀ {p : α × β}, (p.1, p.2) = p
@@ -124,11 +120,10 @@ theorem List.Nodup.erase_eq_filter [BEq α] [LawfulBEq α] {l} (d : Nodup l) (a 
       apply Eq.symm
       rw [filter_eq_self]
       simpa [@eq_comm α] using m
-    · simp [beq_false_of_ne h, erase_cons_tail _ , filter_cons_of_pos, IH, h]
+    · simp [beq_false_of_ne h, IH, h]
 
 theorem List.Nodup.mem_erase_iff [BEq α] [LawfulBEq α] {a : α} (d : Nodup l) : a ∈ l.erase b ↔ a != b ∧ a ∈ l := by
   rw [List.Nodup.erase_eq_filter d, mem_filter, and_comm]
-
 
 theorem List.Nodup.not_mem_erase [BEq α] [LawfulBEq α] {a : α} (h : Nodup l) : a ∉ l.erase a := fun H => by
   have h := ((List.Nodup.mem_erase_iff h).mp H).left
@@ -144,7 +139,7 @@ def List.Pairwise_iff.{u_1} {α : Type u_1} (R : α → α → Prop) (l : List �
   l = [] ∨ Exists fun {a} => Exists fun {l'} => (∀ (a' : α), a' ∈ l' → R a a') ∧
     List.Pairwise R l' ∧ l = a :: l' := by
   induction l with
-  | nil => simp only [List.Pairwise.nil, and_false, exists_false, or_false]
+  | nil => simp
   | cons hd tl _ =>
     simp only [List.pairwise_cons, List.cons.injEq, false_or]
     constructor
@@ -164,8 +159,8 @@ theorem List.Pairwise.imp_of_mem {R S : α → α → Prop} {l : List α}
   | @cons a l r _ ih =>
     constructor
     · intro a' a'_in_l
-      have a_in_al : a ∈ a :: l := by simp only [List.find?, List.mem_cons, true_or]
-      have a'_in_al : a' ∈ a :: l := by simp only [List.find?, List.mem_cons, a'_in_l, or_true]
+      have a_in_al : a ∈ a :: l := by simp
+      have a'_in_al : a' ∈ a :: l := by simp [a'_in_l]
       exact H a_in_al a'_in_al (r a' a'_in_l)
     · exact ih fun {a b} m m' => H (List.mem_cons_of_mem _ m) (List.mem_cons_of_mem _ m')
 
