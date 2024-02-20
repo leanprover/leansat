@@ -70,173 +70,173 @@ theorem php3_of_php3_formula_unsat : unsatisfiable (PosFin 13) php3_formula → 
       List.mem_cons, Prod.mk.injEq, and_false, List.mem_singleton, or_self, Bool.not_eq_true, false_implies, and_true, true_and,
       forall_eq_or_imp, decide_eq_false_iff_not, forall_eq, List.mem_nil_iff] at php3_unsat
     cases hfp1 : f p1
-    repeat {simp only [hfp1, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
+    repeat {simp (config := { decide := true }) only [hfp1, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c2Nodup c (Eq.symm hc)
     simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10 ,v11, v12, Array.toList_eq, Array.data_toArray, List.find?,
       List.mem_cons, Prod.mk.injEq, and_false, List.mem_singleton, or_self, Bool.not_eq_true, false_implies, and_true, true_and,
       forall_eq_or_imp, decide_eq_false_iff_not, forall_eq, List.mem_nil_iff] at php3_unsat
     cases hfp2 : f p2
-    repeat {simp only [hfp2, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
+    repeat {simp (config := { decide := true }) only [hfp2, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c3Nodup c (Eq.symm hc)
     simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10 ,v11, v12, Array.toList_eq, Array.data_toArray, List.find?,
       List.mem_cons, Prod.mk.injEq, and_false, List.mem_singleton, or_self, Bool.not_eq_true, false_implies, and_true, true_and,
       forall_eq_or_imp, decide_eq_false_iff_not, forall_eq, List.mem_nil_iff] at php3_unsat
     cases hfp3 : f p3
-    repeat {simp only [hfp3, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
+    repeat {simp (config := { decide := true }) only [hfp3, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c4Nodup c (Eq.symm hc)
     simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10 ,v11, v12, Array.toList_eq, Array.data_toArray, List.find?,
       List.mem_cons, Prod.mk.injEq, and_false, List.mem_singleton, or_self, Bool.not_eq_true, false_implies, and_true, true_and,
       forall_eq_or_imp, decide_eq_false_iff_not, forall_eq, List.mem_nil_iff] at php3_unsat
     cases hfp4 : f p4
-    repeat {simp only [hfp4, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
+    repeat {simp (config := { decide := true }) only [hfp4, not_true, not_false_eq_true, implies_true, and_self, and_true] at php3_unsat}
 
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c5Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p2 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c6Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p3 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c7Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c8Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p2 p3 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c9Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p2 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c10Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p3 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
 
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c11Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p2 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c12Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p3 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c13Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c14Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p2 p3 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c15Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p2 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c16Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p3 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
 
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c17Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p2 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c18Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p3 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c19Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p1 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | c_in_php3_formula
   . have hc' := Clause.ofArray_eq _ c20Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p2 p3 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   rcases c_in_php3_formula with hc | hc
   . have hc' := Clause.ofArray_eq _ c21Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p2 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
   . have hc' := Clause.ofArray_eq _ c22Nodup c (Eq.symm hc)
-    simp only [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
+    simp [hc', v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, Array.toList_eq, Array.data_toArray, List.find?, List.mem_cons,
       Prod.mk.injEq, and_true, List.mem_singleton, Bool.not_eq_true, and_false, or_self, false_implies, forall_eq_or_imp,
       decide_eq_false_iff_not, decide_not, Bool.not_eq_false', decide_eq_true_eq, forall_eq, List.mem_nil_iff] at php3_unsat
     specialize h p3 p4 (by simp only [not_false_eq_true])
-    rw [php3_unsat.1, php3_unsat.2.1] at h
+    rw [php3_unsat.1, php3_unsat.2] at h
     exact h rfl
 
 def php3_lrat_proof := certified_php3_lrat_proof.map Subtype.val
