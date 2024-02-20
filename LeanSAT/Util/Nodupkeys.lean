@@ -21,8 +21,8 @@ theorem nodupkeys_eq_of_fst_eq {l : List (α × β)} (nd : l.Nodupkeys)
   {s s' : α × β} (h : s ∈ l) (h' : s' ∈ l) : s.1 = s'.1 → s = s' := by
   intro keys_eq
   have goal_rw : (s = s') = (s.1 = s'.1 ∧ s.2 = s'.2) := by
-    have s_rw : s = (s.1, s.2) := by rfl
-    have s'_rw : s' = (s'.1, s'.2) := by rfl
+    have s_rw : s = (s.1, s.2) := rfl
+    have s'_rw : s' = (s'.1, s'.2) := rfl
     rw [s_rw, s'_rw]
     simp only [Prod.mk.injEq]
   rw [goal_rw]

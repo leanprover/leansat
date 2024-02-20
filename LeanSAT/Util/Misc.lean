@@ -146,7 +146,7 @@ def List.Pairwise_iff.{u_1} {α : Type u_1} (R : α → α → Prop) (l : List �
     . intro h
       apply Exists.intro hd
       apply Exists.intro tl
-      exact ⟨h.1, h.2, by rfl, by rfl⟩
+      exact ⟨h.1, h.2, rfl, rfl⟩
     . intro h
       rcases h with ⟨a, l', h1, h2, h3, h4⟩
       rw [h3, h4]
@@ -402,7 +402,7 @@ theorem Array.mem_filter {a : Array α} {p : α → Bool} :
     intro i i_in_bounds i_lt_zero
     exact False.elim $ Nat.not_lt_zero i i_lt_zero
   let f := (fun acc x => if p x = true then Array.push acc x else acc)
-  have f_def : f = (fun acc x => if p x = true then Array.push acc x else acc) := by rfl
+  have f_def : f = (fun acc x => if p x = true then Array.push acc x else acc) := rfl
   have h_inductive (idx : Fin a.size) (acc : Array α) (ih : motive idx.1 acc) : motive (idx.1 + 1) (f acc a[idx]) := by
     intro i i_in_bounds i_lt_idx_add_one
     rw [f_def]

@@ -95,8 +95,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
         let mostRecentUnitIdx : Fin (insertUnit (units, assignments, foundContradiction) l).1.size :=
           ⟨units.size, units_size_lt_updatedUnits_size⟩
         have i_gt_zero : i.1 > 0 := by rw [i_eq_l]; exact l.1.2.1
-        apply Exists.intro mostRecentUnitIdx ∘ Exists.intro l.2
-        apply Exists.intro i_gt_zero
+        refine ⟨mostRecentUnitIdx, l.2, i_gt_zero, ?_⟩
         simp only [insertUnit, h3, Prod.mk.eta, ite_false, Array.get_push_eq, i_eq_l]
         constructor
         . conv => lhs; rw [← @Prod.mk.eta (PosFin n) Bool l]
@@ -139,10 +138,9 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
       have j_lt_updatedUnits_size : j.1 < (insertUnit (units, assignments, foundContradiction) l).1.size := by
         simp only [insertUnit, h5, Prod.mk.eta, ite_true]
         exact j.2
-      apply Exists.intro ⟨j.1, j_lt_updatedUnits_size⟩
-      apply Exists.intro b ∘ Exists.intro i_gt_zero
+      refine ⟨⟨j.1, j_lt_updatedUnits_size⟩, b,i_gt_zero, ?_⟩
       simp only [insertUnit, h5, Prod.mk.eta, ite_true]
-      apply And.intro h1 ∘ And.intro h2 ∘ And.intro h3
+      refine ⟨h1,h2,h3,?_⟩
       intro k k_ne_j
       have k_size : k.1 < units.size := by
         have k_property := k.2
@@ -174,8 +172,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
           rw [hl, ← i_eq_l, assignments_i_rw, h2] at h5
           exact h5 (has_of_add _ true)
         | true, false =>
-          apply Exists.intro ⟨j.1, j_lt_updatedUnits_size⟩
-          apply Exists.intro mostRecentUnitIdx ∘ Exists.intro i_gt_zero
+          refine ⟨⟨j.1, j_lt_updatedUnits_size⟩, mostRecentUnitIdx, i_gt_zero, ?_⟩
           simp only [insertUnit, h5, Prod.mk.eta, ite_false, Array.get_push_eq, ne_eq]
           constructor
           . rw [Array.get_push_lt units l j.1 j.2, h1]
@@ -208,13 +205,12 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                   . exfalso
                     have k_property := k.2
                     simp only [insertUnit, h5, Prod.mk.eta, ite_false, Array.size_push] at k_property
-                    rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
+                    rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
                     . exact h k_lt_units_size
                     . simp only [← k_eq_units_size, not_true] at k_ne_l
                       exact k_ne_l rfl
         | false, true =>
-          apply Exists.intro mostRecentUnitIdx ∘ Exists.intro ⟨j.1, j_lt_updatedUnits_size⟩
-          apply Exists.intro i_gt_zero
+          refine ⟨mostRecentUnitIdx, ⟨j.1, j_lt_updatedUnits_size⟩, i_gt_zero, ?_⟩
           simp only [insertUnit, h5, Prod.mk.eta, ite_false, Array.get_push_eq, ne_eq]
           constructor
           . simp only [i_eq_l, ← hl]
@@ -261,8 +257,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
         have j_lt_updatedUnits_size : j.1 < (insertUnit (units, assignments, foundContradiction) l).1.size := by
           simp only [insertUnit, h5, Prod.mk.eta, ite_false, Array.size_push]
           exact Nat.lt_trans j.2 (Nat.lt_succ_self units.size)
-        apply Exists.intro ⟨j.1, j_lt_updatedUnits_size⟩
-        apply Exists.intro b ∘ Exists.intro i_gt_zero
+        refine ⟨⟨j.1, j_lt_updatedUnits_size⟩, b,i_gt_zero, ?_⟩
         simp only [insertUnit, h5, Prod.mk.eta, ite_false]
         constructor
         . rw [Array.get_push_lt units l j.1 j.2, h1]
@@ -293,9 +288,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
       . exact j2.2
       . simp only [Array.size_push]
         exact Nat.lt_trans j2.2 (Nat.lt_succ_self units.size)
-    apply Or.inr ∘ Or.inr ∘ Exists.intro ⟨j1.1, j1_lt_updatedUnits_size⟩
-    apply Exists.intro ⟨j2.1, j2_lt_updatedUnits_size⟩
-    apply Exists.intro i_gt_zero
+    refine Or.inr <| Or.inr <| ⟨⟨j1.1, j1_lt_updatedUnits_size⟩, ⟨j2.1, j2_lt_updatedUnits_size⟩, i_gt_zero, ?_⟩
     simp only [insertUnit, Prod.mk.eta]
     constructor
     . split
@@ -470,7 +463,7 @@ theorem clearUnit_preserves_size (assignments : Array Assignment) (l : Literal (
 theorem clearUnit_foldl_preserves_size {α : Type u} (assignments : Array Assignment) (f : Array Assignment → α → Array Assignment)
   (f_preserves_size : ∀ arr : Array Assignment, ∀ a : α, (f arr a).size = arr.size) (l : List α) :
   Array.size (List.foldl f assignments l) = Array.size assignments := by
-  have hb : assignments.size = assignments.size := by rfl
+  have hb : assignments.size = assignments.size := rfl
   have hl (assignments' : Array Assignment) (hsize : assignments'.size = assignments.size) (a : α) (_ : a ∈ l) :
     (f assignments' a).size = assignments.size := by rw [f_preserves_size assignments' a, hsize]
   exact List.foldlRecOn l f assignments hb hl
@@ -478,9 +471,7 @@ theorem clearUnit_foldl_preserves_size {α : Type u} (assignments : Array Assign
 def clear_insert_induction_motive {n : Nat} (f : DefaultFormula n) (assignments_size : f.assignments.size = n)
   (units : Array (Literal (PosFin n))) : Nat → Array Assignment → Prop :=
   fun idx assignments => ∃ hsize : assignments.size = n, ∀ i : Fin n,
-    have i_lt_assignments_size : i.1 < assignments.size := by
-      rw [hsize]
-      exact i.2
+    have i_lt_assignments_size : i.1 < assignments.size := hsize ▸ i.2
     have i_lt_f_assignments_size : i.1 < f.assignments.size := by
       rw [assignments_size]
       exact i.2
@@ -554,11 +545,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
           exact Nat.not_succ_le_self j.val k_ge_idx_add_one
         exact ih4 k k_ge_idx k_ne_j
     . next idx_ne_j =>
-      apply Or.inr
-      apply Or.inl
-      apply Exists.intro j
-      apply Exists.intro b
-      apply Exists.intro i_gt_zero
+      refine Or.inr <| Or.inl <| ⟨j,b,i_gt_zero,?_⟩
       constructor
       . rw [← Nat.succ_eq_add_one]
         apply Nat.succ_le_of_lt ∘ Nat.lt_of_le_of_ne j_ge_idx
@@ -585,11 +572,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
         rw [idx_eq_j1]
         intro j1_eq_j2
         simp only [j1_eq_j2, ih2, Prod.mk.injEq, and_false] at ih1
-      apply Or.inr
-      apply Or.inl
-      apply Exists.intro j2
-      apply Exists.intro false
-      apply Exists.intro i_gt_zero
+      refine Or.inr <| Or.inl <| ⟨j2, false, i_gt_zero, ?_⟩
       constructor
       . apply Nat.le_of_lt_succ
         rw [← Nat.succ_eq_add_one]
@@ -601,7 +584,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
           exact ih2
         . constructor
           . simp only [clearUnit, idx_eq_j1, Array.get_eq_getElem, ih1]
-            have i_in_bounds : i.1 < assignments.size := by rw [hsize]; exact i.2
+            have i_in_bounds : i.1 < assignments.size := hsize ▸ i.2
             rw [Array.get_modify_at_idx i_in_bounds, ih3, ih4]
             decide
           . constructor
@@ -617,20 +600,16 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                   exact Nat.lt_irrefl idx.1 $ Nat.lt_of_succ_le k_ge_idx_add_one
                 have h3 := units_nodup k j1 k_ne_j1
                 simp only [getElem_fin, ih1, ← h1, ← h2, ne_eq] at h3
-                exact h3 (by rfl)
+                exact h3 rfl
               . next h2 =>
                 have h3 := units_nodup k j2 k_ne_j2
                 simp only [Bool.not_eq_true] at h2
                 simp only [getElem_fin, ih2, ← h1, ← h2, ne_eq] at h3
-                exact h3 (by rfl)
+                exact h3 rfl
     . next idx_ne_j1 =>
       by_cases idx = j2
       . next idx_eq_j2 =>
-        apply Or.inr
-        apply Or.inl
-        apply Exists.intro j1
-        apply Exists.intro true
-        apply Exists.intro i_gt_zero
+        refine Or.inr <| Or.inl <| ⟨j1, true, i_gt_zero, ?_⟩
         constructor
         . apply Nat.le_of_lt_succ
           rw [← Nat.succ_eq_add_one]
@@ -642,7 +621,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
             exact ih1
           . constructor
             . simp only [clearUnit, idx_eq_j2, Array.get_eq_getElem, ih2]
-              have i_in_bounds : i.1 < assignments.size := by rw [hsize]; exact i.2
+              have i_in_bounds : i.1 < assignments.size := hsize ▸ i.2
               rw [Array.get_modify_at_idx i_in_bounds, ih3, ih4]
               decide
             . constructor
@@ -654,7 +633,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                 . next h2 =>
                   have h3 := units_nodup k j1 k_ne_j1
                   simp only [getElem_fin, ih1, ← h1, ← h2, ne_eq] at h3
-                  exact h3 (by rfl)
+                  exact h3 rfl
                 . next h2 =>
                   have k_ne_j2 : k ≠ j2 := by
                     rw [← idx_eq_j2]
@@ -664,10 +643,9 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                   have h3 := units_nodup k j2 k_ne_j2
                   simp only [Bool.not_eq_true] at h2
                   simp only [getElem_fin, ih2, ← h1, ← h2, ne_eq] at h3
-                  exact h3 (by rfl)
+                  exact h3 rfl
       . next idx_ne_j2 =>
-        apply Or.inr ∘ Or.inr ∘ Exists.intro j1 ∘ Exists.intro j2
-        apply Exists.intro i_gt_zero
+        refine Or.inr <| Or.inr <| ⟨j1, j2,i_gt_zero, ?_⟩
         constructor
         . apply Nat.le_of_lt_succ
           rw [← Nat.succ_eq_add_one]
@@ -694,16 +672,15 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                     . next h2 =>
                       have h3 := units_nodup idx j1 idx_ne_j1
                       simp only [getElem_fin, ih1, ← h1, ← h2, ne_eq] at h3
-                      exact h3 (by rfl)
+                      exact h3 rfl
                     . next h2 =>
                       have h3 := units_nodup idx j2 idx_ne_j2
                       simp only [Bool.not_eq_true] at h2
                       simp only [getElem_fin, ih2, ← h1, ← h2, ne_eq] at h3
-                      exact h3 (by rfl)
+                      exact h3 rfl
                   have idx_unit_in_bounds : units[idx.1].1.1 < assignments.size := by
                     rw [hsize]; exact units[idx.1].1.2.2
-                  have i_in_bounds : i.1 < assignments.size := by
-                    rw [hsize]; exact i.2
+                  have i_in_bounds : i.1 < assignments.size := hsize ▸ i.2
                   rw [Array.get_modify_unchanged idx_unit_in_bounds i_in_bounds _ idx_res_ne_i]
                   exact ih3
                 . constructor
@@ -731,14 +708,9 @@ theorem clear_insertRup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : rea
     . intro i hi1 hi2
       have i_lt_n : i < n := by rw [← f_readyForRupAdd.2.1]; exact hi2
       specialize h ⟨i, i_lt_n⟩
-      rcases h with h | h | h
-      . exact h.1
-      . exfalso
-        rcases h with ⟨j, b, i_gt_zero, j_size, _⟩
-        exact Nat.not_lt_of_le j_size j.2
-      . exfalso
-        rcases h with ⟨j1, j2, i_gt_zero, j1_size, _⟩
-        exact Nat.not_lt_of_le j1_size j1.2
+      rcases h with ⟨h,_⟩
+      . exact h
+      . omega
 
 theorem performRupCheck_preserves_clauses {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat) :
     (performRupCheck f rupHints).1.clauses = f.clauses := by
@@ -756,24 +728,16 @@ theorem confirmRupHint_preserves_assignments_size {n : Nat} (clauses : Array (Op
   (assignments : Array Assignment) (derivedLits : List (Literal (PosFin n))) (b1 b2 : Bool) (id : Nat) :
   (confirmRupHint clauses (assignments, derivedLits, b1, b2) id).1.size = assignments.size := by
   simp only [confirmRupHint]
-  split
-  . rfl
-  . split
-    . split
-      . rfl
-      . rfl
-      . split
-        . rfl
-        . simp only [Array.modify_preserves_size]
-      . rfl
-    . rfl
-    . rfl
+  repeat first
+    | rfl
+    | simp only [Array.modify_preserves_size]
+    | split
 
 theorem performRupCheck_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat) :
     (performRupCheck f rupHints).1.assignments.size = f.assignments.size := by
   simp only [performRupCheck, Prod.mk.eta]
   rw [Array.foldl_eq_foldl_data]
-  have hb : (f.assignments, ([] : List (Literal (PosFin n))), false, false).1.size = f.assignments.size := by rfl
+  have hb : (f.assignments, ([] : List (Literal (PosFin n))), false, false).1.size = f.assignments.size := rfl
   have hl (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) (hsize : acc.1.size = f.assignments.size)
     (id : Nat) (_ : id ∈ rupHints.data) : (confirmRupHint f.clauses acc id).1.size = f.assignments.size := by
     have h := confirmRupHint_preserves_assignments_size f.clauses acc.1 acc.2.1 acc.2.2.1 acc.2.2.2 id
@@ -784,9 +748,7 @@ theorem performRupCheck_preserves_assignments_size {n : Nat} (f : DefaultFormula
 def derivedLits_invariant {n : Nat} (f : DefaultFormula n) (fassignments_size : f.assignments.size = n)
   (assignments : Array Assignment) (assignments_size : assignments.size = n) (derivedLits : List (Literal (PosFin n))) : Prop :=
   ∀ i : Fin n,
-    have i_lt_assignments_size : i.1 < assignments.size := by
-      rw [assignments_size]
-      exact i.2
+    have i_lt_assignments_size : i.1 < assignments.size := assignments_size ▸ i.2
     have i_lt_f_assignments_size : i.1 < f.assignments.size := by
       rw [fassignments_size]
       exact i.2
@@ -921,8 +883,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
           have l'_ne_false : l'.2 ≠ false := Ne.symm l_ne_l'
           simp only [ne_eq, Bool.not_eq_false] at l'_ne_false
           exact l'_ne_false
-        apply Exists.intro ⟨j.1 + 1, j_succ_in_bounds⟩
-        apply Exists.intro ⟨0, zero_in_bounds⟩
+        refine ⟨⟨j.1 + 1, j_succ_in_bounds⟩, ⟨0, zero_in_bounds⟩, ?_⟩
         constructor
         . simp only [List.get, Nat.add_eq, Nat.add_zero]
           exact j_eq_i
@@ -1016,9 +977,8 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
     have l_ne_i : l.1.1 ≠ i.1 := by
       intro l_eq_i
       simp only [hasAssignment, Bool.not_eq_true] at h
-      split at h
-      . simp (config := {decide := true}) only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
-      . simp (config := {decide := true}) only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
+      split at h <;>
+      simp (config := {decide := true}) only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
     constructor
     . rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i]
       exact h1
@@ -1075,7 +1035,7 @@ theorem confirmRupHint_preserves_invariant {n : Nat} (f : DefaultFormula n) (f_a
       match f.clauses[rupHints[i.val]]? with
       | none => exact Or.inl rfl
       | some none => exact Or.inr $ Or.inl rfl
-      | some (some c) => exact (Or.inr ∘ Or.inr ∘ Exists.intro c) (by rfl)
+      | some (some c) => exact (Or.inr ∘ Or.inr ∘ Exists.intro c) rfl
     rcases rupHint_clause_options with rupHint_clause_eq_none | rupHint_clause_eq_some_none | ⟨c, rupHint_clause_eq_c⟩
     . simp only [rupHint_clause_eq_none]
       exact ih
@@ -1087,7 +1047,7 @@ theorem confirmRupHint_preserves_invariant {n : Nat} (f : DefaultFormula n) (f_a
         match reduce c acc.fst with
         | ReduceResult.encounteredBoth => exact Or.inl rfl
         | ReduceResult.reducedToEmpty => exact (Or.inr ∘ Or.inl) rfl
-        | ReduceResult.reducedToUnit l => exact (Or.inr ∘ Or.inr ∘ Or.inl ∘ Exists.intro l) (by rfl)
+        | ReduceResult.reducedToUnit l => exact (Or.inr ∘ Or.inr ∘ Or.inl ∘ Exists.intro l) rfl
         | ReduceResult.reducedToNonunit => exact (Or.inr ∘ Or.inr ∘ Or.inr) rfl
       rcases reduce_c_options with hencounteredBoth | hreducedToEmpty | ⟨l, hreducedToUnit⟩ | hreducedToNonunit
       . simp only [hencounteredBoth]
@@ -1145,7 +1105,7 @@ theorem derivedLits_nodup {n : Nat} (f : DefaultFormula n) (f_assignments_size :
     exact j_property
   rcases derivedLits_satisfies_invariant ⟨li.1.1, li.1.2.2⟩ with ⟨_, h2⟩ | ⟨k, _, _, _, h3⟩ |
     ⟨k1, k2, _, _, k1_eq_true, k2_eq_false, _, _, h3⟩
-  . exact h2 li li_in_derivedLits (by rfl)
+  . exact h2 li li_in_derivedLits rfl
   . by_cases k.1 = i.1
     . next k_eq_i =>
       have j_ne_k : ⟨j.1, j_in_bounds⟩ ≠ k := by
@@ -1236,8 +1196,7 @@ theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormu
       simp only [derivedLits_arr_def, Array.size_mk]
       exact j.2
     have i_gt_zero : i.1 > 0 := by rw [← j_eq_i]; exact (List.get derivedLits j).1.2.1
-    apply Exists.intro ⟨j.1, j_lt_derivedLits_arr_size⟩
-    apply Exists.intro (List.get derivedLits j).2 ∘ Exists.intro i_gt_zero
+    refine ⟨⟨j.1, j_lt_derivedLits_arr_size⟩, List.get derivedLits j |>.2, i_gt_zero, ?_⟩
     constructor
     . apply Nat.zero_le
     . constructor
@@ -1263,9 +1222,9 @@ theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormu
       simp only [derivedLits_arr_def, Array.size_mk]
       exact j2.2
     have i_gt_zero : i.1 > 0 := by rw [← j1_eq_i]; exact (List.get derivedLits j1).1.2.1
-    apply Exists.intro ⟨j1.1, j1_lt_derivedLits_arr_size⟩
-    apply Exists.intro ⟨j2.1, j2_lt_derivedLits_arr_size⟩
-    apply Exists.intro i_gt_zero ∘ And.intro (Nat.zero_le j1.1) ∘ And.intro (Nat.zero_le j2.1)
+    refine ⟨⟨j1.1, j1_lt_derivedLits_arr_size⟩,
+            ⟨j2.1, j2_lt_derivedLits_arr_size⟩,
+            i_gt_zero, Nat.zero_le j1.1, Nat.zero_le j2.1, ?_⟩
     constructor
     . simp only [derivedLits_arr_def, getElem_fin, Array.getElem_eq_data_get, ← j1_eq_i]
       rw [← j1_eq_true]
@@ -1296,7 +1255,7 @@ theorem restoreAssignments_performRupCheck {n : Nat} (f : DefaultFormula n) (f_a
   restoreAssignments (performRupCheck f rupHints).1.assignments (performRupCheck f rupHints).2.1 = f.assignments := by
   rw [restoreAssignments]
   let f' := (performRupCheck f rupHints).1
-  have f'_def : f' = (performRupCheck f rupHints).1 := by rfl
+  have f'_def : f' = (performRupCheck f rupHints).1 := rfl
   have f'_assignments_size : f'.assignments.size = n :=
     by rw [performRupCheck_preserves_assignments_size f rupHints, f_assignments_size]
   have derivedLits_satisfies_invariant := derivedLits_postcondition f f_assignments_size rupHints f'_assignments_size
@@ -1304,7 +1263,7 @@ theorem restoreAssignments_performRupCheck {n : Nat} (f : DefaultFormula n) (f_a
   generalize (performRupCheck f rupHints).2.1 = derivedLits at *
   rw [← f'_def, ← Array.foldl_eq_foldl_data]
   let derivedLits_arr : Array (Literal (PosFin n)) := {data := derivedLits}
-  have derivedLits_arr_def : derivedLits_arr = {data := derivedLits} := by rfl
+  have derivedLits_arr_def : derivedLits_arr = {data := derivedLits} := rfl
   have derivedLits_arr_nodup := derivedLits_nodup f f_assignments_size rupHints f'_assignments_size derivedLits
     derivedLits_satisfies_invariant derivedLits_arr derivedLits_arr_def
   let motive := clear_insert_induction_motive f f_assignments_size derivedLits_arr

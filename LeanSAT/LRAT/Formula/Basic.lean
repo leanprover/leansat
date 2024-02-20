@@ -36,8 +36,7 @@ def assignments_invariant {n : Nat} (f : DefaultFormula n) : Prop :=
 
 theorem assignments_invariant_of_strong_assignments_invariant {n : Nat} (f : DefaultFormula n) :
   strong_assignments_invariant f → assignments_invariant f := by
-  intro h
-  rcases h with ⟨hsize, h⟩
+  intro ⟨hsize, h⟩
   apply Exists.intro hsize
   intro i b hb p pf
   specialize h i b hb
@@ -131,7 +130,7 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
               simp only [toList, ofArray, Array.toList_eq, List.map, List.append_nil, List.mem_filterMap, id_eq, exists_eq_right]
               have i_eq_l : i = l := Subtype.ext i_eq_l
               simp only [unit, b_eq_true, i_eq_l]
-              have c_def : c = ⟨c.clause, c.nodupkey, c.nodup⟩ := by rfl
+              have c_def : c = ⟨c.clause, c.nodupkey, c.nodup⟩ := rfl
               simp only [heq] at c_def
               rw [c_def] at cOpt_in_arr
               exact cOpt_in_arr
@@ -165,7 +164,7 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
               simp only [toList, ofArray, Array.toList_eq, List.map, List.append_nil, List.mem_filterMap, id_eq, exists_eq_right]
               have i_eq_l : i = l := Subtype.ext i_eq_l
               simp only [unit, b_eq_false, i_eq_l]
-              have c_def : c = ⟨c.clause, c.nodupkey, c.nodup⟩ := by rfl
+              have c_def : c = ⟨c.clause, c.nodupkey, c.nodup⟩ := rfl
               simp only [heq] at c_def
               rw [c_def] at cOpt_in_arr
               exact cOpt_in_arr
@@ -245,7 +244,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
   intro f_readyForRupAdd
   simp only [insert]
   split
-  . apply And.intro f_readyForRupAdd.1 ∘ Exists.intro f_readyForRupAdd.2.1
+  . refine ⟨f_readyForRupAdd.1, f_readyForRupAdd.2.1, ?_⟩
     intro i b hb
     have hf := f_readyForRupAdd.2.2 i b hb
     simp only [toList, Array.toList_eq, List.append_assoc, List.mem_append, List.mem_filterMap, id_eq, exists_eq_right,
@@ -258,7 +257,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
   . next l hc =>
     have hsize : (Array.modify f.assignments l.1 addPosAssignment).size = n := by
       rw [Array.modify_preserves_size, f_readyForRupAdd.2.1]
-    apply And.intro f_readyForRupAdd.1 ∘ Exists.intro hsize
+    refine ⟨f_readyForRupAdd.1, hsize, ?_⟩
     intro i b hb
     have hf := f_readyForRupAdd.2.2 i b
     have i_in_bounds : i.1 < f.assignments.size := by rw [f_readyForRupAdd.2.1]; exact i.2.2
@@ -299,7 +298,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
   . next l hc =>
     have hsize : (Array.modify f.assignments l.1 addNegAssignment).size = n := by
       rw [Array.modify_preserves_size, f_readyForRupAdd.2.1]
-    apply And.intro f_readyForRupAdd.1 ∘ Exists.intro hsize
+    refine ⟨f_readyForRupAdd.1, hsize, ?_⟩
     intro i b hb
     have hf := f_readyForRupAdd.2.2 i b
     have i_in_bounds : i.1 < f.assignments.size := by rw [f_readyForRupAdd.2.1]; exact i.2.2
@@ -319,8 +318,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
         . next l_eq_i =>
           have b_eq_false : b = true := by
             by_cases b = true
-            . next b_eq_true =>
-              exact b_eq_true
+            . assumption
             . next b_eq_false =>
               simp only [b_eq_false, Subtype.ext l_eq_i, not_true] at ib_ne_c
           simp only [hasAssignment, b_eq_false, l_eq_i, Array.get_modify_at_idx i_in_bounds, ite_true, hasPos_of_addNeg] at hb
@@ -341,9 +339,7 @@ theorem insert_readyForRatAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
   readyForRatAdd f → readyForRatAdd (insert f c) := by
   intro h
   constructor
-  . simp only [insert, h.1]
-    split
-    repeat { rfl }
+  . simp only [insert, h.1] <;> split <;> rfl
   . exact insert_readyForRupAdd f c h.2
 
 theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : List (Literal (PosFin n)))
@@ -388,9 +384,8 @@ theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : List (Li
   simp only [toList, insertRatUnits, Prod.mk.eta, Array.toList_eq, List.append_assoc, List.mem_append,
     List.mem_filterMap, id_eq, exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]
   intro h
-  have hb : ∀ l : Literal (PosFin n), l ∈ (f.ratUnits, f.assignments, false).1.data → (l ∈ f.ratUnits.data ∨ l ∈ units) := by
-    intro l hl
-    exact Or.inl hl
+  have hb : ∀ l : Literal (PosFin n), l ∈ (f.ratUnits, f.assignments, false).1.data → (l ∈ f.ratUnits.data ∨ l ∈ units) :=
+    fun _ => Or.inl
   have hl (acc : Array (Literal (PosFin n)) × Array Assignment × Bool)
     (ih : ∀ l : Literal (PosFin n), l ∈ acc.1.data → l ∈ f.ratUnits.data ∨ l ∈ units)
     (unit : Literal (PosFin n)) (unit_in_units : unit ∈ units) :
@@ -482,7 +477,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
             . next id_eq_idx =>
               exfalso
               have idx_in_bounds2 : idx.1 < f.clauses.size := by
-                have f_clauses_rw : f.clauses = { data := f.clauses.data } := by rfl
+                have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact idx.2
               simp only [getElem!, id_eq_idx, idx_in_bounds2, dite_true, Array.getElem_eq_data_get] at heq
@@ -519,7 +514,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
             . next id_eq_idx =>
               exfalso
               have idx_in_bounds2 : idx.1 < f.clauses.size := by
-                have f_clauses_rw : f.clauses = { data := f.clauses.data } := by rfl
+                have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact idx.2
               simp only [getElem!, id_eq_idx, idx_in_bounds2, dite_true, Array.getElem_eq_data_get] at heq
@@ -580,7 +575,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
             . next id_eq_idx =>
               exfalso
               have idx_in_bounds2 : idx.1 < f.clauses.size := by
-                have f_clauses_rw : f.clauses = { data := f.clauses.data } := by rfl
+                have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact idx.2
               simp only [getElem!, id_eq_idx, idx_in_bounds2, dite_true, Array.getElem_eq_data_get] at heq
@@ -631,27 +626,9 @@ theorem deleteOne_subset (f : DefaultFormula n) (id : Nat) (c : DefaultClause n)
   c ∈ toList (deleteOne f id) → c ∈ toList f := by
   simp only [deleteOne]
   intro h1
-  split at h1
-  . exact h1
-  . rw [toList, List.mem_append, List.mem_append, or_assoc] at h1
-    rw [toList, List.mem_append, List.mem_append, or_assoc]
-    rcases h1 with h1 | h1 | h1
-    . apply Or.inl
-      simp only [Array.toList_eq, List.mem_filterMap, id_eq, exists_eq_right] at h1
-      simp only [Array.toList_eq, List.mem_filterMap, id_eq, exists_eq_right]
-      rw [Array.set!, Array.setD] at h1
-      split at h1
-      . simp only [Array.data_set] at h1
-        rcases List.get_of_mem h1 with ⟨i, h4⟩
-        rw [List.get_set] at h4
-        split at h4
-        . exact False.elim h4
-        . rw [← h4]
-          apply List.get_mem
-      . exact h1
-    . exact (Or.inr ∘ Or.inl) h1
-    . exact (Or.inr ∘ Or.inr) h1
-  . rw [toList, List.mem_append, List.mem_append, or_assoc] at h1
+  split at h1 <;> first
+  | exact h1
+  | rw [toList, List.mem_append, List.mem_append, or_assoc] at h1
     rw [toList, List.mem_append, List.mem_append, or_assoc]
     rcases h1 with h1 | h1 | h1
     . apply Or.inl
