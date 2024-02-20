@@ -70,7 +70,7 @@ It seems we need to attach information to the nodes of a `BoolExpr` in multiple 
 * The `Bool` at each node as we propagate the evaluation of an input.
 * The fact that these propagated `Bool`s satisfy the CNF clauses.
 
-This suggestions we should construct all four of these things in a uniform manner,
+This suggests we should construct all four of these things in a uniform manner,
 but I don't see how to set this up yet.
 -/
 
