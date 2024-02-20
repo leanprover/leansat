@@ -11,13 +11,10 @@ open LRAT Lean Parser Elab Command DefaultClause
 
 namespace Dimacs
 
-theorem natAbs_is_pos_of_ne_zero {x : Int} (x_ne_zero : x ≠ 0) : 0 < Int.natAbs x := by
-  omega
-
 def intToLiteral [Monad M] [MonadError M] {n : Nat} (x : Int) (x_ne_zero : x ≠ 0) : M (Literal (PosFin n)) :=
   if h : x.natAbs < n then
-    if x > 0 then return (⟨x.natAbs, ⟨natAbs_is_pos_of_ne_zero x_ne_zero, h⟩⟩, true)
-    else return (⟨x.natAbs, ⟨natAbs_is_pos_of_ne_zero x_ne_zero, h⟩⟩, false)
+    if x > 0 then return (⟨x.natAbs, ⟨by omega, h⟩⟩, true)
+    else return (⟨x.natAbs, ⟨by omega, h⟩⟩, false)
   else throwError "Given literal {x} is outside of the bounds specified by the number of variables"
 
 /-- `loadProblem` takes in the path of a CNF file and attempts to output a number `n` (indicating the total number
@@ -64,8 +61,8 @@ def loadProblem (path : System.FilePath) : CommandElabM (Σ n : Nat, Array (Opti
 
 def intToLiteralIO {n : Nat} (x : Int) (x_ne_zero : x ≠ 0) : IO (Option (Literal (PosFin n))) := do
   if h : x.natAbs < n then
-    if x > 0 then return some (⟨x.natAbs, ⟨natAbs_is_pos_of_ne_zero x_ne_zero, h⟩⟩, true)
-    else return some (⟨x.natAbs, ⟨natAbs_is_pos_of_ne_zero x_ne_zero, h⟩⟩, false)
+    if x > 0 then return some (⟨x.natAbs, ⟨by omega, h⟩⟩, true)
+    else return some (⟨x.natAbs, ⟨by omega, h⟩⟩, false)
   else
     IO.println "Given literal {x} is outside of the bounds specified by the number of variables"
     return none
