@@ -3,7 +3,7 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.PHPDemo.Nodup
+import Test.PHPDemo.Nodup
 
 open Dimacs LRAT DefaultClause DefaultFormula Result Lean Classical
 

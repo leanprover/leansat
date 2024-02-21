@@ -17,6 +17,6 @@ syntax (name := loadDimacsCommand) "loadDimacs " strLit : command
     | _ => throwError "Expected strLit: {file}"
   | _ => throwError "Failed to parse loadDimacs command"
 
-loadDimacs "./SampleDimacs/empty.cnf"
-loadDimacs "./SampleDimacs/unit4.cnf"
-loadDimacs "./SampleDimacs/false.cnf"
+loadDimacs "./Test/SampleDimacs/empty.cnf"
+loadDimacs "./Test/SampleDimacs/unit4.cnf"
+loadDimacs "./Test/SampleDimacs/false.cnf"

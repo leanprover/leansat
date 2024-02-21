@@ -54,9 +54,11 @@ def php3_formula : DefaultFormula 13 :=
   DefaultFormula.ofArray #[none, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20, c21, c22]
 
 def load_php3_lrat_proof : IO (List ({act : DefaultClauseAction 13 // wellFormedAction act})) := do
-  IO.FS.writeFile "php3.cnf" $ dimacs php3_formula
-  let _ ← satQuery "php3.cnf" "php3.lrat"
-  match ← parseLRATProof "php3.lrat" with
+  let cnfPath : System.FilePath := "." / "Test" / "PHPDemo" / "php3.cnf"
+  let lratPath : System.FilePath := "." / "Test" / "PHPDemo" / "php3.lrat"
+  IO.FS.writeFile cnfPath $ dimacs php3_formula
+  let _ ← satQuery cnfPath.toString lratPath.toString
+  match ← parseLRATProof lratPath.toString with
   | some lratProof =>
     let lratProof ← lratProof.mapM (intActionToDefaultClauseActionIO 13)
     let lratProof :=
