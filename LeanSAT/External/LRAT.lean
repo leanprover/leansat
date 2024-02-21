@@ -236,17 +236,3 @@ def parseLRATProof (path : System.FilePath) : IO (Option (Array IntAction)) := d
     | none => encounteredError := true
   if encounteredError then return none
   else return some proof
-
-syntax (name := loadLRATCommand) "loadLRAT " strLit : command
-
-@[command_elab loadLRATCommand] def elabLoadLRAT : CommandElab := fun stx => do
-  match stx with
-  | `(loadLRAT $file) =>
-    match Syntax.isStrLit? file with
-    | some file =>
-        let proof ← loadLRATProof file
-        IO.println s!"{proof}"
-    | _ => throwError "Expected strLit: {file}"
-  | _ => throwError "Failed to parse loadLRAT command"
-
-loadLRAT "./pigeon-hole/hole6.lrat"
