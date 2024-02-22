@@ -60,7 +60,7 @@ def load_php3_lrat_proof : IO (List ({act : DefaultClauseAction 13 // wellFormed
   let _ ← satQuery cnfPath.toString lratPath.toString
   match ← parseLRATProof lratPath.toString with
   | some lratProof =>
-    let lratProof ← lratProof.mapM (intActionToDefaultClauseActionIO 13)
+    let lratProof := lratProof.map (intActionToDefaultClauseAction 13)
     let lratProof :=
       lratProof.filterMap
         (fun actOpt =>
