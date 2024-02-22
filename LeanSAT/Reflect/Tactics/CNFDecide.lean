@@ -8,6 +8,7 @@ import LeanSAT.Reflect.CNF.Decidable -- This import is not used directly, but wi
 import LeanSAT.Reflect.BoolExpr.Tseitin
 
 import LeanSAT.LRAT.LRATChecker
+import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.External.Solver
 
 open Lean Meta ReflectSat
@@ -44,6 +45,7 @@ def Solver.lift (solverName : Name) (cnfType : Expr) (certType : Expr) [ToExpr �
     MetaM Expr := do
   let encoded := s.encodeCNF c
   let b ← s.runExternal encoded
+  -- TODO: provide an API that doesn't use reduction but `native_decide` style proofs
   return mkApp6 (.const ``Solver.correct []) cnfType certType
     (.const solverName []) (toExpr c) (toExpr b) (← mkEqRefl (toExpr true))
 
@@ -92,6 +94,32 @@ Obtains the maximum variable index used in `cnf`. If the `cnf` is empty return `
 def maxVarNum (cnf : CNF Nat) : Option Nat :=
   cnf.filterMap (·.map Prod.fst |>.maximum?) |>.maximum?
 
+theorem maxVarNum_eq_some_innerProperty (clause : CNF.Clause Nat) (h : (clause.map Prod.fst).maximum? = some localMaxVar) :
+    ∀ lit ∈ clause, lit.fst ≤ localMaxVar := by
+  intro l hl
+  have h1 := List.maximum?_eq_some_iff'.mp h
+  apply h1.right
+  simp only [List.mem_map]
+  apply Exists.intro l
+  simp[hl]
+
+theorem maxVarNum_eq_some_property (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) :
+    ∀ c ∈ cnf, ∀ lit ∈ c, lit.fst ≤ maxVar := by
+  intro c hc l hl
+  match h1 : (c.map Prod.fst).maximum? with
+  | some localMaxVar =>
+    have h2 := List.maximum?_eq_some_iff'.mp h
+    have h3 : localMaxVar ∈ List.filterMap (·.map Prod.fst |>.maximum?) cnf := by
+      simp only [List.mem_filterMap]
+      apply Exists.intro c
+      simp [hc, h1]
+    have h4 := h2.right localMaxVar h3
+    have h5 := maxVarNum_eq_some_innerProperty c h1 l hl
+    omega
+  | none =>
+    simp only [List.maximum?_eq_none_iff, List.map_eq_nil] at h1
+    simp [h1] at hl
+
 /--
 Convert a `CNF Nat` with a certain maximum variable number into the `LRAT.DefaultFormula`
 format for usage with LeanSAT.
@@ -102,21 +130,25 @@ Notably this:
    refers to the DIMACS file line by line and the DIMACS file begins with the
   `p cnf x y` meta instruction.
 -/
-def convertCNF (maxVar : Nat) (cnf : CNF Nat) : LRAT.DefaultFormula (maxVar + 2) :=
+def convertCNF (maxVar : Nat) (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : LRAT.DefaultFormula (maxVar + 2) :=
   let numVars := maxVar + 1
+  have h2 := maxVarNum_eq_some_property cnf h
   let convertLit (lit : Nat × Bool) (h : lit.fst ≤ maxVar) : _root_.Literal (PosFin numVars.succ) :=
-    -- The reflect framework starts counting variables at 0, DIMACS starts at 1 -> increment
     ⟨⟨lit.fst + 1, by omega⟩, lit.snd⟩
-  let convertClause clause := LRAT.DefaultClause.ofArray (clause.map (convertLit · sorry) |>.toArray)
-  let clauses := cnf.map convertClause
+
+  let convertClause clause hclause :=
+    let clause := clause.attach.map (fun lit => convertLit lit.val (h2 clause hclause lit.val lit.property))
+    LRAT.DefaultClause.ofArray clause.toArray
+
+  let clauses := cnf.attach.map (fun clause => convertClause clause.val clause.property)
   let clauses := none :: clauses
   LRAT.DefaultFormula.ofArray clauses.toArray
 
 def lratSolver : Solver LratFormula LratCert where
   encodeCNF reflectCnf :=
-    match maxVarNum reflectCnf with
+    match h:maxVarNum reflectCnf with
     | some maxVar =>
-      ⟨_, convertCNF maxVar reflectCnf⟩
+      ⟨_, convertCNF maxVar reflectCnf h⟩
     | none =>
       -- TODO: Cadical refuses an input without clauses, figure out what to do here.
       ⟨0, LRAT.DefaultFormula.ofArray #[]⟩
@@ -125,9 +157,10 @@ def lratSolver : Solver LratFormula LratCert where
     let numVars := formula.numVars
     let formula := formula.formula
     -- TODO: how do we choose filenames? Important for parallelism etc.
-    let cnfPath : System.FilePath := "/" / "tmp" / "cnf_decide.cnf"
-    let lratPath : System.FilePath := "/" / "tmp" / "lrat_decide.lrat"
+    let cnfPath : System.FilePath := "." / "cnf_decide.cnf"
+    let lratPath : System.FilePath := "." / "lrat_decide.lrat"
     IO.FS.writeFile cnfPath <| formula.dimacs
+    -- TODO: make sure we handle the case where the problem is in fact not UNSAT
     let _ ← satQuery "cadical" cnfPath.toString lratPath.toString
     let some lratProof ← LRAT.parseLRATProof lratPath.toString | throw <| IO.userError "SAT solver produced invalid LRAT"
     return ⟨lratProof.toList⟩
@@ -157,13 +190,28 @@ def lratSolver : Solver LratFormula LratCert where
         )
     let lratProof := lratProof.map Subtype.val
     let checkerResult := LRAT.lratChecker formula.formula lratProof
-    dbg_trace checkerResult
     checkerResult = .success
 
   correct := by
     intro c b h1
-    dsimp at h1
+    simp only [decide_eq_true_eq] at h1
+    have h4 :=
+      lratCheckerSound
+        _
+        (by split <;> apply LRAT.Formula.ofArray_readyForRupAdd)
+        (by split <;> apply LRAT.Formula.ofArray_readyForRatAdd)
+        _
+        (by
+          intro action h
+          simp only [List.mem_map, List.mem_filterMap] at h
+          rcases h with ⟨wellFormedActions, _, h2⟩
+          rw [← h2]
+          exact wellFormedActions.property)
+        h1
+    -- TODO: h4 contains proof that our encoded CNF is unsat, we now need to
+    -- prove that the original one is unsat based on that
     sorry
+
 
 -- We can solve *very* small problems by decidability.
 def byDecideSolver : Solver (CNF Nat) Unit where
