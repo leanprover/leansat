@@ -1,4 +1,5 @@
 import Test.Sat
+import Test.SatStress
 import Test.ExternalDimacs
 import Test.LRAT
 import Test.LRATChecker
