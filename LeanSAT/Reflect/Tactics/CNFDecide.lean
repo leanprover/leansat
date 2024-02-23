@@ -11,7 +11,7 @@ import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.External.Solver
 
-open Lean Meta ReflectSat
+open Lean Elab Meta ReflectSat
 
 /--
 Interface for an external SAT solver with a verified certificate checker.
@@ -41,13 +41,25 @@ which given `x : CNF Nat` produces a proof of `x.unsat`.
 
 But we need to jump through some hoops!
 -/
-def Solver.lift (solverName : Name) (cnfType : Expr) (certType : Expr) [ToExpr β] (s : Solver α β) (c : CNF Nat) :
-    MetaM Expr := do
-  let encoded := s.encodeCNF c
-  let b ← s.runExternal encoded
-  -- TODO: provide an API that doesn't use reduction but `native_decide` style proofs
-  return mkApp6 (.const ``Solver.correct []) cnfType certType
-    (.const solverName []) (toExpr c) (toExpr b) (← mkEqRefl (toExpr true))
+def Solver.lift (solverName : Name) (auxDeclName : Name) (cnfType : Expr) (certType : Expr)
+    [ToExpr β] (s : Solver α β) (cnf : CNF Nat) : MetaM Expr := do
+  let encoded := s.encodeCNF cnf
+  let cert ← s.runExternal encoded
+  let cnfExpr := toExpr cnf
+  let certExpr := toExpr cert
+  let solverExpr := mkConst solverName
+  let encodingExpr := mkApp4 (mkConst ``Solver.encodeCNF) cnfType certType solverExpr cnfExpr
+  let auxValue := mkApp5 (mkConst ``Solver.verify) cnfType certType solverExpr encodingExpr certExpr
+  addAndCompile <| .defnDecl {
+    name := auxDeclName,
+    levelParams := [],
+    type := mkConst ``Bool,
+    value := auxValue,
+    hints := .abbrev,
+    safety := .safe
+  }
+  let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst auxDeclName) (toExpr true) (← mkEqRefl (toExpr true))
+  return mkApp6 (mkConst ``Solver.correct) cnfType certType solverExpr cnfExpr certExpr nativeProof
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter
@@ -212,29 +224,17 @@ def lratSolver : Solver LratFormula LratCert where
     -- prove that the original one is unsat based on that
     sorry
 
+def lratSolver' (auxDeclName : Name) : CNF Nat → MetaM Expr :=
+  Solver.lift ``lratSolver auxDeclName (mkConst ``LratFormula) (mkConst ``LratCert) lratSolver
 
--- We can solve *very* small problems by decidability.
-def byDecideSolver : Solver (CNF Nat) Unit where
-  encodeCNF := id
-  runExternal _ := pure ()
-  verify c _ := decide c.unsat
-  correct _ _ := of_decide_eq_true
-
-def byDecideSolver' : CNF Nat → MetaM Expr :=
-  Solver.lift ``byDecideSolver (mkApp (mkConst ``CNF) (mkConst ``Nat)) (.const ``Unit []) byDecideSolver
-
-def lratSolver' : CNF Nat → MetaM Expr :=
-  Solver.lift ``lratSolver (mkConst ``LratFormula) (mkConst ``LratCert) lratSolver
-
-def _root_.Lean.MVarId.cnfDecide (g : MVarId) : MetaM Unit := M.run do
+def _root_.Lean.MVarId.cnfDecide (g : MVarId) (auxDeclName : Name) : MetaM Unit := M.run do
   let g' ← falseOrByContra g
   g'.withContext do
     let (boolExpr, f) ← reflectSAT g'
     trace[sat] "Reflected boolean expression: {boolExpr}"
     let cnf := boolExpr.toCNF
     trace[sat] "Converted to CNF: {cnf}"
-    --let cnfUnsat ← byDecideSolver' cnf
-    let cnfUnsat ← lratSolver' cnf
+    let cnfUnsat ← lratSolver' auxDeclName cnf
     let unsat := mkApp2 (.const ``BoolExpr.unsat_of_toCNF_unsat []) (toExpr boolExpr) cnfUnsat
     g'.assign (← f unsat)
 
@@ -242,4 +242,6 @@ syntax (name := cnfDecideSyntax) "cnf_decide" : tactic
 
 open Elab.Tactic
 elab_rules : tactic
-  | `(tactic| cnf_decide) => do liftMetaFinishingTactic fun g => g.cnfDecide
+  | `(tactic| cnf_decide) => do
+    let auxDeclName ← Term.mkAuxName `_cnf_decide
+    liftMetaFinishingTactic fun g => g.cnfDecide auxDeclName
