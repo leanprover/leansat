@@ -13,6 +13,11 @@ import LeanSAT.External.Solver
 
 open Lean Elab Meta ReflectSat
 
+structure TacticConfig where
+  cnfDef : Name
+  certDef : Name
+  reflectionDef : Name
+
 /--
 Interface for an external SAT solver with a verified certificate checker.
 
@@ -35,13 +40,23 @@ structure Solver (α : Type) (β : Type) where
   /-- Proof of the correctness of the verification function. -/
   correct : ∀ c b, verify (encodeCNF c) b = true → c.unsat
 
+private def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
+  addAndCompile <| .defnDecl {
+    name := name,
+    levelParams := [],
+    type := type,
+    value := value,
+    hints := .abbrev,
+    safety := .safe
+  }
+
 /--
 We can lift a `Solver β` to a function `CNF Nat → MetaM Expr`,
 which given `x : CNF Nat` produces a proof of `x.unsat`.
 
 But we need to jump through some hoops!
 -/
-def Solver.lift (solverName : Name) (auxDeclName : Name) (cnfType : Expr) (certType : Expr)
+def Solver.lift (cfg : TacticConfig) (solverName : Name) (cnfType : Expr) (certType : Expr)
     [ToExpr β] (s : Solver α β) (cnf : CNF Nat) : MetaM Expr := do
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
@@ -49,21 +64,21 @@ def Solver.lift (solverName : Name) (auxDeclName : Name) (cnfType : Expr) (certT
   let cert ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
       s.runExternal encoded
-  let cnfExpr := toExpr cnf
-  let certExpr := toExpr cert
+  withTraceNode `sat (fun _ => return "Compiling CNF term") do
+    mkAuxDecl cfg.cnfDef (toExpr cnf) (toTypeExpr (CNF Nat))
+  withTraceNode `sat (fun _ => return "Compiling proof certificate term") do
+    mkAuxDecl cfg.certDef (toExpr cert) certType
+
+  let cnfExpr := mkConst cfg.cnfDef
+  let certExpr := mkConst cfg.certDef
   let solverExpr := mkConst solverName
-  let encodingExpr := mkApp4 (mkConst ``Solver.encodeCNF) cnfType certType solverExpr cnfExpr
-  let auxValue := mkApp5 (mkConst ``Solver.verify) cnfType certType solverExpr encodingExpr certExpr
+
   withTraceNode `sat (fun _ => return "Compiling reflection proof term") do
-    addAndCompile <| .defnDecl {
-      name := auxDeclName,
-      levelParams := [],
-      type := mkConst ``Bool,
-      value := auxValue,
-      hints := .abbrev,
-      safety := .safe
-    }
-  let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst auxDeclName) (toExpr true) (← mkEqRefl (toExpr true))
+    let encodingExpr := mkApp4 (mkConst ``Solver.encodeCNF) cnfType certType solverExpr cnfExpr
+    let auxValue := mkApp5 (mkConst ``Solver.verify) cnfType certType solverExpr encodingExpr certExpr
+    mkAuxDecl cfg.reflectionDef auxValue (mkConst ``Bool)
+
+  let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst cfg.reflectionDef) (toExpr true) (← mkEqRefl (toExpr true))
   return mkApp6 (mkConst ``Solver.correct) cnfType certType solverExpr cnfExpr certExpr nativeProof
 
 /--
@@ -236,10 +251,10 @@ def lratSolver : Solver LratFormula LratCert where
     -- prove that the original one is unsat based on that
     sorry
 
-def lratSolver' (auxDeclName : Name) : CNF Nat → MetaM Expr :=
-  Solver.lift ``lratSolver auxDeclName (mkConst ``LratFormula) (mkConst ``LratCert) lratSolver
+def lratSolver' (cfg : TacticConfig) : CNF Nat → MetaM Expr :=
+  Solver.lift cfg ``lratSolver  (mkConst ``LratFormula) (mkConst ``LratCert) lratSolver
 
-def _root_.Lean.MVarId.cnfDecide (g : MVarId) (auxDeclName : Name) : MetaM Unit := M.run do
+def _root_.Lean.MVarId.cnfDecide (g : MVarId) (cfg : TacticConfig) : MetaM Unit := M.run do
   let g' ← falseOrByContra g
   g'.withContext do
     let (boolExpr, f) ←
@@ -252,7 +267,7 @@ def _root_.Lean.MVarId.cnfDecide (g : MVarId) (auxDeclName : Name) : MetaM Unit 
     trace[sat] "Converted to CNF: {cnf}"
     let cnfUnsat ←
       withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
-        lratSolver' auxDeclName cnf
+        lratSolver' cfg cnf
     let unsat := mkApp2 (.const ``BoolExpr.unsat_of_toCNF_unsat []) (toExpr boolExpr) cnfUnsat
     g'.assign (← f unsat)
 
@@ -261,5 +276,8 @@ syntax (name := cnfDecideSyntax) "cnf_decide" : tactic
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| cnf_decide) => do
-    let auxDeclName ← Term.mkAuxName `_cnf_decide
-    liftMetaFinishingTactic fun g => g.cnfDecide auxDeclName
+    let cnfDef ← Term.mkAuxName `_cnf_def
+    let certDef ← Term.mkAuxName `_cert_def
+    let reflectionDef ← Term.mkAuxName `_reflection_def
+    let cfg := { cnfDef, certDef, reflectionDef }
+    liftMetaFinishingTactic fun g => g.cnfDecide cfg
