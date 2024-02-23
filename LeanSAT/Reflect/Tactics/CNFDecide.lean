@@ -156,6 +156,10 @@ def convertCNF (maxVar : Nat) (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) 
   let clauses := none :: clauses
   LRAT.DefaultFormula.ofArray clauses.toArray
 
+def mkTemp : IO System.FilePath := do
+  let out ← IO.Process.output { cmd := "mktemp" }
+  return out.stdout
+
 def lratSolver : Solver LratFormula LratCert where
   encodeCNF reflectCnf :=
     match h:maxVarNum reflectCnf with
@@ -168,13 +172,16 @@ def lratSolver : Solver LratFormula LratCert where
   runExternal formula := do
     let numVars := formula.numVars
     let formula := formula.formula
-    -- TODO: how do we choose filenames? Important for parallelism etc.
-    let cnfPath : System.FilePath := "." / "cnf_decide.cnf"
-    let lratPath : System.FilePath := "." / "lrat_decide.lrat"
+    -- TODO: In the future we might want to cache these
+    let cnfPath ← mkTemp
+    let lratPath ← mkTemp
     IO.FS.writeFile cnfPath <| formula.dimacs
     -- TODO: make sure we handle the case where the problem is in fact not UNSAT
     let _ ← satQuery "cadical" cnfPath.toString lratPath.toString
     let some lratProof ← LRAT.parseLRATProof lratPath.toString | throw <| IO.userError "SAT solver produced invalid LRAT"
+    -- cleanup files such that we don't pollute /tmp
+    IO.FS.removeFile cnfPath
+    IO.FS.removeFile lratPath
     return ⟨lratProof.toList⟩
 
   verify formula cert :=
