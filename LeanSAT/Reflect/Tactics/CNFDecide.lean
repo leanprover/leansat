@@ -43,21 +43,26 @@ But we need to jump through some hoops!
 -/
 def Solver.lift (solverName : Name) (auxDeclName : Name) (cnfType : Expr) (certType : Expr)
     [ToExpr β] (s : Solver α β) (cnf : CNF Nat) : MetaM Expr := do
-  let encoded := s.encodeCNF cnf
-  let cert ← s.runExternal encoded
+  let encoded ←
+    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
+      return s.encodeCNF cnf
+  let cert ←
+    withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
+      s.runExternal encoded
   let cnfExpr := toExpr cnf
   let certExpr := toExpr cert
   let solverExpr := mkConst solverName
   let encodingExpr := mkApp4 (mkConst ``Solver.encodeCNF) cnfType certType solverExpr cnfExpr
   let auxValue := mkApp5 (mkConst ``Solver.verify) cnfType certType solverExpr encodingExpr certExpr
-  addAndCompile <| .defnDecl {
-    name := auxDeclName,
-    levelParams := [],
-    type := mkConst ``Bool,
-    value := auxValue,
-    hints := .abbrev,
-    safety := .safe
-  }
+  withTraceNode `sat (fun _ => return "Compiling reflection proof term") do
+    addAndCompile <| .defnDecl {
+      name := auxDeclName,
+      levelParams := [],
+      type := mkConst ``Bool,
+      value := auxValue,
+      hints := .abbrev,
+      safety := .safe
+    }
   let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst auxDeclName) (toExpr true) (← mkEqRefl (toExpr true))
   return mkApp6 (mkConst ``Solver.correct) cnfType certType solverExpr cnfExpr certExpr nativeProof
 
@@ -237,11 +242,17 @@ def lratSolver' (auxDeclName : Name) : CNF Nat → MetaM Expr :=
 def _root_.Lean.MVarId.cnfDecide (g : MVarId) (auxDeclName : Name) : MetaM Unit := M.run do
   let g' ← falseOrByContra g
   g'.withContext do
-    let (boolExpr, f) ← reflectSAT g'
+    let (boolExpr, f) ←
+      withTraceNode `sat (fun _ => return "Reflecting goal into BoolExpr") do
+        reflectSAT g'
     trace[sat] "Reflected boolean expression: {boolExpr}"
-    let cnf := boolExpr.toCNF
+    let cnf ←
+      withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
+        return boolExpr.toCNF
     trace[sat] "Converted to CNF: {cnf}"
-    let cnfUnsat ← lratSolver' auxDeclName cnf
+    let cnfUnsat ←
+      withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
+        lratSolver' auxDeclName cnf
     let unsat := mkApp2 (.const ``BoolExpr.unsat_of_toCNF_unsat []) (toExpr boolExpr) cnfUnsat
     g'.assign (← f unsat)
 
