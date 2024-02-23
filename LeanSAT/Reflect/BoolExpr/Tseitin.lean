@@ -195,12 +195,12 @@ theorem traceEval_run_snd_snd : (traceEval.run f l k x).2.2 = k + x.size - 1 := 
     have := y.size_pos
     simp only [size, traceEval.run] at *
     rw [traceEval_run_snd_snd, traceEval_run_snd_snd]
-    all_goals omega
+    omega
 
 theorem traceEval_run_snd_fst_of_le (w : k + x.size ≤ l) : (traceEval.run f l k x).2.1 = false := by
   match x with
-  | .literal a => simp [size, traceEval.run] at * <;> omega
-  | .const b => simp [size, traceEval.run] at * <;> omega
+  | .literal a => simp [size, traceEval.run] at *; omega
+  | .const b => simp [size, traceEval.run] at *; omega
   | .not x =>
     have := x.size_pos
     simp only [size, traceEval.run] at *
@@ -219,8 +219,8 @@ theorem traceEval_run_snd_fst_of_le (w : k + x.size ≤ l) : (traceEval.run f l 
 
 theorem traceEval_run_snd_fst (w₁ : k ≤ l) (w₂ : l < k + x.size) : (traceEval.run f l k x).2.1 = true := by
   match x with
-  | .literal a => simp [size, traceEval.run] at * <;> omega
-  | .const b => simp [size, traceEval.run] at * <;> omega
+  | .literal a => simp [size, traceEval.run] at *; omega
+  | .const b => simp [size, traceEval.run] at *; omega
   | .not x =>
     have := x.size_pos
     simp only [size, traceEval.run] at *
