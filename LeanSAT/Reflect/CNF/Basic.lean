@@ -16,7 +16,14 @@ namespace CNF
 
 def Clause.eval (f : α → Bool) (c : Clause α) : Bool := c.any fun (i, n) => xor n (f i)
 
+@[simp] theorem Clause.eval_nil (f : α → Bool) : Clause.eval f [] = false := rfl
+@[simp] theorem Clause.eval_succ (f : α → Bool) :
+    Clause.eval f ((a, b) :: c) = ((xor b (f a)) || Clause.eval f c) := rfl
+
 def eval (f : α → Bool) (g : CNF α) : Bool := g.all fun c => c.eval f
+
+@[simp] theorem eval_nil (f : α → Bool) : eval f [] = true := rfl
+@[simp] theorem eval_succ (f : α → Bool) : eval f (c :: g) = (c.eval f && eval f g) := rfl
 
 @[simp] theorem eval_append (f : α → Bool) (g h : CNF α) :
     eval f (g ++ h) = (eval f g && eval f h) := List.all_append

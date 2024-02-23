@@ -52,6 +52,15 @@ def toString [ToString α] : BoolExpr α → String
 
 instance [ToString α] : ToString (BoolExpr α) := ⟨toString⟩
 
+def size : BoolExpr α → Nat
+  | .literal _
+  | .const _ => 1
+  | .not x => x.size + 1
+  | .gate _ x y => x.size + y.size + 1
+
+theorem size_pos (x : BoolExpr α) : 0 < x.size := by
+  cases x <;> simp [size] <;> omega
+
 def eval (f : α → Bool) : BoolExpr α → Bool
   | .literal a => f a
   | .const b => b
