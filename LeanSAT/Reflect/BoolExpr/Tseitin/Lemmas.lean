@@ -24,7 +24,8 @@ theorem eq_false_or_eq_true {x : Bool} : x = false ∨ x = true := by cases x <;
 
 namespace Gate
 
-@[simp] theorem toCNF_eval {i₁ i₂ o : α} : (toCNF i₁ i₂ o g).eval f = (f o == g.eval (f i₁) (f i₂)) := by
+@[simp] theorem toCNF_eval {i₁ i₂ o : α} :
+    (toCNF i₁ i₂ o g).eval f = (f o == g.eval (f i₁) (f i₂)) := by
   match g with
   | .and
   | .or
@@ -265,7 +266,8 @@ theorem elim_traceEval_eq_comp (k) :
     rw [traceEval_run_snd_snd, traceEval_run_snd_snd]
     omega
 
-theorem traceEval_run_snd_fst_of_le (x) (w : k + x.size ≤ l) : (traceEval.run f l k x).2.1 = false := by
+theorem traceEval_run_snd_fst_of_le (x) (w : k + x.size ≤ l) :
+    (traceEval.run f l k x).2.1 = false := by
   match x with
   | .literal a => simp [size, traceEval.run] at *; omega
   | .const b => simp [size, traceEval.run] at *; omega
@@ -285,7 +287,8 @@ theorem traceEval_run_snd_fst_of_le (x) (w : k + x.size ≤ l) : (traceEval.run 
     simp only [Bool.or_self, Bool.false_or, decide_eq_false_iff_not, ne_eq]
     all_goals omega
 
-theorem traceEval_run_snd_fst (x) (w₁ : k ≤ l) (w₂ : l < k + x.size) : (traceEval.run f l k x).2.1 = true := by
+theorem traceEval_run_snd_fst (x) (w₁ : k ≤ l) (w₂ : l < k + x.size) :
+    (traceEval.run f l k x).2.1 = true := by
   match x with
   | .literal a => simp [size, traceEval.run] at *; omega
   | .const b => simp [size, traceEval.run] at *; omega
@@ -462,8 +465,8 @@ theorem traceEval_gate_right (w₁ : x.size ≤ l) (w₂ : l < x.size + y.size) 
           traceEval_run_snd_fst z (by omega) (by omega)]
         simp [t]
       else
-        rw [traceEval_run_snd_fst_of_le y (by omega), traceEval_run_snd_fst_of_le y (by omega), traceEval_run_snd_fst_of_le z (by omega),
-          traceEval_run_snd_fst_of_le z (by omega)]
+        rw [traceEval_run_snd_fst_of_le y (by omega), traceEval_run_snd_fst_of_le y (by omega),
+          traceEval_run_snd_fst_of_le z (by omega), traceEval_run_snd_fst_of_le z (by omega)]
         simp [cond_eq_if]
         rw [if_pos]
         simp [t]
