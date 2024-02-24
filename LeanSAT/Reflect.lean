@@ -5,7 +5,8 @@ Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.BoolExpr.Basic
 import LeanSAT.Reflect.BoolExpr.Decidable
-import LeanSAT.Reflect.BoolExpr.Tseitin
+import LeanSAT.Reflect.BoolExpr.Tseitin.Defs
+import LeanSAT.Reflect.BoolExpr.Tseitin.Lemmas
 import LeanSAT.Reflect.CNF.Basic
 import LeanSAT.Reflect.CNF.Decidable
 import LeanSAT.Reflect.CNF.ForStd
