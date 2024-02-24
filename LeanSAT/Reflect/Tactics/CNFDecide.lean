@@ -5,7 +5,7 @@ Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.CNF.Decidable -- This import is not used directly, but without it the tactic fails.
-import LeanSAT.Reflect.BoolExpr.Tseitin
+import LeanSAT.Reflect.BoolExpr.Tseitin.Lemmas
 
 open Lean Meta ReflectSat
 

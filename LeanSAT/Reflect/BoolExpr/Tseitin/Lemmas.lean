@@ -3,8 +3,7 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
-import LeanSAT.Reflect.BoolExpr.Decidable
-import LeanSAT.Reflect.CNF.Relabel
+import LeanSAT.Reflect.BoolExpr.Tseitin.Defs
 import Std.Data.Sum.Basic
 
 @[simp] theorem false_beq_false : (false == false) = true := rfl
@@ -25,20 +24,6 @@ theorem eq_false_or_eq_true {x : Bool} : x = false ∨ x = true := by cases x <;
 
 namespace Gate
 
-def toCNF (i₁ i₂ o : α) : Gate → CNF α
-  | .and =>
-    [[(o, true), (i₁, false)], [(o, true), (i₂, false)], [(o, false), (i₁, true), (i₂, true)]]
-  | .or =>
-    [[(o, false), (i₁, true)], [(o, false), (i₂, true)], [(o, true), (i₁, false), (i₂, false)]]
-  | .xor =>
-    [[(o, true), (i₁, false), (i₂, false)], [(o, true), (i₁, true), (i₂, true)],
-      [(o, false), (i₁, true), (i₂, false)], [(o, false), (i₁, false), (i₂, true)]]
-  | .beq =>
-    [[(o, true), (i₁, false), (i₂, true)], [(o, true), (i₁, true), (i₂, false)],
-      [(o, false), (i₁, true), (i₂, true)], [(o, false), (i₁, false), (i₂, false)]]
-  | .imp =>
-    [[(o, true), (i₁, true), (i₂, false)], [(o, false), (i₁, false)], [(o, false), (i₂, true)]]
-
 @[simp] theorem toCNF_eval {i₁ i₂ o : α} : (toCNF i₁ i₂ o g).eval f = (f o == g.eval (f i₁) (f i₂)) := by
   match g with
   | .and
@@ -56,15 +41,11 @@ end Gate
 
 namespace CNF
 
-def eq (x y : α) : CNF α := [[(x, true), (y, false)], [(x, false), (y, true)]]
-
 @[simp] theorem eq_eval : (eq x y).eval f = (f x == f y) := by
   simp [eq, CNF.eval, CNF.Clause.eval]
   cases f x <;> cases f y <;> simp
 
 theorem eq_sat : (eq x y).sat f ↔ f x = f y := by simp [CNF.sat]
-
-def ne (x y : α) : CNF α := [[(x, true), (y, true)], [(x, false), (y, false)]]
 
 @[simp] theorem ne_eval : (ne x y).eval f = (f x == !f y) := by
   simp [ne, CNF.eval, CNF.Clause.eval]
@@ -75,48 +56,6 @@ theorem ne_sat : (ne x y).sat f ↔ f x = !f y := by simp [CNF.sat]
 end CNF
 
 namespace BoolExpr
-
-/-!
-This is work in progress, and seems nontrivial.
-We need `def toCNF : BoolExpr Nat → CNF Nat`,
-and `theorem toCNF_unsat : (toCNF x).unsat ↔ x.unsat`.
-I don't mind whether it follows the approach below (which may well be buggy!) or not.
-
-It seems we need to attach information to the nodes of a `BoolExpr` in multiple ways:
-* Numbering the nodes (so they can be CNF literals)
-* The CNF clauses expressing the relation between inputs and outputs (in terms of those numbers)
-* The `Bool` at each node as we propagate the evaluation of an input.
-* The fact that these propagated `Bool`s satisfy the CNF clauses.
-
-This suggests we should construct all four of these things in a uniform manner,
-but I don't see how to set this up yet.
--/
-
-/-
-Implementation of `BoolExpr.toCNF`.
-
-We produce a CNF with literals labelled by `α ⊕ Nat`.
-- `.inl a` represents an "input node" corresponding to a literal in the original `BoolExpr`
-- `.inr j` represents a "circuit node" corresponding to
-  a gate (0-ary, 1-ary, or 2-ary) in the `BoolExpr`.
--/
-def toCNF' (x : BoolExpr α) : CNF (α ⊕ Nat) :=
-  let (c, p) := run 0 x
-  [(.inr p, false)] :: c
-where
-  /--
-  We take as additional argument `k : Nat` which is the "next available circuit node label"
-  and return an `α ⊕ Nat`, the label of the "output node".
-  -/
-  run (k : Nat) : BoolExpr α → CNF (α ⊕ Nat) × Nat
-  | .literal a => (CNF.eq (.inl a) (.inr k), k)
-  | .const b => ([[(.inr k, !b)]], k)
-  | .not x => match run k x with
-    | (c, nx) => (CNF.ne (.inr (nx + 1)) (.inr nx) ++ c, nx + 1)
-  | .gate g x y => match run k x with
-    | (cx, nx) => match run (nx + 1) y with
-      | (cy, ny) =>
-        (g.toCNF (.inr nx) (.inr ny) (.inr (ny + 1)) ++ cx ++ cy, ny + 1)
 
 def toCNF'_relabel (k : Nat) : α ⊕ Nat → α ⊕ Nat
   | .inl a => .inl a
@@ -645,10 +584,6 @@ theorem toCNF'_unsat {x : BoolExpr α} : (toCNF' x).unsat ↔ x.unsat := by
     have := toCNF'_eval x f
     revert this
     cases CNF.eval f (toCNF' x) <;> cases eval (fun a => f (Sum.inl a)) x <;> simp
-
-
-def toCNF (x : BoolExpr Nat) : CNF Nat :=
-  (toCNF' x.attach).relabel fun | .inl a => a | .inr j => x.vars + j
 
 theorem toCNF_unsat : (toCNF x).unsat ↔ x.unsat := by
   dsimp [toCNF]
