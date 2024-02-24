@@ -178,7 +178,7 @@ def convertCNF (maxVar : Nat) (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) 
 
 def mkTemp : IO System.FilePath := do
   let out ← IO.Process.output { cmd := "mktemp" }
-  return out.stdout
+  return out.stdout.trim
 
 def lratSolver : Solver LratFormula LratCert where
   encodeCNF reflectCnf :=
