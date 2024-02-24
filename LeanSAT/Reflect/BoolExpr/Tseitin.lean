@@ -5,8 +5,7 @@ Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.BoolExpr.Decidable
 import LeanSAT.Reflect.CNF.Relabel
-import LeanSAT.Reflect.CNF.Decidable
-import Std.Tactic.LibrarySearch
+import Std.Data.Sum.Basic
 
 @[simp] theorem false_beq_false : (false == false) = true := rfl
 @[simp] theorem false_beq_true : (false == true) = false := rfl
@@ -123,9 +122,48 @@ def toCNF'_relabel (k : Nat) : α ⊕ Nat → α ⊕ Nat
   | .inl a => .inl a
   | .inr i => .inr (k + i)
 
+theorem toCNF'.run_snd_eq (k) (x : BoolExpr α) :
+    (toCNF'.run k x).2 = (toCNF'.run 0 x).2 + k := by
+  match x with
+  | .literal _ => simp [run]
+  | .const _ => simp [run]
+  | .not x =>
+    simp [run]
+    rw [toCNF'.run_snd_eq]
+    omega
+  | .gate g x y =>
+    simp [run]
+    rw [toCNF'.run_snd_eq (_ + _), toCNF'.run_snd_eq (_ + _), toCNF'.run_snd_eq k]
+    omega
+
+theorem toCNF'.run_fst_eq_relabel' (k) (k') (x : BoolExpr α) :
+    (toCNF'.run (k' + k) x).1 = (toCNF'.run k x).1.relabel (toCNF'_relabel k') := by
+  match x with
+  | .literal a => rfl
+  | .const b => rfl
+  | .not x =>
+    simp only [toCNF'.run, CNF.relabel_append]
+    rw [← toCNF'.run_fst_eq_relabel']
+    congr 1
+    dsimp only [run]
+    rw [toCNF'.run_snd_eq (k' + k), toCNF'.run_snd_eq k]
+    simp [CNF.ne, CNF.relabel, CNF.Clause.relabel, toCNF'_relabel]
+    omega
+  | .gate g x y =>
+    simp only [toCNF'.run, CNF.relabel_append]
+    rw [← toCNF'.run_fst_eq_relabel', ← toCNF'.run_fst_eq_relabel']
+    rw [toCNF'.run_snd_eq (_ + _), toCNF'.run_snd_eq k]
+    congr 3
+    · dsimp only [run]
+      rw [toCNF'.run_snd_eq (_ + _), toCNF'.run_snd_eq (_ + _)]
+      cases g <;>
+      · simp [Gate.toCNF, CNF.relabel, CNF.Clause.relabel, toCNF'_relabel]
+        omega
+    · omega
+
 theorem toCNF'.run_fst_eq_relabel (k) (x : BoolExpr α) :
     (toCNF'.run k x).1 = (toCNF'.run 0 x).1.relabel (toCNF'_relabel k) :=
-  sorry
+  toCNF'.run_fst_eq_relabel' 0 k x
 
 @[simp] theorem toCNF'_run_snd (x : BoolExpr α) : (toCNF'.run k x).2 = k + x.size - 1 := by
   match x with
@@ -137,7 +175,7 @@ theorem toCNF'.run_fst_eq_relabel (k) (x : BoolExpr α) :
     simp [toCNF'.run, size, toCNF'_run_snd] <;> omega
 
 theorem bounds_of_inr_mem_toCNF'_run_fst {i : Nat} {x : BoolExpr α}
-    (w : .inr i ∈ (toCNF'.run k x).1) : k ≤ i ∧ i < k + x.size := by
+    (w : CNF.mem (.inr i) (toCNF'.run k x).1) : k ≤ i ∧ i < k + x.size := by
   match x with
   | .literal a =>
     simp [toCNF'.run, size, CNF.eq] at *
@@ -168,11 +206,11 @@ theorem bounds_of_inr_mem_toCNF'_run_fst {i : Nat} {x : BoolExpr α}
       omega
 
 theorem ge_of_inr_mem_toCNF'_run_fst {i : Nat} {x : BoolExpr α}
-    (w : .inr i ∈ (toCNF'.run k x).1) : k ≤ i :=
+    (w : CNF.mem (.inr i) (toCNF'.run k x).1) : k ≤ i :=
   (bounds_of_inr_mem_toCNF'_run_fst w).1
 
 theorem lt_of_inr_mem_toCNF'_run_fst {i : Nat} {x : BoolExpr α}
-    (w : .inr i ∈ (toCNF'.run k x).1) : i < k + x.size :=
+    (w : CNF.mem (.inr i) (toCNF'.run k x).1) : i < k + x.size :=
   (bounds_of_inr_mem_toCNF'_run_fst w).2
 
 theorem toCNF'_run_eval (k : Nat) (x : BoolExpr α) (f : α ⊕ Nat → Bool) :
@@ -235,16 +273,34 @@ where
       | (ry, dy, ky) =>
         (bif dx then rx else bif dy then ry else g.eval rx ry, dx || dy || (ky + 1 = l), ky + 1)
 
-theorem traceEval_run_eq : (match (traceEval.run f i 0 x) with | ⟨r, d, c⟩ => ⟨r, d, c + k⟩) =
-    traceEval.run f (k + i) k x := by
+theorem traceEval_run_eq (f) (x : BoolExpr α) (l k k') :
+    (match (traceEval.run f l k x) with | ⟨r, d, c⟩ => ⟨r, d, c + k'⟩) =
+      traceEval.run f (k' + l) (k' + k) x := by
   match x with
   | .literal a => simp [traceEval.run]; omega
   | .const b => simp [traceEval.run]; omega
-  | .not x => simp [traceEval.run, ← traceEval_run_eq]; sorry
-  | .gate g x y => sorry
+  | .not x =>
+    simp [traceEval.run, ← traceEval_run_eq];
+    constructor
+    · congr 1
+      simp
+      omega
+    · omega
+  | .gate g x y =>
+    simp [traceEval.run]
+    simp [← traceEval_run_eq];
+    rw [Nat.add_comm _ k', Nat.add_assoc k' _ 1, ← traceEval_run_eq]
+    simp
+    constructor
+    · congr 1
+      simp
+      omega
+    · omega
 
 theorem traceEval_run_fst_eq : (traceEval.run f i 0 x).fst = (traceEval.run f (k + i) k x).fst := by
-  sorry
+  have := congrArg (·.1) (traceEval_run_eq f x i 0 k)
+  simp at this
+  exact this
 
 theorem elim_traceEval_eq_comp (k) :
     Sum.elim f (traceEval x f) =

@@ -5,6 +5,7 @@ Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.CNF.ForStd
 import Std.Data.Bool
+import Std.Data.List.Lemmas
 import Std.Tactic.Omega
 import Std.Tactic.SimpTrace
 
@@ -37,40 +38,56 @@ namespace Clause
 
 def mem (a : α) (c : Clause α) : Prop := (a, false) ∈ c ∨ (a, true) ∈ c
 
-instance : Membership α (Clause α) := ⟨mem⟩
+@[simp] theorem not_mem_nil {a : α} : mem a ([] : Clause α) ↔ False := by simp [mem]
+@[simp] theorem mem_cons {a : α} : mem a (i :: c : Clause α) ↔ (a = i.1 ∨ mem a c) := by
+  rcases i with ⟨b, (_|_)⟩
+  · simp [mem, or_assoc]
+  · simp [mem]
+    rw [or_left_comm]
 
-@[simp] theorem not_mem_nil {a : α} : a ∈ ([] : Clause α) ↔ False := sorry
-@[simp] theorem mem_cons {a : α} : (a ∈ (i :: c : Clause α)) ↔ (a = i.1 ∨ a ∈ c) := sorry
-
-theorem eval_congr (f g : α → Bool) (c : Clause α) (w : ∀ i, i ∈ c → f i = g i) :
+theorem eval_congr (f g : α → Bool) (c : Clause α) (w : ∀ i, mem i c → f i = g i) :
     eval f c = eval g c := by
   induction c
   case nil => rfl
   case cons i c ih =>
     simp only [eval_succ]
     rw [ih, w]
-    · sorry
+    · rcases i with ⟨b, (_|_)⟩ <;> simp [mem]
     · intro j h
       apply w
-      sorry
+      rcases h with h | h
+      · left
+        apply List.mem_cons_of_mem _ h
+      · right
+        apply List.mem_cons_of_mem _ h
 
 end Clause
 
 def mem (a : α) (g : CNF α) : Prop := ∃ c, c ∈ g ∧ c.mem a
 
-instance : Membership α (CNF α) := ⟨mem⟩
+@[simp] theorem not_mem_nil {a : α} : mem a ([] : CNF α) ↔ False := by simp [mem]
+@[simp] theorem mem_cons {a : α} {i} {c : CNF α} :
+    mem a (i :: c : CNF α) ↔ (Clause.mem a i ∨ mem a c) := by simp [mem]
 
-@[simp] theorem not_mem_nil {a : α} : a ∈ ([] : CNF α) ↔ False := sorry
-@[simp] theorem mem_cons {a : α} {i} {c : CNF α} : (a ∈ (i :: c : CNF α)) ↔ (a ∈ i ∨ a ∈ c) := sorry
+@[simp] theorem mem_append {a : α} {x y : CNF α} : mem a (x ++ y) ↔ mem a x ∨ mem a y := by
+  simp [mem, List.mem_append]
+  constructor
+  · rintro ⟨c, (mx | my), mc⟩
+    · left
+      exact ⟨c, mx, mc⟩
+    · right
+      exact ⟨c, my, mc⟩
+  · rintro (⟨c, mx, mc⟩ | ⟨c, my, mc⟩)
+    · exact ⟨c, Or.inl mx, mc⟩
+    · exact ⟨c, Or.inr my, mc⟩
 
-@[simp] theorem mem_append {a : α} {x y : CNF α} : a ∈ x ++ y ↔ a ∈ x ∨ a ∈ y := sorry
-
-theorem eval_congr (f g : α → Bool) (x : CNF α) (w : ∀ i, i ∈ x → f i = g i) :
+theorem eval_congr (f g : α → Bool) (x : CNF α) (w : ∀ i, mem i x → f i = g i) :
     eval f x = eval g x := by
   induction x
   case nil => rfl
   case cons c x ih =>
     simp only [eval_succ]
-    rw [ih, Clause.eval_congr]
-    · sorry
-    · sorry
+    rw [ih, Clause.eval_congr] <;>
+    · intro i h
+      apply w
+      simp [h]

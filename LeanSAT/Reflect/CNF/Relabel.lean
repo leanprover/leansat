@@ -35,6 +35,9 @@ def relabel (f : α → β) (g : CNF α) : CNF β := g.map (Clause.relabel f)
     (relabel f x).eval g = x.eval (g ∘ f) := by
   induction x <;> simp_all [relabel]
 
+@[simp] theorem relabel_append : relabel f (g ++ h) = relabel f g ++ relabel f h :=
+  List.map_append _ _ _
+
 theorem sat_relabel (h : sat x (g ∘ f)) : sat (relabel f x) g := by
   simp_all [sat]
 
