@@ -27,7 +27,7 @@ def main : List String → IO Unit := fun args => do
         else
           match ← lineToAction line with
           | some intAction =>
-            match ← intActionToDefaultClauseActionIO n intAction with
+            match intActionToDefaultClauseAction n intAction with
             | some action => (formula, res) := incrementalLRATChecker formula action
             | none => encounteredParsingError := true; break
           | none => encounteredParsingError := true; break

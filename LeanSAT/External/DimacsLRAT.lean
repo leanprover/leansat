@@ -59,13 +59,12 @@ def loadProblem (path : System.FilePath) : CommandElabM (Σ n : Nat, Array (Opti
     throwError "The problem line stated there were {numClauses} clauses but there are actually {res.size} (res: {res})"
   return ⟨numVarsSucc, res⟩
 
-def intToLiteralIO {n : Nat} (x : Int) (x_ne_zero : x ≠ 0) : IO (Option (Literal (PosFin n))) := do
+def intToLiteralPure {n : Nat} (x : Int) (x_ne_zero : x ≠ 0) : Option (Literal (PosFin n)) := do
   if h : x.natAbs < n then
-    if x > 0 then return some (⟨x.natAbs, ⟨by omega, h⟩⟩, true)
-    else return some (⟨x.natAbs, ⟨by omega, h⟩⟩, false)
+    if x > 0 then some (⟨x.natAbs, ⟨by omega, h⟩⟩, true)
+    else some (⟨x.natAbs, ⟨by omega, h⟩⟩, false)
   else
-    IO.println "Given literal {x} is outside of the bounds specified by the number of variables"
-    return none
+    none
 
 /-- `parseProblem` takes in the path of a CNF file and attempts to output a number `n` (indicating the total number
     of variables + 1) along with an Array of `DefaultClause n` Option expressions. This Array should match the
@@ -98,7 +97,7 @@ def parseProblem (path : System.FilePath) : IO (Option (Σ n : Nat, Array (Optio
       let some lit := String.toInt? lit
         | IO.println s!"Clause {c} contains non-int {lit}"; return none
       if h : lit ≠ 0 then
-        let some lit ← intToLiteralIO lit h
+        let some lit := intToLiteralPure lit h
           | return none
         match curClause.insert lit with
         | some updatedClause => curClause := updatedClause
