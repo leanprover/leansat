@@ -175,48 +175,23 @@ def liftClause (clause : CNF.Clause Nat) (hclause : clause ∈ cnf) (hnum : maxV
   clause
 
 def liftCnf (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : CNF (PosFin (maxVar + 2)) :=
-  cnf.attach.map (fun clause => liftClause clause.val clause.property h)
+  -- TODO: this needs a slightlier beefier version of relabel but is otherwise fine
+  cnf.relabel (fun lit => ⟨lit + 1, sorry⟩)
 
 theorem unsat_of_liftCnf_unsat (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : CNF.unsat (liftCnf cnf h) → CNF.unsat cnf := by
-  intro h2 assign
-  let liftedAssign (lit : PosFin (maxVar + 2)) : Bool := assign (lit.val - 1)
-  have h2 := h2 liftedAssign
-  simp only [CNF.eval, List.all_eq_not_any_not, Bool.not_eq_false', List.any_eq_true, Bool.not_eq_true'] at *
-  rcases h2 with ⟨clause, ⟨hclause1, hclause2⟩⟩
-  apply Exists.intro (clause.map (fun lit => (lit.fst.val - 1, lit.snd)))
-  constructor
-  . sorry -- some membership preservation lemma that connects lift and lower functions
-  . simp only [CNF.Clause.eval, List.any_eq_not_all_not, Bool.not_eq_false', List.all_eq_true, List.mem_map] at *
-    intro lit hlit
-    rcases hlit with ⟨liftedLit, ⟨hliftedLit1, hliftedLit2⟩⟩
-    have hclause2 := hclause2 ⟨⟨lit.fst + 1, sorry⟩, lit.snd⟩
-    apply hclause2
-    cases hliftedLit2
-    have hliftedLit3 := liftedLit.fst.property
-    rw [Nat.sub_add_cancel (by omega)]
-    exact hliftedLit1
-
-def convertLit (lit : PosFin n × Bool) : _root_.Literal (PosFin n) :=
-  /-
-  The encoding difference is as follows:
-  Josh: if the assignment of the literal matches the accompanying bool
-  Scott: if the assignment of the literal *does not match* the accompanying bool
-  -> flip the bool
-  -/
-  ⟨lit.fst, !lit.snd⟩
+  intro h2
+  refine CNF.unsat_relabel_iff ?_ |>.mp h2
+  intro a b h
+  injections h
 
 def convertClause (clause : CNF.Clause (PosFin n)) : Option (LRAT.DefaultClause n) :=
-  LRAT.DefaultClause.ofArray (clause.map convertLit).toArray
+  LRAT.DefaultClause.ofArray clause.toArray
 
 def convertClauses (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
   clauses.map convertClause
 
-def flipAssignment (a : α → Bool) : α → Bool := fun x => !(a x)
-
-theorem eq_not_iff : ∀ {a b : Bool}, a = !b ↔ a ≠ b := by decide
-
 theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : convertClause clause = some lratClause) :
-    CNF.Clause.eval assign clause → (flipAssignment assign) ⊨ lratClause := by
+    CNF.Clause.eval assign clause → assign ⊨ lratClause := by
   intro h2
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
   simp only [HSat.eval, List.any_eq_true, decide_eq_true_eq]
@@ -224,9 +199,7 @@ theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : conve
   apply Exists.intro (lit.fst, !lit.snd)
   constructor
   . sorry -- this follows by some membership preservation lemma on convertClause
-  . rw [← ne_eq, ← eq_not_iff] at hlit2
-    simp[flipAssignment, hlit2]
-    sorry
+  . sorry
 
 /--
 Convert a `CNF Nat` with a certain maximum variable number into the `LRAT.DefaultFormula`
