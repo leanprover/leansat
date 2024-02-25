@@ -10,17 +10,17 @@ namespace Gate
 
 def toCNF (i₁ i₂ o : α) : Gate → CNF α
   | .and =>
-    [[(o, true), (i₁, false)], [(o, true), (i₂, false)], [(o, false), (i₁, true), (i₂, true)]]
-  | .or =>
     [[(o, false), (i₁, true)], [(o, false), (i₂, true)], [(o, true), (i₁, false), (i₂, false)]]
+  | .or =>
+    [[(o, true), (i₁, false)], [(o, true), (i₂, false)], [(o, false), (i₁, true), (i₂, true)]]
   | .xor =>
-    [[(o, true), (i₁, false), (i₂, false)], [(o, true), (i₁, true), (i₂, true)],
-      [(o, false), (i₁, true), (i₂, false)], [(o, false), (i₁, false), (i₂, true)]]
+    [[(o, false), (i₁, true), (i₂, true)], [(o, false), (i₁, false), (i₂, false)],
+      [(o, true), (i₁, false), (i₂, true)], [(o, true), (i₁, true), (i₂, false)]]
   | .beq =>
-    [[(o, true), (i₁, false), (i₂, true)], [(o, true), (i₁, true), (i₂, false)],
-      [(o, false), (i₁, true), (i₂, true)], [(o, false), (i₁, false), (i₂, false)]]
+    [[(o, false), (i₁, true), (i₂, false)], [(o, false), (i₁, false), (i₂, true)],
+      [(o, true), (i₁, false), (i₂, false)], [(o, true), (i₁, true), (i₂, true)]]
   | .imp =>
-    [[(o, true), (i₁, true), (i₂, false)], [(o, false), (i₁, false)], [(o, false), (i₂, true)]]
+    [[(o, false), (i₁, false), (i₂, true)], [(o, true), (i₁, true)], [(o, true), (i₂, false)]]
 
 end Gate
 
@@ -44,7 +44,7 @@ We produce a CNF with literals labelled by `α ⊕ Nat`.
 -/
 def toCNF' (x : BoolExpr α) : CNF (α ⊕ Nat) :=
   let (c, p) := run 0 x
-  [(.inr p, false)] :: c
+  [(.inr p, true)] :: c
 where
   /--
   We take as additional argument `k : Nat` which is the "next available circuit node label"
@@ -52,7 +52,7 @@ where
   -/
   run (k : Nat) : BoolExpr α → CNF (α ⊕ Nat) × Nat
   | .literal a => (CNF.eq (.inl a) (.inr k), k)
-  | .const b => ([[(.inr k, !b)]], k)
+  | .const b => ([[(.inr k, b)]], k)
   | .not x => match run k x with
     | (c, nx) => (CNF.ne (.inr (nx + 1)) (.inr nx) ++ c, nx + 1)
   | .gate g x y => match run k x with

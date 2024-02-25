@@ -11,17 +11,22 @@ import Std.Tactic.SimpTrace
 
 set_option linter.missingDocs false
 
+/--
+A clause in a CNF.
+
+The literal `(i, b)` is satisfied is the assignment to `i` agrees with `b`.
+-/
 abbrev CNF.Clause (α : Type) : Type := List (α × Bool)
 
 abbrev CNF (α : Type) : Type := List (CNF.Clause α)
 
 namespace CNF
 
-def Clause.eval (f : α → Bool) (c : Clause α) : Bool := c.any fun (i, n) => xor n (f i)
+def Clause.eval (f : α → Bool) (c : Clause α) : Bool := c.any fun (i, n) => f i == n
 
 @[simp] theorem Clause.eval_nil (f : α → Bool) : Clause.eval f [] = false := rfl
 @[simp] theorem Clause.eval_succ (f : α → Bool) :
-    Clause.eval f (i :: c) = ((xor i.2 (f i.1)) || Clause.eval f c) := rfl
+    Clause.eval f (i :: c) = (f i.1 == i.2 || Clause.eval f c) := rfl
 
 def eval (f : α → Bool) (g : CNF α) : Bool := g.all fun c => c.eval f
 
