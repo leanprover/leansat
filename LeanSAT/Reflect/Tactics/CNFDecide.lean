@@ -278,7 +278,11 @@ def _root_.Lean.MVarId.cnfDecide (g : MVarId) (cfg : TacticConfig) : MetaM Unit 
     let boolExprUnsat ←
       withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
         lratSolver' cfg boolExpr
-    g'.assign (← f boolExprUnsat)
+    IO.println "before proof construction"
+    let proveFalse ← f boolExprUnsat
+    IO.println "after proof construction"
+    g'.assign proveFalse
+    IO.println "after assign"
 
 syntax (name := cnfDecideSyntax) "cnf_decide" : tactic
 

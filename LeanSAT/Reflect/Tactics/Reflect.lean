@@ -17,6 +17,7 @@ namespace ReflectSat
 structure State where
   /-- The atoms up-to-defeq encountered so far. -/
   atoms : Array Expr := #[]
+  stashedAtomsFn? : Option Expr := none
 
 /-- The `ReflectSat.M` monad. -/
 abbrev M := StateRefT State MetaM
@@ -40,13 +41,21 @@ def atomsFn : M Expr := do
   return .lam `i (.const ``Nat []) (mkApp4 (.const ``List.getD [0]) (.const ``Bool [])
     (← atomsList) (.bvar 0) (.const ``false [])) .default
 
+def stashedAtomsFn : M Expr := do
+  match (← get).stashedAtomsFn? with
+  | none =>
+    let r ← atomsFn
+    set { (← get) with stashedAtomsFn? := r }
+    return r
+  | some r => return r
+
 /--
 Look up an expression in the atoms, recording it if it has not previously appeared.
 -/
 def lookup (e : Expr) : M Nat := do
   let c ← getThe State
   for h : i in [:c.atoms.size] do
-    if ← isDefEq e c.atoms[i] then
+    if ← withReducible (isDefEq e c.atoms[i]) then
       return i
   trace[sat] "New atom: {e}"
   let i ← modifyGetThe State fun c => (c.atoms.size, { c with atoms := c.atoms.push e })
@@ -54,13 +63,44 @@ def lookup (e : Expr) : M Nat := do
 
 end M
 
+instance : ToExpr Gate where
+  toExpr
+  | .and => .const ``Gate.and []
+  | .or  => .const ``Gate.or  []
+  | .xor => .const ``Gate.xor []
+  | .beq => .const ``Gate.beq []
+  | .imp => .const ``Gate.imp []
+  toTypeExpr := .const ``Gate []
+
+def literalExpr (i : Nat) : Expr := mkApp2 (.const ``BoolExpr.literal []) (.const ``Nat []) (toExpr i)
+def constExpr (b : Bool) : Expr := mkApp2 (.const ``BoolExpr.const []) (.const ``Nat []) (toExpr b)
+def notExpr (x : Expr) : Expr := mkApp2 (.const ``BoolExpr.not []) (.const ``Nat []) x
+def gateExpr (g : Gate) (x y : Expr) : Expr :=
+  mkApp4 (.const ``BoolExpr.gate []) (.const ``Nat []) (toExpr g) x y
+
+instance : ToExpr (BoolExpr Nat) where
+  toExpr x := t x
+  toTypeExpr := .app (.const ``BoolExpr []) (.const ``Nat [])
+where
+  t : BoolExpr Nat → Expr
+  | .literal i => literalExpr i
+  | .const b => constExpr b
+  | .not x => notExpr (t x)
+  | .gate g x y => gateExpr g (t x) (t y)
+
+def mkEvalExpr (x : Expr) (atomsFn : Expr) :
+  Expr := mkApp3 (.const ``BoolExpr.eval []) (.const ``Nat []) atomsFn x
+
 structure EvalAtAtoms where
   boolExpr : BoolExpr Nat
+  expr : Expr -- `toExpr boolExpr`
   eval : M Expr -- a proof that `boolExpr.eval atomsFn = _`
 
 namespace EvalAtAtoms
 
-def mkAtom (e : Expr) : M EvalAtAtoms := return ⟨.literal (← M.lookup e), do mkEqRefl e⟩
+def mkAtom (e : Expr) : M EvalAtAtoms := do
+  let i ← M.lookup e
+  return ⟨.literal i, literalExpr i, do mkEqRefl e⟩
 
 theorem not_congr {x₁ x₂ : Bool} (h : x₁ = x₂) : (!x₁) = (!x₂) := by
   cases h; rfl
@@ -81,80 +121,74 @@ theorem beq_congr {x₁ x₂ y₁ y₂ : Bool} (hx : x₁ = x₂) (hy : y₁ = y
 
 partial def of (e : Expr) : M EvalAtAtoms := do
   match e with
-  | .const ``true [] => return ⟨.const true, do mkEqRefl e⟩
-  | .const ``false [] => return ⟨.const false, do mkEqRefl e⟩
+  | .const ``true [] => return ⟨.const true, constExpr true, do mkEqRefl e⟩
+  | .const ``false [] => return ⟨.const false, constExpr false, do mkEqRefl e⟩
   | .app _ _ => match e.getAppFnArgs with
     | (``_root_.not, #[x]) => do
-      let ⟨xb, xp⟩ ← of x
-      let p := do mkAppM ``not_congr #[(← xp)]
-      return ⟨.not xb, p⟩
+      let ⟨xb, xe, xp⟩ ← of x
+      let p := return mkApp3 (.const ``not_congr []) (mkEvalExpr xe (← M.atomsFn)) x (← xp)
+      return ⟨.not xb, notExpr xe, p⟩
     | (``_root_.and, #[x, y]) => do
-      let ⟨xb, xp⟩ ← of x
-      let ⟨yb, yp⟩ ← of y
-      let p := do mkAppM ``and_congr #[(← xp), (← yp)]
-      return ⟨.gate .and xb yb, p⟩
+      let ⟨xb, xe, xp⟩ ← of x
+      let ⟨yb, ye, yp⟩ ← of y
+      let p := do pure <|
+        (mkApp6 (.const ``and_congr [])
+          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
+      return ⟨.gate .and xb yb, gateExpr .and xe ye, p⟩
     | (``_root_.or, #[x, y]) => do
-      let ⟨xb, xp⟩ ← of x
-      let ⟨yb, yp⟩ ← of y
-      let p := do mkAppM ``or_congr #[(← xp), (← yp)]
-      return ⟨.gate .or xb yb, p⟩
+      let ⟨xb, xe, xp⟩ ← of x
+      let ⟨yb, ye, yp⟩ ← of y
+      let p := do pure <|
+        (mkApp6 (.const ``or_congr [])
+          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
+      return ⟨.gate .or xb yb, gateExpr .or xe ye, p⟩
     | (``Bool.xor, #[x, y]) => do
-      let ⟨xb, xp⟩ ← of x
-      let ⟨yb, yp⟩ ← of y
-      let p := do mkAppM ``xor_congr #[(← xp), (← yp)]
-      return ⟨.gate .xor xb yb, p⟩
+      let ⟨xb, xe, xp⟩ ← of x
+      let ⟨yb, ye, yp⟩ ← of y
+      let p := do pure <|
+        (mkApp6 (.const ``xor_congr [])
+          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
+      return ⟨.gate .xor xb yb, gateExpr .xor xe ye, p⟩
     | (``BEq.beq, #[_, _, x, y]) => do
-      let ⟨xb, xp⟩ ← of x
-      let ⟨yb, yp⟩ ← of y
-      let p := do mkAppM ``beq_congr #[(← xp), (← yp)]
-      return ⟨.gate .beq xb yb, p⟩
+      let ⟨xb, xe, xp⟩ ← of x
+      let ⟨yb, ye, yp⟩ ← of y
+      let p := do pure <|
+        (mkApp6 (.const ``beq_congr [])
+          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
+      return ⟨.gate .beq xb yb, gateExpr .beq xe ye, p⟩
     | _ => mkAtom e
   | _ => mkAtom e
 
 end EvalAtAtoms
 
-instance : ToExpr Gate where
-  toExpr
-  | .and => .const ``Gate.and []
-  | .or  => .const ``Gate.or  []
-  | .xor => .const ``Gate.xor []
-  | .beq => .const ``Gate.beq []
-  | .imp => .const ``Gate.imp []
-  toTypeExpr := .const ``Gate []
-
-instance : ToExpr (BoolExpr Nat) where
-  toExpr x := t x
-  toTypeExpr := .app (.const ``BoolExpr []) (.const ``Nat [])
-where
-  t : BoolExpr Nat → Expr
-  | .literal i => mkApp2 (.const ``BoolExpr.literal []) (.const ``Nat []) (toExpr i)
-  | .const b => mkApp2 (.const ``BoolExpr.const []) (.const ``Nat []) (toExpr b)
-  | .not x => mkApp2 (.const ``BoolExpr.not []) (.const ``Nat []) (t x)
-  | .gate g x y => mkApp4 (.const ``BoolExpr.gate []) (.const ``Nat []) (toExpr g) (t x) (t y)
-
 structure SatAtAtoms where
-  expr : BoolExpr Nat
+  boolExpr : BoolExpr Nat
+  expr : Expr -- `toExpr boolExpr`, cached
   satAtAtoms : M Expr -- a proof that `expr.eval atomsFn = true`
 
 namespace SatAtAtoms
 
 def trivial : SatAtAtoms where
-  expr := .const true
+  boolExpr := .const true
+  expr := toExpr (.const true : BoolExpr Nat)
   satAtAtoms := return mkApp2 (.const ``sat_true []) (.const ``Nat []) (← M.atomsFn)
 
 def and (x y : SatAtAtoms) : SatAtAtoms where
-  expr := .gate .and x.expr y.expr
+  boolExpr := .gate .and x.boolExpr y.boolExpr
+  expr := gateExpr .and x.expr y.expr
   satAtAtoms := do
     pure <|
     (mkApp6 (.const ``sat_and []) (.const ``Nat [])
-      (toExpr x.expr) (toExpr y.expr) (← M.atomsFn) (← x.satAtAtoms) (← y.satAtAtoms))
+      x.expr y.expr (← M.atomsFn) (← x.satAtAtoms) (← y.satAtAtoms))
 
 theorem false_of_eq_true_of_eq_false (h₁ : x = true) (h₂ : x = false) : False := by
   cases h₁; cases h₂
 
 /-- Given a proof that `x.expr.unsat`, produce a proof of `False`. -/
-def false (x : SatAtAtoms) (h : Expr) : M Expr := do
-  mkAppM ``false_of_eq_true_of_eq_false #[← x.satAtAtoms, .app h (← M.atomsFn)]
+def proveFalse (x : SatAtAtoms) (h : Expr) : M Expr := do
+  let atomsFn ← M.atomsFn
+  return mkApp3 (.const ``false_of_eq_true_of_eq_false [])
+    (mkEvalExpr x.expr atomsFn) (← x.satAtAtoms) (.app h atomsFn)
 
 theorem beq_eq_true_of_eq {x y : Bool} (h : x = y) : (x == y) = true := (beq_iff_eq x y).mpr h
 
@@ -167,11 +201,18 @@ partial def of (h : Expr) : M (Option SatAtAtoms) := do
   match t.getAppFnArgs with
   -- We could special case `x` or `y` being true or false.
   | (``Eq, #[.const ``Bool [], x, y]) =>
-    let ⟨xb, xp⟩ ← EvalAtAtoms.of x
-    let ⟨yb, yp⟩ ← EvalAtAtoms.of y
+    let ⟨xb, xe, xp⟩ ← EvalAtAtoms.of x
+    let ⟨yb, ye, yp⟩ ← EvalAtAtoms.of y
     let p := do
-       mkAppM ``beq_eq_true_of_eq #[← mkEqTrans (← mkEqTrans (← xp) h) (← mkEqSymm (← yp))]
-    return some ⟨.gate .beq xb yb, p⟩
+       let atomsFn ← M.atomsFn
+       let xeval := mkEvalExpr xe atomsFn
+       let yeval := mkEvalExpr ye atomsFn
+       return mkApp3 (.const ``beq_eq_true_of_eq [])
+         xeval yeval
+         (mkApp6 (.const ``Eq.trans [1]) (.const ``Bool []) xeval y yeval
+           (mkApp6 (.const ``Eq.trans [1]) (.const ``Bool []) xeval x y (← xp) h)
+           (mkApp4 (.const ``Eq.symm [1]) (.const ``Bool []) yeval y (← yp)))
+    return some ⟨.gate .beq xb yb, gateExpr .beq xe ye, p⟩
   | (``Ne, #[_, x, y]) => of (mkApp3 (.const ``eq_not_of_ne []) x y h)
   | (``Not, #[w]) =>
     match w.getAppFnArgs with
@@ -189,6 +230,8 @@ Given a goal `g`, which should be `False`, returns
 -/
 def reflectSAT (g : MVarId) : M (BoolExpr Nat × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
+  IO.println "before SatAtAtoms.of"
   let sats ← hyps.filterMapM fun h => SatAtAtoms.of h
+  IO.println "after SatAtAtoms.of"
   let sat := sats.foldl (init := SatAtAtoms.trivial) SatAtAtoms.and
-  return (sat.expr, sat.false)
+  return (sat.boolExpr, sat.proveFalse)
