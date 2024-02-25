@@ -181,8 +181,20 @@ theorem unsat_of_liftCnf_unsat (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar)
   intro h2 assign
   let liftedAssign (lit : PosFin (maxVar + 2)) : Bool := assign (lit.val - 1)
   have h2 := h2 liftedAssign
-  -- probably some brutal unfolding of CNF.eval until something interesting happens
-  sorry
+  simp only [CNF.eval, List.all_eq_not_any_not, Bool.not_eq_false', List.any_eq_true, Bool.not_eq_true'] at *
+  rcases h2 with ⟨clause, ⟨hclause1, hclause2⟩⟩
+  apply Exists.intro (clause.map (fun lit => (lit.fst.val - 1, lit.snd)))
+  constructor
+  . sorry -- some membership preservation lemma that connects lift and lower functions
+  . simp only [CNF.Clause.eval, List.any_eq_not_all_not, Bool.not_eq_false', List.all_eq_true, List.mem_map] at *
+    intro lit hlit
+    rcases hlit with ⟨liftedLit, ⟨hliftedLit1, hliftedLit2⟩⟩
+    have hclause2 := hclause2 ⟨⟨lit.fst + 1, sorry⟩, lit.snd⟩
+    apply hclause2
+    cases hliftedLit2
+    have hliftedLit3 := liftedLit.fst.property
+    rw [Nat.sub_add_cancel (by omega)]
+    exact hliftedLit1
 
 def convertLit (lit : PosFin n × Bool) : _root_.Literal (PosFin n) :=
   /-
@@ -199,20 +211,22 @@ def convertClause (clause : CNF.Clause (PosFin n)) : Option (LRAT.DefaultClause 
 def convertClauses (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
   clauses.map convertClause
 
+def flipAssignment (a : α → Bool) : α → Bool := fun x => !(a x)
+
+theorem eq_not_iff : ∀ {a b : Bool}, a = !b ↔ a ≠ b := by decide
+
 theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : convertClause clause = some lratClause) :
-    CNF.Clause.eval assign clause → assign ⊨ lratClause := by
-  -- This proof sketch is not entirely valid, we need to take into account the fact that
-  -- due to h all polarities are flipped in lratClause
+    CNF.Clause.eval assign clause → (flipAssignment assign) ⊨ lratClause := by
   intro h2
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
   simp only [HSat.eval, List.any_eq_true, decide_eq_true_eq]
   rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
-  apply Exists.intro lit
+  apply Exists.intro (lit.fst, !lit.snd)
   constructor
   . sorry -- this follows by some membership preservation lemma on convertClause
-  . sorry
-
-
+  . rw [← ne_eq, ← eq_not_iff] at hlit2
+    simp[flipAssignment, hlit2]
+    sorry
 
 /--
 Convert a `CNF Nat` with a certain maximum variable number into the `LRAT.DefaultFormula`
@@ -229,10 +243,6 @@ def convertCNF (maxVar : Nat) (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) 
   let lratCnf := convertClauses lifted
   LRAT.DefaultFormula.ofArray (none :: lratCnf).toArray
 
-def mkTemp : IO System.FilePath := do
-  let out ← IO.Process.output { cmd := "mktemp" }
-  return out.stdout.trim
-
 theorem unsat_of_cons_none_unsat (clauses : List (Option (LRAT.DefaultClause n))) :
     unsatisfiable (PosFin n) (LRAT.DefaultFormula.ofArray (none :: clauses).toArray)
       →
@@ -242,6 +252,10 @@ theorem unsat_of_cons_none_unsat (clauses : List (Option (LRAT.DefaultClause n))
   simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at *
   intro clause hclause
   simp_all[LRAT.DefaultFormula.ofArray, LRAT.Formula.toList, LRAT.DefaultFormula.toList]
+
+def mkTemp : IO System.FilePath := do
+  let out ← IO.Process.output { cmd := "mktemp" }
+  return out.stdout.trim
 
 def lratSolver : Solver LratFormula LratCert where
   encodeCNF reflectCnf :=
@@ -311,29 +325,23 @@ def lratSolver : Solver LratFormula LratCert where
     next maxVar heq =>
       apply unsat_of_liftCnf_unsat c heq
       intro assignment
-
-      -- get rid of the initial none
-      dsimp at h2
       unfold convertCNF at h2
-      have h2 := (unsat_of_cons_none_unsat _ h2) assignment
-
+      have h2 := (unsat_of_cons_none_unsat _ h2) (flipAssignment assignment)
       apply eq_false_of_ne_true
       intro h3
       apply h2
-
       simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
       intro lratClause hlclause
       simp only [LRAT.Formula.toList, LRAT.DefaultFormula.toList, LRAT.DefaultFormula.ofArray,
         convertClauses, Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
         List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
       rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
-
       simp only [CNF.eval, List.all_eq_true] at h3
       simp [convertClause_sat_of_cnf_sat reflectClause hrclause2, h3 reflectClause hrclause1]
     next =>
       exfalso
       apply h2 (fun _ => false)
-      simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+      simp only [LRAT.Formula.formulaHSat_def]
       decide
 
 def lratSolver' (cfg : TacticConfig) : BoolExpr Nat → MetaM Expr :=
