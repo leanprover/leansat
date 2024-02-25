@@ -177,19 +177,42 @@ def liftClause (clause : CNF.Clause Nat) (hclause : clause ∈ cnf) (hnum : maxV
 def liftCnf (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : CNF (PosFin (maxVar + 2)) :=
   cnf.attach.map (fun clause => liftClause clause.val clause.property h)
 
--- XXX: technically speaking we only need one direction
-theorem liftCnf_equisat (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : CNF.unsat cnf ↔ CNF.unsat (liftCnf cnf h) :=
+theorem unsat_of_liftCnf_unsat (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : CNF.unsat (liftCnf cnf h) → CNF.unsat cnf := by
+  intro h2 assign
+  let liftedAssign (lit : PosFin (maxVar + 2)) : Bool := assign (lit.val - 1)
+  have h2 := h2 liftedAssign
+  -- probably some brutal unfolding of CNF.eval until something interesting happens
   sorry
 
+def convertLit (lit : PosFin n × Bool) : _root_.Literal (PosFin n) :=
+  /-
+  The encoding difference is as follows:
+  Josh: if the assignment of the literal matches the accompanying bool
+  Scott: if the assignment of the literal *does not match* the accompanying bool
+  -> flip the bool
+  -/
+  ⟨lit.fst, !lit.snd⟩
+
 def convertClause (clause : CNF.Clause (PosFin n)) : Option (LRAT.DefaultClause n) :=
-  LRAT.DefaultClause.ofArray clause.toArray
+  LRAT.DefaultClause.ofArray (clause.map convertLit).toArray
 
 def convertClauses (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
   clauses.map convertClause
 
-theorem convertClause_equisat (clause : CNF.Clause (PosFin n)) (h : convertClause clause = some lratClause) :
-    CNF.Clause.eval assign clause ↔ assign ⊨ lratClause := by
-  sorry
+theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : convertClause clause = some lratClause) :
+    CNF.Clause.eval assign clause → assign ⊨ lratClause := by
+  -- This proof sketch is not entirely valid, we need to take into account the fact that
+  -- due to h all polarities are flipped in lratClause
+  intro h2
+  simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
+  simp only [HSat.eval, List.any_eq_true, decide_eq_true_eq]
+  rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
+  apply Exists.intro lit
+  constructor
+  . sorry -- this follows by some membership preservation lemma on convertClause
+  . sorry
+
+
 
 /--
 Convert a `CNF Nat` with a certain maximum variable number into the `LRAT.DefaultFormula`
@@ -228,7 +251,6 @@ def lratSolver : Solver LratFormula LratCert where
     | none => ⟨0, LRAT.DefaultFormula.ofArray #[]⟩
 
   runExternal formula := do
-    let numVars := formula.numVars
     let formula := formula.formula
     -- TODO: In the future we might want to cache these
     let cnfPath ← mkTemp
@@ -287,7 +309,7 @@ def lratSolver : Solver LratFormula LratCert where
         h1
     split at h2
     next maxVar heq =>
-      rw [liftCnf_equisat c heq]
+      apply unsat_of_liftCnf_unsat c heq
       intro assignment
 
       -- get rid of the initial none
@@ -307,8 +329,7 @@ def lratSolver : Solver LratFormula LratCert where
       rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
 
       simp only [CNF.eval, List.all_eq_true] at h3
-      have h3 := h3 reflectClause hrclause1
-      simp [← convertClause_equisat reflectClause hrclause2, h3]
+      simp [convertClause_sat_of_cnf_sat reflectClause hrclause2, h3 reflectClause hrclause1]
     next =>
       exfalso
       apply h2 (fun _ => false)
