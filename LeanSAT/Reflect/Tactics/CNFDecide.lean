@@ -104,6 +104,8 @@ structure LratFormula where
   numVars : Nat
   /-- The actual SAT formula in the LeanSAT framework. -/
   formula : LRAT.DefaultFormula numVars.succ
+  h1 : LRAT.DefaultFormula.readyForRupAdd formula
+  h2 : LRAT.DefaultFormula.readyForRatAdd formula
 
 /--
 An LRAT proof certificate. Note that this only contains a list of LRAT actions
@@ -174,11 +176,11 @@ def liftClause (clause : CNF.Clause Nat) (hclause : clause ∈ cnf) (hnum : maxV
   let clause := clause.attach.map (fun lit => liftLit lit.val (h2 clause hclause lit.val lit.property))
   clause
 
-def liftCnf (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : CNF (PosFin (maxVar + 2)) :=
+def liftCnf (cnf : CNF Nat) (h : ∀ c ∈ cnf, ∀ l ∈ c, l.fst ≤ maxVar) : CNF (PosFin (maxVar + 2)) :=
   -- TODO: this needs a slightlier beefier version of relabel but is otherwise fine
   cnf.relabel (fun lit => ⟨lit + 1, sorry⟩)
 
-theorem unsat_of_liftCnf_unsat (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : CNF.unsat (liftCnf cnf h) → CNF.unsat cnf := by
+theorem unsat_of_liftCnf_unsat (cnf : CNF Nat) (h : ∀ c ∈ cnf, ∀ l ∈ c, l.fst ≤ maxVar) : CNF.unsat (liftCnf cnf h) → CNF.unsat cnf := by
   intro h2
   refine CNF.unsat_relabel_iff ?_ |>.mp h2
   intro a b h
@@ -190,6 +192,10 @@ def convertClause (clause : CNF.Clause (PosFin n)) : Option (LRAT.DefaultClause 
 def convertClauses (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
   clauses.map convertClause
 
+theorem aux1 (clause : CNF.Clause (PosFin n)) (h1 : l ∈ clause)
+    (h2 : LRAT.DefaultClause.ofArray clause.toArray = some lratClause) : l ∈ lratClause.clause := by
+  sorry
+
 theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : convertClause clause = some lratClause) :
     CNF.Clause.eval assign clause → assign ⊨ lratClause := by
   intro h2
@@ -198,7 +204,9 @@ theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : conve
   rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
   apply Exists.intro (lit.fst, lit.snd)
   constructor
-  . sorry -- this follows by some membership preservation lemma on convertClause
+  . simp[LRAT.Clause.toList, LRAT.DefaultClause.toList]
+    simp[convertClause] at h
+    exact aux1 clause hlit1 h
   . simp_all
 
 /--
@@ -211,7 +219,7 @@ Notably this:
    refers to the DIMACS file line by line and the DIMACS file begins with the
   `p cnf x y` meta instruction.
 -/
-def convertCNF (maxVar : Nat) (cnf : CNF Nat) (h : maxVarNum cnf = some maxVar) : LRAT.DefaultFormula (maxVar + 2) :=
+def convertCNF (maxVar : Nat) (cnf : CNF Nat) (h : ∀ c ∈ cnf, ∀ l ∈ c, l.fst ≤ maxVar) : LRAT.DefaultFormula (maxVar + 2) :=
   let lifted := liftCnf cnf h
   let lratCnf := convertClauses lifted
   LRAT.DefaultFormula.ofArray (none :: lratCnf).toArray
@@ -234,8 +242,19 @@ def lratSolver : Solver LratFormula LratCert where
   encodeCNF reflectCnf :=
     match h:maxVarNum reflectCnf with
     | some maxVar =>
-      ⟨_, convertCNF maxVar reflectCnf h⟩
-    | none => ⟨0, LRAT.DefaultFormula.ofArray #[]⟩
+      ⟨
+        maxVar + 1,
+        convertCNF maxVar reflectCnf (maxVarNum_eq_some_property _ h),
+        by apply LRAT.DefaultFormula.ofArray_readyForRupAdd,
+        by apply LRAT.DefaultFormula.ofArray_readyForRatAdd
+      ⟩
+    | none =>
+      ⟨
+        0,
+        LRAT.DefaultFormula.ofArray #[],
+        by apply LRAT.DefaultFormula.ofArray_readyForRupAdd,
+        by apply LRAT.DefaultFormula.ofArray_readyForRatAdd
+      ⟩
 
   runExternal formula := do
     let formula := formula.formula
@@ -284,8 +303,8 @@ def lratSolver : Solver LratFormula LratCert where
     have h2 :=
       lratCheckerSound
         _
-        (by split <;> apply LRAT.Formula.ofArray_readyForRupAdd)
-        (by split <;> apply LRAT.Formula.ofArray_readyForRatAdd)
+        (by apply LratFormula.h1)
+        (by apply LratFormula.h2)
         _
         (by
           intro action h
@@ -296,7 +315,7 @@ def lratSolver : Solver LratFormula LratCert where
         h1
     split at h2
     next maxVar heq =>
-      apply unsat_of_liftCnf_unsat c heq
+      apply unsat_of_liftCnf_unsat c (maxVarNum_eq_some_property _ heq)
       intro assignment
       unfold convertCNF at h2
       have h2 := (unsat_of_cons_none_unsat _ h2) assignment
