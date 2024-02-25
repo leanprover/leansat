@@ -196,10 +196,10 @@ theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : conve
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
   simp only [HSat.eval, List.any_eq_true, decide_eq_true_eq]
   rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
-  apply Exists.intro (lit.fst, !lit.snd)
+  apply Exists.intro (lit.fst, lit.snd)
   constructor
   . sorry -- this follows by some membership preservation lemma on convertClause
-  . sorry
+  . simp_all
 
 /--
 Convert a `CNF Nat` with a certain maximum variable number into the `LRAT.DefaultFormula`
@@ -299,7 +299,7 @@ def lratSolver : Solver LratFormula LratCert where
       apply unsat_of_liftCnf_unsat c heq
       intro assignment
       unfold convertCNF at h2
-      have h2 := (unsat_of_cons_none_unsat _ h2) (flipAssignment assignment)
+      have h2 := (unsat_of_cons_none_unsat _ h2) assignment
       apply eq_false_of_ne_true
       intro h3
       apply h2
