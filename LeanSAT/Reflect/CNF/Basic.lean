@@ -91,14 +91,37 @@ def mem (a : α) (g : CNF α) : Prop := ∃ c, c ∈ g ∧ c.mem a
 instance {a : α} {g : CNF α} [DecidableEq α] : Decidable (mem a g) :=
   inferInstanceAs <| Decidable (∃ _, _)
 
+theorem any_nonEmpty_iff_exists_mem {g : CNF α} [DecidableEq α] : (List.any g fun c => !List.isEmpty c) = true ↔ ∃ a, mem a g := by
+  simp[mem, Clause.mem]
+  constructor
+  . intro h
+    rcases h with ⟨clause, ⟨hclause1, hclause2⟩⟩
+    rw[List.isEmpty_false_iff_exists_mem] at hclause2
+    rcases hclause2 with ⟨lit, hlit⟩
+    exists lit.fst, clause
+    constructor
+    . assumption
+    . rcases lit with ⟨_, ⟨_ | _⟩⟩ <;> simp_all
+  . intro h
+    rcases h with ⟨lit, clause, ⟨hclause1, hclause2⟩⟩
+    exists clause
+    constructor
+    . assumption
+    . rw [List.isEmpty_false_iff_exists_mem]
+      cases hclause2 with
+      | inl hl => exact Exists.intro _ hl
+      | inr hr => exact Exists.intro _ hr
+
 instance {g : CNF α} [DecidableEq α] : Decidable (∃ a, mem a g) :=
-  decidable_of_iff (g.any fun c => !c.isEmpty) sorry
+  decidable_of_iff (g.any fun c => !c.isEmpty) any_nonEmpty_iff_exists_mem
 
 @[simp] theorem not_mem_nil {a : α} : mem a ([] : CNF α) ↔ False := by simp [mem]
 @[simp] theorem mem_cons {a : α} {i} {c : CNF α} :
     mem a (i :: c : CNF α) ↔ (Clause.mem a i ∨ mem a c) := by simp [mem]
 
-theorem mem_of (h : c ∈ g) (w : Clause.mem a c) : mem a g := sorry
+theorem mem_of (h : c ∈ g) (w : Clause.mem a c) : mem a g := by
+  apply Exists.intro c
+  constructor <;> assumption
 
 @[simp] theorem mem_append {a : α} {x y : CNF α} : mem a (x ++ y) ↔ mem a x ∨ mem a y := by
   simp [mem, List.mem_append]
