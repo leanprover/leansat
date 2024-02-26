@@ -83,7 +83,6 @@ def Solver.lift (cfg : TacticConfig) (solverName : Name) (cnfType : Expr) (certT
   withTraceNode `sat (fun _ => return "Compiling proof certificate term") do
     mkAuxDecl cfg.certDef (toExpr cert) certType
 
-  -- TODO: put into its own decl
   let boolExpr := mkConst cfg.boolExprDef
   let certExpr := mkConst cfg.certDef
   let solverExpr := mkConst solverName
