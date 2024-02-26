@@ -98,7 +98,9 @@ instance {g : CNF α} [DecidableEq α] : Decidable (∃ a, mem a g) :=
 @[simp] theorem mem_cons {a : α} {i} {c : CNF α} :
     mem a (i :: c : CNF α) ↔ (Clause.mem a i ∨ mem a c) := by simp [mem]
 
-theorem mem_of (h : c ∈ g) (w : Clause.mem a c) : mem a g := sorry
+theorem mem_of (h : c ∈ g) (w : Clause.mem a c) : mem a g := by
+  apply Exists.intro c
+  constructor <;> assumption
 
 @[simp] theorem mem_append {a : α} {x y : CNF α} : mem a (x ++ y) ↔ mem a x ∨ mem a y := by
   simp [mem, List.mem_append]
