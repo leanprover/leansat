@@ -156,9 +156,42 @@ def convertClause (clause : CNF.Clause (PosFin n)) : Option (LRAT.DefaultClause 
 def convertClauses (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
   clauses.map convertClause
 
-theorem aux1 (clause : CNF.Clause (PosFin n)) (h1 : l ∈ clause)
+theorem mem_lratClause_of_mem_clause (clause : CNF.Clause (PosFin n)) (h1 : l ∈ clause)
     (h2 : LRAT.DefaultClause.ofArray clause.toArray = some lratClause) : l ∈ lratClause.clause := by
-  sorry
+  induction clause generalizing lratClause with
+  | nil => cases h1
+  | cons hd tl ih =>
+    unfold LRAT.DefaultClause.ofArray at h2
+    rw [Array.foldr_eq_foldr_data,Array.toArray_data] at h2
+    dsimp only [List.foldr] at h2
+    split at h2
+    · cases h2
+    · rw [LRAT.DefaultClause.insert] at h2
+      split at h2
+      · cases h2
+      · split at h2
+        · rename_i h
+          rw [<-Option.some.inj h2] at *
+          cases h1
+          · exact List.mem_of_elem_eq_true h
+          · apply ih
+            · assumption
+            · next heq _ _ =>
+              unfold LRAT.DefaultClause.ofArray
+              rw [Array.foldr_eq_foldr_data,Array.toArray_data]
+              exact heq
+        · cases h1
+          · simp only [<-Option.some.inj h2]
+            constructor
+          · simp only at h2
+            simp only [<-Option.some.inj h2]
+            rename_i heq _ _ _
+            apply List.Mem.tail
+            apply ih
+            assumption
+            unfold LRAT.DefaultClause.ofArray
+            rw [Array.foldr_eq_foldr_data,Array.toArray_data]
+            exact heq
 
 theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : convertClause clause = some lratClause) :
     CNF.Clause.eval assign clause → assign ⊨ lratClause := by
@@ -170,7 +203,7 @@ theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : conve
   constructor
   . simp[LRAT.Clause.toList, LRAT.DefaultClause.toList]
     simp[convertClause] at h
-    exact aux1 clause hlit1 h
+    exact mem_lratClause_of_mem_clause clause hlit1 h
   . simp_all
 
 /--
