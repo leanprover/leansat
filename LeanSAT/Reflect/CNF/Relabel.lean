@@ -7,12 +7,20 @@ import LeanSAT.Reflect.CNF.Basic
 
 set_option linter.missingDocs false
 
-@[simp] theorem _root_.List.map_replicate :
+namespace List
+
+@[simp] theorem map_replicate :
     (List.replicate n a).map f = List.replicate n (f a) := by
   induction n <;> simp_all
 
-theorem _root_.List.map_congr {f g : α → β} {L : List α} (w : ∀ a, a ∈ L → f a = g a) :
-    L.map f = L.map g := sorry
+-- taken from Mathlib, move to Lean
+theorem map_congr {f g : α → β} : ∀ {l : List α}, (∀ x ∈ l, f x = g x) → map f l = map g l
+  | [], _ => rfl
+  | a :: l, h => by
+    let ⟨h₁, h₂⟩ := forall_mem_cons.1 h
+    rw [map, map, h₁, map_congr h₂]
+
+end List
 
 namespace CNF
 
@@ -28,12 +36,11 @@ def relabel (f : α → β) (c : Clause α) : Clause β := c.map (fun (i, n) => 
 
 theorem relabel_congr {x : Clause α} {f g : α → β} (w : ∀ a, mem a x → f a = g a) :
     relabel f x = relabel g x := by
-  simp [relabel]
+  simp only [relabel]
   rw [List.map_congr]
   intro ⟨i, b⟩ h
   congr
-  apply w
-
+  apply w _ (mem_of h)
 
 -- We need the unapplied equality later.
 @[simp] theorem relabel_relabel' : relabel f ∘ relabel g = relabel (f ∘ g) := by
@@ -64,7 +71,13 @@ def relabel (f : α → β) (g : CNF α) : CNF β := g.map (Clause.relabel f)
 @[simp] theorem relabel_id : relabel id x = x := by simp [relabel]
 
 theorem relabel_congr {x : CNF α} {f g : α → β} (w : ∀ a, mem a x → f a = g a) :
-  relabel f x = relabel g x := sorry -- define `Clause.relabel_congr` first
+    relabel f x = relabel g x := by
+  dsimp only [relabel]
+  rw [List.map_congr]
+  intro c h
+  apply Clause.relabel_congr
+  intro a m
+  exact w _ (mem_of h m)
 
 theorem sat_relabel (h : sat x (g ∘ f)) : sat (relabel f x) g := by
   simp_all [sat]
