@@ -591,7 +591,7 @@ theorem toCNF'_unsat {x : BoolExpr α} : (toCNF' x).unsat ↔ x.unsat := by
 theorem toCNF_unsat : (toCNF x).unsat ↔ x.unsat := by
   dsimp [toCNF]
   rw [CNF.unsat_relabel_iff, toCNF'_unsat, ← BoolExpr.attach_unsat]
-  · rintro (a | a) (b | b) <;> simp
+  · rintro (a | a) (b | b) - - <;> simp
     exact Fin.eq_of_val_eq -- FIXME `omega` should handle this too!
     all_goals omega
 

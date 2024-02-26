@@ -43,12 +43,20 @@ namespace Clause
 
 def mem (a : α) (c : Clause α) : Prop := (a, false) ∈ c ∨ (a, true) ∈ c
 
+instance {a : α} {c : Clause α} [DecidableEq α] : Decidable (mem a c) :=
+  inferInstanceAs <| Decidable (_ ∨ _)
+
 @[simp] theorem not_mem_nil {a : α} : mem a ([] : Clause α) ↔ False := by simp [mem]
 @[simp] theorem mem_cons {a : α} : mem a (i :: c : Clause α) ↔ (a = i.1 ∨ mem a c) := by
   rcases i with ⟨b, (_|_)⟩
   · simp [mem, or_assoc]
   · simp [mem]
     rw [or_left_comm]
+
+theorem mem_of (h : (a, b) ∈ c) : mem a c := by
+  cases b
+  · left; exact h
+  · right; exact h
 
 theorem eval_congr (f g : α → Bool) (c : Clause α) (w : ∀ i, mem i c → f i = g i) :
     eval f c = eval g c := by
@@ -70,9 +78,17 @@ end Clause
 
 def mem (a : α) (g : CNF α) : Prop := ∃ c, c ∈ g ∧ c.mem a
 
+instance {a : α} {g : CNF α} [DecidableEq α] : Decidable (mem a g) :=
+  inferInstanceAs <| Decidable (∃ _, _)
+
+instance {g : CNF α} [DecidableEq α] : Decidable (∃ a, mem a g) :=
+  decidable_of_iff (g.any fun c => !c.isEmpty) sorry
+
 @[simp] theorem not_mem_nil {a : α} : mem a ([] : CNF α) ↔ False := by simp [mem]
 @[simp] theorem mem_cons {a : α} {i} {c : CNF α} :
     mem a (i :: c : CNF α) ↔ (Clause.mem a i ∨ mem a c) := by simp [mem]
+
+theorem mem_of (h : c ∈ g) (w : Clause.mem a c) : mem a g := sorry
 
 @[simp] theorem mem_append {a : α} {x y : CNF α} : mem a (x ++ y) ↔ mem a x ∨ mem a y := by
   simp [mem, List.mem_append]
