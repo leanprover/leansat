@@ -240,11 +240,8 @@ def _root_.Lean.MVarId.cnfDecide (g : MVarId) (cfg : TacticContext) : MetaM Unit
     let boolExprUnsat ←
       withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
         lratSolver cfg boolExpr
-    IO.println "before proof construction"
     let proveFalse ← f boolExprUnsat
-    IO.println "after proof construction"
     g'.assign proveFalse
-    IO.println "after assign"
 
 /--
 Close a goal by turning:

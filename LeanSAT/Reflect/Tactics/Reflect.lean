@@ -230,8 +230,6 @@ Given a goal `g`, which should be `False`, returns
 -/
 def reflectSAT (g : MVarId) : M (BoolExpr Nat × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
-  IO.println "before SatAtAtoms.of"
   let sats ← hyps.filterMapM fun h => SatAtAtoms.of h
-  IO.println "after SatAtAtoms.of"
   let sat := sats.foldl (init := SatAtAtoms.trivial) SatAtAtoms.and
   return (sat.boolExpr, sat.proveFalse)
