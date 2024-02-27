@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.Tactics.Reflect
-import LeanSAT.Reflect.CNF.Decidable -- This import is not used directly, but without it the tactic fails.
 import LeanSAT.Reflect.BoolExpr.Tseitin.Lemmas
+import LeanSAT.Reflect.Glue
 
 import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
@@ -50,50 +50,6 @@ theorem Solver.unsat_of_verifyExpr_eq_true (s : Solver α β) (b : BoolExpr Nat)
   rw [verifyExpr] at h
   exact h
 
-def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
-  addAndCompile <| .defnDecl {
-    name := name,
-    levelParams := [],
-    type := type,
-    value := value,
-    hints := .abbrev,
-    safety := .safe
-  }
-
-/--
-We can lift a `Solver β` to a function `CNF Nat → MetaM Expr`,
-which given `x : CNF Nat` produces a proof of `x.unsat`.
-
-But we need to jump through some hoops!
--/
-def Solver.lift (cfg : TacticConfig) (solverName : Name) (cnfType : Expr) (certType : Expr)
-    [ToExpr β] (s : Solver α β) (boolExpr : BoolExpr Nat) : MetaM Expr := do
-  let cnf ←
-    withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
-      return boolExpr.toCNF
-  trace[sat] "Converted to CNF: {cnf}"
-  let encoded ←
-    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
-      return s.encodeCNF cnf
-  let cert ←
-    withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      s.runExternal encoded
-  withTraceNode `sat (fun _ => return "Compiling BoolExpr term") do
-    mkAuxDecl cfg.boolExprDef (toExpr boolExpr) (toTypeExpr (BoolExpr Nat))
-  withTraceNode `sat (fun _ => return "Compiling proof certificate term") do
-    mkAuxDecl cfg.certDef (toExpr cert) certType
-
-  let boolExpr := mkConst cfg.boolExprDef
-  let certExpr := mkConst cfg.certDef
-  let solverExpr := mkConst solverName
-
-  withTraceNode `sat (fun _ => return "Compiling reflection proof term") do
-    let auxValue := mkApp5 (mkConst ``Solver.verifyExpr) cnfType certType solverExpr boolExpr certExpr
-    mkAuxDecl cfg.reflectionDef auxValue (mkConst ``Bool)
-
-  let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst cfg.reflectionDef) (toExpr true) (← mkEqRefl (toExpr true))
-  return mkApp6 (mkConst ``Solver.unsat_of_verifyExpr_eq_true) cnfType certType solverExpr boolExpr certExpr nativeProof
-
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter
 as the `Solver` framework does not intend for dependent typing like this.
@@ -133,119 +89,13 @@ instance : ToExpr LratCert where
   toExpr cert := mkApp (mkConst ``LratCert.mk) (toExpr cert.cert)
   toTypeExpr := mkConst ``LratCert
 
-def liftCnf (cnf : CNF Nat) : CNF (PosFin (cnf.numLiterals + 1)) :=
-  let cnf := cnf.relabelFin
-  cnf.relabel (fun lit => ⟨lit.val + 1, by omega⟩)
-
-theorem unsat_of_liftCnf_unsat (cnf : CNF Nat) : CNF.unsat (liftCnf cnf) → CNF.unsat cnf := by
-  intro h2
-  have h3 :=
-    CNF.unsat_relabel_iff
-      (by
-        intro a b ha hb hab
-        injections hab
-        cases a; cases b; simp_all)
-      |>.mp h2
-  have h4 := CNF.unsat_relabelFin.mp h3
-  assumption
-
-def convertClause (clause : CNF.Clause (PosFin n)) : Option (LRAT.DefaultClause n) :=
-  LRAT.DefaultClause.ofArray clause.toArray
-
-def convertClauses (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
-  clauses.map convertClause
-
-theorem mem_lratClause_of_mem_clause (clause : CNF.Clause (PosFin n)) (h1 : l ∈ clause)
-    (h2 : LRAT.DefaultClause.ofArray clause.toArray = some lratClause) : l ∈ lratClause.clause := by
-  induction clause generalizing lratClause with
-  | nil => cases h1
-  | cons hd tl ih =>
-    unfold LRAT.DefaultClause.ofArray at h2
-    rw [Array.foldr_eq_foldr_data,Array.toArray_data] at h2
-    dsimp only [List.foldr] at h2
-    split at h2
-    · cases h2
-    · rw [LRAT.DefaultClause.insert] at h2
-      split at h2
-      · cases h2
-      · split at h2
-        · rename_i h
-          rw [<-Option.some.inj h2] at *
-          cases h1
-          · exact List.mem_of_elem_eq_true h
-          · apply ih
-            · assumption
-            · next heq _ _ =>
-              unfold LRAT.DefaultClause.ofArray
-              rw [Array.foldr_eq_foldr_data,Array.toArray_data]
-              exact heq
-        · cases h1
-          · simp only [<-Option.some.inj h2]
-            constructor
-          · simp only at h2
-            simp only [<-Option.some.inj h2]
-            rename_i heq _ _ _
-            apply List.Mem.tail
-            apply ih
-            assumption
-            unfold LRAT.DefaultClause.ofArray
-            rw [Array.foldr_eq_foldr_data,Array.toArray_data]
-            exact heq
-
-theorem convertClause_sat_of_cnf_sat (clause : CNF.Clause (PosFin n)) (h : convertClause clause = some lratClause) :
-    CNF.Clause.eval assign clause → assign ⊨ lratClause := by
-  intro h2
-  simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
-  simp only [HSat.eval, List.any_eq_true, decide_eq_true_eq]
-  rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
-  apply Exists.intro (lit.fst, lit.snd)
-  constructor
-  . simp[LRAT.Clause.toList, LRAT.DefaultClause.toList]
-    simp[convertClause] at h
-    exact mem_lratClause_of_mem_clause clause hlit1 h
-  . simp_all
-
-/--
-Convert a `CNF Nat` with a certain maximum variable number into the `LRAT.DefaultFormula`
-format for usage with LeanSAT.
-
-Notably this:
-1. Increments all variables as DIMACS variables start at 1 instead of 0
-2. Adds a leading `none` clause. This clause *must* be persistet as the LRAT proof
-   refers to the DIMACS file line by line and the DIMACS file begins with the
-  `p cnf x y` meta instruction.
--/
-def convertCNF (cnf : CNF Nat) : LRAT.DefaultFormula (cnf.numLiterals + 1) :=
-  let lifted := liftCnf cnf
-  let lratCnf := convertClauses lifted
-  LRAT.DefaultFormula.ofArray (none :: lratCnf).toArray
-
-
-theorem convertCNF_readfyForRupAdd : LRAT.DefaultFormula.readyForRupAdd (convertCNF cnf) := by
-  unfold convertCNF
-  apply LRAT.DefaultFormula.ofArray_readyForRupAdd
-
-theorem convertCNF_readfyForRatAdd : LRAT.DefaultFormula.readyForRatAdd (convertCNF cnf) := by
-  unfold convertCNF
-  apply LRAT.DefaultFormula.ofArray_readyForRatAdd
-
-theorem unsat_of_cons_none_unsat (clauses : List (Option (LRAT.DefaultClause n))) :
-    unsatisfiable (PosFin n) (LRAT.DefaultFormula.ofArray (none :: clauses).toArray)
-      →
-    unsatisfiable (PosFin n) (LRAT.DefaultFormula.ofArray clauses.toArray) := by
-  intro h assign hassign
-  apply h assign
-  simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at *
-  intro clause hclause
-  simp_all[LRAT.DefaultFormula.ofArray, LRAT.Formula.toList, LRAT.DefaultFormula.toList]
-
 def mkTemp : IO System.FilePath := do
   let out ← IO.Process.output { cmd := "mktemp" }
   return out.stdout.trim
 
 def lratSolver : Solver LratFormula LratCert where
   encodeCNF reflectCnf :=
-    ⟨_, convertCNF reflectCnf⟩
+    ⟨_, reflectCnf.convertLRAT⟩
 
   runExternal formula := do
     let formula := formula.formula
@@ -309,8 +159,8 @@ def lratSolver : Solver LratFormula LratCert where
       have h2 :=
         lratCheckerSound
           _
-          (by apply convertCNF_readfyForRupAdd)
-          (by apply convertCNF_readfyForRatAdd)
+          (by apply CNF.convertLRAT_readfyForRupAdd)
+          (by apply CNF.convertLRAT_readfyForRatAdd)
           _
           (by
             intro action h
@@ -319,25 +169,62 @@ def lratSolver : Solver LratFormula LratCert where
             rw [← h2]
             exact wellFormedActions.property)
           h1
-      apply unsat_of_liftCnf_unsat c
+      apply CNF.unsat_of_lift_unsat c
       intro assignment
-      unfold convertCNF at h2
-      have h2 := (unsat_of_cons_none_unsat _ h2) assignment
+      unfold CNF.convertLRAT at h2
+      have h2 := (LRAT.unsat_of_cons_none_unsat _ h2) assignment
       apply eq_false_of_ne_true
       intro h3
       apply h2
       simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
       intro lratClause hlclause
       simp only [LRAT.Formula.toList, LRAT.DefaultFormula.toList, LRAT.DefaultFormula.ofArray,
-        convertClauses, Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
+        CNF.convertLRAT', Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
         List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
       rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
       simp only [CNF.eval, List.all_eq_true] at h3
-      simp [convertClause_sat_of_cnf_sat reflectClause hrclause2, h3 reflectClause hrclause1]
+      simp [CNF.Clause.convertLRAT_sat_of_sat reflectClause hrclause2, h3 reflectClause hrclause1]
     . contradiction
 
-def lratSolver' (cfg : TacticConfig) : BoolExpr Nat → MetaM Expr :=
-  Solver.lift cfg ``lratSolver  (mkConst ``LratFormula) (mkConst ``LratCert) lratSolver
+
+def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
+  addAndCompile <| .defnDecl {
+    name := name,
+    levelParams := [],
+    type := type,
+    value := value,
+    hints := .abbrev,
+    safety := .safe
+  }
+
+def lratSolver' (cfg : TacticConfig) (boolExpr : BoolExpr Nat) : MetaM Expr := do
+  let cnf ←
+    withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
+      return boolExpr.toCNF
+  trace[sat] "Converted to CNF: {cnf}"
+  let encoded ←
+    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
+      return lratSolver.encodeCNF cnf
+  let cert ←
+    withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
+      lratSolver.runExternal encoded
+  withTraceNode `sat (fun _ => return "Compiling BoolExpr term") do
+    mkAuxDecl cfg.boolExprDef (toExpr boolExpr) (toTypeExpr (BoolExpr Nat))
+  let certType := toTypeExpr LratCert
+  withTraceNode `sat (fun _ => return "Compiling proof certificate term") do
+    mkAuxDecl cfg.certDef (toExpr cert) certType
+
+  let boolExpr := mkConst cfg.boolExprDef
+  let certExpr := mkConst cfg.certDef
+  let solverExpr := mkConst ``lratSolver
+  let cnfType := mkConst ``LratFormula
+
+  withTraceNode `sat (fun _ => return "Compiling reflection proof term") do
+    let auxValue := mkApp5 (mkConst ``Solver.verifyExpr) cnfType certType solverExpr boolExpr certExpr
+    mkAuxDecl cfg.reflectionDef auxValue (mkConst ``Bool)
+
+  let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst cfg.reflectionDef) (toExpr true) (← mkEqRefl (toExpr true))
+  return mkApp6 (mkConst ``Solver.unsat_of_verifyExpr_eq_true) cnfType certType solverExpr boolExpr certExpr nativeProof
 
 def _root_.Lean.MVarId.cnfDecide (g : MVarId) (cfg : TacticConfig) : MetaM Unit := M.run do
   let g' ← falseOrByContra g
