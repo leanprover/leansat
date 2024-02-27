@@ -15,8 +15,12 @@ import Std.Tactic.SimpTrace
 @[simp] theorem exists_or_eq_left' (y : α) (p : α → Prop) : ∃ x : α, y = x ∨ p x := ⟨y, .inl rfl⟩
 @[simp] theorem exists_or_eq_right' (y : α) (p : α → Prop) : ∃ x : α, p x ∨ y = x := ⟨y, .inr rfl⟩
 
-theorem List.isEmpty_false_iff_exists_mem (xs : List α) :
+@[simp] theorem List.isEmpty_false_iff_exists_mem (xs : List α) :
     (List.isEmpty xs = false) ↔ ∃ x, x ∈ xs := by
+  cases xs <;> simp
+
+@[simp] theorem List.isEmpty_true_iff (xs : List α) :
+    (List.isEmpty xs = true) ↔ xs = [] := by
   cases xs <;> simp
 
 set_option linter.missingDocs false
@@ -48,6 +52,12 @@ def eval (f : α → Bool) (g : CNF α) : Bool := g.all fun c => c.eval f
 
 def sat (g : CNF α) (f : α → Bool) : Prop := eval f g = true
 def unsat (g : CNF α) : Prop := ∀ f, eval f g = false
+
+@[simp] theorem unsat_nil_iff_false : unsat ([] : CNF α) ↔ False :=
+  ⟨fun h => by simp [unsat] at h, by simp⟩
+
+@[simp] theorem unsat_nil_cons : unsat ([] :: g) ↔ True := by
+  simp [unsat]
 
 namespace Clause
 
@@ -91,12 +101,13 @@ def mem (a : α) (g : CNF α) : Prop := ∃ c, c ∈ g ∧ c.mem a
 instance {a : α} {g : CNF α} [DecidableEq α] : Decidable (mem a g) :=
   inferInstanceAs <| Decidable (∃ _, _)
 
-theorem any_nonEmpty_iff_exists_mem {g : CNF α} [DecidableEq α] : (List.any g fun c => !List.isEmpty c) = true ↔ ∃ a, mem a g := by
-  simp[mem, Clause.mem]
+theorem any_nonEmpty_iff_exists_mem {g : CNF α} :
+    (List.any g fun c => !List.isEmpty c) = true ↔ ∃ a, mem a g := by
+  simp only [List.any_eq_true, Bool.not_eq_true', List.isEmpty_false_iff_exists_mem, mem,
+    Clause.mem]
   constructor
   . intro h
     rcases h with ⟨clause, ⟨hclause1, hclause2⟩⟩
-    rw[List.isEmpty_false_iff_exists_mem] at hclause2
     rcases hclause2 with ⟨lit, hlit⟩
     exists lit.fst, clause
     constructor
@@ -107,10 +118,27 @@ theorem any_nonEmpty_iff_exists_mem {g : CNF α} [DecidableEq α] : (List.any g 
     exists clause
     constructor
     . assumption
-    . rw [List.isEmpty_false_iff_exists_mem]
-      cases hclause2 with
+    . cases hclause2 with
       | inl hl => exact Exists.intro _ hl
       | inr hr => exact Exists.intro _ hr
+
+@[simp] theorem not_mem_cons : (¬ ∃ a, mem a g) ↔ ∃ n, g = List.replicate n [] := by
+  simp only [← any_nonEmpty_iff_exists_mem]
+  simp only [List.any_eq_true, Bool.not_eq_true', not_exists, not_and, Bool.not_eq_false]
+  induction g with
+  | nil =>
+    simp only [List.not_mem_nil, List.isEmpty_true_iff, false_implies, forall_const, true_iff]
+    exact ⟨0, rfl⟩
+  | cons c g ih =>
+    simp_all [ih]
+    constructor
+    · rintro ⟨rfl, n, rfl⟩
+      exact ⟨n+1, rfl⟩
+    · rintro ⟨n, h⟩
+      cases n
+      · simp at h
+      · simp_all only [List.replicate, List.cons.injEq, true_and]
+        exact ⟨_, rfl⟩
 
 instance {g : CNF α} [DecidableEq α] : Decidable (∃ a, mem a g) :=
   decidable_of_iff (g.any fun c => !c.isEmpty) any_nonEmpty_iff_exists_mem

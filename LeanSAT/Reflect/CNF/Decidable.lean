@@ -113,7 +113,7 @@ def relabelFin (g : CNF Nat) : CNF (Fin g.numLiterals) :=
       else
         ⟨0, numLiterals_pos h.choose_spec⟩
   else
-    []
+    List.replicate g.length []
 
 theorem unsat_relabelFin : unsat g.relabelFin ↔ unsat g := by
   dsimp [relabelFin]
@@ -125,7 +125,15 @@ theorem unsat_relabelFin : unsat g.relabelFin ↔ unsat g := by
     split <;> rename_i a_lt
     · simp
     · contradiction
-  · sorry
+  · cases g with
+    | nil => simp
+    | cons c g =>
+      simp only [not_mem_cons] at h
+      obtain ⟨n, h⟩ := h
+      cases n with
+      | zero => simp at h
+      | succ n =>
+        simp_all
 
 instance (x : CNF (Fin n)) : Decidable x.unsat :=
   inferInstanceAs <| Decidable (∀ f, eval f x = false)
