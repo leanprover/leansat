@@ -16,3 +16,4 @@ import LeanSAT.Reflect.Tactics.CNFDecide
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.Tactics.SatDecide
 import LeanSAT.Reflect.Fin
+import LeanSAT.Reflect.Glue
