@@ -14,7 +14,7 @@ example (h : x = false) : false = x := by cnf_decide
 def axiomCheck (_ : x = true) (_ : (x && false) = true) : False := by cnf_decide
 
 /--
-info: 'axiomCheck' depends on axioms: [Classical.choice, propext, Quot.sound, Lean.ofReduceBool]
+info: 'axiomCheck' depends on axioms: [propext, Classical.choice, Quot.sound, Lean.ofReduceBool]
 -/
 #guard_msgs in
 #print axioms axiomCheck
