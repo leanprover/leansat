@@ -253,8 +253,8 @@ def lratSolver : Solver LratFormula LratCert where
     let cnfPath ← mkTemp
     let lratPath ← mkTemp
     IO.FS.writeFile cnfPath <| formula.dimacs
-    -- TODO: make sure we handle the case where the problem is in fact not UNSAT
-    let _ ← satQuery "cadical" cnfPath.toString lratPath.toString
+    -- TODO: make cadical parameterizable
+    satQuery "cadical" cnfPath lratPath
     let some lratProof ← LRAT.parseLRATProof lratPath.toString | throw <| IO.userError "SAT solver produced invalid LRAT"
     -- cleanup files such that we don't pollute /tmp
     IO.FS.removeFile cnfPath

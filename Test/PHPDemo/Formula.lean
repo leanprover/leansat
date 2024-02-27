@@ -57,7 +57,7 @@ def load_php3_lrat_proof : IO (List ({act : DefaultClauseAction 13 // wellFormed
   let cnfPath : System.FilePath := "." / "Test" / "PHPDemo" / "php3.cnf"
   let lratPath : System.FilePath := "." / "Test" / "PHPDemo" / "php3.lrat"
   IO.FS.writeFile cnfPath $ dimacs php3_formula
-  let _ ← satQuery cnfPath.toString lratPath.toString
+  let _ ← satQuery "cadical" cnfPath lratPath
   match ← parseLRATProof lratPath.toString with
   | some lratProof =>
     let lratProof := lratProof.map (intActionToDefaultClauseAction 13)
