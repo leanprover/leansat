@@ -111,8 +111,8 @@ This is done as we need to provide an `ToExpr LratCert` instance, which not easi
 possible for proof carrying structures.
 -/
 structure LratCert where
-  /-- The list of LRAT actions to take for the proof. -/
-  cert : List LRAT.IntAction
+  /-- An LRAT proof read from a file. This will get parsed using ofReduceBool. -/
+  cert : String
 
 instance : ToExpr LRAT.IntAction where
   toExpr action :=
@@ -255,70 +255,86 @@ def lratSolver : Solver LratFormula LratCert where
     IO.FS.writeFile cnfPath <| formula.dimacs
     -- TODO: make cadical parameterizable
     satQuery "cadical" cnfPath lratPath
-    let some lratProof ← LRAT.parseLRATProof lratPath.toString | throw <| IO.userError "SAT solver produced invalid LRAT"
+    let lines ← IO.FS.lines lratPath
+    -- This is just a sanity check to verify that the proof does indeed parse.
+    -- The parsing relevant for the reflection proof happens in the reflection term.
+    if LRAT.parseLRATProof lines |>.isNone then
+      throw <| IO.userError "SAT solver produced invalid LRAT"
     -- cleanup files such that we don't pollute /tmp
     IO.FS.removeFile cnfPath
     IO.FS.removeFile lratPath
-    return ⟨lratProof.toList⟩
+    -- XXX String.intercalate wit Array
+    let lratProof := String.intercalate "\n" lines.toList
+    return ⟨lratProof⟩
 
   verify formula cert :=
-    let lratProof := cert.cert.map (LRAT.intActionToDefaultClauseAction formula.numVars.succ)
-    let lratProof : List { act // LRAT.wellFormedAction act } :=
-      lratProof.filterMap
-        (fun actOpt =>
-          match actOpt with
-          | none => none
-          | some (LRAT.Action.addEmpty id rupHints) =>
-            some ⟨LRAT.Action.addEmpty id rupHints, by simp only [LRAT.wellFormedAction]⟩
-          | some (LRAT.Action.addRup id c rupHints) =>
-            some ⟨LRAT.Action.addRup id c rupHints, by simp only [LRAT.wellFormedAction]⟩
-          | some (LRAT.Action.del ids) =>
-            some ⟨LRAT.Action.del ids, by simp only [LRAT.wellFormedAction]⟩
-          | some (LRAT.Action.addRat id c pivot rupHints ratHints) =>
-            if h : pivot ∈ LRAT.Clause.toList c then
-              some ⟨
-                LRAT.Action.addRat id c pivot rupHints ratHints,
-                by simp [LRAT.wellFormedAction, LRAT.Clause.limplies_iff_mem, h]
-              ⟩
-            else
-              -- TODO: report this
-              none
-        )
-    let lratProof := lratProof.map Subtype.val
-    let checkerResult := LRAT.lratChecker formula.formula lratProof
-    checkerResult = .success
+    -- XXX String.splitOn with Array
+    let lines := cert.cert.splitOn "\n" |>.toArray
+    match LRAT.parseLRATProof lines with
+    | some lratProof =>
+      -- XXX
+      let lratProof := lratProof.toList
+      let lratProof := lratProof.map (LRAT.intActionToDefaultClauseAction formula.numVars.succ)
+      let lratProof : List { act // LRAT.wellFormedAction act } :=
+        lratProof.filterMap
+          (fun actOpt =>
+            match actOpt with
+            | none => none
+            | some (LRAT.Action.addEmpty id rupHints) =>
+              some ⟨LRAT.Action.addEmpty id rupHints, by simp only [LRAT.wellFormedAction]⟩
+            | some (LRAT.Action.addRup id c rupHints) =>
+              some ⟨LRAT.Action.addRup id c rupHints, by simp only [LRAT.wellFormedAction]⟩
+            | some (LRAT.Action.del ids) =>
+              some ⟨LRAT.Action.del ids, by simp only [LRAT.wellFormedAction]⟩
+            | some (LRAT.Action.addRat id c pivot rupHints ratHints) =>
+              if h : pivot ∈ LRAT.Clause.toList c then
+                some ⟨
+                  LRAT.Action.addRat id c pivot rupHints ratHints,
+                  by simp [LRAT.wellFormedAction, LRAT.Clause.limplies_iff_mem, h]
+                ⟩
+              else
+                -- TODO: report this
+                none
+          )
+      let lratProof := lratProof.map Subtype.val
+      let checkerResult := LRAT.lratChecker formula.formula lratProof
+      checkerResult = .success
+    | none => false
 
   correct := by
     intro c b h1
-    simp only [decide_eq_true_eq] at h1
-    have h2 :=
-      lratCheckerSound
-        _
-        (by apply convertCNF_readfyForRupAdd)
-        (by apply convertCNF_readfyForRatAdd)
-        _
-        (by
-          intro action h
-          simp only [List.mem_map, List.mem_filterMap] at h
-          rcases h with ⟨wellFormedActions, _, h2⟩
-          rw [← h2]
-          exact wellFormedActions.property)
-        h1
-    apply unsat_of_liftCnf_unsat c
-    intro assignment
-    unfold convertCNF at h2
-    have h2 := (unsat_of_cons_none_unsat _ h2) assignment
-    apply eq_false_of_ne_true
-    intro h3
-    apply h2
-    simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
-    intro lratClause hlclause
-    simp only [LRAT.Formula.toList, LRAT.DefaultFormula.toList, LRAT.DefaultFormula.ofArray,
-      convertClauses, Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
-      List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
-    rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
-    simp only [CNF.eval, List.all_eq_true] at h3
-    simp [convertClause_sat_of_cnf_sat reflectClause hrclause2, h3 reflectClause hrclause1]
+    dsimp at h1
+    split at h1
+    . simp only [decide_eq_true_eq] at h1
+      have h2 :=
+        lratCheckerSound
+          _
+          (by apply convertCNF_readfyForRupAdd)
+          (by apply convertCNF_readfyForRatAdd)
+          _
+          (by
+            intro action h
+            simp only [List.mem_map, List.mem_filterMap] at h
+            rcases h with ⟨wellFormedActions, _, h2⟩
+            rw [← h2]
+            exact wellFormedActions.property)
+          h1
+      apply unsat_of_liftCnf_unsat c
+      intro assignment
+      unfold convertCNF at h2
+      have h2 := (unsat_of_cons_none_unsat _ h2) assignment
+      apply eq_false_of_ne_true
+      intro h3
+      apply h2
+      simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+      intro lratClause hlclause
+      simp only [LRAT.Formula.toList, LRAT.DefaultFormula.toList, LRAT.DefaultFormula.ofArray,
+        convertClauses, Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
+        List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
+      rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
+      simp only [CNF.eval, List.all_eq_true] at h3
+      simp [convertClause_sat_of_cnf_sat reflectClause hrclause2, h3 reflectClause hrclause1]
+    . contradiction
 
 def lratSolver' (cfg : TacticConfig) : BoolExpr Nat → MetaM Expr :=
   Solver.lift cfg ``lratSolver  (mkConst ``LratFormula) (mkConst ``LratCert) lratSolver
