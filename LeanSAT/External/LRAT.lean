@@ -164,9 +164,9 @@ def loadLRATProof (path : System.FilePath) : CommandElabM (Array IntAction) := d
     is found in the line.
 
    `lineToAction` is written in an `IO` monad so that it can print errors on failure. `lineToAction` is called
-   in `parseLRATProof` but can also be called independently by a program such as `main` to facilitate parsing an
+   in `readLRATProof` but can also be called independently by a program such as `main` to facilitate parsing an
    LRAT proof one line at a time and checking the LRAT proof incrementally with `incrementalLRATChecker` -/
-def lineToAction (line : String) : IO (Option IntAction) := do
+def lineToAction (line : String) : Option IntAction := Id.run do
   let mut encounteredError := false
   let mut action : Option IntAction := none
 
@@ -181,14 +181,13 @@ def lineToAction (line : String) : IO (Option IntAction) := do
   let lineAction := (line.splitOn " ").toArray
   for token in lineAction do
     if action != none then
-      IO.println "End of line should correspond with end of LRAT action"
       encounteredError := true
       break
     match clauseID with
     | none =>
       match String.toNat? token with
       | some id => clauseID := some id
-      | none => IO.println "Unable to parse id"; encounteredError := true; break
+      | none => encounteredError := true; break
     | some id =>
       if firstSectionTokens == #[] && isDeletion == none then
         if token == "d" then
@@ -198,10 +197,10 @@ def lineToAction (line : String) : IO (Option IntAction) := do
           isDeletion := some false -- no continue because we should add token to firstSectionTokens
       if token == "0" then
         match isDeletion with
-        | none => IO.println "Error while loading LRAT proof"; encounteredError := true; break
+        | none => encounteredError := true; break
         | some true =>
           match makeDeletion firstSectionTokens with
-          | none => IO.println "Error while loading LRAT proof"; encounteredError := true; break
+          | none => encounteredError := true; break
           | some curAction => action := some curAction
         | some false =>
           if numZeroes == 0 then -- This zero ends the clause, but not the action
@@ -209,7 +208,6 @@ def lineToAction (line : String) : IO (Option IntAction) := do
           else -- This zero ends the hint section
             match makeAddition id firstSectionTokens hintTokens with
             | none =>
-              IO.println "Error while loading LRAT proof"
               encounteredError := true
               break
             | some curAction => action := some curAction
@@ -219,20 +217,17 @@ def lineToAction (line : String) : IO (Option IntAction) := do
   if encounteredError then return none
   else return action
 
-/-- `parseLRATProof` takes in the path of an LRAT proof and attempts to output an Array of IntActions
-    that correspond to the parsed LRAT proof.
-
-    `parseLRATProof` is written as an `IO` monad so that it can be used in programs such as `main`. Since the `IO` monad does
-    not support `throwError` in the way that `CommandElabM` does, `parseLRATProof` returns `none` where `loadLRATProof`
-    would throw an error. Other than this difference though, `loadLRATProof` and `parseLRATProof` are intended to be equivalent. -/
-def parseLRATProof (path : System.FilePath) : IO (Option (Array IntAction)) := do
-  let lines ← IO.FS.lines path
+def parseLRATProof (lines : Array String) : Option (Array IntAction) := Id.run do
   let lines := lines.filter fun l => not (l.startsWith "c")
   let mut proof : Array IntAction := #[]
-  let mut encounteredError := false
   for line in lines do
-    match ← lineToAction line with
+    match lineToAction line with
     | some action => proof := proof.push action
-    | none => encounteredError := true
-  if encounteredError then return none
-  else return some proof
+    | none => return none
+  return some proof
+
+/-- `readLRATProof` takes in the path of an LRAT proof and attempts to output an Array of IntActions
+    that correspond to the parsed LRAT proof. -/
+def readLRATProof (path : System.FilePath) : IO (Option (Array IntAction)) := do
+  let lines ← IO.FS.lines path
+  return parseLRATProof lines
