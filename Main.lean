@@ -25,7 +25,7 @@ def main : List String → IO Unit := fun args => do
         else if line.startsWith "c" then
           continue -- Skip over comments
         else
-          match ← lineToAction line with
+          match lineToAction line with
           | some intAction =>
             match intActionToDefaultClauseAction n intAction with
             | some action => (formula, res) := incrementalLRATChecker formula action
