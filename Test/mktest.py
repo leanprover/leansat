@@ -14,7 +14,11 @@ def generate_lean_proof(depth):
             left = generate_variables(current_depth - 1, prefix + '0')
             right = generate_variables(current_depth - 1, prefix + '1')
             # Generate the parent node equation
-            equations.append(f"(_ : {left[-1]} && {right[-1]} = {prefix})")
+            var_left = left[-1]
+            var_right = right[-1]
+            equations.append(f"(_ : ({var_left} && {var_right}) = {prefix})")
+            equations.append(f"({var_left} : Bool)")
+            equations.append(f"({var_right} : Bool)")
             return left + right + [prefix]
 
     if depth < 1:
