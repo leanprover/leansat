@@ -13,7 +13,7 @@ def _root_.Lean.MVarId.satDecide (g : MVarId) : MetaM Unit := M.run do
   g'.withContext do
   let (e, f) ← reflectSAT g'
     trace[sat] "Reflected boolean expression: {e}"
-    let p ← mkDecideProof (mkApp2 (.const ``BoolExpr.unsat []) (.const ``Nat []) (toExpr e))
+    let p ← mkDecideProof (.app (.const ``BoolExprNat.unsat []) (toExpr e))
     g'.assign (← f p)
 
 syntax (name := satDecideSyntax) "sat_decide" : tactic
