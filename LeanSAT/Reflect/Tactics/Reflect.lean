@@ -5,11 +5,11 @@ Authors: Scott Morrison
 -/
 import Lean.Data.HashMap
 import LeanSAT.Reflect.Tactics.Attr
-import LeanSAT.Reflect.BoolExpr.Basic
+import LeanSAT.Reflect.BoolExpr.Nat
 
 set_option linter.missingDocs false
 
-open Lean Meta BoolExpr
+open Lean Meta BoolExprNat
 
 namespace ReflectSat
 
@@ -75,27 +75,27 @@ instance : ToExpr Gate where
   | .imp => .const ``Gate.imp []
   toTypeExpr := .const ``Gate []
 
-def literalExpr (i : Nat) : Expr := mkApp2 (.const ``BoolExpr.literal []) (.const ``Nat []) (toExpr i)
-def constExpr (b : Bool) : Expr := mkApp2 (.const ``BoolExpr.const []) (.const ``Nat []) (toExpr b)
-def notExpr (x : Expr) : Expr := mkApp2 (.const ``BoolExpr.not []) (.const ``Nat []) x
+def literalExpr (i : Nat) : Expr := .app (.const ``BoolExprNat.literal []) (toExpr i)
+def constExpr (b : Bool) : Expr := .app (.const ``BoolExprNat.const []) (toExpr b)
+def notExpr (x : Expr) : Expr := .app (.const ``BoolExprNat.not []) x
 def gateExpr (g : Gate) (x y : Expr) : Expr :=
-  mkApp4 (.const ``BoolExpr.gate []) (.const ``Nat []) (toExpr g) x y
+  mkApp3 (.const ``BoolExprNat.gate []) (toExpr g) x y
 
-instance : ToExpr (BoolExpr Nat) where
+instance : ToExpr BoolExprNat where
   toExpr x := t x
-  toTypeExpr := .app (.const ``BoolExpr []) (.const ``Nat [])
+  toTypeExpr := .const ``BoolExprNat []
 where
-  t : BoolExpr Nat → Expr
+  t : BoolExprNat → Expr
   | .literal i => literalExpr i
   | .const b => constExpr b
   | .not x => notExpr (t x)
   | .gate g x y => gateExpr g (t x) (t y)
 
 def mkEvalExpr (x : Expr) (atomsFn : Expr) :
-  Expr := mkApp3 (.const ``BoolExpr.eval []) (.const ``Nat []) atomsFn x
+  Expr := mkApp2 (.const ``BoolExprNat.eval []) atomsFn x
 
 structure EvalAtAtoms where
-  boolExpr : BoolExpr Nat
+  boolExpr : BoolExprNat
   expr : Expr -- `toExpr boolExpr`
   eval : M (Option Expr) -- a proof that `boolExpr.eval atomsFn = _`, or none for a `rfl` proof.
 
@@ -206,7 +206,7 @@ partial def of (e : Expr) : M EvalAtAtoms := do
 end EvalAtAtoms
 
 structure SatAtAtoms where
-  boolExpr : BoolExpr Nat
+  boolExpr : BoolExprNat
   expr : Expr -- `toExpr boolExpr`, cached
   satAtAtoms : M Expr -- a proof that `expr.eval atomsFn = true`
 
@@ -214,15 +214,15 @@ namespace SatAtAtoms
 
 def trivial : SatAtAtoms where
   boolExpr := .const true
-  expr := toExpr (.const true : BoolExpr Nat)
-  satAtAtoms := return mkApp2 (.const ``sat_true []) (.const ``Nat []) (← M.atomsFn)
+  expr := toExpr (.const true : BoolExprNat)
+  satAtAtoms := return .app (.const ``sat_true []) (← M.atomsFn)
 
 def and (x y : SatAtAtoms) : SatAtAtoms where
   boolExpr := .gate .and x.boolExpr y.boolExpr
   expr := gateExpr .and x.expr y.expr
   satAtAtoms := do
     pure <|
-    (mkApp6 (.const ``sat_and []) (.const ``Nat [])
+    (mkApp5 (.const ``BoolExprNat.sat_and [])
       x.expr y.expr (← M.atomsFn) (← x.satAtAtoms) (← y.satAtAtoms))
 
 theorem false_of_eq_true_of_eq_false (h₁ : x = true) (h₂ : x = false) : False := by
@@ -278,11 +278,11 @@ end SatAtAtoms
 
 /--
 Given a goal `g`, which should be `False`, returns
-* a `e : BoolExpr Nat` (representing the conjunction of all boolean expressions in hypotheses of `g`)
+* a `e : BoolExprNat` (representing the conjunction of all boolean expressions in hypotheses of `g`)
 * a function which takes an expression representing a proof of `e.unsat`,
   and returns a proof of `False` valid in the context of `g`.
 -/
-def reflectSAT (g : MVarId) : M (BoolExpr Nat × (Expr → M Expr)) := g.withContext do
+def reflectSAT (g : MVarId) : M (BoolExprNat × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
   let sats ← hyps.filterMapM fun h => SatAtAtoms.of h
   let sat := sats.foldl (init := SatAtAtoms.trivial) SatAtAtoms.and

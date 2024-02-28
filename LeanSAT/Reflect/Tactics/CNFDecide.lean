@@ -167,11 +167,12 @@ This is the verification function that we run in the reflection term.
 The advantage over running just `verifyCert` is that the Tseitin encoding happens
 in the reflection code as well instead of in the kernel reduction engine.
 -/
-def verifyBoolExpr (b : BoolExpr Nat) (cert : LratCert) : Bool :=
-  verifyCert (LratFormula.ofCnf b.toCNF) cert
+def verifyBoolExpr (b : BoolExprNat) (cert : LratCert) : Bool :=
+  verifyCert (LratFormula.ofCnf b.toBoolExpr.toCNF) cert
 
-theorem unsat_of_verifyBoolExpr_eq_true (b : BoolExpr Nat) (c : LratCert)
-    (h : verifyBoolExpr b c = true) : BoolExpr.unsat b := by
+theorem unsat_of_verifyBoolExpr_eq_true (b : BoolExprNat) (c : LratCert)
+    (h : verifyBoolExpr b c = true) : BoolExprNat.unsat b := by
+  rw [BoolExprNat.unsat_iff]
   apply BoolExpr.unsat_of_toCNF_unsat
   apply verifyCert_correct
   rw [verifyBoolExpr] at h
@@ -193,10 +194,10 @@ def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
 /--
 Prepare an `Expr` that proofs `boolExpr.unsat` using `ofReduceBool`.
 -/
-def lratSolver (cfg : TacticContext) (boolExpr : BoolExpr Nat) : MetaM Expr := do
+def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   let cnf ←
     withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
-      return boolExpr.toCNF
+      return boolExpr.toBoolExpr.toCNF
 
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
@@ -207,7 +208,7 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExpr Nat) : MetaM Expr := d
       runExternal encoded
 
   withTraceNode `sat (fun _ => return "Compiling BoolExpr term") do
-    mkAuxDecl cfg.boolExprDef (toExpr boolExpr) (toTypeExpr (BoolExpr Nat))
+    mkAuxDecl cfg.boolExprDef (toExpr boolExpr) (toTypeExpr (BoolExprNat))
 
   let certType := toTypeExpr LratCert
 
