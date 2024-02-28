@@ -14,18 +14,18 @@ inductive BoolExprNat
 
 namespace BoolExprNat
 
-def eval (f : Nat → Bool) : BoolExprNat → Bool
-  | .literal a => f a
+def eval (f : List Bool) : BoolExprNat → Bool
+  | .literal a => f.getD a false
   | .const b => b
   | .not x => !eval f x
   | .gate g x y => g.eval (eval f x) (eval f y)
 
-@[simp] theorem eval_literal : eval f (.literal a) = f a := rfl
+@[simp] theorem eval_literal : eval f (.literal a) = f.getD a false := rfl
 @[simp] theorem eval_const : eval f (.const b) = b := rfl
 @[simp] theorem eval_not : eval f (.not x) = !eval f x := rfl
 @[simp] theorem eval_gate : eval f (.gate g x y) = g.eval (eval f x) (eval f y) := rfl
 
-def sat (x : BoolExprNat) (f : Nat → Bool) : Prop := eval f x = true
+def sat (x : BoolExprNat) (f : List Bool) : Prop := eval f x = true
 
 theorem sat_and {x y : BoolExprNat} {f} (hx : sat x f) (hy : sat y f) : sat (.gate .and x y) f :=
   congr_arg₂ (· && ·) hx hy
@@ -50,18 +50,29 @@ def toString (x : BoolExprNat) : String := x.toBoolExpr.toString
 
 instance : ToString (BoolExprNat) := ⟨toString⟩
 
-@[simp] theorem eval_toBoolExpr (x : BoolExprNat) (f : Nat → Bool) : x.toBoolExpr.eval f = x.eval f := by
+@[simp] theorem eval_toBoolExpr (x : BoolExprNat) (f : List Bool) :
+    x.toBoolExpr.eval (f.getD · false) = x.eval f := by
   induction x with
   | literal a => rfl
   | const b => rfl
   | not x ih => simp [eval, ih, toBoolExpr]
   | gate g x y ihx ihy => simp [eval, ihx, ihy, toBoolExpr]
 
-theorem sat_iff (x : BoolExprNat) (f : Nat → Bool) : x.sat f ↔ (toBoolExpr x).sat f := by
+theorem sat_iff (x : BoolExprNat) (f : List Bool) :
+    x.sat f ↔ (toBoolExpr x).sat (f.getD · false) := by
   simp [sat, BoolExpr.sat]
 
 theorem unsat_iff (x : BoolExprNat) : x.unsat ↔ (toBoolExpr x).unsat := by
-  simp [unsat, BoolExpr.unsat]
+  rw [← BoolExpr.attach_unsat]
+  simp only [unsat, BoolExpr.unsat]
+  constructor
+  · intro h f
+    specialize h (List.ofFn f)
+    sorry
+  · intro h f
+    specialize h (f.getD · false)
+    simp at h
+    sorry
 
 instance (x : BoolExprNat) : Decidable x.unsat :=
   decidable_of_iff _ (unsat_iff _).symm
