@@ -52,6 +52,7 @@ def stashedAtomsFn : M Expr := do
 /--
 Look up an expression in the atoms, recording it if it has not previously appeared.
 -/
+-- TODO use a hash map here, and don't use `isDefEq`.
 def lookup (e : Expr) : M Nat := do
   let c ← getThe State
   for h : i in [:c.atoms.size] do
@@ -94,68 +95,109 @@ def mkEvalExpr (x : Expr) (atomsFn : Expr) :
 structure EvalAtAtoms where
   boolExpr : BoolExpr Nat
   expr : Expr -- `toExpr boolExpr`
-  eval : M Expr -- a proof that `boolExpr.eval atomsFn = _`
+  eval : M (Option Expr) -- a proof that `boolExpr.eval atomsFn = _`, or none for a `rfl` proof.
 
 namespace EvalAtAtoms
 
 def mkAtom (e : Expr) : M EvalAtAtoms := do
   let i ← M.lookup e
-  return ⟨.literal i, literalExpr i, do mkEqRefl e⟩
+  return ⟨.literal i, literalExpr i, pure none⟩
 
 theorem not_congr {x₁ x₂ : Bool} (h : x₁ = x₂) : (!x₁) = (!x₂) := by
   cases h; rfl
 
 theorem and_congr {x₁ x₂ y₁ y₂ : Bool} (hx : x₁ = x₂) (hy : y₁ = y₂) : (x₁ && y₁) = (x₂ && y₂) := by
   cases hx; cases hy; rfl
+theorem and_congr_left {x₁ x₂ y : Bool} (hx : x₁ = x₂) : (x₁ && y) = (x₂ && y) := by
+  cases hx; rfl
+theorem and_congr_right {x y₁ y₂ : Bool} (hy : y₁ = y₂) : (x && y₁) = (x && y₂) := by
+  cases hy; rfl
 
 theorem or_congr {x₁ x₂ y₁ y₂ : Bool} (hx : x₁ = x₂) (hy : y₁ = y₂) : (x₁ || y₁) = (x₂ || y₂) := by
   cases hx; cases hy; rfl
+theorem or_congr_left {x₁ x₂ y : Bool} (hx : x₁ = x₂) : (x₁ || y) = (x₂ || y) := by
+  cases hx; rfl
+theorem or_congr_right {x y₁ y₂ : Bool} (hy : y₁ = y₂) : (x || y₁) = (x || y₂) := by
+  cases hy; rfl
 
 theorem xor_congr {x₁ x₂ y₁ y₂ : Bool} (hx : x₁ = x₂) (hy : y₁ = y₂) :
     (Bool.xor x₁ y₁) = (Bool.xor x₂ y₂) := by
   cases hx; cases hy; rfl
+theorem xor_congr_left {x₁ x₂ y : Bool} (hx : x₁ = x₂) : (Bool.xor x₁ y) = (Bool.xor x₂ y) := by
+  cases hx; rfl
+theorem xor_congr_right {x y₁ y₂ : Bool} (hy : y₁ = y₂) : (Bool.xor x y₁) = (Bool.xor x y₂) := by
+  cases hy; rfl
 
 theorem beq_congr {x₁ x₂ y₁ y₂ : Bool} (hx : x₁ = x₂) (hy : y₁ = y₂) :
     (x₁ == y₁) = (x₂ == y₂) := by
   cases hx; cases hy; rfl
+theorem beq_congr_left {x₁ x₂ y : Bool} (hx : x₁ = x₂) : (x₁ == y) = (x₂ == y) := by
+  cases hx; rfl
+theorem beq_congr_right {x y₁ y₂ : Bool} (hy : y₁ = y₂) : (x == y₁) = (x == y₂) := by
+  cases hy; rfl
+
+theorem imp_congr {x₁ x₂ y₁ y₂ : Bool} (hx : x₁ = x₂) (hy : y₁ = y₂) :
+    (!x₁ ∨ y₁) = (!x₂ ∨ y₂) := by
+  cases hx; cases hy; rfl
+theorem imp_congr_left {x₁ x₂ y : Bool} (hx : x₁ = x₂) : (!x₁ ∨ y) = (!x₂ ∨ y) := by
+  cases hx; rfl
+theorem imp_congr_right {x y₁ y₂ : Bool} (hy : y₁ = y₂) : (!x ∨ y₁) = (!x ∨ y₂) := by
+  cases hy; rfl
+
+def mkGateCongr (g : Gate) (x y xe ye : Expr) (xp yp : M (Option Expr)) : M (Option Expr) := do
+  match (← xp), (← yp) with
+  | none, none => return none
+  | some xp, none => do
+    let n := match g with
+    | .and => ``and_congr_left
+    | .or =>  ``or_congr_left
+    | .xor => ``xor_congr_left
+    | .beq => ``beq_congr_left
+    | .imp => ``imp_congr_left
+    return some <| mkApp4 (.const n []) (mkEvalExpr xe (← M.atomsFn)) x y xp
+  | none, some yp => do
+    let n := match g with
+    | .and => ``and_congr_right
+    | .or =>  ``or_congr_right
+    | .xor => ``xor_congr_right
+    | .beq => ``beq_congr_right
+    | .imp => ``imp_congr_right
+    return some <| mkApp4 (.const n []) x (mkEvalExpr ye (← M.atomsFn)) y yp
+  | some xp, some yp => do
+    let atomsFn ← M.atomsFn
+    let n := match g with
+    | .and => ``and_congr
+    | .or =>  ``or_congr
+    | .xor => ``xor_congr
+    | .beq => ``beq_congr
+    | .imp => ``imp_congr
+    return some <| mkApp6 (.const n [])
+          (mkEvalExpr xe atomsFn) x (mkEvalExpr ye atomsFn) y xp yp
 
 partial def of (e : Expr) : M EvalAtAtoms := do
   match e with
-  | .const ``true [] => return ⟨.const true, constExpr true, do mkEqRefl e⟩
-  | .const ``false [] => return ⟨.const false, constExpr false, do mkEqRefl e⟩
+  | .const ``true [] => return ⟨.const true, constExpr true, pure none⟩
+  | .const ``false [] => return ⟨.const false, constExpr false, pure none⟩
   | .app _ _ => match e.getAppFnArgs with
     | (``_root_.not, #[x]) => do
       let ⟨xb, xe, xp⟩ ← of x
-      let p := return mkApp3 (.const ``not_congr []) (mkEvalExpr xe (← M.atomsFn)) x (← xp)
+      let p := do
+        match (← xp) with
+        | none => pure none
+        | some xp => pure (some (mkApp3 (.const ``not_congr []) (mkEvalExpr xe (← M.atomsFn)) x xp))
       return ⟨.not xb, notExpr xe, p⟩
-    | (``_root_.and, #[x, y]) => do
+    | (n, #[x, y]) => do
+      let g? : Option Gate := match n with
+      | ``_root_.and => some .and
+      | ``_root_.or => some .or
+      | ``Bool.xor => some .xor
+      | ``BEq.beq => some .beq
+      | _ => none
+      let some g := g? | mkAtom e
       let ⟨xb, xe, xp⟩ ← of x
       let ⟨yb, ye, yp⟩ ← of y
-      let p := do pure <|
-        (mkApp6 (.const ``and_congr [])
-          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
-      return ⟨.gate .and xb yb, gateExpr .and xe ye, p⟩
-    | (``_root_.or, #[x, y]) => do
-      let ⟨xb, xe, xp⟩ ← of x
-      let ⟨yb, ye, yp⟩ ← of y
-      let p := do pure <|
-        (mkApp6 (.const ``or_congr [])
-          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
-      return ⟨.gate .or xb yb, gateExpr .or xe ye, p⟩
-    | (``Bool.xor, #[x, y]) => do
-      let ⟨xb, xe, xp⟩ ← of x
-      let ⟨yb, ye, yp⟩ ← of y
-      let p := do pure <|
-        (mkApp6 (.const ``xor_congr [])
-          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
-      return ⟨.gate .xor xb yb, gateExpr .xor xe ye, p⟩
-    | (``BEq.beq, #[_, _, x, y]) => do
-      let ⟨xb, xe, xp⟩ ← of x
-      let ⟨yb, ye, yp⟩ ← of y
-      let p := do pure <|
-        (mkApp6 (.const ``beq_congr [])
-          (mkEvalExpr xe (← M.atomsFn)) x (mkEvalExpr ye (← M.atomsFn)) y (← xp) (← yp))
-      return ⟨.gate .beq xb yb, gateExpr .beq xe ye, p⟩
+      let p := mkGateCongr g x y xe ye xp yp
+      return ⟨.gate g xb yb, gateExpr g xe ye, p⟩
     | _ => mkAtom e
   | _ => mkAtom e
 
@@ -196,6 +238,16 @@ theorem eq_not_of_ne {x y : Bool} (h : x ≠ y) : x = !y := by
   revert h
   cases x <;> cases y <;> simp
 
+def mkSymm (x y : Expr) : Option Expr → Option Expr
+  | none => none
+  | some e => some <| mkApp4 (.const ``Eq.symm [1]) (.const ``Bool []) x y e
+
+def mkTrans (x y z : Expr) : Option Expr → Option Expr → Option Expr
+  | none, none => none
+  | some e, none => some e
+  | none, some e => some e
+  | some e₁, some e₂ => some <| mkApp6 (.const ``Eq.trans [1]) (.const ``Bool []) x y z e₁ e₂
+
 partial def of (h : Expr) : M (Option SatAtAtoms) := do
   let t ← instantiateMVars (← whnfR (← inferType h))
   match t.getAppFnArgs with
@@ -209,9 +261,9 @@ partial def of (h : Expr) : M (Option SatAtAtoms) := do
        let yeval := mkEvalExpr ye atomsFn
        return mkApp3 (.const ``beq_eq_true_of_eq [])
          xeval yeval
-         (mkApp6 (.const ``Eq.trans [1]) (.const ``Bool []) xeval y yeval
-           (mkApp6 (.const ``Eq.trans [1]) (.const ``Bool []) xeval x y (← xp) h)
-           (mkApp4 (.const ``Eq.symm [1]) (.const ``Bool []) yeval y (← yp)))
+         ((mkTrans xeval y yeval
+           (mkTrans xeval x y (← xp) (some h))
+           (mkSymm yeval y (← yp))).getD (mkApp2 (.const ``Eq.refl [1]) (.const ``Bool []) xeval))
     return some ⟨.gate .beq xb yb, gateExpr .beq xe ye, p⟩
   | (``Ne, #[_, x, y]) => of (mkApp3 (.const ``eq_not_of_ne []) x y h)
   | (``Not, #[w]) =>
