@@ -75,7 +75,7 @@ instance : ToExpr Gate where
   | .imp => .const ``Gate.imp []
   toTypeExpr := .const ``Gate []
 
-def literalExpr (i : Nat) : Expr := .app (.const ``BoolExprNat.literal []) (toExpr i)
+def literalExpr (i : Nat) : Expr := .app (.const ``BoolExprNat.literal []) (mkRawNatLit i)
 def constExpr (b : Bool) : Expr := .app (.const ``BoolExprNat.const []) (toExpr b)
 def notExpr (x : Expr) : Expr := .app (.const ``BoolExprNat.not []) x
 def gateExpr (g : Gate) (x y : Expr) : Expr :=
