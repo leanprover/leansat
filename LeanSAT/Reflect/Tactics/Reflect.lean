@@ -16,7 +16,7 @@ namespace ReflectSat
 /-- The internal state for the `ReflectSat.M` monad, recording previously encountered atoms. -/
 structure State where
   /-- The atoms up-to-defeq encountered so far. -/
-  atoms : Array Expr := #[]
+  atoms : HashMap Expr Nat := {}
   stashedAtomsFn? : Option Expr := none
 
 /-- The `ReflectSat.M` monad. -/
@@ -31,7 +31,8 @@ def run (m : M α) : MetaM α :=
   m.run' { } { }
 
 /-- Retrieve the atoms. -/
-def atoms : M (List Expr) := return (← getThe State).atoms.toList
+def atoms : M (List Expr) :=
+  return (← getThe State).atoms.toArray.qsort (·.2 < ·.2) |>.map (·.1) |>.toList
 
 /-- Return the `Expr` representing the list of atoms. -/
 def atomsList : M Expr := do mkListLit (.const ``Bool []) (← atoms)
@@ -55,11 +56,12 @@ Look up an expression in the atoms, recording it if it has not previously appear
 -- TODO use a hash map here, and don't use `isDefEq`.
 def lookup (e : Expr) : M Nat := do
   let c ← getThe State
-  for h : i in [:c.atoms.size] do
-    if ← withReducible (isDefEq e c.atoms[i]) then
-      return i
+  match c.atoms.find? e with
+  | some i => return i
+  | none =>
   trace[sat] "New atom: {e}"
-  let i ← modifyGetThe State fun c => (c.atoms.size, { c with atoms := c.atoms.push e })
+  let i ← modifyGetThe State
+    fun c => (c.atoms.size, { c with atoms := c.atoms.insert e c.atoms.size })
   return i
 
 end M
