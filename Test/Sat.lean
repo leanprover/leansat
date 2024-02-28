@@ -18,3 +18,6 @@ info: 'axiomCheck' depends on axioms: [propext, Classical.choice, Quot.sound, Le
 -/
 #guard_msgs in
 #print axioms axiomCheck
+
+set_option pp.all true
+#print axiomCheck
