@@ -1,4 +1,39 @@
 import LeanSAT.Reflect.BoolExpr.Decidable
+import Std.Data.Array.Lemmas
+import Std
+
+namespace List
+
+-- Sigh... `List.ofFn` should be defined using `Array.data` instead of `Array.toList`.
+
+@[simp] theorem length_ofFn {f : Fin k → α} : (List.ofFn f).length = k := by
+  simp [List.ofFn]
+
+@[simp] theorem get_Array_data : (Array.data x).get i = x.get (Fin.cast (by simp) i) := by
+  rfl
+
+@[simp] theorem get_Array_toList : (Array.toList x).get i = x.get (Fin.cast (by simp) i) := by
+  sorry
+
+@[simp] theorem get_ofFn {f : Fin k → α} {i : Fin (List.ofFn f).length} :
+    (List.ofFn f).get i = f (Fin.cast (by simp) i) := by
+  simp [List.ofFn]
+  congr
+
+theorem getD_ofFn {f : Fin k → α} : (List.ofFn f).getD i d = if h : i < k then f ⟨i, h⟩ else d := by
+  simp [List.getD]
+  if h : i < (ofFn f).length then
+    rw [get?_eq_get h]
+    rw [length_ofFn] at h
+    rw [dif_pos h]
+    simp
+  else
+    rw [get?_eq_none.mpr (by simpa using h)]
+    rw [length_ofFn] at h
+    rw [dif_neg h]
+    rfl
+
+end List
 
 /--
 A version of `BoolExpr α` specialized to `Nat`.
@@ -58,6 +93,31 @@ instance : ToString (BoolExprNat) := ⟨toString⟩
   | not x ih => simp [eval, ih, toBoolExpr]
   | gate g x y ihx ihy => simp [eval, ihx, ihy, toBoolExpr]
 
+@[simp] theorem eval_ofFn (x : BoolExprNat) (f : Fin k → Bool) :
+    x.eval (List.ofFn f) = x.toBoolExpr.eval fun i => if h : i < k then f ⟨i, h⟩ else false  := by
+  match x with
+  | literal a => simp [toBoolExpr, List.getD_ofFn]
+  | const b => rfl
+  | not x => simp [eval, toBoolExpr, eval_ofFn]
+  | gate g x y => simp [eval, toBoolExpr, eval_ofFn]
+
+@[simp] theorem eval_if (f : List Bool) :
+    (toBoolExpr x).eval (fun i => if i < (toBoolExpr x).vars then f.getD i false else false) =
+      x.eval f := by
+  match x with
+  | literal a => simp [toBoolExpr]
+  | const b => rfl
+  | not x => simp [toBoolExpr, eval_if]
+  | gate g x y =>
+    simp [toBoolExpr]
+    rw [BoolExpr.eval_congr, eval_if f, BoolExpr.eval_congr, eval_if f]
+    · intro i h
+      rw [if_pos h, if_pos]
+      omega
+    · intro i h
+      rw [if_pos h, if_pos]
+      omega
+
 theorem sat_iff (x : BoolExprNat) (f : List Bool) :
     x.sat f ↔ (toBoolExpr x).sat (f.getD · false) := by
   simp [sat, BoolExpr.sat]
@@ -68,11 +128,10 @@ theorem unsat_iff (x : BoolExprNat) : x.unsat ↔ (toBoolExpr x).unsat := by
   constructor
   · intro h f
     specialize h (List.ofFn f)
-    sorry
+    simpa using h
   · intro h f
     specialize h (f.getD · false)
-    simp at h
-    sorry
+    simpa using h
 
 instance (x : BoolExprNat) : Decidable x.unsat :=
   decidable_of_iff _ (unsat_iff _).symm
