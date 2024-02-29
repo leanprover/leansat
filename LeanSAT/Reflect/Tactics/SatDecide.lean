@@ -193,6 +193,7 @@ def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
     hints := .abbrev,
     safety := .safe
   }
+
 def LratCert.toReflectionProof (cert : LratCert) (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   withTraceNode `sat (fun _ => return "Compiling BoolExpr term") do
     mkAuxDecl cfg.boolExprDef (toExpr boolExpr) (toTypeExpr (BoolExprNat))
@@ -211,7 +212,6 @@ def LratCert.toReflectionProof (cert : LratCert) (cfg : TacticContext) (boolExpr
 
   let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst cfg.reflectionDef) (toExpr true) (← mkEqRefl (toExpr true))
   return mkApp3 (mkConst ``unsat_of_verifyBoolExpr_eq_true) boolExpr certExpr nativeProof
-  
 
 /--
 Prepare an `Expr` that proofs `boolExpr.unsat` using `ofReduceBool`.
