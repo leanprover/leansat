@@ -44,4 +44,4 @@ jobs:
       - name: Don't 'import Lean', use precise imports
         if: always()
         run: |
-          ! (find . -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Lean$')
+          ! (find Sat -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Lean$')
