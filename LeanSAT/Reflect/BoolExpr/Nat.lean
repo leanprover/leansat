@@ -12,9 +12,6 @@ namespace List
 @[simp] theorem get_Array_data : (Array.data x).get i = x.get (Fin.cast (by simp) i) := by
   rfl
 
-@[simp] theorem get_Array_toList : (Array.toList x).get i = x.get (Fin.cast (by simp) i) := by
-  sorry
-
 @[simp] theorem get_ofFn {f : Fin k → α} {i : Fin (List.ofFn f).length} :
     (List.ofFn f).get i = f (Fin.cast (by simp) i) := by
   simp [List.ofFn]
