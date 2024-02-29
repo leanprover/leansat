@@ -1,4 +1,5 @@
 import LeanSAT.Reflect.Tactics.SatDecide
+import LeanSAT.Reflect.Tactics.SatCheck
 import Std.Tactic.GuardMsgs
 
 example (h : true = false) : False := by sat_decide
@@ -8,6 +9,7 @@ example {a b c d e f : Bool} (_ : (a && b) = c) (_ : (b && c) = d) (_ : (c && d)
 
 example (h : true = false) : False := by sat_decide
 example (h : x = false) : false = x := by sat_decide
+example (h : x = false) : false = x := by sat_check "sat_check.lrat"
 
 
 def axiomCheck (_ : x = true) (_ : (x && false) = true) : False := by sat_decide
