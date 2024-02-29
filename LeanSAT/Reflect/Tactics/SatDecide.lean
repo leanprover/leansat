@@ -22,6 +22,7 @@ structure TacticContext where
   boolExprDef : Name
   certDef : Name
   reflectionDef : Name
+  solver : String
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
@@ -63,29 +64,31 @@ def mkTemp : IO System.FilePath := do
   let out ← IO.Process.output { cmd := "mktemp" }
   return out.stdout.trim
 
-/--
-Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
-
-This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
--/
-def runExternal (formula : LratFormula) : IO LratCert := do
-  let formula := formula.formula
-  -- TODO: In the future we might want to cache these
-  let cnfPath ← mkTemp
-  let lratPath ← mkTemp
-  IO.FS.writeFile cnfPath <| formula.dimacs
-  -- TODO: make cadical parameterizable
-  satQuery "cadical" cnfPath lratPath
+def LratCert.ofFile (lratPath : System.FilePath) : IO LratCert := do
   let lines ← IO.FS.lines lratPath
   -- This is just a sanity check to verify that the proof does indeed parse.
   -- The parsing relevant for the reflection proof happens in the reflection term.
   if LRAT.parseLRATProof lines |>.isNone then
     throw <| IO.userError "SAT solver produced invalid LRAT"
+  -- XXX String.intercalate wit Array
+  return String.intercalate "\n" lines.toList
+
+/--
+Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
+
+This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
+-/
+def runExternal (formula : LratFormula) (solver : String) : IO LratCert := do
+  let formula := formula.formula
+  -- TODO: In the future we might want to cache these
+  let cnfPath ← mkTemp
+  let lratPath ← mkTemp
+  IO.FS.writeFile cnfPath <| formula.dimacs
+  satQuery solver cnfPath lratPath
+  let lratProof ← LratCert.ofFile lratPath
   -- cleanup files such that we don't pollute /tmp
   IO.FS.removeFile cnfPath
   IO.FS.removeFile lratPath
-  -- XXX String.intercalate wit Array
-  let lratProof := String.intercalate "\n" lines.toList
   return lratProof
 
 /--
@@ -190,23 +193,7 @@ def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
     hints := .abbrev,
     safety := .safe
   }
-
-/--
-Prepare an `Expr` that proofs `boolExpr.unsat` using `ofReduceBool`.
--/
-def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
-  let cnf ←
-    withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
-      return boolExpr.toBoolExpr.toCNF
-
-  let encoded ←
-    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
-      return LratFormula.ofCnf cnf
-
-  let cert ←
-    withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      runExternal encoded
-
+def LratCert.toReflectionProof (cert : LratCert) (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   withTraceNode `sat (fun _ => return "Compiling BoolExpr term") do
     mkAuxDecl cfg.boolExprDef (toExpr boolExpr) (toTypeExpr (BoolExprNat))
 
@@ -224,41 +211,68 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
 
   let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst cfg.reflectionDef) (toExpr true) (← mkEqRefl (toExpr true))
   return mkApp3 (mkConst ``unsat_of_verifyBoolExpr_eq_true) boolExpr certExpr nativeProof
+  
 
 /--
-Close a goal by turning:
-1. Turning it into a SAT problem.
-2. Running an external SAT solver on it and obtaining an LRAT proof from it.
-3. Verify the LRAT proof using proof by reflection.
+Prepare an `Expr` that proofs `boolExpr.unsat` using `ofReduceBool`.
 -/
-def _root_.Lean.MVarId.satDecide (g : MVarId) (cfg : TacticContext) : MetaM Unit := M.run do
+def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
+  let cnf ←
+    withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
+      return boolExpr.toBoolExpr.toCNF
+
+  let encoded ←
+    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
+      return LratFormula.ofCnf cnf
+
+  let cert ←
+    withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
+      runExternal encoded cfg.solver
+
+  cert.toReflectionProof cfg boolExpr
+
+def _root_.Lean.MVarId.closeWithBoolReflection (g : MVarId) (unsatProver : BoolExprNat → MetaM Expr) : MetaM Unit := M.run do
   let g' ← falseOrByContra g
   g'.withContext do
     let (boolExpr, f) ←
       withTraceNode `sat (fun _ => return "Reflecting goal into BoolExpr") do
         reflectSAT g'
     trace[sat] "Reflected boolean expression: {boolExpr}"
-    let boolExprUnsat ←
-      withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
-        lratSolver cfg boolExpr
+    let boolExprUnsat ← unsatProver boolExpr
     let proveFalse ← f boolExprUnsat
     g'.assign proveFalse
 
 /--
-Close a goal by turning:
+Close a goal by:
 1. Turning it into a SAT problem.
 2. Running an external SAT solver on it and obtaining an LRAT proof from it.
-3. Verify the LRAT proof using proof by reflection.
+3. Verifying the LRAT proof using proof by reflection.
 -/
+def _root_.Lean.MVarId.satDecide (g : MVarId) (cfg : TacticContext) : MetaM Unit := M.run do
+  let unsatProver (exp : BoolExprNat) : MetaM Expr := do
+    withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
+      lratSolver cfg exp
+  g.closeWithBoolReflection unsatProver
+
+@[inherit_doc Lean.MVarId.satDecide]
 syntax (name := satDecideSyntax) "sat_decide" : tactic
 
 end SatDecide
 
+register_option sat.solver : String := {
+  defValue := "cadical"
+  descr := "name of the SAT solver used by LeanSAT tactics"
+}
+
+def SatDecide.TacticContext.new : TermElabM TacticContext := do
+  let boolExprDef ← Term.mkAuxName `_boolExpr_def
+  let certDef ← Term.mkAuxName `_cert_def
+  let reflectionDef ← Term.mkAuxName `_reflection_def
+  let solver := sat.solver.get (← getOptions)
+  return { boolExprDef, certDef, reflectionDef, solver }
+
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| sat_decide) => do
-    let boolExprDef ← Term.mkAuxName `_boolExpr_def
-    let certDef ← Term.mkAuxName `_cert_def
-    let reflectionDef ← Term.mkAuxName `_reflection_def
-    let cfg := { boolExprDef, certDef, reflectionDef }
+    let cfg ← SatDecide.TacticContext.new
     liftMetaFinishingTactic fun g => g.satDecide cfg
