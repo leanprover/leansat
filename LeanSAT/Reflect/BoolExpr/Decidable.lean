@@ -69,7 +69,7 @@ theorem map_fin_val_attach_go : map Fin.val (attach.go x k h) = x := by
 theorem forget_attach : forget (attach x) = x :=
   map_fin_val_attach_go
 
-theorem eval_attach (x : BoolExpr Nat) (f : Fin x.vars → Bool) :
+@[simp] theorem eval_attach (x : BoolExpr Nat) (f : Fin x.vars → Bool) :
     (attach x).eval f = x.eval fun i => if h : i < x.vars then f ⟨i, h⟩ else false := by
   generalize h : (fun i => if h : i < x.vars then f ⟨i, h⟩ else false) = f'
   obtain rfl := show f = fun i : Fin _ => f' i by subst h; simp
