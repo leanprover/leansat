@@ -12,7 +12,6 @@ import LeanSAT.Reflect.CNF.Decidable
 import LeanSAT.Reflect.CNF.ForStd
 import LeanSAT.Reflect.CNF.Relabel
 import LeanSAT.Reflect.Tactics.Attr
-import LeanSAT.Reflect.Tactics.CNFDecide
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.Tactics.SatDecide
 import LeanSAT.Reflect.Fin
