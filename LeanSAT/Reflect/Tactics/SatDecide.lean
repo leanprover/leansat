@@ -214,7 +214,7 @@ def LratCert.toReflectionProof (cert : LratCert) (cfg : TacticContext) (boolExpr
   return mkApp3 (mkConst ``unsat_of_verifyBoolExpr_eq_true) boolExpr certExpr nativeProof
 
 /--
-Prepare an `Expr` that proofs `boolExpr.unsat` using `ofReduceBool`.
+Prepare an `Expr` that proves `boolExpr.unsat` using `ofReduceBool`.
 -/
 def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   let cnf ←
