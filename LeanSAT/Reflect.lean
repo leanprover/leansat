@@ -15,5 +15,6 @@ import LeanSAT.Reflect.Tactics.Attr
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.Tactics.SatDecide
 import LeanSAT.Reflect.Tactics.SatCheck
+import LeanSAT.Reflect.Tactics.SatTrace
 import LeanSAT.Reflect.Fin
 import LeanSAT.Reflect.Glue

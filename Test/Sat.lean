@@ -1,6 +1,11 @@
 import LeanSAT.Reflect.Tactics.SatDecide
 import LeanSAT.Reflect.Tactics.SatCheck
+import LeanSAT.Reflect.Tactics.SatTrace
 import Std.Tactic.GuardMsgs
+
+/-- info: Try this: sat_check "Sat.lean-test-8-47.lrat" -/
+#guard_msgs in
+theorem test (h : x = false) : false = x := by sat_decide?
 
 example (h : true = false) : False := by sat_decide
 example {x y z : Bool} (_ : (x && y) = z) (_ : x = !y) (_ : z = true) : False := by sat_decide

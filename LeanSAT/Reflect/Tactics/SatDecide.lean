@@ -23,6 +23,7 @@ structure TacticContext where
   certDef : Name
   reflectionDef : Name
   solver : String
+  lratPath : System.FilePath
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
@@ -78,17 +79,15 @@ Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
 
 This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
 -/
-def runExternal (formula : LratFormula) (solver : String) : IO LratCert := do
+def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath) : IO LratCert := do
   let formula := formula.formula
   -- TODO: In the future we might want to cache these
   let cnfPath ← mkTemp
-  let lratPath ← mkTemp
   IO.FS.writeFile cnfPath <| formula.dimacs
   satQuery solver cnfPath lratPath
   let lratProof ← LratCert.ofFile lratPath
   -- cleanup files such that we don't pollute /tmp
   IO.FS.removeFile cnfPath
-  IO.FS.removeFile lratPath
   return lratProof
 
 /--
@@ -227,7 +226,7 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
 
   let cert ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      runExternal encoded cfg.solver
+      runExternal encoded cfg.solver cfg.lratPath
 
   cert.toReflectionProof cfg boolExpr
 
@@ -264,15 +263,17 @@ register_option sat.solver : String := {
   descr := "name of the SAT solver used by LeanSAT tactics"
 }
 
-def SatDecide.TacticContext.new : TermElabM TacticContext := do
+def SatDecide.TacticContext.new (lratPath : System.FilePath) : TermElabM TacticContext := do
   let boolExprDef ← Term.mkAuxName `_boolExpr_def
   let certDef ← Term.mkAuxName `_cert_def
   let reflectionDef ← Term.mkAuxName `_reflection_def
   let solver := sat.solver.get (← getOptions)
-  return { boolExprDef, certDef, reflectionDef, solver }
+  return { boolExprDef, certDef, reflectionDef, solver, lratPath }
 
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| sat_decide) => do
-    let cfg ← SatDecide.TacticContext.new
+    let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
     liftMetaFinishingTactic fun g => g.satDecide cfg
+    -- the auto generated lratPath is a temp file that should be removed
+    IO.FS.removeFile cfg.lratPath
