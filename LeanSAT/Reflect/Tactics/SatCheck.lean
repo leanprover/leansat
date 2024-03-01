@@ -9,6 +9,7 @@ structure TacticContext extends SatDecide.TacticContext where
 
 def TacticContext.new (lratPath : System.FilePath) : TermElabM TacticContext := do
   let inner ← SatDecide.TacticContext.new
+  -- Figure out where the current .lean file is to look for the LRAT file in the same directory
   let ctx ← readThe Lean.Core.Context
   let srcPath := System.FilePath.mk ctx.fileName
   let some srcDir := srcPath.parent
@@ -28,6 +29,11 @@ Close a goal by:
 1. Turning it into a SAT problem.
 2. Parsing a previously produced LRAT proof for that SAT problem.
 3. Verifying the LRAT proof using proof by reflection.
+
+It is called with the name of an LRAT file in the same directory as the current Lean file:
+```
+sat_check "proof.lrat"
+```
 -/
 def _root_.Lean.MVarId.satCheck (g : MVarId) (cfg : TacticContext) : MetaM Unit := do
   let unsatProver (exp : BoolExprNat) : MetaM Expr := do
