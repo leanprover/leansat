@@ -59,17 +59,23 @@ def toString : BVExpr w → String
 
 instance : ToString (BVExpr w) := ⟨toString⟩
 
-abbrev Assignment := Nat → Σ w, BitVec w
+structure PackedBitVec where
+  {w : Nat}
+  bv: BitVec w
+
+abbrev Assignment := List PackedBitVec
+def Assignment.getD (assign : Assignment) (idx : Nat) : PackedBitVec :=
+  List.getD assign idx ⟨BitVec.zero 0⟩
 
 def eval (assign : Assignment) : BVExpr w → BitVec w
   | .var idx =>
-    let ⟨_, bv⟩ := assign idx
+    let ⟨bv⟩ := assign.getD idx
     bv.truncate w
   | .const val => val
   | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
   | .un op operand => op.eval (eval assign operand)
 
-@[simp] theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign idx).snd.truncate _ := by rfl
+@[simp] theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.truncate _ := by rfl
 @[simp] theorem eval_const : eval assign (.const val) = val := by rfl
 @[simp] theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rhs.eval assign) := by rfl
 @[simp] theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) := by rfl
@@ -101,6 +107,8 @@ namespace BVPred
 def toString : BVPred → String
   | bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
 
+instance : ToString BVPred := ⟨toString⟩
+
 def eval (assign : BVExpr.Assignment) : BVPred → Bool
   | bin lhs op rhs => op.eval (lhs.eval assign) (rhs.eval assign)
 
@@ -122,5 +130,10 @@ def eval (assign : BVExpr.Assignment) (expr : BVLogicalExpr) : Bool :=
 
 def sat (x : BVLogicalExpr) (assign : BVExpr.Assignment) : Prop := eval assign x = true
 def unsat (x : BVLogicalExpr) : Prop := ∀ f, eval f x = false
+
+theorem sat_and {x y : BVLogicalExpr} {assign} (hx : sat x assign) (hy : sat y assign) : sat (.gate .and x y) assign :=
+  congr_arg₂ (· && ·) hx hy
+
+theorem sat_true : sat (.const true) assign := rfl
 
 end BVLogicalExpr

@@ -17,9 +17,9 @@ abbrev BVBitwise := BoolExpr BVBit
 namespace BVBitwise
 
 def eval (assign : BVExpr.Assignment) (expr : BVBitwise) : Bool :=
-  BoolExpr.eval (fun bit => assign bit.var |>.snd.getLsb bit.idx.val) expr
+  BoolExpr.eval (fun bit => assign.getD bit.var |>.bv.getLsb bit.idx.val) expr
 
-@[simp] theorem eval_literal : eval assign (.literal bit) = (assign bit.var |>.snd.getLsb bit.idx.val) := rfl
+@[simp] theorem eval_literal : eval assign (.literal bit) = (assign.getD bit.var |>.bv.getLsb bit.idx.val) := rfl
 @[simp] theorem eval_const : eval assign (.const b) = b := rfl
 @[simp] theorem eval_not : eval assign (.not x) = !eval assign x := rfl
 @[simp] theorem eval_gate : eval assign (.gate g x y) = g.eval (eval assign x) (eval assign y) := rfl
