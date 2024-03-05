@@ -8,3 +8,4 @@ import Lean.Util.Trace
 open Lean
 
 initialize registerTraceClass `sat
+initialize registerTraceClass `bv

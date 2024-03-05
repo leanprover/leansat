@@ -53,7 +53,6 @@ def stashedAtomsFn : M Expr := do
 /--
 Look up an expression in the atoms, recording it if it has not previously appeared.
 -/
--- TODO use a hash map here, and don't use `isDefEq`.
 def lookup (e : Expr) : M Nat := do
   let c ← getThe State
   match c.atoms.find? e with
