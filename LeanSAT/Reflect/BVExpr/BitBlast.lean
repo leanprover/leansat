@@ -103,6 +103,18 @@ theorem bitblast.mkEqBit_correct' :
   . intro h idx
     simp [bitblast.mkEqBit_correct, h]
 
+theorem Fin.forall_succ (p : Fin (n + 1) → Prop) [DecidablePred p] :
+    (∀ (x : Fin (n + 1)), p x) ↔ (p (Fin.last _) ∧ ∀ (x : Fin n), p (x.castAdd 1)) :=
+  ⟨fun w => ⟨w _, fun i => w _⟩, fun ⟨h, w⟩ x =>
+    if p : x = Fin.last _ then by
+      subst p; exact h
+    else by
+      -- This line is needed now that `omega` doesn't check defeq on atoms.
+      simp [Fin.last, ← Fin.val_ne_iff] at p
+      have t : x < n := by omega
+      rw [show x = Fin.castAdd 1 ⟨x, by omega⟩ by rfl]
+      apply w⟩
+
 theorem bitblast.aux :
    (∀ (idx : Fin w), (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign)
      = 
@@ -118,11 +130,19 @@ theorem bitblast.aux :
     . intro h
       constructor
       . apply h ⟨w, (by omega)⟩
-      -- TODO: this follows from the ih but I don't quite know how
-      . sorry
-    . intro h idx
+      . rw [Fin.forall_succ] at h
+        rcases h with ⟨h1, h2⟩
+        -- TODO: this is almost IH now
+        sorry
+    . intro h
+      rw [Fin.forall_succ]
       rcases h with ⟨h1, h2⟩
-      sorry
+      constructor
+      . simp[h1]
+      . intro x
+        simp only [Fin.coe_castAdd]
+        -- TODO: this is almost IH now
+        sorry
 
 theorem bitblast.goEq_correct' {lhs rhs : BVExpr w} :
     ((goEq lhs rhs w (by omega)).eval assign)
