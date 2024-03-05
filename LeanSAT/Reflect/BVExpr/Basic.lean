@@ -1,0 +1,126 @@
+/-
+Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Henrik Böving
+-/
+import Std.Data.BitVec.Basic
+import LeanSAT.Reflect.BoolExpr.Basic
+
+
+open Std
+
+inductive BVBinOp where
+| and
+
+namespace BVBinOp
+
+def toString : BVBinOp → String
+  | and => "&&"
+
+instance : ToString BVBinOp := ⟨toString⟩
+
+def eval : BVBinOp → (BitVec w → BitVec w → BitVec w)
+  | and => (· &&& ·)
+
+@[simp] theorem eval_and : eval .and = ((· &&& ·) : BitVec w → BitVec w → BitVec w) := by rfl
+
+end BVBinOp
+
+inductive BVUnOp where
+| not
+
+namespace BVUnOp
+
+def toString : BVUnOp → String
+  | not => "~"
+
+instance : ToString BVUnOp := ⟨toString⟩
+
+def eval : BVUnOp → (BitVec w → BitVec w)
+  | not => (~~~ ·)
+
+@[simp] theorem eval_not : eval .not = ((~~~ ·) : BitVec w → BitVec w) := by rfl
+
+end BVUnOp
+
+inductive BVExpr (w : Nat) where
+| var (idx : Nat) : BVExpr w
+| const (val : BitVec w) : BVExpr w
+| bin (lhs : BVExpr w) (op : BVBinOp) (rhs : BVExpr w) : BVExpr w
+| un (op : BVUnOp) (operand : BVExpr w) : BVExpr w
+
+namespace BVExpr
+
+def toString : BVExpr w → String
+  | .var idx => ToString.toString idx
+  | .const val => ToString.toString val
+  | .bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
+  | .un op operand => s!"({op.toString} {toString operand})"
+
+instance : ToString (BVExpr w) := ⟨toString⟩
+
+abbrev Assignment := Nat → Σ w, BitVec w
+
+def eval (assign : Assignment) : BVExpr w → BitVec w
+  | .var idx =>
+    let ⟨_, bv⟩ := assign idx
+    bv.truncate w
+  | .const val => val
+  | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
+  | .un op operand => op.eval (eval assign operand)
+
+@[simp] theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign idx).snd.truncate _ := by rfl
+@[simp] theorem eval_const : eval assign (.const val) = val := by rfl
+@[simp] theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rhs.eval assign) := by rfl
+@[simp] theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) := by rfl
+
+end BVExpr
+
+inductive BVBinPred where
+| eq
+
+namespace BVBinPred
+
+def toString : BVBinPred → String
+  | eq => "=="
+
+instance : ToString BVBinPred := ⟨toString⟩
+
+def eval : BVBinPred → (BitVec w → BitVec w → Bool)
+  | .eq => (· == ·)
+
+@[simp] theorem eval_eq : eval .eq = ((· == ·) : BitVec w → BitVec w → Bool) := by rfl
+
+end BVBinPred
+
+inductive BVPred where
+| bin (lhs : BVExpr w) (op : BVBinPred) (rhs : BVExpr w)
+
+namespace BVPred
+
+def toString : BVPred → String
+  | bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
+
+def eval (assign : BVExpr.Assignment) : BVPred → Bool
+  | bin lhs op rhs => op.eval (lhs.eval assign) (rhs.eval assign)
+
+@[simp] theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rhs.eval assign) := by rfl
+
+end BVPred
+
+abbrev BVLogicalExpr := BoolExpr BVPred
+
+namespace BVLogicalExpr
+
+def eval (assign : BVExpr.Assignment) (expr : BVLogicalExpr) : Bool :=
+  BoolExpr.eval (·.eval assign) expr
+
+@[simp] theorem eval_literal : eval assign (.literal pred) = pred.eval assign := rfl
+@[simp] theorem eval_const : eval assign (.const b) = b := rfl
+@[simp] theorem eval_not : eval assign (.not x) = !eval assign x := rfl
+@[simp] theorem eval_gate : eval assign (.gate g x y) = g.eval (eval assign x) (eval assign y) := rfl
+
+def sat (x : BVLogicalExpr) (assign : BVExpr.Assignment) : Prop := eval assign x = true
+def unsat (x : BVLogicalExpr) : Prop := ∀ f, eval f x = false
+
+end BVLogicalExpr
