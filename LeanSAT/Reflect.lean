@@ -18,3 +18,5 @@ import LeanSAT.Reflect.Tactics.SatCheck
 import LeanSAT.Reflect.Tactics.SatTrace
 import LeanSAT.Reflect.Fin
 import LeanSAT.Reflect.Glue
+import LeanSAT.Reflect.BVExpr.Basic
+import LeanSAT.Reflect.BVExpr.BitBlast
