@@ -269,13 +269,11 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
   . specialize h ⟨i, i_in_bounds⟩
     simp only at h
     have i_in_bounds' : i < arr.data.length := by
-      --omega
-      sorry
+      dsimp; omega
     rw [List.get?_eq_get i_in_bounds, List.get?_eq_get i_in_bounds']
     simp only [h, Nat.zero_add, Array.getElem_eq_data_get, Option.mem_def, Option.some.injEq]
   . have arr_data_length_le_i : arr.data.length ≤ i := by
-      --omega
-      sorry
+      dsimp; omega
     simp only [Nat.not_lt, ← List.get?_eq_none] at i_in_bounds arr_data_length_le_i
     rw [i_in_bounds, arr_data_length_le_i]
 

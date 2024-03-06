@@ -377,8 +377,8 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
     have in_bounds_inductive (idx : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool)
       (ih : in_bounds_motive idx.1 acc) : in_bounds_motive (idx.1 + 1) (confirmRupHint f.clauses acc rupHints[idx]) := by
       have h := confirmRupHint_preserves_assignments_size f.clauses acc.1 acc.2.1 acc.2.2.1 acc.2.2.2 rupHints[idx]
-      --omega
-      sorry
+      simp at *
+      omega
     rw [Array.foldl_induction in_bounds_motive in_bounds_base in_bounds_inductive]
     exact i.2.2
   simp only [getElem!, i_in_bounds, dite_true] at h1
@@ -431,8 +431,8 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   simp only [ratHintsExhaustive, getRatClauseIndices] at ratHintsExhaustive_eq_true
   have i_in_bounds : i.val < Array.size (Array.range (Array.size f.clauses)) := by
     rw [Array.range_size]
-    sorry
-    --omega
+    dsimp
+    omega
   have i_lt_f_clauses_size : i.1 < f.clauses.size := by
     rw [Array.range_size] at i_in_bounds
     exact i_in_bounds
@@ -452,8 +452,8 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   have j_in_bounds : j < ratHints.size := by
     have j_property := j.2
     simp only [Array.map_data, List.length_map] at j_property
-    sorry
-    --omega
+    dsimp at *
+    omega
   rw [← Array.getElem_eq_data_get] at h'
   simp only [Array.getElem_map] at h'
   apply Exists.intro ⟨j.1, j_in_bounds⟩
