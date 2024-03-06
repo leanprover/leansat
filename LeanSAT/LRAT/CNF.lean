@@ -47,10 +47,10 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
   . intro h
     -- Construct an assignment p such that p ⊨ l and p ⊭ c ∖ {l}
     let p := fun x : α => if x = l.1 then l.2 else (x, false) ∈ toList c
-    have pl : p ⊨ l := by simp only [instHSatLiteral, ite_true]
+    have pl : p ⊨ l := by simp only [instHSatLiteral, ite_true, p]
     specialize h p pl
     rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
-    . simp only [instHSatLiteral] at h2
+    . simp only [instHSatLiteral, p] at h2
       split at h2
       . next v_eq_l =>
         rw [← @Prod.mk.eta α Bool l, ← v_eq_l, h2]
@@ -59,7 +59,7 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
         simp only [decide_eq_false_iff_not] at h2
         exfalso
         exact h2 h1
-    . simp only [instHSatLiteral] at h2
+    . simp only [instHSatLiteral, p] at h2
       split at h2
       . next v_eq_l =>
         rw [← @Prod.mk.eta α Bool l, ← v_eq_l, h2]
