@@ -5,7 +5,6 @@ Authors: Josh Clune
 -/
 import Lean.Elab.Command
 import LeanSAT.LRAT.Clause
-import Std.Tactic.Omega
 
 open LRAT Lean Parser Elab Command DefaultClause
 

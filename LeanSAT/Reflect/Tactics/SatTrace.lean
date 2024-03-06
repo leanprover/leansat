@@ -1,6 +1,6 @@
 import LeanSAT.Reflect.Tactics.SatDecide
 import LeanSAT.Reflect.Tactics.SatCheck
-import Std.Tactic.TryThis
+import Lean.Meta.Tactic.TryThis
 
 open Lean Elab Meta Tactic
 
@@ -32,7 +32,7 @@ def evalSatTraceTactic : Tactic := fun stx =>
     (← getMainGoal).withContext do
       liftMetaFinishingTactic fun g => g.satDecide cfg
     let stx ← `(tactic| sat_check $(quote lratFile.toString))
-    Std.Tactic.TryThis.addSuggestion tk stx (origSpan? := ← getRef)
+    TryThis.addSuggestion tk stx (origSpan? := ← getRef)
   | _ => throwUnsupportedSyntax
 
 end SatTrace

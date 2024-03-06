@@ -21,9 +21,9 @@ instance decidableForallFin (n : Nat) (p : (Fin n → Bool) → Prop) [i : Decid
     Decidable (∀ f, p f) :=
   match n, p, i with
   | 0, p, i =>
-    match h : decide (p fun.) with
+    match h : decide (p nofun) with
     | true => .isTrue fun f => by
-        have t : f = fun. := funext (fun.)
+        have t : f = nofun := funext nofun
         subst t
         exact of_decide_eq_true h
     | false => .isFalse fun f => by

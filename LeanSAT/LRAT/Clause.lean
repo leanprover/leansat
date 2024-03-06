@@ -8,7 +8,6 @@ import LeanSAT.Sat.Literal
 import LeanSAT.Util.PosFin
 import LeanSAT.Util.Misc
 import Std.Data.Array.Lemmas
-import Std.Tactic.Omega
 import LeanSAT.LRAT.Assignment
 
 namespace LRAT
@@ -107,8 +106,8 @@ theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
 
 def empty {n : Nat} : DefaultClause n :=
   let clause := []
-  have nodupkey := by simp only [List.find?, List.not_mem_nil, not_false_eq_true, or_self, implies_true]
-  have nodup := by simp only [List.nodup_nil]
+  have nodupkey := by simp only [clause, List.find?, List.not_mem_nil, not_false_eq_true, or_self, implies_true]
+  have nodup := by simp only [clause, List.nodup_nil]
   ⟨clause, nodupkey, nodup⟩
 
 theorem empty_eq {n : Nat} : toList (empty : DefaultClause n) = [] := rfl
@@ -120,11 +119,11 @@ def unit {n : Nat} (l : Literal (PosFin n)) : DefaultClause n :=
     by_cases l.2
     . apply Or.inr
       cases l
-      simp_all
+      simp_all [clause]
     . apply Or.inl
       cases l
-      simp_all
-  have nodup : List.Nodup clause:= by simp
+      simp_all [clause]
+  have nodup : List.Nodup clause:= by simp [clause]
   ⟨clause, nodupkey, nodup⟩
 
 theorem unit_eq {n : Nat} (l : Literal (PosFin n)) : toList (unit l) = [l] := rfl
@@ -158,7 +157,7 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
       intro l'
       simp only [List.contains, Bool.not_eq_true] at heq1
       have heq1 := List.not_mem_of_elem_eq_false heq1
-      simp only [List.find?, List.mem_cons, not_or]
+      simp only [List.find?, List.mem_cons, not_or, clause]
       by_cases l' = l.1
       . next l'_eq_l =>
         by_cases hl : l.2
@@ -181,7 +180,7 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
           intro heq
           simp only [← heq, not_true] at l'_ne_l
     have nodup : List.Nodup clause := by
-      simp [c.nodup, List.not_mem_of_elem_eq_false, heq2]
+      simp [c.nodup, List.not_mem_of_elem_eq_false, heq2, clause]
     some ⟨clause, nodupkey, nodup⟩
 
 def ofArray {n : Nat} (ls : Array (Literal (PosFin n))) : Option (DefaultClause n) :=
@@ -221,7 +220,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
     rcases ih with ⟨idx_add_one_le_arr_size, ih⟩
     apply Exists.intro $ Nat.le_of_succ_le idx_add_one_le_arr_size
     intro c' heq
-    simp only [getElem_fin] at heq
+    simp only [getElem_fin, fold_fn] at heq
     split at heq
     . simp only at heq
     . next acc =>
@@ -270,11 +269,11 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
   . specialize h ⟨i, i_in_bounds⟩
     simp only at h
     have i_in_bounds' : i < arr.data.length := by
-      omega
+      dsimp; omega
     rw [List.get?_eq_get i_in_bounds, List.get?_eq_get i_in_bounds']
     simp only [h, Nat.zero_add, Array.getElem_eq_data_get, Option.mem_def, Option.some.injEq]
   . have arr_data_length_le_i : arr.data.length ≤ i := by
-      omega
+      dsimp; omega
     simp only [Nat.not_lt, ← List.get?_eq_none] at i_in_bounds arr_data_length_le_i
     rw [i_in_bounds, arr_data_length_le_i]
 
@@ -282,7 +281,7 @@ def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultCla
   let clause := c.clause.erase l
   let nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
     intro l'
-    simp only
+    simp only [clause]
     rcases c.nodupkey l' with ih | ih
     . apply Or.inl
       intro h
@@ -291,7 +290,7 @@ def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultCla
       intro h
       exact ih $ List.mem_of_mem_erase h
   have nodup := by
-    simp only
+    simp only [clause]
     exact List.Nodup.erase l c.nodup
   ⟨clause, nodupkey, nodup⟩
 

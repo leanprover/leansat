@@ -3,11 +3,7 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import Std.Logic
-import Std.Data.List.Basic
-import Std.Data.List.Lemmas
 import Std.Data.Array.Lemmas
-import Std.Tactic.SimpTrace
 
 -- Various helper theorems/definitions copied from mathlib
 namespace Misc -- Adding this namespace to avoid naming conflicts with the actual mathlib theorems
@@ -304,7 +300,7 @@ theorem Nat.even_iff : Even n ↔ n % 2 = 0 :=
     ⟨n / 2, (mod_add_div n 2).symm.trans (by simp only [h, Nat.zero_add, Nat.two_mul])⟩⟩
 
 theorem Nat.odd_iff : Odd n ↔ n % 2 = 1 :=
-  ⟨fun ⟨m, hm⟩ => by rw [hm, Nat.add_mod, Nat.mul_mod_right]; rfl,
+  ⟨fun ⟨m, hm⟩ => by rw [hm, Nat.add_mod, Nat.mul_mod_right],
     fun h => ⟨n / 2, (mod_add_div n 2).symm.trans (by rw [h, Nat.add_comm])⟩⟩
 
 theorem Nat.odd_succ_of_even : Even n → Odd n.succ := by
@@ -380,16 +376,16 @@ theorem Array.range_idx {n : Nat} {x : Nat} (h : x < n) : (Array.range n)[x]'(by
       . next x_ge_n =>
         exfalso
         have h_range_size : (Array.range n).size = n := Array.range_size
-        simp only [Array.range, flip] at h_range_size
-        rw [h_range_size] at x_ge_n
+        simp only [Array.mkEmpty_eq, Array.range, flip] at h_range_size
+        simp only [Array.mkEmpty_eq, h_range_size] at x_ge_n
         exact x_ge_n x_lt_n
     . simp only [Array.range, Nat.fold, flip, Array.get_push]
       split
       . next x_lt_n =>
         exfalso
         have h_range_size : (Array.range n).size = n := Array.range_size
-        simp only [Array.range, flip] at h_range_size
-        simp only [x_eq_n, h_range_size, Nat.lt_irrefl] at x_lt_n
+        simp only [Array.range, Array.mkEmpty_eq] at h_range_size
+        simp only [x_eq_n, Array.mkEmpty_eq, h_range_size, Nat.lt_irrefl] at x_lt_n
       . rw [x_eq_n]
 
 theorem Array.mem_filter {a : Array α} {p : α → Bool} :

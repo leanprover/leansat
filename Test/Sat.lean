@@ -1,9 +1,8 @@
 import LeanSAT.Reflect.Tactics.SatDecide
 import LeanSAT.Reflect.Tactics.SatCheck
 import LeanSAT.Reflect.Tactics.SatTrace
-import Std.Tactic.GuardMsgs
 
-/-- info: Try this: sat_check "Sat.lean-test-8-47.lrat" -/
+/-- info: Try this: sat_check "Sat.lean-test-7-47.lrat" -/
 #guard_msgs in
 theorem test (h : x = false) : false = x := by sat_decide?
 

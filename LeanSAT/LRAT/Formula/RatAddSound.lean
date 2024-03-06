@@ -116,7 +116,7 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
             apply Array.getElem_mem_data
           . rfl
       specialize hp j_unit ((Or.inr ∘ Or.inr) j_unit_in_insertRatUnits_res)
-      simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, getElem_fin, List.find?] at hp
+      simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, getElem_fin, List.find?, j_unit] at hp
       simp only [getElem_fin] at h1
       rcases hp with ⟨i', hp⟩
       simp only [instClausePosFinDefaultClause, h1, Clause.toList, unit_eq, List.mem_singleton, Prod.mk.injEq] at hp
@@ -172,7 +172,9 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
     rcases hp2 with ⟨i2, hp2⟩
     simp only [getElem_fin] at h1 h2
     simp only [instClausePosFinDefaultClause, h1, Clause.toList, unit_eq, List.mem_singleton, Prod.mk.injEq,
-      and_false, false_and, and_true, false_or, h2, or_false] at hp1 hp2
+      and_false, false_and, and_true, false_or, h2, or_false, j1_unit, j2_unit] at hp1 hp2
+    simp_all only [Bool.decide_eq_false, Bool.not_eq_true', ne_eq, getElem_fin, Prod.mk.injEq,
+      and_false, false_and, and_true, false_or, or_false]
     simp [hp2.1, ← hp1.1, hp1.2] at hp2
 
 theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ assignments_invariant f)
@@ -184,7 +186,7 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
   let motive := confirmRupHint_fold_entails_hsat_motive fc.1
   have h_base : motive 0 (fc.fst.assignments, [], false, false) := by
     simp only [confirmRupHint_fold_entails_hsat_motive, insertRatUnits_preserves_assignments_size, hf.2.1,
-      false_implies, and_true, true_and]
+      false_implies, and_true, true_and, fc, motive]
     have fc_satisfies_assignments_invariant : assignments_invariant fc.1 :=
       insertRatUnits_preserves_assignments_invariant f hf (negate c)
     exact assignments_invariant_entails_limplies fc.1 fc_satisfies_assignments_invariant
@@ -357,7 +359,7 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
   let motive := confirmRupHint_fold_entails_hsat_motive f
   have h_base : motive 0 (f.assignments, [], false, false) := by
     simp only [confirmRupHint_fold_entails_hsat_motive, f_assignments_invariant.1, false_implies, and_true, true_and,
-      assignments_invariant_entails_limplies f f_assignments_invariant]
+      assignments_invariant_entails_limplies f f_assignments_invariant, motive]
   have h_inductive (idx : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) (ih : motive idx.1 acc) :=
     confirmRupHint_preserves_motive f rupHints idx acc ih
   rcases Array.foldl_induction motive h_base h_inductive with ⟨hsize, h1, _⟩
@@ -370,10 +372,12 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
   have i_in_bounds :
     i.1 < (rupHints.foldl (fun b => confirmRupHint f.clauses b) (f.assignments, [], false, false) 0 rupHints.size).1.size := by
     let in_bounds_motive (_idx : Nat) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) := acc.1.size = n
-    have in_bounds_base : in_bounds_motive 0 (f.assignments, [], false, false) := by simp only [f_assignments_invariant.1]
+    have in_bounds_base : in_bounds_motive 0 (f.assignments, [], false, false) := by
+      simp only [f_assignments_invariant.1, in_bounds_motive]
     have in_bounds_inductive (idx : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool)
       (ih : in_bounds_motive idx.1 acc) : in_bounds_motive (idx.1 + 1) (confirmRupHint f.clauses acc rupHints[idx]) := by
       have h := confirmRupHint_preserves_assignments_size f.clauses acc.1 acc.2.1 acc.2.2.1 acc.2.2.2 rupHints[idx]
+      simp at *
       omega
     rw [Array.foldl_induction in_bounds_motive in_bounds_base in_bounds_inductive]
     exact i.2.2
@@ -427,6 +431,7 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   simp only [ratHintsExhaustive, getRatClauseIndices] at ratHintsExhaustive_eq_true
   have i_in_bounds : i.val < Array.size (Array.range (Array.size f.clauses)) := by
     rw [Array.range_size]
+    dsimp
     omega
   have i_lt_f_clauses_size : i.1 < f.clauses.size := by
     rw [Array.range_size] at i_in_bounds
@@ -447,6 +452,7 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   have j_in_bounds : j < ratHints.size := by
     have j_property := j.2
     simp only [Array.map_data, List.length_map] at j_property
+    dsimp at *
     omega
   rw [← Array.getElem_eq_data_get] at h'
   simp only [Array.getElem_map] at h'
@@ -529,7 +535,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
       have p'_rw : p' = (fun a => if a = pivot.1 then pivot.2 else p a) := rfl
       have p'_entails_c : p' ⊨ c := by
         specialize pivot_in_c p'
-        simp only [instHSatLiteral._eq_1, HSat.eval._eq_1, ite_eq_left_iff, not_true, false_implies, forall_const] at pivot_in_c
+        simp only [instHSatLiteral._eq_1, HSat.eval._eq_1, ite_eq_left_iff, not_true, false_implies, forall_const, p'] at pivot_in_c
         exact pivot_in_c
       specialize fc_unsat p'
       simp only [← p'_rw, formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Misc.not_forall, exists_prop] at fc_unsat
