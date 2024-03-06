@@ -11,9 +11,9 @@ open Lean Meta
 namespace BVDecide
 
 -- TODO: This should be upstream?
-instance : ToExpr (Std.BitVec w) where
-  toExpr bv := mkApp2 (mkConst ``Std.BitVec.ofNat) (toExpr w) (toExpr bv.toNat)
-  toTypeExpr := mkApp (mkConst ``Std.BitVec) (toExpr w)
+instance : ToExpr (BitVec w) where
+  toExpr bv := mkApp2 (mkConst ``BitVec.ofNat) (toExpr w) (toExpr bv.toNat)
+  toTypeExpr := mkApp (mkConst ``BitVec) (toExpr w)
 
 instance : ToExpr BVBinPred where
   toExpr x :=
@@ -99,11 +99,11 @@ namespace BVAtAtoms
 
 def of (x : Expr) : M (Option (BVAtAtoms w)) := do
   match x.getAppFnArgs with
-  | (``Std.BitVec.ofNat, #[_, valExpr]) =>
+  | (``BitVec.ofNat, #[_, valExpr]) =>
     let val := parseNatLit valExpr
-    let bvVal := Std.BitVec.ofNat w val
-    let bvExpr := .const (Std.BitVec.ofNat w val)
-    let expr := mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr bvVal) 
+    let bvVal := BitVec.ofNat w val
+    let bvExpr := .const (BitVec.ofNat w val)
+    let expr := mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr bvVal)
     -- Hopefully by rfl?
     let proof := do sorry
     return some ⟨bvExpr, proof, expr⟩
@@ -145,7 +145,7 @@ where
   ofPred (h : Expr) : M (Option (HoldsAtAtoms BVPred)) := do
     let t ← instantiateMVars (← whnfR (← inferType h))
     match t.getAppFnArgs with
-    | (``Eq, #[.app (.const ``Std.BitVec []) widthExpr, lhs, rhs]) => 
+    | (``Eq, #[.app (.const ``BitVec []) widthExpr, lhs, rhs]) =>
       let width := parseNatLit widthExpr
       IO.println lhs
       IO.println rhs
@@ -155,7 +155,7 @@ where
       let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.eq) rhs.expr
       /-
         TODO: This will become a proof that evaluating this predicate holds through a congruence argument:
-        - h is of the form bv1 = bv2 
+        - h is of the form bv1 = bv2
         - we obtain proof from the parsing of bv1 and bv2 that evaluating their expressions (call them bv1' bv2')
           is equivalent to bv1 and bv2 respectively
         - we need a theorem that says (bv1 = bv2) (bv1 = bv1') (bv2 = bv2') : bv1' = bv2'
@@ -174,7 +174,7 @@ def and (x y : HoldsAtAtoms BVLogicalExpr) : HoldsAtAtoms BVLogicalExpr where
   bvExpr := .gate .and x.bvExpr y.bvExpr
   expr := mkApp4 (mkConst ``BoolExpr.gate) (mkConst ``BVPred) (mkConst ``Gate.and) x.expr y.expr
   holdsAtAtoms :=
-    return mkApp5 
+    return mkApp5
       (mkConst ``BVLogicalExpr.sat_and)
       x.expr
       y.expr
@@ -186,7 +186,7 @@ def and (x y : HoldsAtAtoms BVLogicalExpr) : HoldsAtAtoms BVLogicalExpr where
 def proveFalse (x : HoldsAtAtoms BVLogicalExpr) (h : Expr) : M Expr := do
   let atomsList ← M.atomsAssignment
   let evalExpr := mkApp2 (mkConst ``BVLogicalExpr.eval) atomsList x.expr
-  return mkApp3 
+  return mkApp3
     (mkConst ``ReflectSat.SatAtAtoms.false_of_eq_true_of_eq_false)
     evalExpr
     (← x.holdsAtAtoms)
@@ -225,5 +225,5 @@ end BVDecide
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| bv_decide) => do
-    let cfg ← SatDecide.TacticContext.new
+    let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
     liftMetaFinishingTactic fun g => g.bvDecide cfg
