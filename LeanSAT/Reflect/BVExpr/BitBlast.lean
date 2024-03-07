@@ -69,7 +69,7 @@ def bitblast (expr : BVPred) : BVBitwise :=
   | @bin w lhs op rhs =>
     match op with
     | .eq => goEq lhs rhs w (by omega)
-    | .neq => sorry
+    | .neq => .not (goEq lhs rhs w (by omega))
 where
   mkEqBit {w : Nat} (lhs rhs : BVExpr w) (bit : Nat) (h : bit < w) : BVBitwise :=
     let blhs := lhs.bitblast ⟨bit, h⟩
@@ -79,24 +79,24 @@ where
   goEq {w : Nat} (lhs rhs : BVExpr w) (bit : Nat) (h : bit ≤ w) :=
     match h:bit with
     | 0 => .const true
-    | rem + 1 => 
+    | rem + 1 =>
       let eq := mkEqBit lhs rhs rem (by omega)
       .gate .and eq (goEq lhs rhs rem (by omega))
 
-theorem bitblast.mkEqBit_correct (idx : Fin w) : 
-    (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign 
+theorem bitblast.mkEqBit_correct (idx : Fin w) :
+    (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign
       =
     ((lhs.eval assign).getLsb idx.val = (rhs.eval assign).getLsb idx.val) := by
   simp[mkEqBit, Gate.eval, BVExpr.getLsb_eq_bitblast]
 
 
-theorem bitblast.mkEqBit_correct' : 
+theorem bitblast.mkEqBit_correct' :
     (∀ (idx : Fin w), (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign)
-      = 
+      =
     (lhs.eval assign = rhs.eval assign) := by
   simp only [eq_iff_iff]
   constructor
-  . intro h; 
+  . intro h;
     apply BitVec.eq_of_getLsb_eq
     intro idx
     rw [← bitblast.mkEqBit_correct]
@@ -118,14 +118,14 @@ theorem Fin.forall_succ (p : Fin (n + 1) → Prop) [DecidablePred p] :
 
 theorem bitblast.aux :
    (∀ (idx : Fin w), (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign)
-     = 
+     =
    (goEq lhs rhs w (by omega)).eval assign := by
   induction w with
-  | zero => 
+  | zero =>
     simp[goEq]
     intro idx
     cases idx.isLt
-  | succ w ih => 
+  | succ w ih =>
     simp only [goEq, BVBitwise.eval_gate, Gate.eval, Bool.and_eq_true, eq_iff_iff]
     constructor
     . intro h

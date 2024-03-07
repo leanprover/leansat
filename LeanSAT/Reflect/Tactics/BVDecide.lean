@@ -159,6 +159,9 @@ theorem and_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = 
     lhs' &&& rhs' = lhs &&& rhs' := by
   simp[*]
 
+theorem not_congr (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
+  simp[*]
+
 /--
 Reify an `Expr` that's a `BitVec`.
 -/
@@ -187,6 +190,15 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
       let rhsProof ← rhs.evalsAtAtoms
       let rhsEval ← mkEvalExpr w rhs.expr
       return mkApp7 (mkConst ``and_congr) (toExpr w) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
+    return some ⟨bvExpr, proof, expr⟩
+  | (``Complement.complement, #[_, _, innerExpr]) =>
+    let some inner ← of innerExpr | return none
+    let bvExpr : BVExpr w := .un .not inner.bvExpr
+    let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr w) (mkConst ``BVUnOp.not) inner.expr
+    let proof := do
+      let innerEval ← mkEvalExpr w inner.expr
+      let innerProof ← inner.evalsAtAtoms
+      return mkApp4 (mkConst ``not_congr) (toExpr w) innerExpr innerEval innerProof
     return some ⟨bvExpr, proof, expr⟩
   | _ =>
     let t ← instantiateMVars (← whnfR (← inferType x))
