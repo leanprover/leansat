@@ -48,7 +48,7 @@ inductive BVExpr (w : Nat) where
 namespace BVExpr
 
 def toString : BVExpr w → String
-  | .var idx => ToString.toString idx
+  | .var idx => s!"var{idx}"
   | .const val => ToString.toString val
   | .bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
   | .un op operand => s!"({op.toString} {toString operand})"
