@@ -80,18 +80,22 @@ end BVExpr
 
 inductive BVBinPred where
 | eq
+| neq
 
 namespace BVBinPred
 
 def toString : BVBinPred → String
   | eq => "=="
+  | neq => "!="
 
 instance : ToString BVBinPred := ⟨toString⟩
 
 def eval : BVBinPred → (BitVec w → BitVec w → Bool)
   | .eq => (· == ·)
+  | .neq => (· != ·)
 
 @[simp] theorem eval_eq : eval .eq = ((· == ·) : BitVec w → BitVec w → Bool) := by rfl
+@[simp] theorem eval_neq : eval .neq = ((· != ·) : BitVec w → BitVec w → Bool) := by rfl
 
 end BVBinPred
 
