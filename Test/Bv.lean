@@ -20,8 +20,11 @@ next extensions:
 - Handle bitwise not at BVExpr
 -/
 
-theorem foo (h1 : 0#1 = 1#1) (h2 : (1 : BitVec 2) = 1) (h3 : 0#1 ≠ 0#1) : 3#10 = 2#10 := by bv_decide
+set_option trace.bv true in
+theorem foo (h1 : 0#1 = 1#1) (h2 : (2 : BitVec 2) = 3) (h3 : x = 4#3)
+    (h4 : x &&& y = y &&& x) : 4#5 = 5#5 := by
+  bv_decide
 
-#print foo
-
-
+set_option trace.bv true in
+theorem all_features {x y : BitVec 10} (h : x = y) : x &&& 1 = y &&& 1#10 := by
+  bv_decide
