@@ -69,6 +69,7 @@ def bitblast (expr : BVPred) : BVBitwise :=
   | @bin w lhs op rhs =>
     match op with
     | .eq => goEq lhs rhs w (by omega)
+    | .neq => sorry
 where
   mkEqBit {w : Nat} (lhs rhs : BVExpr w) (bit : Nat) (h : bit < w) : BVBitwise :=
     let blhs := lhs.bitblast ⟨bit, h⟩
@@ -165,6 +166,7 @@ theorem eq_bitblast (expr : BVPred) : ∀ assign, expr.eval assign = expr.bitbla
   | @bin w lhs op rhs =>
     cases op with
     | eq => simp [bitblast, bitblast.goEq_correct]
+    | neq => sorry
 
 end BVPred
 

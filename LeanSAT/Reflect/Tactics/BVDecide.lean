@@ -19,6 +19,7 @@ instance : ToExpr BVBinPred where
   toExpr x :=
     match x with
     | .eq => mkConst ``BVBinPred.eq
+    | .neq => mkConst ``BVBinPred.neq
   toTypeExpr := mkConst ``BVBinPred
 
 instance : ToExpr BVUnOp where
@@ -176,12 +177,15 @@ structure ReifiedBVPred where
 namespace ReifiedBVPred
 
 theorem beq_eq_true_of_eq {x y : BitVec w} (h : x = y) : (x == y) = true := (beq_iff_eq x y).mpr h
+theorem bne_eq_true_of_ne {x y : BitVec w} (h : x ≠ y) : (x != y) = true := (bne_iff_ne x y).mpr h
 
-def mkTrans (w : Nat) (x y z : Expr) (hxy hyz : Expr) : Expr :=
-  mkApp6 (mkConst ``Eq.trans [1]) (mkApp (mkConst ``BitVec) (toExpr w)) x y z hxy hyz
+theorem eq_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) (h3 : lhs = rhs)
+    : lhs' = rhs' := by
+  simp[*]
 
-def mkSymm (w : Nat) (x y : Expr) (hxy : Expr) : Expr :=
-  mkApp4 (mkConst ``Eq.symm [1]) (mkApp (mkConst ``BitVec) (toExpr w)) x y hxy
+theorem ne_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) (h3 : lhs ≠ rhs)
+    : lhs' ≠ rhs' := by
+  simp[*]
 
 /--
 Reify an `Expr` that is a proof of a predicate about `BitVec`.
@@ -189,10 +193,29 @@ Reify an `Expr` that is a proof of a predicate about `BitVec`.
 def of (h : Expr) : M (Option ReifiedBVPred) := do
   let t ← instantiateMVars (← whnfR (← inferType h))
   match t.getAppFnArgs with
+  | (``Not, #[w]) =>
+    match w.getAppFnArgs with
+    | (``Eq, #[.app (.const ``BitVec []) widthExpr, lhsExpr, rhsExpr]) =>
+      let some ⟨width, lhs, rhs⟩ ← extractEq widthExpr lhsExpr rhsExpr | return none
+      let bvExpr := .bin (w := width) lhs.bvExpr .neq rhs.bvExpr
+      let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.neq) rhs.expr
+      let proof := do
+        let lhsEval ← ReifiedBVExpr.mkEvalExpr width lhs.expr
+        let lhsProof ← lhs.evalsAtAtoms
+        let rhsEval ← ReifiedBVExpr.mkEvalExpr width rhs.expr
+        let rhsProof ← rhs.evalsAtAtoms
+        let neqProof :=
+          mkApp8 (mkConst ``ne_congr) (toExpr width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof h
+        return mkApp4
+          (mkConst ``bne_eq_true_of_ne)
+          (toExpr width)
+          lhsEval
+          rhsEval
+          neqProof
+      return some ⟨bvExpr, proof, expr⟩
+    | _ => return none
   | (``Eq, #[.app (.const ``BitVec []) widthExpr, lhsExpr, rhsExpr]) =>
-    let some width ← getNatValue? widthExpr | return none
-    let some lhs ← ReifiedBVExpr.of lhsExpr | return none
-    let some rhs ← ReifiedBVExpr.of rhsExpr | return none
+    let some ⟨width, lhs, rhs⟩ ← extractEq widthExpr lhsExpr rhsExpr | return none
     let bvExpr := .bin (w := width) lhs.bvExpr .eq rhs.bvExpr
     let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.eq) rhs.expr
     let proof := do
@@ -201,17 +224,16 @@ def of (h : Expr) : M (Option ReifiedBVPred) := do
       let rhsEval ← ReifiedBVExpr.mkEvalExpr width rhs.expr
       let rhsProof ← rhs.evalsAtAtoms
       let eqProof :=
-        mkTrans width lhsEval lhsExpr rhsEval lhsProof
-          (mkTrans width lhsExpr rhsExpr rhsEval h
-            (mkSymm width rhsEval rhsExpr rhsProof))
-      return mkApp4
-        (mkConst ``beq_eq_true_of_eq)
-        (toExpr width)
-        lhsEval
-        rhsEval
-        eqProof
+        mkApp8 (mkConst ``eq_congr) (toExpr width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof h
+      return mkApp4 (mkConst ``beq_eq_true_of_eq) (toExpr width) lhsEval rhsEval eqProof
     return some ⟨bvExpr, proof, expr⟩
   | _ => return none
+where
+  extractEq (widthExpr lhsExpr rhsExpr : Expr) : M (Option ((w : Nat) × ReifiedBVExpr w × ReifiedBVExpr w)) := do
+    let some width ← getNatValue? widthExpr | return none
+    let some lhs ← ReifiedBVExpr.of lhsExpr | return none
+    let some rhs ← ReifiedBVExpr.of rhsExpr | return none
+    return some ⟨width, lhs, rhs⟩
 
 end ReifiedBVPred
 
@@ -244,19 +266,27 @@ def mkTrans (x y z : Expr) (hxy hyz : Expr) : Expr :=
 /--
 Reify an `Expr` that is a proof of some boolean structure on top of predicates about `BitVec`s.
 -/
-def of (h : Expr) : M (Option ReifiedBVLogical) := do
-  -- TODO: naive approach, does not handle any boolean structure on top of our problem
-  -- this is no issue for most cases but we *must* handle at least negation of preds
-  -- for any proof by contradiction where the goal involves a bitvec expression.
-  let some pred ← ReifiedBVPred.of h | return none
-  let bvExpr := .literal pred.bvPred
-  let expr := mkApp2 (mkConst ``BoolExpr.literal) (mkConst ``BVPred) pred.expr
-  let proof := do
-    let evalLogic ← M.mkEvalExpr ``BVLogicalExpr.eval expr
-    let evalPred ← M.mkEvalExpr ``BVPred.eval pred.expr
-    let predProof ← pred.holdsAtAtoms
-    return mkTrans evalLogic evalPred (mkConst ``Bool.true) (mkRefl evalLogic) predProof
-  return some ⟨bvExpr, proof, expr⟩
+partial def of (h : Expr) : M (Option ReifiedBVLogical) := do
+  -- TODO: naive approach, does not handle any boolean structure on top of our problem.
+  let t ← instantiateMVars (← whnfR (← inferType h))
+  match t.getAppFnArgs with
+  | (``Not, #[w]) =>
+    match w.getAppFnArgs with
+    | (``Eq, #[.app (.const ``BitVec []) _, _, _]) => goPred h
+    -- TODO: might want support for other negations in the future
+    | _ => return none
+  | _ => goPred h
+where
+  goPred (h : Expr) : M (Option ReifiedBVLogical) := do
+    let some pred ← ReifiedBVPred.of h | return none
+    let bvExpr := .literal pred.bvPred
+    let expr := mkApp2 (mkConst ``BoolExpr.literal) (mkConst ``BVPred) pred.expr
+    let proof := do
+      let evalLogic ← M.mkEvalExpr ``BVLogicalExpr.eval expr
+      let evalPred ← M.mkEvalExpr ``BVPred.eval pred.expr
+      let predProof ← pred.holdsAtAtoms
+      return mkTrans evalLogic evalPred (mkConst ``Bool.true) (mkRefl evalLogic) predProof
+    return some ⟨bvExpr, proof, expr⟩
 
 /--
 The trivially true `BVLogicalExpr`.
