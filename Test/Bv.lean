@@ -20,7 +20,7 @@ next extensions:
 - Handle bitwise not at BVExpr
 -/
 
-theorem foo (h : 0#1 = 1#1) : False := by bv_decide
+theorem foo (h1 : 0#1 = 1#1) (h2 : (1 : BitVec 2) = 1) : False := by bv_decide
 
 #print foo
 
