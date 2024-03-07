@@ -48,7 +48,8 @@ instance : ToExpr BVPred where
   toTypeExpr := mkConst ``BVPred
 where
   go : BVPred → Expr
-  | .bin (w := w) lhs op rhs => mkApp4 (mkConst ``BVPred.bin) (toExpr w) (toExpr lhs) (toExpr op) (toExpr rhs)
+  | .bin (w := w) lhs op rhs =>
+    mkApp4 (mkConst ``BVPred.bin) (toExpr w) (toExpr lhs) (toExpr op) (toExpr rhs)
 
 instance : ToExpr BVLogicalExpr where
   toExpr x := go x
@@ -61,6 +62,9 @@ where
   | .gate g x y => mkApp4 (mkConst ``BoolExpr.gate) (toTypeExpr BVPred) (toExpr g) (go x) (go y)
 
 
+/--
+The state of the reflection monad
+-/
 structure State where
   /--
   The atoms encountered so far. Saved as a map from `BitVec` expressions to a
@@ -68,17 +72,29 @@ structure State where
   -/
   atoms : HashMap Expr (Nat × Nat) := {}
 
+/--
+The reflection monad, used to track `BitVec` variables that we see as we traverse
+the context.
+-/
 abbrev M := StateRefT State MetaM
 
 namespace M
 
+/--
+Run a reflection computation as a `MetaM` one.
+-/
 def run (m : M α) : MetaM α :=
   m.run' { } { }
 
-/-- Retrieve the atoms. -/
+/--
+Retrieve the atoms as pairs of their width and expression.
+-/
 def atoms : M (List (Nat × Expr)) :=
   return (← getThe State).atoms.toArray.qsort (·.2.2 < ·.2.2) |>.map (fun (expr, width, _) => (width, expr)) |>.toList
 
+/--
+Retrieve a `BitVec.Assignment` representing the atoms we found so far.
+-/
 def atomsAssignment : M Expr := do
   let as ← atoms
   let packed : List Expr := as.map (fun (width, expr) => mkApp2 (mkConst ``BVExpr.PackedBitVec.mk) (toExpr width) expr)
@@ -91,125 +107,169 @@ def mkEvalExpr (evalFunc : Name) (expr : Expr) : M Expr := do
 
 end M
 
--- TODO: how to extract nat literals? Is there code for this?
-structure BVAtAtoms (w : Nat) where
+/--
+A reified version of an `Expr` representing a `BVExpr`.
+-/
+structure ReifiedBVExpr (w : Nat) where
+  /--
+  The reified expression.
+  -/
   bvExpr : BVExpr w
-  evalsAtAtoms : M Expr -- a proof that `expr.eval atomsFn = originalBV`
-  expr : Expr -- `toExpr bvExpr`, cached
+  /--
+  A proof that `bvExpr.eval atomsAssignment = originalBVExpr`.
+  -/
+  evalsAtAtoms : M Expr
+  /--
+  A cache for `toExpr bvExpr`.
+  -/
+  expr : Expr
 
-namespace BVAtAtoms
+namespace ReifiedBVExpr
 
 def mkEvalExpr (w : Nat) (expr : Expr) : M Expr := do
   return mkApp3 (mkConst ``BVExpr.eval) (toExpr w) (← M.atomsAssignment) expr
 
-def of (x : Expr) : M (Option (BVAtAtoms w)) := do
+def mkBVRefl (w : Nat) (expr : Expr) : Expr :=
+  mkApp2
+   (mkConst ``Eq.refl [1])
+   (mkApp (mkConst ``BitVec) (toExpr w))
+   expr
+
+/--
+Reify an `Expr` that's a `BitVec`.
+-/
+def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
   -- TODO: should I do some whnf operation here? I think I should
   match x.getAppFnArgs with
-  -- TODO: OfNat.ofNat support
-  | (``BitVec.ofNat, #[_, _]) =>
+  | (``BitVec.ofNat, #[_, _]) | (``OfNat.ofNat, #[_, _, _]) =>
     let some ⟨width, bvVal⟩ ← getBitVecValue? x | return none
     if h:width = w then
       let bvExpr := .const (h ▸ bvVal)
       let expr := mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr bvVal)
-      -- Hopefully by rfl?
       let proof := do
         let evalExpr ← mkEvalExpr w expr
-        return mkApp2
-          (mkConst ``Eq.refl [1])
-          (mkApp (mkConst ``BitVec) (toExpr w))
-          evalExpr
+        return mkBVRefl w evalExpr
       return some ⟨bvExpr, proof, expr⟩
     else
       panic! "Attempt to reify ill-typed BitVec literal"
   | _ => return none
 
-end BVAtAtoms
+end ReifiedBVExpr
 
-structure HoldsAtAtoms (α : Type) where
-  bvExpr : α
-  holdsAtAtoms : M Expr -- a proof that `expr.eval atomsFn = true`
-  expr : Expr -- `toExpr bvExpr`, cached
+/--
+A reified version of an `Expr` representing a `BVPred`.
+-/
+structure ReifiedBVPred where
+  /--
+  The reified expression.
+  -/
+  bvPred : BVPred
+  /--
+  A proof that `bvPred.eval atomsAssignment = true`.
+  -/
+  holdsAtAtoms : M Expr
+  /--
+  A cache for `toExpr bvPred`
+  -/
+  expr : Expr
 
-namespace HoldsAtAtoms
+namespace ReifiedBVPred
 
 theorem beq_eq_true_of_eq {x y : BitVec w} (h : x = y) : (x == y) = true := (beq_iff_eq x y).mpr h
 
-theorem foo {le re : BitVec w} (lhs rhs : BVExpr w) (h1 : lhs.eval [] = le) (h2 : rhs.eval [] = re) (h3 : le = re)
-    : lhs.eval [] = rhs.eval [] := by
-  apply Eq.trans
-  exact h1
-  apply Eq.trans
-  exact h3
-  exact h2.symm
+def mkTrans (w : Nat) (x y z : Expr) (hxy hyz : Expr) : Expr :=
+  mkApp6 (mkConst ``Eq.trans [1]) (mkApp (mkConst ``BitVec) (toExpr w)) x y z hxy hyz
 
-#print foo
+def mkSymm (w : Nat) (x y : Expr) (hxy : Expr) : Expr :=
+  mkApp4 (mkConst ``Eq.symm [1]) (mkApp (mkConst ``BitVec) (toExpr w)) x y hxy
 
-partial def of (h : Expr) : M (Option (HoldsAtAtoms BVLogicalExpr)) := do
+/--
+Reify an `Expr` that is a proof of a predicate about `BitVec`.
+-/
+def of (h : Expr) : M (Option ReifiedBVPred) := do
+  let t ← instantiateMVars (← whnfR (← inferType h))
+  match t.getAppFnArgs with
+  | (``Eq, #[.app (.const ``BitVec []) widthExpr, lhsExpr, rhsExpr]) =>
+    let some width ← getNatValue? widthExpr | return none
+    let some lhs ← ReifiedBVExpr.of lhsExpr | return none
+    let some rhs ← ReifiedBVExpr.of rhsExpr | return none
+    let bvExpr := .bin (w := width) lhs.bvExpr .eq rhs.bvExpr
+    let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.eq) rhs.expr
+    let proof := do
+      let lhsEval ← ReifiedBVExpr.mkEvalExpr width lhs.expr
+      let lhsProof ← lhs.evalsAtAtoms
+      let rhsEval ← ReifiedBVExpr.mkEvalExpr width rhs.expr
+      let rhsProof ← rhs.evalsAtAtoms
+      let eqProof :=
+        mkTrans width lhsEval lhsExpr rhsEval lhsProof
+          (mkTrans width lhsExpr rhsExpr rhsEval h
+            (mkSymm width rhsEval rhsExpr rhsProof))
+      return mkApp4
+        (mkConst ``beq_eq_true_of_eq)
+        (toExpr width)
+        lhsEval
+        rhsEval
+        eqProof
+    return some ⟨bvExpr, proof, expr⟩
+  | _ => return none
+
+end ReifiedBVPred
+
+/--
+A reified version of an `Expr` representing a `BVLogicalExpr`.
+-/
+structure ReifiedBVLogical where
+  /--
+  The reified expression.
+  -/
+  bvExpr : BVLogicalExpr
+  /--
+  A proof that `bvExpr.eval atomsAssignment = true`.
+  -/
+  holdsAtAtoms : M Expr
+  /--
+  A cache for `toExpr bvExpr`
+  -/
+  expr : Expr
+
+
+namespace ReifiedBVLogical
+
+def mkRefl (expr : Expr) : Expr :=
+  mkApp2 (mkConst ``Eq.refl [1]) (mkConst ``Bool) expr
+
+def mkTrans (x y z : Expr) (hxy hyz : Expr) : Expr :=
+  mkApp6 (mkConst ``Eq.trans [1]) (mkConst ``Bool) x y z hxy hyz
+
+/--
+Reify an `Expr` that is a proof of some boolean structure on top of predicates about `BitVec`s.
+-/
+def of (h : Expr) : M (Option ReifiedBVLogical) := do
   -- TODO: naive approach, does not handle any boolean structure on top of our problem
   -- this is no issue for most cases but we *must* handle at least negation of preds
   -- for any proof by contradiction where the goal involves a bitvec expression.
-  let some pred ← ofPred h | return none
-  let bvExpr := .literal pred.bvExpr
+  let some pred ← ReifiedBVPred.of h | return none
+  let bvExpr := .literal pred.bvPred
   let expr := mkApp2 (mkConst ``BoolExpr.literal) (mkConst ``BVPred) pred.expr
   let proof := do
     let evalLogic ← M.mkEvalExpr ``BVLogicalExpr.eval expr
     let evalPred ← M.mkEvalExpr ``BVPred.eval pred.expr
-    let helper := mkApp2 (mkConst ``Eq.refl [1]) (mkConst ``Bool) evalLogic
-    return mkApp6 (mkConst ``Eq.trans [1])
-      (mkConst ``Bool)
-      evalLogic
-      evalPred
-      (mkConst ``Bool.true)
-      helper
-      (← pred.holdsAtAtoms)
+    let predProof ← pred.holdsAtAtoms
+    return mkTrans evalLogic evalPred (mkConst ``Bool.true) (mkRefl evalLogic) predProof
   return some ⟨bvExpr, proof, expr⟩
-where
-  ofPred (h : Expr) : M (Option (HoldsAtAtoms BVPred)) := do
-    let t ← instantiateMVars (← whnfR (← inferType h))
-    match t.getAppFnArgs with
-    | (``Eq, #[.app (.const ``BitVec []) widthExpr, lhsExpr, rhsExpr]) =>
-      let some width ← getNatValue? widthExpr | return none
-      let some lhs ← BVAtAtoms.of lhsExpr | return none
-      let some rhs ← BVAtAtoms.of rhsExpr | return none
-      let bvExpr := .bin (w := width) lhs.bvExpr .eq rhs.bvExpr
-      let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.eq) rhs.expr
-      let proof := do
-        let lhsEval ← BVAtAtoms.mkEvalExpr width lhs.expr
-        let rhsEval ← BVAtAtoms.mkEvalExpr width rhs.expr
-        let eqProof := mkApp6 (mkConst ``Eq.trans [1])
-          (mkApp (mkConst ``BitVec) (toExpr width))
-          lhsEval
-          lhsExpr
-          rhsEval
-          (← lhs.evalsAtAtoms)
-          (mkApp6 (mkConst ``Eq.trans [1])
-            (mkApp (mkConst ``BitVec) (toExpr width))
-            lhsExpr
-            rhsExpr
-            rhsEval
-            h
-            (mkApp4 (mkConst ``Eq.symm [1])
-              (mkApp (mkConst ``BitVec) (toExpr width))
-              rhsEval
-              rhsExpr
-              (← rhs.evalsAtAtoms)
-            )
-          )
-        return mkApp4
-          (mkConst ``beq_eq_true_of_eq)
-          (toExpr width)
-          lhsEval
-          rhsEval
-          eqProof
-      return some ⟨bvExpr, proof, expr⟩
-    | _ => return none
 
-def trivial : HoldsAtAtoms BVLogicalExpr where
+/--
+The trivially true `BVLogicalExpr`.
+-/
+def trivial : ReifiedBVLogical where
   bvExpr := .const true
   expr := toExpr (.const true : BVLogicalExpr)
   holdsAtAtoms := return mkApp (mkConst ``BVLogicalExpr.sat_true) (← M.atomsAssignment)
 
-def and (x y : HoldsAtAtoms BVLogicalExpr) : HoldsAtAtoms BVLogicalExpr where
+/--
+Logical conjunction of two `ReifiedBVLogical`.
+-/
+def and (x y : ReifiedBVLogical) : ReifiedBVLogical where
   bvExpr := .gate .and x.bvExpr y.bvExpr
   expr := mkApp4 (mkConst ``BoolExpr.gate) (mkConst ``BVPred) (mkConst ``Gate.and) x.expr y.expr
   holdsAtAtoms :=
@@ -222,7 +282,7 @@ def and (x y : HoldsAtAtoms BVLogicalExpr) : HoldsAtAtoms BVLogicalExpr where
       (← y.holdsAtAtoms)
 
 /-- Given a proof that `x.expr.unsat`, produce a proof of `False`. -/
-def proveFalse (x : HoldsAtAtoms BVLogicalExpr) (h : Expr) : M Expr := do
+def proveFalse (x : ReifiedBVLogical) (h : Expr) : M Expr := do
   let atomsList ← M.atomsAssignment
   let evalExpr := mkApp2 (mkConst ``BVLogicalExpr.eval) atomsList x.expr
   return mkApp3
@@ -231,7 +291,7 @@ def proveFalse (x : HoldsAtAtoms BVLogicalExpr) (h : Expr) : M Expr := do
     (← x.holdsAtAtoms)
     (.app h atomsList)
 
-end HoldsAtAtoms
+end ReifiedBVLogical
 
 /--
 Given a goal `g`, which should be `False`, returns
@@ -241,12 +301,19 @@ Given a goal `g`, which should be `False`, returns
 -/
 def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
-  let sats ← hyps.filterMapM HoldsAtAtoms.of
+  let sats ← hyps.filterMapM ReifiedBVLogical.of
   IO.println "reflected things:"
   IO.println <| sats.map (·.bvExpr)
-  let sat := sats.foldl (init := HoldsAtAtoms.trivial) HoldsAtAtoms.and
+  let sat := sats.foldl (init := ReifiedBVLogical.trivial) ReifiedBVLogical.and
   return (sat.bvExpr, sat.proveFalse)
 
+/--
+Close a goal by:
+1. Turning it into a BitVec problem.
+2. Using bitblasting to turn that into a SAT problem.
+3. Running an external SAT solver on it and obtaining an LRAT proof from it.
+4. Verifying the LRAT proof using proof by reflection.
+-/
 def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := M.run do
   let g' ← falseOrByContra g
   g'.withContext do
@@ -259,6 +326,7 @@ def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : M
     let proveFalse ← f unsatProof
     g'.assign proveFalse
 
+@[inherit_doc _root_.Lean.MVarId.bvDecide]
 syntax (name := bvDecideSyntax) "bv_decide" : tactic
 
 end BVDecide
