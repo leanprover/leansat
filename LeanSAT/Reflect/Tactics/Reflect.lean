@@ -176,30 +176,25 @@ def mkGateCongr (g : Gate) (x y xe ye : Expr) (xp yp : M (Option Expr)) : M (Opt
           (mkEvalExpr xe atomsList) x (mkEvalExpr ye atomsList) y xp yp
 
 partial def of (e : Expr) : M EvalAtAtoms := do
-  match e with
-  | .const ``true [] => return ⟨.const true, constExpr true, pure none⟩
-  | .const ``false [] => return ⟨.const false, constExpr false, pure none⟩
-  | .app _ _ => match e.getAppFnArgs with
-    | (``_root_.not, #[x]) => do
-      let ⟨xb, xe, xp⟩ ← of x
-      let p := do
-        match (← xp) with
-        | none => pure none
-        | some xp => pure (some (mkApp3 (.const ``not_congr []) (mkEvalExpr xe (← M.atomsList)) x xp))
-      return ⟨.not xb, notExpr xe, p⟩
-    | (n, #[x, y]) => do
-      let g? : Option Gate := match n with
-      | ``_root_.and => some .and
-      | ``_root_.or => some .or
-      | ``Bool.xor => some .xor
-      | ``BEq.beq => some .beq
-      | _ => none
-      let some g := g? | mkAtom e
-      let ⟨xb, xe, xp⟩ ← of x
-      let ⟨yb, ye, yp⟩ ← of y
-      let p := mkGateCongr g x y xe ye xp yp
-      return ⟨.gate g xb yb, gateExpr g xe ye, p⟩
-    | _ => mkAtom e
+  let mkBin g x y := do
+    let ⟨xb, xe, xp⟩ ← of x
+    let ⟨yb, ye, yp⟩ ← of y
+    let p := mkGateCongr g x y xe ye xp yp
+    return ⟨.gate g xb yb, gateExpr g xe ye, p⟩
+  match_expr e with
+  | true  => return ⟨.const true, constExpr true, pure none⟩
+  | false => return ⟨.const false, constExpr false, pure none⟩
+  | _root_.not x =>
+    let ⟨xb, xe, xp⟩ ← of x
+    let p := do
+      match (← xp) with
+      | none => pure none
+      | some xp => pure (some (mkApp3 (.const ``not_congr []) (mkEvalExpr xe (← M.atomsList)) x xp))
+    return ⟨.not xb, notExpr xe, p⟩
+  | _root_.and x y => mkBin .and x y
+  | _root_.or x y => mkBin .or x y
+  | Bool.xor x y => mkBin .xor x y
+  | BEq.beq x y => mkBin .beq x y
   | _ => mkAtom e
 
 end EvalAtAtoms
@@ -251,9 +246,9 @@ def mkTrans (x y z : Expr) : Option Expr → Option Expr → Option Expr
 
 partial def of (h : Expr) : M (Option SatAtAtoms) := do
   let t ← instantiateMVars (← whnfR (← inferType h))
-  match t.getAppFnArgs with
-  -- We could special case `x` or `y` being true or false.
-  | (``Eq, #[.const ``Bool [], x, y]) =>
+  match_expr t with
+  | Eq α x y =>
+    let_expr Bool := α | return none
     let ⟨xb, xe, xp⟩ ← EvalAtAtoms.of x
     let ⟨yb, ye, yp⟩ ← EvalAtAtoms.of y
     let p := do
@@ -266,11 +261,11 @@ partial def of (h : Expr) : M (Option SatAtAtoms) := do
            (mkTrans xeval x y (← xp) (some h))
            (mkSymm yeval y (← yp))).getD (mkApp2 (.const ``Eq.refl [1]) (.const ``Bool []) xeval))
     return some ⟨.gate .beq xb yb, gateExpr .beq xe ye, p⟩
-  | (``Ne, #[_, x, y]) => of (mkApp3 (.const ``eq_not_of_ne []) x y h)
-  | (``Not, #[w]) =>
-    match w.getAppFnArgs with
-    | (``Eq, #[.const ``Bool [], x, y]) => of (mkApp3 (.const ``eq_not_of_ne []) x y h)
-    | _ => return none
+  | Ne _ x y  => of (mkApp3 (.const ``eq_not_of_ne []) x y h)
+  | Not w =>
+    let_expr Eq α x y := w | return none
+    let_expr Bool := α | return none
+    of (mkApp3 (.const ``eq_not_of_ne []) x y h)
   | _ => return none
 
 end SatAtAtoms
