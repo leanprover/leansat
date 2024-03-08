@@ -166,20 +166,10 @@ theorem not_congr (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
 Reify an `Expr` that's a `BitVec`.
 -/
 partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
-  -- TODO: should I do some whnf operation here? I think I should
-  match x.getAppFnArgs with
-  | (``BitVec.ofNat, #[_, _]) | (``OfNat.ofNat, #[_, _, _]) =>
-    let some ⟨width, bvVal⟩ ← getBitVecValue? x | return none
-    if h:width = w then
-      let bvExpr := .const (h ▸ bvVal)
-      let expr := mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr bvVal)
-      let proof := do
-        let evalExpr ← mkEvalExpr w expr
-        return mkBVRefl w evalExpr
-      return some ⟨bvExpr, proof, expr⟩
-    else
-      panic! "Attempt to reify ill-typed BitVec literal"
-  | (``HAnd.hAnd, #[_, _, _, _, lhsExpr, rhsExpr]) =>
+  match_expr x with
+  | BitVec.ofNat _ _ => goBvLit x
+  | OfNat.ofNat _ _ _ => goBvLit x
+  | HAnd.hAnd _ _ _ _ lhsExpr rhsExpr =>
     let some lhs ← of lhsExpr | return none
     let some rhs ← of rhsExpr | return none
     let bvExpr := .bin lhs.bvExpr .and rhs.bvExpr
@@ -191,7 +181,7 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
       let rhsEval ← mkEvalExpr w rhs.expr
       return mkApp7 (mkConst ``and_congr) (toExpr w) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
     return some ⟨bvExpr, proof, expr⟩
-  | (``Complement.complement, #[_, _, innerExpr]) =>
+  | Complement.complement _ _ innerExpr =>
     let some inner ← of innerExpr | return none
     let bvExpr : BVExpr w := .un .not inner.bvExpr
     let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr w) (mkConst ``BVUnOp.not) inner.expr
@@ -202,14 +192,26 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     return some ⟨bvExpr, proof, expr⟩
   | _ =>
     let t ← instantiateMVars (← whnfR (← inferType x))
-    match t.getAppFnArgs with
-    | (``BitVec, #[widthExpr]) =>
+    match_expr t with
+    | BitVec widthExpr =>
       let some width ← getNatValue? widthExpr | return none
       if h:width = w then
         h ▸ mkAtom x width
       else
         panic! "Attempt to reify ill-typed BitVec value"
     | _ => return none
+where
+  goBvLit (x : Expr) : M (Option (ReifiedBVExpr w)) := do
+    let some ⟨width, bvVal⟩ ← getBitVecValue? x | return none
+    if h:width = w then
+      let bvExpr := .const (h ▸ bvVal)
+      let expr := mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr bvVal)
+      let proof := do
+        let evalExpr ← mkEvalExpr w expr
+        return mkBVRefl w evalExpr
+      return some ⟨bvExpr, proof, expr⟩
+    else
+      panic! "Attempt to reify ill-typed BitVec literal"
 
 end ReifiedBVExpr
 
@@ -252,10 +254,12 @@ Reify an `Expr` that is a proof of a predicate about `BitVec`.
 -/
 def of (h : Expr) : M (Option ReifiedBVPred) := do
   let t ← instantiateMVars (← whnfR (← inferType h))
-  match t.getAppFnArgs with
-  | (``Not, #[w]) =>
-    match w.getAppFnArgs with
-    | (``Eq, #[.app (.const ``BitVec []) widthExpr, lhsExpr, rhsExpr]) =>
+  match_expr t with
+  -- TODO: support negations other than equality
+  | Not w =>
+    match_expr w with
+    | Eq α lhsExpr rhsExpr =>
+      let_expr BitVec widthExpr := α | return none
       let some ⟨width, lhs, rhs⟩ ← extractEq widthExpr lhsExpr rhsExpr | return none
       let bvExpr := .bin (w := width) lhs.bvExpr .neq rhs.bvExpr
       let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.neq) rhs.expr
@@ -274,7 +278,8 @@ def of (h : Expr) : M (Option ReifiedBVPred) := do
           neqProof
       return some ⟨bvExpr, proof, expr⟩
     | _ => return none
-  | (``Eq, #[.app (.const ``BitVec []) widthExpr, lhsExpr, rhsExpr]) =>
+  | Eq α lhsExpr rhsExpr =>
+    let_expr BitVec widthExpr := α | return none
     let some ⟨width, lhs, rhs⟩ ← extractEq widthExpr lhsExpr rhsExpr | return none
     let bvExpr := .bin (w := width) lhs.bvExpr .eq rhs.bvExpr
     let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.eq) rhs.expr
@@ -332,11 +337,13 @@ Reify an `Expr` that is a proof of some boolean structure on top of predicates a
 partial def of (h : Expr) : M (Option ReifiedBVLogical) := do
   -- TODO: naive approach, does not handle any boolean structure on top of our problem.
   let t ← instantiateMVars (← whnfR (← inferType h))
-  match t.getAppFnArgs with
-  | (``Not, #[w]) =>
-    match w.getAppFnArgs with
-    | (``Eq, #[.app (.const ``BitVec []) _, _, _]) => goPred h
-    -- TODO: might want support for other negations in the future
+  match_expr t with
+  | Not w =>
+    -- TODO: support negations other than equality on BitVec
+    match_expr w with
+    | Eq α _ _ _ =>
+      let_expr BitVec _ := α | return none
+      goPred h
     | _ => return none
   | _ => goPred h
 where
