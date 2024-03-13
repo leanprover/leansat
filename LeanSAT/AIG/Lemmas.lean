@@ -141,6 +141,24 @@ theorem Env.lt_mkGate_size (e1 : Env.Entrypoint) (lhs rhs : Nat) (linv rinv : Bo
     Env.mkGate_le_size _ _ _ _ _ _ _
   omega
 
+@[simp]
+theorem Env.denote_mkGate_entry (entry : Env.Entrypoint) {hlbound} {hrbound} {h}:
+    denote ⟨(mkGate lhs rhs lpol rpol entry.env hlbound hrbound).env, entry.start, h⟩ assign = denote entry assign :=  by
+  apply Env.denote.eq_of_env_eq
+  . intro idx h
+    apply mkGate_decl_eq
+  . apply mkGate_le_size
+
+@[simp]
+theorem Env.denote_mkGate_lhs (entry : Env.Entrypoint) {hlbound} {hrbound} {h}:
+    denote ⟨(mkGate lhs rhs lpol rpol entry.env hlbound hrbound).env, lhs, h⟩ assign = denote ⟨entry.env, lhs, hlbound⟩ assign :=  by
+  apply Env.denote.go_eq_of_env_eq
+  . intro idx hbound
+    apply mkGate_decl_eq <;> assumption
+  . apply Env.mkGate_le_size
+    . simp [hlbound]
+    . simp [hrbound]
+
 /--
 `Env.mkAtom` never shrinks the underlying AIG.
 -/
@@ -202,7 +220,7 @@ theorem Env.denote_mkConst : denote (mkConst val env) assign = val := by
 @[simp]
 theorem Env.denote_mkConst_lt (entry : Env.Entrypoint) {h} :
     denote ⟨(mkConst val entry.env).env, entry.start, h⟩ assign = denote entry assign :=  by
-  apply Env.denote.go_eq_of_env_eq
+  apply Env.denote.eq_of_env_eq
   . intro idx h
     apply mkConst_decl_eq
   . apply mkConst_le_size
