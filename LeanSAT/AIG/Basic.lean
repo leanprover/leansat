@@ -122,16 +122,18 @@ structure Env where
   -/
   inv : IsDag decls
 
+namespace Env
+
 /--
 An `Env` with an empty AIG and cache.
 -/
-def Env.empty : Env := { decls := #[], cache := Cache.empty #[], inv := IsDag.empty }
+def empty : Env := { decls := #[], cache := Cache.empty #[], inv := IsDag.empty }
 
 /--
 An entrypoint into an `Env`. This can be used to evaluate a circuit, starting at a certain node,
 with `Env.denote` or to construct bigger circuits
 -/
-structure Env.Entrypoint where
+structure Entrypoint where
   /--
   The AIG that we are in.
   -/
@@ -148,7 +150,7 @@ structure Env.Entrypoint where
 /--
 Evaluate an `Env.Entrypoint` using some assignment for atoms.
 -/
-def Env.denote (entry : Env.Entrypoint) (assign : List Bool) : Bool :=
+def denote (entry : Entrypoint) (assign : List Bool) : Bool :=
   go entry.start entry.env.decls assign entry.inv entry.env.inv
 where
   go (x : Nat) (decls : Array Decl) (assign : List Bool) (h1 : x < decls.size) (h2 : IsDag decls) :=
@@ -160,13 +162,24 @@ where
       let lval := go lhs decls assign (by omega) h2
       let rval := go rhs decls assign (by omega) h2
       xor lval linv && xor rval rinv
+-- ⟦ ⟧
+
+scoped notation "⟦" env ", " "⟨" start "," hbound "⟩"  ", " assign "⟧" => denote (Env.Entrypoint.mk env start hbound) assign
+scoped notation "⟦" entry ", " assign "⟧" => denote entry assign
+
+-- TODO: fix
+@[app_unexpander Env.denote]
+def unexpandDenote : Lean.PrettyPrinter.Unexpander
+  | `($(_)  (Env.Entrypoint.mk $env $start $hbound) $assign) => `(⟦$env, ⟨$start, $hbound⟩, $assign⟧)
+  | `($(_) $entry $assign) => `(⟦$entry, $assign⟧)
+  | _ => throw ()
 
 /--
 Build an AIG gate in `env`. Note that his version is only meant for proving,
 for production purposes use `Env.mkGateCached` and equality theorems to this one.
 -/
-def Env.mkGate (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
-    (hr : rhs < env.decls.size) : Env.Entrypoint :=
+def mkGate (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
+    (hr : rhs < env.decls.size) : Entrypoint :=
   let g := env.decls.size
   let decls := env.decls.push (.gate lhs rhs linv rinv)
   let cache := env.cache.noUpdate
@@ -182,7 +195,7 @@ def Env.mkGate (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.de
 Add a new input node to the AIG in `env`. Note that his version is only meant for proving,
 for production purposes use `Env.mkAtomCached` and equality theorems to this one.
 -/
-def Env.mkAtom (n : Nat) (env : Env) : Env.Entrypoint :=
+def mkAtom (n : Nat) (env : Env) : Entrypoint :=
   let g := env.decls.size
   let decls := env.decls.push (.atom n)
   let cache := env.cache.noUpdate
@@ -199,7 +212,7 @@ def Env.mkAtom (n : Nat) (env : Env) : Env.Entrypoint :=
 Build an constant node in `env`. Note that his version is only meant for proving,
 for production purposes use `Env.mkConstCached` and equality theorems to this one.
 -/
-def Env.mkConst (val : Bool) (env : Env) : Env.Entrypoint :=
+def mkConst (val : Bool) (env : Env) : Entrypoint :=
   let g := env.decls.size
   let decls := env.decls.push (.const val)
   let cache := env.cache.noUpdate
@@ -211,3 +224,5 @@ def Env.mkConst (val : Bool) (env : Env) : Env.Entrypoint :=
     . apply env.inv <;> assumption
     . contradiction
   ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
+
+end Env

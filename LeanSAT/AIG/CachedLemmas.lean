@@ -50,7 +50,6 @@ theorem Env.mkGateCached_eval_eq_mkGate_eval (lhs rhs : Nat) (linv rinv : Bool) 
         all_goals
           apply ReflectSat.EvalAtAtoms.xor_congr
           . rw [denote.go_lt_push]
-            exact env.inv
           . rfl
   . simp [denote]
 

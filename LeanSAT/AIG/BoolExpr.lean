@@ -261,22 +261,11 @@ theorem Env.foo (entry : Entrypoint) {h}:
       =
     denote entry assign := by
   apply Env.denote.eq_of_env_eq
+  apply IsPrefix.of
   . intro idx h
     apply Env.ofBoolExprNat.go_decl_eq
   . apply Env.ofBoolExprNat.go_decls_size_le
 
-/-
-denote
-  {
-    env :=
-      (mkGate (ofBoolExprNat.go lhs env).val.start (ofBoolExprNat.go rhs (ofBoolExprNat.go lhs env).val.env).val.start
-          false false (ofBoolExprNat.go rhs (ofBoolExprNat.go lhs env).val.env).val.env ⋯ ⋯).env,
-    start := (ofBoolExprNat.go lhs env).val.start,
-    inv := ⋯
-  }
--/
-
--- TODO: much of this requires theorems about ofBoolExprNat.go in the spirit of Env.denote_mkConst_lt
 theorem Env.ofBoolExprNatgo_eval_eq_eval (expr : BoolExprNat) (env : Env) (assign : List Bool) :
     denote (Env.ofBoolExprNat.go expr env) assign = expr.eval assign := by
   induction expr generalizing env with

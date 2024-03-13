@@ -1,50 +1,27 @@
 import LeanSAT.AIG.Basic
 
-/--
-Running `Env.denote.go` on a node that is within bounds of `decls` is equivalent to running it a bigger `decls` array.
--/
-theorem Env.denote.go_lt_push (x : Nat) (decls : Array Decl) (h1 : x < decls.size) {h2} {h3} (inv : IsDag decls) :
-    (denote.go x decls assign h1 h2) = (denote.go x (decls.push decl) assign (by simp; omega) h3) := by
-  unfold denote.go
-  simp [h1]
-  have h4 := Array.push_get_old decls decl h1
-  split
-  . next heq1 =>
-    split
-    all_goals
-      next heq2 =>
-        rw [h4, heq1] at heq2;
-        injections
-  . next heq1 =>
-    split
-    . next heq2 => rw [h4, heq1] at heq2; injections
-    . next heq2 => rw [h4, heq1] at heq2; injection heq2 with heq3; simp [heq3]
-    . next heq2 => rw [h4, heq1] at heq2; injections
-  . next lhs1 rhs1 linv1 rinv1 heq1 =>
-    split
-    . next heq2 => rw [h4, heq1] at heq2; injections
-    . next heq2 => rw [h4, heq1] at heq2; injections
-    . next lhs2 rhs2 linv2 rinv2 heq2 =>
-      rw [heq1, heq2] at h4
-      injection h4 with lhseq rhseq linveq rinveq
-      simp only [lhseq, linveq, rhseq, rinveq]
-      have := inv x lhs1 rhs1 linv1 rinv1 h1 heq1
-      apply ReflectSat.EvalAtAtoms.and_congr
-      all_goals
-        apply ReflectSat.EvalAtAtoms.xor_congr
-        . apply denote.go_lt_push
-          assumption
-        . rfl
-termination_by sizeOf x
+namespace Env
 
-theorem Env.denote.go_eq_of_env_eq (decls1 decls2 : Array Decl) {hdag1} {hdag2} {hbounds}
-    (hsize : decls1.size ≤ decls2.size)
-    (hidx : ∀ idx (h : idx < decls1.size), decls2[idx]'(by omega) = decls1[idx]'h) :
-    denote.go start decls2 assign (by omega) hdag2
+structure IsPrefix (decls1 decls2 : Array Decl) : Prop where
+  size_le : decls1.size ≤ decls2.size
+  idx_eq : ∀ idx (h : idx < decls1.size), decls2[idx]'(by omega) = decls1[idx]'h
+
+theorem IsPrefix.of {decls1 decls2 : Array Decl}
+    (size_le : decls1.size ≤ decls2.size)
+    (idx_eq : ∀ idx (h : idx < decls1.size), decls2[idx]'(by omega) = decls1[idx]'h)
+    : IsPrefix decls1 decls2 := ⟨size_le, idx_eq⟩
+
+/--
+If `decls1` is a prefix of `decls2` and we start evaluating `decls2` at an
+index in bounds of `decls1` we can evluate at `decls1`.
+-/
+theorem denote.go_eq_of_env_eq (decls1 decls2 : Array Decl) (start : Nat) {hdag1} {hdag2}
+    {hbounds1} {hbounds2} (hprefix : IsPrefix decls1 decls2) :
+    denote.go start decls2 assign hbounds2 hdag2
       =
-    denote.go start decls1 assign hbounds hdag1 := by
+    denote.go start decls1 assign hbounds1 hdag1 := by
   unfold denote.go
-  have hidx1 := hidx start hbounds
+  have hidx1 := hprefix.idx_eq start hbounds1
   split
   . next heq =>
     rw [hidx1] at heq
@@ -54,9 +31,9 @@ theorem Env.denote.go_eq_of_env_eq (decls1 decls2 : Array Decl) {hdag1} {hdag2} 
     split <;> simp_all
   . next lhs rhs linv rinv heq =>
     rw [hidx1] at heq
-    have foo := hdag1 start lhs rhs linv rinv hbounds heq
-    have hidx2 := hidx lhs (by omega)
-    have hidx3 := hidx rhs (by omega)
+    have foo := hdag1 start lhs rhs linv rinv hbounds1 heq
+    have hidx2 := hprefix.idx_eq lhs (by omega)
+    have hidx3 := hprefix.idx_eq rhs (by omega)
     split
     . simp_all
     . simp_all
@@ -64,48 +41,73 @@ theorem Env.denote.go_eq_of_env_eq (decls1 decls2 : Array Decl) {hdag1} {hdag2} 
       apply ReflectSat.EvalAtAtoms.and_congr
       all_goals
         apply ReflectSat.EvalAtAtoms.xor_congr
-        . apply Env.denote.go_eq_of_env_eq
-          . exact hidx
-          . exact hsize
+        . apply denote.go_eq_of_env_eq
+          assumption
         . rfl
 termination_by sizeOf start
 
-theorem Env.denote.eq_of_env_eq (entry : Entrypoint) (newEnv : Env)
-    (hsize : entry.env.decls.size ≤ newEnv.decls.size)
-    (hidx : ∀ idx (h : idx < entry.env.decls.size), newEnv.decls[idx]'(by omega) = entry.env.decls[idx]'h)
+/--
+Running `Env.denote.go` on a node that is within bounds of `decls` is equivalent to running it a bigger `decls` array.
+-/
+theorem denote.go_lt_push (x : Nat) (decls : Array Decl) {h1} {h2} {h3} :
+    (denote.go x (decls.push decl) assign (by simp; omega) h3) = (denote.go x decls assign h1 h2)  := by
+  apply denote.go_eq_of_env_eq
+  apply IsPrefix.of
+  . intro idx h
+    simp only [Array.push_get]
+    split
+    . rfl
+    . contradiction
+  . simp_arith
+
+@[inherit_doc denote.go_eq_of_env_eq ]
+theorem denote.eq_of_env_eq (entry : Entrypoint) (newEnv : Env) (hprefix : IsPrefix entry.env.decls newEnv.decls)
     {hbounds} :
-    denote ⟨newEnv, entry.start, hbounds⟩ assign
+    ⟦newEnv, ⟨entry.start, hbounds⟩, assign⟧
       =
-    denote entry assign := by
+    ⟦entry, assign⟧
+    := by
   unfold denote
-  apply Env.denote.go_eq_of_env_eq
-  exact hidx
-  exact hsize
+  apply denote.go_eq_of_env_eq
+  assumption
 
 @[simp]
-theorem Env.denote_projected_entry {entry : Env.Entrypoint} :
-    denote ⟨entry.env, entry.start, entry.inv⟩ assign = denote entry assign := by
+theorem denote_projected_entry {entry : Env.Entrypoint} :
+    ⟦entry.env, ⟨entry.start, entry.inv⟩, assign⟧ = ⟦entry, assign⟧ := by
   cases entry; simp
 
 /--
 `Env.mkGate` never shrinks the underlying AIG.
 -/
-theorem Env.mkGate_le_size (lhs rhs : Nat) (linv rinv : Bool) (env : Env) hl hr
+theorem mkGate_le_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
     : env.decls.size ≤ (env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
   simp_arith [mkGate]
 
-theorem Env.mkGate_decl_eq idx (h : idx < env.decls.size) {hbound} :
-    (mkGate lhs rhs linv rinv env hl hr).env.decls[idx]'hbound = env.decls[idx] := by
+/--
+The AIG produced by `Env.mkGate` agrees with the input AIG on all indices that are valid for both.
+-/
+theorem mkGate_decl_eq idx (env : Env) (lhs rhs : Nat) (linv rinv : Bool) {h : idx < env.decls.size} {hl} {hr} :
+    (env.mkGate lhs rhs linv rinv hl hr).env.decls[idx]'(by simp[mkGate]; omega) = env.decls[idx] := by
   simp only [mkGate, Array.push_get]
   split
   . rfl
   . contradiction
 
+/--
+The input AIG to an `mkGate` is a prefix to the output AIG.
+-/
+theorem mkGate_IsPrefix_env (env : Env) (lhs rhs : Nat) (linv rinv : Bool) {hl} {hr} :
+    IsPrefix env.decls (env.mkGate lhs rhs linv rinv hl hr).env.decls := by
+  apply IsPrefix.of
+  . intro idx h
+    apply mkGate_decl_eq
+  . apply mkGate_le_size
+
 @[simp]
-theorem Env.denote_mkGate :
-    denote (mkGate lhs rhs linv rinv env hl hr) assign
+theorem denote_mkGate :
+    ⟦env.mkGate lhs rhs linv rinv hl hr, assign⟧
       =
-    ((xor (denote ⟨env, lhs, hl⟩ assign) linv) && (xor (denote ⟨env, rhs, hr⟩ assign) rinv)) := by
+    ((xor ⟦env, ⟨lhs, hl⟩, assign⟧ linv) && (xor ⟦env, ⟨rhs, hr⟩, assign⟧ rinv)) := by
   conv =>
     lhs
     unfold denote denote.go
@@ -125,56 +127,78 @@ theorem Env.denote_mkGate :
       apply ReflectSat.EvalAtAtoms.xor_congr
       . unfold denote
         simp only [heq1, heq2]
-        apply Env.denote.go_eq_of_env_eq
-        . intro idx h; apply mkGate_decl_eq
-        . apply mkGate_le_size
+        apply denote.go_eq_of_env_eq
+        apply mkGate_IsPrefix_env
       . simp only [heq3, heq4]
 
 /--
 Reusing an `Env.Entrypoint` to build an additional gate will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem Env.lt_mkGate_size (e1 : Env.Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) hl hr
-    : e1.start < (e1.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
-  have h1 := e1.inv
-  have h2 : e1.env.decls.size ≤ (e1.env.mkGate lhs rhs linv rinv hl hr).env.decls.size :=
-    Env.mkGate_le_size _ _ _ _ _ _ _
+theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) {hl} {hr}
+    : entry.start < (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
+  have h1 := entry.inv
+  have h2 : entry.env.decls.size ≤ (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
+    apply mkGate_le_size
   omega
 
 @[simp]
-theorem Env.denote_mkGate_entry (entry : Env.Entrypoint) {hlbound} {hrbound} {h}:
-    denote ⟨(mkGate lhs rhs lpol rpol entry.env hlbound hrbound).env, entry.start, h⟩ assign = denote entry assign :=  by
-  apply Env.denote.eq_of_env_eq
-  . intro idx h
-    apply mkGate_decl_eq
-  . apply mkGate_le_size
+theorem denote_mkGate_entry (entry : Entrypoint) {hlbound} {hrbound} {h} :
+    ⟦(entry.env.mkGate lhs rhs lpol rpol hlbound hrbound).env, ⟨entry.start, h⟩, assign ⟧
+      =
+    ⟦entry, assign⟧ :=  by
+  apply denote.eq_of_env_eq
+  apply mkGate_IsPrefix_env
 
 @[simp]
-theorem Env.denote_mkGate_lhs (entry : Env.Entrypoint) {hlbound} {hrbound} {h}:
-    denote ⟨(mkGate lhs rhs lpol rpol entry.env hlbound hrbound).env, lhs, h⟩ assign = denote ⟨entry.env, lhs, hlbound⟩ assign :=  by
-  apply Env.denote.go_eq_of_env_eq
-  . intro idx hbound
-    apply mkGate_decl_eq <;> assumption
-  . apply Env.mkGate_le_size
-    . simp [hlbound]
-    . simp [hrbound]
+theorem denote_mkGate_lhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
+    ⟦(entry.env.mkGate lhs rhs lpol rpol hlbound hrbound).env, ⟨lhs, h⟩, assign⟧
+      =
+    ⟦entry.env, ⟨lhs, hlbound⟩, assign⟧ :=  by
+  apply denote.go_eq_of_env_eq
+  apply mkGate_IsPrefix_env
+  . assumption
+  . assumption
+
+@[simp]
+theorem denote_mkGate_rhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
+    ⟦(entry.env.mkGate lhs rhs lpol rpol hlbound hrbound).env, ⟨rhs, h⟩, assign⟧
+      =
+    ⟦entry.env, ⟨rhs, hrbound⟩, assign⟧ :=  by
+  apply denote.go_eq_of_env_eq
+  apply mkGate_IsPrefix_env
+  . assumption
+  . assumption
 
 /--
 `Env.mkAtom` never shrinks the underlying AIG.
 -/
-theorem Env.mkAtom_le_size (env : Env) (var : Nat)
-    : env.decls.size ≤ (env.mkAtom var).env.decls.size := by
+theorem mkAtom_le_size (env : Env) (var : Nat) : env.decls.size ≤ (env.mkAtom var).env.decls.size := by
   simp_arith [mkAtom]
 
-theorem Env.mkAtom_decl_eq idx (h : idx < env.decls.size) {hbound} :
-    (mkAtom var env ).env.decls[idx]'hbound = env.decls[idx] := by
+/--
+The AIG produced by `Env.mkAtom` agrees with the input AIG on all indices that are valid for both.
+-/
+theorem mkAtom_decl_eq (env : Env) (var : Nat) (idx : Nat) {h : idx < env.decls.size} {hbound} :
+    (env.mkAtom var).env.decls[idx]'hbound = env.decls[idx] := by
   simp only [mkAtom, Array.push_get]
   split
   . rfl
   . contradiction
 
+/--
+The input AIG to an `mkAtom` is a prefix to the output AIG.
+-/
+theorem mkAtom_IsPrefix_env (env : Env) (var : Nat) :
+    IsPrefix env.decls (env.mkAtom var).env.decls := by
+  apply IsPrefix.of
+  . intro idx h
+    apply mkAtom_decl_eq
+  . apply mkAtom_le_size
+
 @[simp]
-theorem Env.denote_mkAtom : denote (mkAtom var env) assign = assign.getD var false := by
+theorem denote_mkAtom {env : Env} :
+    ⟦(env.mkAtom var), assign⟧ = assign.getD var false := by
   unfold denote denote.go
   split
   . next heq =>
@@ -188,8 +212,19 @@ theorem Env.denote_mkAtom : denote (mkAtom var env) assign = assign.getD var fal
     rw [mkAtom, Array.push_get_size] at heq
     contradiction
 
-theorem Env.mkConst_decl_eq idx (h : idx < env.decls.size) {hbound} :
-    (mkConst val env).env.decls[idx]'hbound = env.decls[idx] := by
+@[simp]
+theorem denote_mkAtom_lt (entry : Entrypoint) {h} :
+    ⟦(entry.env.mkAtom var).env, ⟨entry.start, h⟩, assign⟧
+      =
+    ⟦entry, assign⟧ := by
+  apply denote.eq_of_env_eq
+  apply mkAtom_IsPrefix_env
+
+/--
+The AIG produced by `Env.mkConst` agrees with the input AIG on all indices that are valid for both.
+-/
+theorem mkConst_decl_eq (env : Env) (val : Bool) (idx : Nat) {h : idx < env.decls.size} {hbound} :
+    (env.mkConst val).env.decls[idx]'hbound = env.decls[idx] := by
   simp only [mkConst, Array.push_get]
   split
   . rfl
@@ -198,12 +233,22 @@ theorem Env.mkConst_decl_eq idx (h : idx < env.decls.size) {hbound} :
 /--
 `Env.mkConst` never shrinks the underlying AIG.
 -/
-theorem Env.mkConst_le_size (env : Env) (val : Bool)
+theorem mkConst_le_size (env : Env) (val : Bool)
     : env.decls.size ≤ (env.mkConst val).env.decls.size := by
   simp_arith [mkConst]
 
+/--
+The input AIG to an `mkConst` is a prefix to the output AIG.
+-/
+theorem mkConst_IsPrefix_env (env : Env) (const : Bool) :
+    IsPrefix env.decls (env.mkConst const).env.decls := by
+  apply IsPrefix.of
+  . intro idx h
+    apply mkConst_decl_eq
+  . apply mkConst_le_size
+
 @[simp]
-theorem Env.denote_mkConst : denote (mkConst val env) assign = val := by
+theorem denote_mkConst {env : Env} : ⟦(env.mkConst val), assign⟧ = val := by
   unfold denote denote.go
   split
   . next heq =>
@@ -218,19 +263,21 @@ theorem Env.denote_mkConst : denote (mkConst val env) assign = val := by
     contradiction
 
 @[simp]
-theorem Env.denote_mkConst_lt (entry : Env.Entrypoint) {h} :
-    denote ⟨(mkConst val entry.env).env, entry.start, h⟩ assign = denote entry assign :=  by
-  apply Env.denote.eq_of_env_eq
-  . intro idx h
-    apply mkConst_decl_eq
-  . apply mkConst_le_size
+theorem denote_mkConst_lt (entry : Entrypoint) {h} :
+    ⟦(entry.env.mkConst val).env, ⟨entry.start, h⟩, assign⟧
+      =
+    ⟦entry, assign⟧ := by
+  apply denote.eq_of_env_eq
+  apply mkConst_IsPrefix_env
 
 /--
 Reusing an `Env.Entrypoint` to build an additional constant will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem Env.lt_mkConst_size (e1 : Env.Entrypoint) : e1.start < (e1.env.mkConst val).env.decls.size := by
-  have h1 := e1.inv
-  have h2 : e1.env.decls.size ≤ (e1.env.mkConst val).env.decls.size :=
-    Env.mkConst_le_size _ _
+theorem lt_mkConst_size (entry : Entrypoint) (val : Bool) : entry.start < (entry.env.mkConst val).env.decls.size := by
+  have h1 := entry.inv
+  have h2 : entry.env.decls.size ≤ (entry.env.mkConst val).env.decls.size :=
+    mkConst_le_size _ _
   omega
+
+end Env
