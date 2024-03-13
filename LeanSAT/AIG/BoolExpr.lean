@@ -1,6 +1,8 @@
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 
+namespace Env
+
 theorem or_as_and (a b : Bool) : (!(!a && !b)) = (a || b) := by cases a <;> cases b <;> decide
 theorem xor_as_and (a b : Bool) : (!(a && b) && !(!a && !b)) = (xor a b) := by cases a <;> cases b <;> decide
 theorem beq_as_and (a b : Bool) : (!(a && !b) && !(!a && b)) = (a == b) := by cases a <;> cases b <;> decide
@@ -10,7 +12,7 @@ theorem imp_as_and (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cas
 Turn a `BoolExprNat` into an AIG + entrypoint. Note that this version is only meant
 for proving purposes. For programming use `Env.ofBoolExprNatCached` and equality theorems.
 -/
-def Env.ofBoolExprNat (expr : BoolExprNat) : Env.Entrypoint :=
+def ofBoolExprNat (expr : BoolExprNat) : Entrypoint :=
   go expr Env.empty |>.val
 where
   /--
@@ -20,7 +22,7 @@ where
   call this function multiple times so we need to guarantee that no recursive call ever shrinks
   the AIG in order to be allowed to use the generated AIG nodes.
   -/
-  go (expr : BoolExprNat) (env : Env) : { entry : Env.Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
+  go (expr : BoolExprNat) (env : Env) : { entry : Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
     match expr with
     | .literal var => ⟨env.mkAtom var, (by apply Env.mkAtom_le_size)⟩
     | .const val => ⟨env.mkConst val, (by apply Env.mkConst_le_size)⟩
@@ -36,8 +38,8 @@ where
          false
          true
          constEntry.inv
-         (by apply Env.lt_mkConst_size)
-      have := constEntry.env.mkGate_le_size _ _ false true constEntry.inv (by apply Env.lt_mkConst_size)
+         (by apply lt_mkConst_size)
+      have := constEntry.env.mkGate_le_size _ _ false true constEntry.inv (by apply lt_mkConst_size)
       ⟨ret, by dsimp [constEntry, ret] at *; omega⟩
     | .gate g lhs rhs =>
       let ⟨lhsEntry, _⟩ := go lhs env
@@ -77,8 +79,8 @@ where
             false
             true
             constEntry.inv
-            (by apply Env.lt_mkConst_size)
-        have := constEntry.env.mkGate_le_size _ auxEntry.start false true constEntry.inv (by apply Env.lt_mkConst_size)
+            (by apply lt_mkConst_size)
+        have := constEntry.env.mkGate_le_size _ auxEntry.start false true constEntry.inv (by apply lt_mkConst_size)
         ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
       | .xor =>
         -- x xor y = (invert (invert (x && y))) && (invert ((invert x) && (invert y)))
@@ -101,17 +103,17 @@ where
             true
             true
             h3
-            (by apply Env.lt_mkGate_size)
-        have := aux1Entry.env.mkGate_le_size _ _ true true h3 (by apply Env.lt_mkGate_size)
+            (by apply lt_mkGate_size)
+        have := aux1Entry.env.mkGate_le_size _ _ true true h3 (by apply lt_mkGate_size)
         let ret :=
           aux2Entry.env.mkGate
             aux1Entry.start
             aux2Entry.start
             true
             true
-            (by apply Env.lt_mkGate_size)
+            (by apply lt_mkGate_size)
             aux2Entry.inv
-        have := aux2Entry.env.mkGate_le_size aux1Entry.start _ true true (by apply Env.lt_mkGate_size) aux2Entry.inv
+        have := aux2Entry.env.mkGate_le_size aux1Entry.start _ true true (by apply lt_mkGate_size) aux2Entry.inv
         ⟨ret, by simp (config := { zetaDelta := true}) only at *; omega⟩
       | .beq =>
         -- a == b = (invert (a && (invert b))) && (invert ((invert a) && b))
@@ -134,17 +136,17 @@ where
             true
             false
             h3
-            (by apply Env.lt_mkGate_size)
-        have := aux1Entry.env.mkGate_le_size _ _ true false h3 (by apply Env.lt_mkGate_size)
+            (by apply lt_mkGate_size)
+        have := aux1Entry.env.mkGate_le_size _ _ true false h3 (by apply lt_mkGate_size)
         let ret :=
           aux2Entry.env.mkGate
             aux1Entry.start
             aux2Entry.start
             true
             true
-            (by apply Env.lt_mkGate_size)
+            (by apply lt_mkGate_size)
             aux2Entry.inv
-        have := aux2Entry.env.mkGate_le_size aux1Entry.start _ true true (by apply Env.lt_mkGate_size) aux2Entry.inv
+        have := aux2Entry.env.mkGate_le_size aux1Entry.start _ true true (by apply lt_mkGate_size) aux2Entry.inv
         ⟨ret, by simp (config := { zetaDelta := true}) only at *; omega⟩
       | .imp =>
         -- a -> b = true && (invert (a and (invert b)))
@@ -166,37 +168,35 @@ where
             false
             true
             constEntry.inv
-            (by apply Env.lt_mkConst_size)
-        have := constEntry.env.mkGate_le_size _ auxEntry.start false true constEntry.inv (by apply Env.lt_mkConst_size)
+            (by apply lt_mkConst_size)
+        have := constEntry.env.mkGate_le_size _ auxEntry.start false true constEntry.inv (by apply lt_mkConst_size)
         ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
 
 
-#eval Env.ofBoolExprNat (.gate .and (.gate .and (.literal 0) (.literal 0)) (.gate .and (.literal 0) (.literal 0))) |>.env.decls
+#eval ofBoolExprNat (.gate .and (.gate .and (.literal 0) (.literal 0)) (.gate .and (.literal 0) (.literal 0))) |>.env.decls
 
-theorem Env.ofBoolExprNat.go_decls_size_le (expr : BoolExprNat) (env : Env) :
+theorem ofBoolExprNat.go_decls_size_le (expr : BoolExprNat) (env : Env) :
     env.decls.size ≤ (ofBoolExprNat.go expr env).val.env.decls.size := by
   exact (ofBoolExprNat.go expr env).property
 
-theorem Env.ofBoolExprNat.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbounds) :
+theorem ofBoolExprNat.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbounds) :
     (ofBoolExprNat.go expr env).val.env.decls[idx]'hbounds = env.decls[idx] := by
   induction expr generalizing env with
   | const =>
     simp only [go]
-    apply Env.mkConst_decl_eq
+    apply mkConst_decl_eq
   | literal =>
     simp only [go]
-    apply Env.mkAtom_decl_eq
+    apply mkAtom_decl_eq
   | not expr ih =>
     simp only [go]
     have := go_decls_size_le expr env
     specialize ih env (by omega) (by omega)
-    -- TODO: I think I want a more general theorem here
-    simp [mkConst, mkAtom, mkGate, Array.push_get]
-    split
-    . split
-      . assumption
-      . omega
-    . omega
+    rw [mkGate_decl_eq]
+    rw [mkConst_decl_eq]
+    . rw [ih]
+    . have := mkConst_le_size (go expr env).val.env true
+      omega
   | gate g lhs rhs lih rih =>
     have := go_decls_size_le lhs env
     have := go_decls_size_le rhs (go lhs env).val.env
@@ -204,97 +204,71 @@ theorem Env.ofBoolExprNat.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbo
     specialize rih (go lhs env).val.env (by omega) (by omega)
     cases g with
     | and =>
-      -- TODO: other use case for simp lemma
       simp only [go]
-      simp [mkGate, mkAtom, Array.push_get]
-      split
-      . simp [rih, lih]
-      . omega
+      rw [mkGate_decl_eq]
+      rw [rih, lih]
     | or =>
-      -- TODO: other use case for simp lemma
       simp only [go]
-      simp [mkGate, mkAtom, mkConst, Array.push_get]
-      split
-      . split
-        . split
-          . simp [lih, rih]
-          . omega
-        . omega
-      . omega
+      rw [mkGate_decl_eq, mkConst_decl_eq, mkGate_decl_eq]
+      . rw [rih, lih]
+      . simp [mkConst, mkGate] -- TODO: this should be possible with lemmas
+        omega
     | xor =>
-      -- TODO: other use case for simp lemma
       simp only [go]
-      simp [mkGate, mkAtom, Array.push_get]
-      split
-      . split
-        . split
-          . simp [lih, rih]
-          . omega
-        . omega
-      . omega
+      rw [mkGate_decl_eq, mkGate_decl_eq, mkGate_decl_eq]
+      rw [rih, lih]
     | beq =>
-      -- TODO: other use case for simp lemma
       simp only [go]
-      simp [mkGate, mkAtom, Array.push_get]
-      split
-      . split
-        . split
-          . simp [lih, rih]
-          . omega
-        . omega
-      . omega
+      rw [mkGate_decl_eq, mkGate_decl_eq, mkGate_decl_eq]
+      rw [rih, lih]
     | imp =>
-      -- TODO: other use case for simp lemma
       simp only [go]
-      simp [mkGate, mkAtom, mkConst, Array.push_get]
-      split
-      . split
-        . split
-          . simp [lih, rih]
-          . omega
-        . omega
-      . omega
+      rw [mkGate_decl_eq, mkConst_decl_eq, mkGate_decl_eq]
+      . rw [rih, lih]
+      . simp [mkConst, mkGate] -- TODO: this should be possible with lemmas
+        omega
 
 @[simp]
-theorem Env.foo (entry : Entrypoint) {h}:
-    denote ⟨(ofBoolExprNat.go expr entry.env).val.env, entry.start, h⟩ assign
+theorem ofBoolExprNat.go_denote_entry (entry : Entrypoint) {h}:
+    ⟦(ofBoolExprNat.go expr entry.env).val.env, ⟨entry.start, h⟩, assign ⟧
       =
-    denote entry assign := by
-  apply Env.denote.eq_of_env_eq
+    ⟦entry, assign⟧ := by
+  apply denote.eq_of_env_eq
   apply IsPrefix.of
   . intro idx h
-    apply Env.ofBoolExprNat.go_decl_eq
-  . apply Env.ofBoolExprNat.go_decls_size_le
+    apply ofBoolExprNat.go_decl_eq
+  . apply ofBoolExprNat.go_decls_size_le
 
-theorem Env.ofBoolExprNatgo_eval_eq_eval (expr : BoolExprNat) (env : Env) (assign : List Bool) :
-    denote (Env.ofBoolExprNat.go expr env) assign = expr.eval assign := by
+theorem ofBoolExprNatgo_eval_eq_eval (expr : BoolExprNat) (env : Env) (assign : List Bool) :
+    ⟦ofBoolExprNat.go expr env, assign⟧ = expr.eval assign := by
   induction expr generalizing env with
   | const => simp [ofBoolExprNat.go]
   | literal => simp [ofBoolExprNat.go]
   | not expr ih =>
-    simp [ofBoolExprNat.go]
-    rw [← ih]
+    simp [ofBoolExprNat.go, ih]
   | gate g lhs rhs lih rih =>
     cases g with
     | and =>
       simp [ofBoolExprNat.go, Gate.eval, lih, rih]
     | or =>
-      simp [ofBoolExprNat.go, Gate.eval]
+      simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← or_as_and]
-      simp [lih, rih]
+      simp [ofBoolExprNat.go, lih, rih]
     | xor =>
-      simp [ofBoolExprNat.go, Gate.eval]
+      simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← xor_as_and]
-      simp [lih, rih]
+      simp [ofBoolExprNat.go, lih, rih]
     | beq =>
-      simp [ofBoolExprNat.go, Gate.eval]
+      simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← beq_as_and]
-      simp [lih, rih]
+      simp [ofBoolExprNat.go, lih, rih]
     | imp =>
-      simp [ofBoolExprNat.go, Gate.eval]
+      simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← imp_as_and]
-      simp [lih, rih]
+      simp [ofBoolExprNat.go, lih, rih]
 
-theorem Env.ofBoolExprNat_eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
-    denote (Env.ofBoolExprNat expr) assign = expr.eval assign := by
-  apply Env.ofBoolExprNatgo_eval_eq_eval
+theorem ofBoolExprNat_eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
+    ⟦ofBoolExprNat expr, assign⟧ = expr.eval assign := by
+  apply ofBoolExprNatgo_eval_eq_eval
+
+end Env
