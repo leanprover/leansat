@@ -2,23 +2,23 @@ import LeanSAT.AIG.Cached
 import LeanSAT.AIG.CachedLemmas
 import LeanSAT.AIG.BoolExpr
 
+namespace Env
+
 -- lines such as: ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
--- are slow because of the high defeq degree
--- TODO: ask leo how to fix this stuff
-set_option pp.oneline true in
-set_option trace.profiler true in
+-- are slow in Meta.check
+-- TODO: minimize
 /--
 Turn a `BoolExprNat` into an AIG + entrypoint. Note that this version is meant for programming
 purposes. For proving use `Env.ofBoolExprNat` and equality theorems.
 -/
-def Env.ofBoolExprNatCached (expr : BoolExprNat) : Env.Entrypoint :=
+def ofBoolExprNatCached (expr : BoolExprNat) : Entrypoint :=
   go expr Env.empty |>.val
 where
   @[inherit_doc Env.ofBoolExprNat.go]
-  go (expr : BoolExprNat) (env : Env) : { entry : Env.Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
+  go (expr : BoolExprNat) (env : Env) : { entry : Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
     match expr with
-    | .literal var => ⟨env.mkAtomCached var, (by apply Env.mkAtomCached_le_size)⟩
-    | .const val => ⟨env.mkConstCached val, (by apply Env.mkConstCached_le_size)⟩
+    | .literal var => ⟨env.mkAtomCached var, (by apply mkAtomCached_le_size)⟩
+    | .const val => ⟨env.mkConstCached val, (by apply mkConstCached_le_size)⟩
     | .not expr =>
       -- ¬x = true && invert x
       let ⟨exprEntry, _⟩ := go expr env
@@ -31,8 +31,8 @@ where
          false
          true
          constEntry.inv
-         (by apply Env.lt_mkConstCached_size)
-      have := constEntry.env.mkGateCached_le_size _ _ false true constEntry.inv (by apply Env.lt_mkConstCached_size)
+         (by apply lt_mkConstCached_size)
+      have := constEntry.env.mkGateCached_le_size _ _ false true constEntry.inv (by apply lt_mkConstCached_size)
       ⟨ret, by dsimp [constEntry, ret] at *; omega⟩
     | .gate g lhs rhs =>
       let ⟨lhsEntry, _⟩ := go lhs env
@@ -72,8 +72,8 @@ where
             false
             true
             constEntry.inv
-            (by apply Env.lt_mkConstCached_size)
-        have := constEntry.env.mkGateCached_le_size _ auxEntry.start false true constEntry.inv (by apply Env.lt_mkConstCached_size)
+            (by apply lt_mkConstCached_size)
+        have := constEntry.env.mkGateCached_le_size _ auxEntry.start false true constEntry.inv (by apply lt_mkConstCached_size)
         ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
       | .xor =>
         -- x xor y = (invert (invert (x && y))) && (invert ((invert x) && (invert y)))
@@ -96,17 +96,17 @@ where
             true
             true
             h3
-            (by apply Env.lt_mkGateCached_size)
-        have := aux1Entry.env.mkGateCached_le_size _ _ true true h3 (by apply Env.lt_mkGateCached_size)
+            (by apply lt_mkGateCached_size)
+        have := aux1Entry.env.mkGateCached_le_size _ _ true true h3 (by apply lt_mkGateCached_size)
         let ret :=
           aux2Entry.env.mkGateCached
             aux1Entry.start
             aux2Entry.start
             true
             true
-            (by apply Env.lt_mkGateCached_size)
+            (by apply lt_mkGateCached_size)
             aux2Entry.inv
-        have := aux2Entry.env.mkGateCached_le_size aux1Entry.start _ true true (by apply Env.lt_mkGateCached_size) aux2Entry.inv
+        have := aux2Entry.env.mkGateCached_le_size aux1Entry.start _ true true (by apply lt_mkGateCached_size) aux2Entry.inv
         ⟨ret, by simp (config := { zetaDelta := true}) only at *; omega⟩
       | .beq =>
         -- a == b = (invert (a && (invert b))) && (invert ((invert a) && b))
@@ -129,17 +129,17 @@ where
             true
             false
             h3
-            (by apply Env.lt_mkGateCached_size)
-        have := aux1Entry.env.mkGateCached_le_size _ _ true false h3 (by apply Env.lt_mkGateCached_size)
+            (by apply lt_mkGateCached_size)
+        have := aux1Entry.env.mkGateCached_le_size _ _ true false h3 (by apply lt_mkGateCached_size)
         let ret :=
           aux2Entry.env.mkGateCached
             aux1Entry.start
             aux2Entry.start
             true
             true
-            (by apply Env.lt_mkGateCached_size)
+            (by apply lt_mkGateCached_size)
             aux2Entry.inv
-        have := aux2Entry.env.mkGateCached_le_size aux1Entry.start _ true true (by apply Env.lt_mkGateCached_size) aux2Entry.inv
+        have := aux2Entry.env.mkGateCached_le_size aux1Entry.start _ true true (by apply lt_mkGateCached_size) aux2Entry.inv
         ⟨ret, by simp (config := { zetaDelta := true}) only at *; omega⟩
       | .imp =>
         -- a -> b = true && (invert (a and (invert b)))
@@ -161,19 +161,146 @@ where
             false
             true
             constEntry.inv
-            (by apply Env.lt_mkConstCached_size)
-        have := constEntry.env.mkGateCached_le_size _ auxEntry.start false true constEntry.inv (by apply Env.lt_mkConstCached_size)
-        ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
+            (by apply lt_mkConstCached_size)
+        have := constEntry.env.mkGateCached_le_size _ auxEntry.start false true constEntry.inv (by apply lt_mkConstCached_size)
+        ⟨ret, by simp [auxEntry, constEntry, ret] at *; omega⟩
 
-#eval Env.ofBoolExprNatCached (.gate .and (.gate .and (.literal 0) (.literal 0)) (.gate .and (.literal 0) (.literal 0))) |>.env.decls
 
-theorem Env.ofBoolExprCachedgo_eval_eq_ofBoolExprgo_eval (expr : BoolExprNat) (assign : List Bool) (env : Env) :
-    Env.denote (Env.ofBoolExprNatCached.go expr env).val assign = Env.denote (Env.ofBoolExprNat.go expr env).val assign := by
-  sorry
+#eval ofBoolExprNatCached (.gate .and (.gate .and (.literal 0) (.literal 0)) (.gate .and (.literal 0) (.literal 0))) |>.env.decls
 
-theorem Env.ofBoolExprCached_eval_eq_ofBoolExpr_eval (expr : BoolExprNat) (assign : List Bool) :
-    Env.denote (Env.ofBoolExprNatCached expr) assign = Env.denote (Env.ofBoolExprNat expr) assign := by
-  unfold Env.ofBoolExprNatCached
-  rw [Env.ofBoolExprCachedgo_eval_eq_ofBoolExprgo_eval]
-  unfold Env.ofBoolExprNat
+theorem ofBoolExprNatCached.go_decls_size_le (expr : BoolExprNat) (env : Env) :
+    env.decls.size ≤ (ofBoolExprNatCached.go expr env).val.env.decls.size := by
+  exact (ofBoolExprNatCached.go expr env).property
+
+theorem ofBoolExprNatCached.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbounds) :
+    (ofBoolExprNatCached.go expr env).val.env.decls[idx]'hbounds = env.decls[idx] := by
+  induction expr generalizing env with
+  | const =>
+    simp only [go]
+    apply mkConstCached_decl_eq
+  | literal =>
+    simp only [go]
+    apply mkAtomCached_decl_eq
+  | not expr ih =>
+    simp only [go]
+    have := go_decls_size_le expr env
+    specialize ih env (by omega) (by omega)
+    rw [mkGateCached_decl_eq]
+    rw [mkConstCached_decl_eq]
+    . rw [ih]
+    . have := mkConstCached_le_size (go expr env).val.env true
+      omega
+  | gate g lhs rhs lih rih =>
+    have := go_decls_size_le lhs env
+    have := go_decls_size_le rhs (go lhs env).val.env
+    specialize lih env (by omega) (by omega)
+    specialize rih (go lhs env).val.env (by omega) (by omega)
+    cases g with
+    | and =>
+      simp only [go]
+      rw [mkGateCached_decl_eq]
+      rw [rih, lih]
+    | or =>
+      simp only [go]
+      rw [mkGateCached_decl_eq, mkConstCached_decl_eq, mkGateCached_decl_eq]
+      . rw [rih, lih]
+      . apply lt_of_lt_mkGateCached_size
+        omega
+      . apply lt_of_lt_mkConstCached_size
+        apply lt_of_lt_mkGateCached_size
+        omega
+    | xor =>
+      simp only [go]
+      rw [mkGateCached_decl_eq, mkGateCached_decl_eq, mkGateCached_decl_eq]
+      rw [rih, lih]
+      . apply lt_of_lt_mkGateCached_size
+        omega
+      . apply lt_of_lt_mkGateCached_size
+        apply lt_of_lt_mkGateCached_size
+        omega
+    | beq =>
+      simp only [go]
+      rw [mkGateCached_decl_eq, mkGateCached_decl_eq, mkGateCached_decl_eq]
+      rw [rih, lih]
+      . apply lt_of_lt_mkGateCached_size
+        omega
+      . apply lt_of_lt_mkGateCached_size
+        apply lt_of_lt_mkGateCached_size
+        omega
+    | imp =>
+      simp only [go]
+      rw [mkGateCached_decl_eq, mkConstCached_decl_eq, mkGateCached_decl_eq]
+      rw [rih, lih]
+      . apply lt_of_lt_mkGateCached_size
+        omega
+      . apply lt_of_lt_mkConstCached_size
+        apply lt_of_lt_mkGateCached_size
+        omega
+
+theorem ofBoolExprNatCached.go_IsPrefix_env : IsPrefix env.decls (go expr env).val.env.decls := by
+  apply IsPrefix.of
+  . intro idx h
+    apply ofBoolExprNatCached.go_decl_eq
+  . apply ofBoolExprNatCached.go_decls_size_le
+
+@[simp]
+theorem ofBoolExprNatCached.go_denote_entry (entry : Entrypoint) {h}:
+    ⟦(go expr entry.env).val.env, ⟨entry.start, h⟩, assign ⟧
+      =
+    ⟦entry, assign⟧ := by
+  apply denote.eq_of_env_eq
+  apply ofBoolExprNatCached.go_IsPrefix_env
+
+theorem ofBoolExprNatCached.go_eval_eq_ofBoolExprgo_eval (expr : BoolExprNat) (assign : List Bool) (env : Env) :
+    ⟦(ofBoolExprNatCached.go expr env).val, assign⟧
+      =
+    ⟦(ofBoolExprNat.go expr env).val, assign⟧ := by
+  induction expr generalizing env with
+  | const =>
+    dsimp [go]
+    simp
+  | literal =>
+    dsimp [go]
+    simp
+  | not expr ih =>
+    dsimp [go]
+    simp [ih]
+  | gate g lhs rhs lih rih =>
+    cases g with
+    | and =>
+      dsimp [go]
+      simp [Gate.eval, rih, lih]
+    | or =>
+      dsimp [go]
+      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
+      rw [← or_as_and]
+      simp [rih, lih]
+    | xor =>
+      dsimp [go]
+      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
+      rw [← xor_as_and]
+      simp [rih, lih]
+    | beq =>
+      dsimp [go]
+      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
+      rw [← beq_as_and]
+      simp [rih, lih]
+    | imp =>
+      dsimp [go]
+      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
+      rw [← imp_as_and]
+      simp [rih, lih]
+
+theorem ofBoolExprNatCached_eval_eq_ofBoolExpr_eval (expr : BoolExprNat) (assign : List Bool) :
+    ⟦ofBoolExprNatCached expr, assign⟧ = ⟦ofBoolExprNat expr, assign⟧ := by
+  unfold ofBoolExprNatCached
+  rw [ofBoolExprNatCached.go_eval_eq_ofBoolExprgo_eval]
+  unfold ofBoolExprNat
   rfl
+
+@[simp]
+theorem ofBoolExprCached_eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
+    ⟦ofBoolExprNatCached expr, assign⟧ = expr.eval assign := by
+  simp [ofBoolExprNatCached_eval_eq_ofBoolExpr_eval]
+
+end Env

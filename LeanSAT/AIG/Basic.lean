@@ -2,15 +2,11 @@ import LeanSAT.Reflect.Tactics.Reflect
 import Std.Data.HashMap
 open Std
 
--- Missing Array theorems?
-theorem Array.push_get (as : Array α) (a : α) (h : i < (as.push a).size) : (as.push a)[i] = if _ : i < as.size then as[i] else a :=
-  sorry
+theorem Array.get_push_old (as : Array α) (a : α) (h : i < as.size) : (as.push a)[i]'(by simp; omega) = as[i] := by
+  simp [Array.get_push, h]
 
-theorem Array.push_get_old (as : Array α) (a : α) (h : i < as.size) : (as.push a)[i]'(by simp; omega) = as[i] := by
-  simp [Array.push_get, h]
-
-theorem Array.push_get_size (as : Array α) (a : α) : (as.push a)[as.size] = a := by
-  simp [Array.push_get]
+theorem Array.get_push_size (as : Array α) (a : α) : (as.push a)[as.size] = a := by
+  simp [Array.get_push]
 
 /--
 A circuit node declaration. These are not recursive but instead contain indices into an `Env`.
@@ -164,13 +160,16 @@ where
       xor lval linv && xor rval rinv
 -- ⟦ ⟧
 
-scoped notation "⟦" env ", " "⟨" start "," hbound "⟩"  ", " assign "⟧" => denote (Env.Entrypoint.mk env start hbound) assign
-scoped notation "⟦" entry ", " assign "⟧" => denote entry assign
+scoped syntax "⟦" term ", " term "⟧" : term
+scoped syntax "⟦" term ", " "⟨" term ", " term "⟩" ", " term "⟧" : term
 
--- TODO: fix
+macro_rules
+| `(⟦$entry, $assign⟧) => `(denote $entry $assign)
+| `(⟦$env, ⟨$start, $hbound⟩, $assign⟧) => `(denote (Entrypoint.mk $env $start $hbound) $assign)
+
 @[app_unexpander Env.denote]
 def unexpandDenote : Lean.PrettyPrinter.Unexpander
-  | `($(_)  (Env.Entrypoint.mk $env $start $hbound) $assign) => `(⟦$env, ⟨$start, $hbound⟩, $assign⟧)
+  | `($(_) {env := $env, start := $start, inv := $hbound} $assign) => `(⟦$env, ⟨$start, $hbound⟩, $assign⟧)
   | `($(_) $entry $assign) => `(⟦$entry, $assign⟧)
   | _ => throw ()
 
@@ -185,7 +184,7 @@ def mkGate (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.
   let cache := env.cache.noUpdate
   have inv := by
     intro i lhs rhs linv rinv h1 h2
-    simp only [decls, Array.push_get] at h2
+    simp only [decls, Array.get_push] at h2
     split at h2
     . apply env.inv <;> assumption
     . injections; omega
@@ -202,7 +201,7 @@ def mkAtom (n : Nat) (env : Env) : Entrypoint :=
   have inv := by
     intro i lhs rhs linv rinv h1 h2
     simp only [decls] at *
-    simp only [Array.push_get] at h2
+    simp only [Array.get_push] at h2
     split at h2
     . apply env.inv <;> assumption
     . contradiction
@@ -219,7 +218,7 @@ def mkConst (val : Bool) (env : Env) : Entrypoint :=
   have inv := by
     intro i lhs rhs linv rinv h1 h2
     simp only [decls] at *
-    simp only [Array.push_get] at h2
+    simp only [Array.get_push] at h2
     split at h2
     . apply env.inv <;> assumption
     . contradiction
