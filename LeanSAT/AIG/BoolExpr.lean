@@ -211,7 +211,8 @@ theorem ofBoolExprNat.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbounds
       simp only [go]
       rw [mkGate_decl_eq, mkConst_decl_eq, mkGate_decl_eq]
       . rw [rih, lih]
-      . simp [mkConst, mkGate] -- TODO: this should be possible with lemmas
+      . apply lt_of_lt_mkConst_size
+        apply lt_of_lt_mkGate_size
         omega
     | xor =>
       simp only [go]
@@ -225,50 +226,56 @@ theorem ofBoolExprNat.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbounds
       simp only [go]
       rw [mkGate_decl_eq, mkConst_decl_eq, mkGate_decl_eq]
       . rw [rih, lih]
-      . simp [mkConst, mkGate] -- TODO: this should be possible with lemmas
+      . apply lt_of_lt_mkConst_size
+        apply lt_of_lt_mkGate_size
         omega
 
-@[simp]
-theorem ofBoolExprNat.go_denote_entry (entry : Entrypoint) {h}:
-    ⟦(ofBoolExprNat.go expr entry.env).val.env, ⟨entry.start, h⟩, assign ⟧
-      =
-    ⟦entry, assign⟧ := by
-  apply denote.eq_of_env_eq
+theorem ofBoolExprNat.go_IsPrefix_env : IsPrefix env.decls (go expr env).val.env.decls := by
   apply IsPrefix.of
   . intro idx h
     apply ofBoolExprNat.go_decl_eq
   . apply ofBoolExprNat.go_decls_size_le
 
-theorem ofBoolExprNatgo_eval_eq_eval (expr : BoolExprNat) (env : Env) (assign : List Bool) :
-    ⟦ofBoolExprNat.go expr env, assign⟧ = expr.eval assign := by
+@[simp]
+theorem ofBoolExprNat.go_denote_entry (entry : Entrypoint) {h}:
+    ⟦(go expr entry.env).val.env, ⟨entry.start, h⟩, assign ⟧
+      =
+    ⟦entry, assign⟧ := by
+  apply denote.eq_of_env_eq
+  apply ofBoolExprNat.go_IsPrefix_env
+
+@[simp]
+theorem ofBoolExprNat.go_eval_eq_eval (expr : BoolExprNat) (env : Env) (assign : List Bool) :
+    ⟦go expr env, assign⟧ = expr.eval assign := by
   induction expr generalizing env with
-  | const => simp [ofBoolExprNat.go]
-  | literal => simp [ofBoolExprNat.go]
+  | const => simp [go]
+  | literal => simp [go]
   | not expr ih =>
-    simp [ofBoolExprNat.go, ih]
+    simp [go, ih]
   | gate g lhs rhs lih rih =>
     cases g with
     | and =>
-      simp [ofBoolExprNat.go, Gate.eval, lih, rih]
+      simp [go, Gate.eval, lih, rih]
     | or =>
       simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← or_as_and]
-      simp [ofBoolExprNat.go, lih, rih]
+      simp [go, lih, rih]
     | xor =>
       simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← xor_as_and]
-      simp [ofBoolExprNat.go, lih, rih]
+      simp [go, lih, rih]
     | beq =>
       simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← beq_as_and]
-      simp [ofBoolExprNat.go, lih, rih]
+      simp [go, lih, rih]
     | imp =>
       simp only [BoolExprNat.eval_gate, Gate.eval]
       rw [← imp_as_and]
-      simp [ofBoolExprNat.go, lih, rih]
+      simp [go, lih, rih]
 
-theorem ofBoolExprNat_eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
+@[simp]
+theorem ofBoolExprNat.eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
     ⟦ofBoolExprNat expr, assign⟧ = expr.eval assign := by
-  apply ofBoolExprNatgo_eval_eq_eval
+  apply ofBoolExprNat.go_eval_eq_eval
 
 end Env

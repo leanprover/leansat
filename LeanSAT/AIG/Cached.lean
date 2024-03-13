@@ -20,7 +20,7 @@ def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.
     have inv := by
       intro lhs rhs linv rinv i h1 h2
       simp only [decls] at *
-      simp only [Array.push_get] at h2
+      simp only [Array.get_push] at h2
       split at h2
       . apply env.inv <;> assumption
       . injections; omega
@@ -42,7 +42,7 @@ def mkAtomCached (n : Nat) (env : Env) : Entrypoint :=
     have inv := by
       intro i lhs rhs linv rinv h1 h2
       simp only [decls] at *
-      simp only [Array.push_get] at h2
+      simp only [Array.get_push] at h2
       split at h2
       . apply env.inv <;> assumption
       . contradiction
@@ -64,7 +64,7 @@ def mkConstCached (val : Bool) (env : Env) : Entrypoint :=
     have inv := by
       intro i lhs rhs linv rinv h1 h2
       simp only [decls] at *
-      simp only [Array.push_get] at h2
+      simp only [Array.get_push] at h2
       split at h2
       . apply env.inv <;> assumption
       . contradiction

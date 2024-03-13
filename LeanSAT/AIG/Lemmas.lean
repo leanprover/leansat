@@ -54,7 +54,7 @@ theorem denote.go_lt_push (x : Nat) (decls : Array Decl) {h1} {h2} {h3} :
   apply denote.go_eq_of_env_eq
   apply IsPrefix.of
   . intro idx h
-    simp only [Array.push_get]
+    simp only [Array.get_push]
     split
     . rfl
     . contradiction
@@ -88,7 +88,7 @@ The AIG produced by `Env.mkGate` agrees with the input AIG on all indices that a
 -/
 theorem mkGate_decl_eq idx (env : Env) (lhs rhs : Nat) (linv rinv : Bool) {h : idx < env.decls.size} {hl} {hr} :
     (env.mkGate lhs rhs linv rinv hl hr).env.decls[idx]'(by simp[mkGate]; omega) = env.decls[idx] := by
-  simp only [mkGate, Array.push_get]
+  simp only [mkGate, Array.get_push]
   split
   . rfl
   . contradiction
@@ -113,13 +113,13 @@ theorem denote_mkGate :
     unfold denote denote.go
   split
   . next heq =>
-    rw [mkGate, Array.push_get_size] at heq
+    rw [mkGate, Array.get_push_size] at heq
     contradiction
   . next heq =>
-    rw [mkGate, Array.push_get_size] at heq
+    rw [mkGate, Array.get_push_size] at heq
     contradiction
   . next heq =>
-    rw [mkGate, Array.push_get_size] at heq
+    rw [mkGate, Array.get_push_size] at heq
     injection heq with heq1 heq2 heq3 heq4
     simp
     apply ReflectSat.EvalAtAtoms.and_congr
@@ -135,11 +135,16 @@ theorem denote_mkGate :
 Reusing an `Env.Entrypoint` to build an additional gate will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) {hl} {hr}
+theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
     : entry.start < (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
   have h1 := entry.inv
   have h2 : entry.env.decls.size ≤ (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
     apply mkGate_le_size
+  omega
+
+theorem lt_of_lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < entry.env.decls.size)
+    : x < (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
+  have := mkGate_le_size entry.env lhs rhs linv rinv hl hr
   omega
 
 @[simp]
@@ -181,7 +186,7 @@ The AIG produced by `Env.mkAtom` agrees with the input AIG on all indices that a
 -/
 theorem mkAtom_decl_eq (env : Env) (var : Nat) (idx : Nat) {h : idx < env.decls.size} {hbound} :
     (env.mkAtom var).env.decls[idx]'hbound = env.decls[idx] := by
-  simp only [mkAtom, Array.push_get]
+  simp only [mkAtom, Array.get_push]
   split
   . rfl
   . contradiction
@@ -202,14 +207,14 @@ theorem denote_mkAtom {env : Env} :
   unfold denote denote.go
   split
   . next heq =>
-    rw [mkAtom, Array.push_get_size] at heq
+    rw [mkAtom, Array.get_push_size] at heq
     contradiction
   . next heq =>
-    rw [mkAtom, Array.push_get_size] at heq
+    rw [mkAtom, Array.get_push_size] at heq
     injection heq with heq
     rw [heq]
   . next heq =>
-    rw [mkAtom, Array.push_get_size] at heq
+    rw [mkAtom, Array.get_push_size] at heq
     contradiction
 
 @[simp]
@@ -225,7 +230,7 @@ The AIG produced by `Env.mkConst` agrees with the input AIG on all indices that 
 -/
 theorem mkConst_decl_eq (env : Env) (val : Bool) (idx : Nat) {h : idx < env.decls.size} {hbound} :
     (env.mkConst val).env.decls[idx]'hbound = env.decls[idx] := by
-  simp only [mkConst, Array.push_get]
+  simp only [mkConst, Array.get_push]
   split
   . rfl
   . contradiction
@@ -252,14 +257,14 @@ theorem denote_mkConst {env : Env} : ⟦(env.mkConst val), assign⟧ = val := by
   unfold denote denote.go
   split
   . next heq =>
-    rw [mkConst, Array.push_get_size] at heq
+    rw [mkConst, Array.get_push_size] at heq
     injection heq with heq
     rw [heq]
   . next heq =>
-    rw [mkConst, Array.push_get_size] at heq
+    rw [mkConst, Array.get_push_size] at heq
     contradiction
   . next heq =>
-    rw [mkConst, Array.push_get_size] at heq
+    rw [mkConst, Array.get_push_size] at heq
     contradiction
 
 @[simp]
@@ -278,6 +283,10 @@ theorem lt_mkConst_size (entry : Entrypoint) (val : Bool) : entry.start < (entry
   have h1 := entry.inv
   have h2 : entry.env.decls.size ≤ (entry.env.mkConst val).env.decls.size :=
     mkConst_le_size _ _
+  omega
+
+theorem lt_of_lt_mkConst_size (entry : Entrypoint) (val : Bool) (h : x < entry.env.decls.size) : x < (entry.env.mkConst val).env.decls.size := by
+  have := mkConst_le_size entry.env val
   omega
 
 end Env
