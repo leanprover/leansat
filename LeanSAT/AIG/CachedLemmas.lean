@@ -1,9 +1,26 @@
 import LeanSAT.AIG.Cached
 
+namespace Env
+
+/--
+If we find a cached gate declaration in the AIG, denoting it is equivalent to denoting `Env.mkGate`.
+-/
+theorem denote_mkGate_cached {env : Env} {hl} {hr}
+    (h : env.cache.find? (.gate lhs rhs lpol rpol) = some gate) :
+    ⟦⟨env, gate, Cache.find?_bounds env.cache (.gate lhs rhs lpol rpol) h⟩, assign⟧
+      =
+    ⟦env.mkGate lhs rhs lpol rpol hl hr, assign⟧ := by
+  have := Cache.find?_property _ _ h
+  simp only [denote_mkGate]
+  conv =>
+    lhs
+    unfold denote denote.go
+  split <;> simp_all[denote]
+
 /--
 `Env.mkGateCached` never shrinks the underlying AIG.
 -/
-theorem Env.mkGateCached_le_size (lhs rhs : Nat) (linv rinv : Bool) (env : Env) hl hr
+theorem mkGateCached_le_size (lhs rhs : Nat) (linv rinv : Bool) (env : Env) hl hr
     : env.decls.size ≤ (env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
   dsimp [mkGateCached]
   split
@@ -14,86 +31,70 @@ theorem Env.mkGateCached_le_size (lhs rhs : Nat) (linv rinv : Bool) (env : Env) 
 Reusing an `Env.Entrypoint` to build an additional gate will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem Env.lt_mkGateCached_size (e1 : Env.Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) hl hr
-    : e1.start < (e1.env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
-  have h1 := e1.inv
-  have h2 : e1.env.decls.size ≤ (e1.env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size :=
-    Env.mkGateCached_le_size _ _ _ _ _ _ _
+theorem lt_mkGateCached_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) hl hr
+    : entry.start < (entry.env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
+  have h1 := entry.inv
+  have h2 : entry.env.decls.size ≤ (entry.env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size :=
+    mkGateCached_le_size _ _ _ _ _ _ _
   omega
 
--- TODO: refactor with denote simp things
 /--
 The central equality theorem between `mkGateCached` and `mkGate`.
 -/
-theorem Env.mkGateCached_eval_eq_mkGate_eval (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
+theorem mkGateCached_eval_eq_mkGate_eval (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
     (hr : rhs < env.decls.size) :
-    denote (env.mkGateCached lhs rhs linv rinv hl hr) assign = denote (env.mkGate lhs rhs linv rinv hl hr) assign := by
-  simp only [mkGate, mkGateCached]
+    ⟦env.mkGateCached lhs rhs linv rinv hl hr, assign⟧ = ⟦env.mkGate lhs rhs linv rinv hl hr, assign⟧ := by
+  simp only [mkGateCached]
   split
   . next heq1 =>
-    unfold denote denote.go
-    have h1 := Cache.find?_property env.cache (.gate lhs rhs linv rinv) heq1
-    simp only [Array.size_push, Nat.lt_succ_self]
-    split
-    . next heq2 => rw [h1] at heq2; injections
-    . next heq2 => rw [h1] at heq2; injections
-    . next heq2 =>
-      split
-      . next heq3 => rw [Array.push_get_size] at heq3; injections
-      . next heq3 => rw [Array.push_get_size] at heq3; injections
-      . next heq3 =>
-        rw [Array.push_get_size] at heq3;
-        injection heq3 with lhseq rhseq linveq rinveq
-        simp only [lhseq, linveq, rhseq, rinveq]
-        simp_all only [Decl.gate.injEq]
-        apply ReflectSat.EvalAtAtoms.and_congr
-        all_goals
-          apply ReflectSat.EvalAtAtoms.xor_congr
-          . rw [denote.go_lt_push]
-          . rfl
-  . simp [denote]
+    rw [denote_mkGate_cached heq1]
+  . simp [mkGate, denote]
+
+/--
+If we find a cached atom declaration in the AIG, denoting it is equivalent to denoting `Env.mkAtom`.
+-/
+theorem denote_mkAtom_cached {env : Env} (h : env.cache.find? (.atom v) = some gate) :
+    ⟦⟨env, gate, Cache.find?_bounds env.cache (.atom v) h⟩, assign⟧ = ⟦env.mkAtom v, assign⟧ := by
+  have := Cache.find?_property _ _ h
+  simp only [denote_mkAtom]
+  unfold denote denote.go
+  split <;> simp_all
 
 /--
 `Env.mkAtomCached` never shrinks the underlying AIG.
 -/
-theorem Env.mkAtomCached_le_size (env : Env) (var : Nat)
+theorem mkAtomCached_le_size (env : Env) (var : Nat)
     : env.decls.size ≤ (env.mkAtomCached var).env.decls.size := by
   dsimp [mkAtomCached]
   split
   . simp
   . simp_arith
 
--- TODO: refactor with denote simp things
 /--
 The central equality theorem between `mkAtomCached` and `mkAtom`.
 -/
-theorem Env.mkAtomCached_eval_eq_mkAtom_eval (var : Nat) (env : Env)
-    : denote (env.mkAtomCached var) assign = denote (env.mkAtom var) assign := by
-  simp only [mkAtom, mkAtomCached]
+theorem mkAtomCached_eval_eq_mkAtom_eval (var : Nat) (env : Env)
+    : ⟦env.mkAtomCached var, assign⟧ = ⟦env.mkAtom var, assign⟧ := by
+  simp only [mkAtomCached]
   split
   . next heq1 =>
-    unfold denote denote.go
-    have h1 := Cache.find?_property env.cache (.atom var) heq1
-    simp only [Array.size_push, Nat.lt_succ_self]
-    split
-    . next heq2 => rw [h1] at heq2; injections
-    . next heq2 =>
-      split
-      . next heq3 => rw [Array.push_get_size] at heq3; injections
-      . next heq3 =>
-        rw [Array.push_get_size] at heq3
-        rw [heq2] at h1
-        injections
-        simp [*]
-      . next heq3 => rw [Array.push_get_size] at heq3; injections
-    . next heq2 => rw [h1] at heq2; injections
-  . simp [denote]
+    rw [denote_mkAtom_cached heq1]
+  . simp [mkAtom, denote]
 
+/--
+If we find a cached const declaration in the AIG, denoting it is equivalent to denoting `Env.mkConst`.
+-/
+theorem denote_mkConst_cached {env : Env} (h : env.cache.find? (.const b) = some gate) :
+    ⟦⟨env, gate, Cache.find?_bounds env.cache (.const b) h⟩, assign⟧ = ⟦env.mkConst b, assign⟧ := by
+  have := Cache.find?_property _ _ h
+  simp only [denote_mkConst]
+  unfold denote denote.go
+  split <;> simp_all
 
 /--
 `Env.mkConstCached` never shrinks the underlying AIG.
 -/
-theorem Env.mkConstCached_le_size (env : Env) (val : Bool)
+theorem mkConstCached_le_size (env : Env) (val : Bool)
     : env.decls.size ≤ (env.mkConstCached val).env.decls.size := by
   dsimp [mkConstCached]
   split
@@ -104,35 +105,21 @@ theorem Env.mkConstCached_le_size (env : Env) (val : Bool)
 Reusing an `Env.Entrypoint` to build an additional constant will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem Env.lt_mkConstCached_size (e1 : Env.Entrypoint) : e1.start < (e1.env.mkConstCached val).env.decls.size := by
-  have h1 := e1.inv
-  have h2 : e1.env.decls.size ≤ (e1.env.mkConstCached val).env.decls.size :=
+theorem lt_mkConstCached_size (entry : Entrypoint) : entry.start < (entry.env.mkConstCached val).env.decls.size := by
+  have h1 := entry.inv
+  have h2 : entry.env.decls.size ≤ (entry.env.mkConstCached val).env.decls.size :=
     Env.mkConstCached_le_size _ _
   omega
 
--- TODO: refactor with denote simp things
 /--
 The central equality theorem between `mkConstCached` and `mkConst`.
 -/
-theorem Env.mkConstCached_eval_eq_mkConst_eval (val : Bool) (env : Env)
-    : denote (env.mkConstCached val) assign = denote (env.mkConst val) assign := by
-  simp only [mkConst, mkConstCached]
+theorem mkConstCached_eval_eq_mkConst_eval (val : Bool) (env : Env)
+    : ⟦env.mkConstCached val, assign⟧ = ⟦env.mkConst val, assign⟧ := by
+  simp only [mkConstCached]
   split
   . next heq1 =>
-    unfold denote denote.go
-    have h1 := Cache.find?_property env.cache (.const val) heq1
-    simp only [Array.size_push, Nat.lt_succ_self]
-    split
-    . next heq2 =>
-      split
-      . next heq3 =>
-        rw [Array.push_get_size] at heq3
-        rw [heq2] at h1
-        injection heq3 with heq4
-        rw [heq4] at h1
-        injections
-      . next heq3 => rw [Array.push_get_size] at heq3; injections
-      . next heq3 => rw [Array.push_get_size] at heq3; injections
-    . next heq2 => rw [h1] at heq2; injections
-    . next heq2 => rw [h1] at heq2; injections
-  . simp [denote]
+    rw [denote_mkConst_cached heq1]
+  . simp [mkConst, denote]
+
+end Env

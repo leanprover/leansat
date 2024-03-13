@@ -1,11 +1,13 @@
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 
+namespace Env
+
 /--
 A version of `Env.mkGate` that uses the subterm cache in `Env`. This version is meant for
 programmming, for proving purposes use `Env.mkGate` and equality theorems to this one.
 -/
-def Env.mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
+def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
     (hr : rhs < env.decls.size) : Env.Entrypoint :=
   let decl := .gate lhs rhs linv rinv
   match h:env.cache.find? decl with
@@ -28,7 +30,7 @@ def Env.mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < 
 A version of `Env.mkAtom` that uses the subterm cache in `Env`. This version is meant for
 programmming, for proving purposes use `Env.mkAtom` and equality theorems to this one.
 -/
-def Env.mkAtomCached (n : Nat) (env : Env) : Env.Entrypoint :=
+def mkAtomCached (n : Nat) (env : Env) : Entrypoint :=
   let decl := .atom n
   match h:env.cache.find? decl with
   | some gate =>
@@ -50,7 +52,7 @@ def Env.mkAtomCached (n : Nat) (env : Env) : Env.Entrypoint :=
 A version of `Env.mkConst` that uses the subterm cache in `Env`. This version is meant for
 programmming, for proving purposes use `Env.mkGate` and equality theorems to this one.
 -/
-def Env.mkConstCached (val : Bool) (env : Env) : Env.Entrypoint :=
+def mkConstCached (val : Bool) (env : Env) : Entrypoint :=
   let decl := .const val
   match h:env.cache.find? decl with
   | some gate =>
@@ -67,3 +69,5 @@ def Env.mkConstCached (val : Bool) (env : Env) : Env.Entrypoint :=
       . apply env.inv <;> assumption
       . contradiction
   ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
+
+end Env
