@@ -1,6 +1,11 @@
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 
+theorem or_as_and (a b : Bool) : (!(!a && !b)) = (a || b) := by cases a <;> cases b <;> decide
+theorem xor_as_and (a b : Bool) : (!(a && b) && !(!a && !b)) = (xor a b) := by cases a <;> cases b <;> decide
+theorem beq_as_and (a b : Bool) : (!(a && !b) && !(!a && b)) = (a == b) := by cases a <;> cases b <;> decide
+theorem imp_as_and (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cases b <;> decide
+
 /--
 Turn a `BoolExprNat` into an AIG + entrypoint. Note that this version is only meant
 for proving purposes. For programming use `Env.ofBoolExprNatCached` and equality theorems.
