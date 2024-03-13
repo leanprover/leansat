@@ -296,26 +296,11 @@ theorem Env.ofBoolExprNatgo_eval_eq_eval (expr : BoolExprNat) (env : Env) (assig
     | xor =>
       simp [ofBoolExprNat.go, Gate.eval]
       rw [← xor_as_and]
-      apply ReflectSat.EvalAtAtoms.and_congr
-      . apply ReflectSat.EvalAtAtoms.not_congr
-        sorry
-      . apply ReflectSat.EvalAtAtoms.not_congr
-        apply ReflectSat.EvalAtAtoms.and_congr
-        . apply ReflectSat.EvalAtAtoms.not_congr
-          sorry
-        . apply ReflectSat.EvalAtAtoms.not_congr
-          sorry
+      simp [lih, rih]
     | beq =>
       simp [ofBoolExprNat.go, Gate.eval]
       rw [← beq_as_and]
-      apply ReflectSat.EvalAtAtoms.and_congr
-      . apply ReflectSat.EvalAtAtoms.not_congr
-        sorry
-      . apply ReflectSat.EvalAtAtoms.not_congr
-        apply ReflectSat.EvalAtAtoms.and_congr
-        . apply ReflectSat.EvalAtAtoms.not_congr
-          sorry
-        . sorry
+      simp [lih, rih]
     | imp =>
       simp [ofBoolExprNat.go, Gate.eval]
       rw [← imp_as_and]
@@ -324,4 +309,3 @@ theorem Env.ofBoolExprNatgo_eval_eq_eval (expr : BoolExprNat) (env : Env) (assig
 theorem Env.ofBoolExprNat_eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
     denote (Env.ofBoolExprNat expr) assign = expr.eval assign := by
   apply Env.ofBoolExprNatgo_eval_eq_eval
-
