@@ -211,8 +211,8 @@ theorem ofBoolExprNat.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbounds
       simp only [go]
       rw [mkGate_decl_eq, mkConst_decl_eq, mkGate_decl_eq]
       . rw [rih, lih]
-      . apply lt_of_lt_mkConst_size
-        apply lt_of_lt_mkGate_size
+      . apply lt_mkConst_size_of_lt_env_size
+        apply lt_mkGate_size_of_lt_env_size
         omega
     | xor =>
       simp only [go]
@@ -226,8 +226,8 @@ theorem ofBoolExprNat.go_decl_eq (idx) (env) (h : idx < env.decls.size) (hbounds
       simp only [go]
       rw [mkGate_decl_eq, mkConst_decl_eq, mkGate_decl_eq]
       . rw [rih, lih]
-      . apply lt_of_lt_mkConst_size
-        apply lt_of_lt_mkGate_size
+      . apply lt_mkConst_size_of_lt_env_size
+        apply lt_mkGate_size_of_lt_env_size
         omega
 
 theorem ofBoolExprNat.go_IsPrefix_env : IsPrefix env.decls (go expr env).val.env.decls := by

@@ -204,37 +204,37 @@ theorem ofBoolExprNatCached.go_decl_eq (idx) (env) (h : idx < env.decls.size) (h
       simp only [go]
       rw [mkGateCached_decl_eq, mkConstCached_decl_eq, mkGateCached_decl_eq]
       . rw [rih, lih]
-      . apply lt_of_lt_mkGateCached_size
+      . apply lt_mkGateCached_size_of_lt_env_size
         omega
-      . apply lt_of_lt_mkConstCached_size
-        apply lt_of_lt_mkGateCached_size
+      . apply lt_mkConstCached_size_of_lt_env_size
+        apply lt_mkGateCached_size_of_lt_env_size
         omega
     | xor =>
       simp only [go]
       rw [mkGateCached_decl_eq, mkGateCached_decl_eq, mkGateCached_decl_eq]
       rw [rih, lih]
-      . apply lt_of_lt_mkGateCached_size
+      . apply lt_mkGateCached_size_of_lt_env_size
         omega
-      . apply lt_of_lt_mkGateCached_size
-        apply lt_of_lt_mkGateCached_size
+      . apply lt_mkGateCached_size_of_lt_env_size
+        apply lt_mkGateCached_size_of_lt_env_size
         omega
     | beq =>
       simp only [go]
       rw [mkGateCached_decl_eq, mkGateCached_decl_eq, mkGateCached_decl_eq]
       rw [rih, lih]
-      . apply lt_of_lt_mkGateCached_size
+      . apply lt_mkGateCached_size_of_lt_env_size
         omega
-      . apply lt_of_lt_mkGateCached_size
-        apply lt_of_lt_mkGateCached_size
+      . apply lt_mkGateCached_size_of_lt_env_size
+        apply lt_mkGateCached_size_of_lt_env_size
         omega
     | imp =>
       simp only [go]
       rw [mkGateCached_decl_eq, mkConstCached_decl_eq, mkGateCached_decl_eq]
       rw [rih, lih]
-      . apply lt_of_lt_mkGateCached_size
+      . apply lt_mkGateCached_size_of_lt_env_size
         omega
-      . apply lt_of_lt_mkConstCached_size
-        apply lt_of_lt_mkGateCached_size
+      . apply lt_mkConstCached_size_of_lt_env_size
+        apply lt_mkGateCached_size_of_lt_env_size
         omega
 
 theorem ofBoolExprNatCached.go_IsPrefix_env : IsPrefix env.decls (go expr env).val.env.decls := by
