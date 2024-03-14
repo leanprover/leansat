@@ -142,7 +142,7 @@ theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (
     apply mkGate_le_size
   omega
 
-theorem lt_of_lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < entry.env.decls.size)
+theorem lt_mkGate_size_of_lt_env_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < entry.env.decls.size)
     : x < (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
   have := mkGate_le_size entry.env lhs rhs linv rinv hl hr
   omega
@@ -285,7 +285,7 @@ theorem lt_mkConst_size (entry : Entrypoint) (val : Bool) : entry.start < (entry
     mkConst_le_size _ _
   omega
 
-theorem lt_of_lt_mkConst_size (entry : Entrypoint) (val : Bool) (h : x < entry.env.decls.size) : x < (entry.env.mkConst val).env.decls.size := by
+theorem lt_mkConst_size_of_lt_env_size (entry : Entrypoint) (val : Bool) (h : x < entry.env.decls.size) : x < (entry.env.mkConst val).env.decls.size := by
   have := mkConst_le_size entry.env val
   omega
 
