@@ -27,9 +27,9 @@ theorem mkGateCached_le_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) hl h
   . simp
   . simp_arith
 
-theorem lt_mkGateCached_size_of_lt_env_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < entry.env.decls.size)
-    : x < (entry.env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
-  have := mkGateCached_le_size entry.env lhs rhs linv rinv hl hr
+theorem lt_mkGateCached_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < env.decls.size)
+    : x < (env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
+  have := mkGateCached_le_size env lhs rhs linv rinv hl hr
   omega
 
 /--
@@ -238,9 +238,9 @@ theorem mkConstCached_le_size (env : Env) (val : Bool)
   . simp
   . simp_arith
 
-theorem lt_mkConstCached_size_of_lt_env_size (entry : Entrypoint) (val : Bool) (h : x < entry.env.decls.size) :
-    x < (entry.env.mkConstCached val).env.decls.size := by
-  have := mkConstCached_le_size entry.env val
+theorem lt_mkConstCached_size_of_lt_env_size (env : Env) (val : Bool) (h : x < env.decls.size) :
+    x < (env.mkConstCached val).env.decls.size := by
+  have := mkConstCached_le_size env val
   omega
 
 /--
