@@ -103,21 +103,11 @@ theorem denote_mkGateCached_entry (entry : Entrypoint) {hlbound} {hrbound} {h} :
   apply denote.eq_of_env_eq
   apply mkGateCached_IsPrefix_env
 
-@[simp]
-theorem denote_mkGateCached_lhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
-    ⟦(entry.env.mkGateCached lhs rhs lpol rpol hlbound hrbound).env, ⟨lhs, h⟩, assign⟧
+theorem denote_mkGateCached_mem_prefix {env : Env} {hlbound} {hrbound} (h) :
+    ⟦(env.mkGateCached lhs rhs lpol rpol hlbound hrbound).env, ⟨start, (by apply lt_mkGateCached_size_of_lt_env_size; assumption)⟩, assign ⟧
       =
-    ⟦entry.env, ⟨lhs, hlbound⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkGateCached_IsPrefix_env
-
-@[simp]
-theorem denote_mkGateCached_rhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
-    ⟦(entry.env.mkGateCached lhs rhs lpol rpol hlbound hrbound).env, ⟨rhs, h⟩, assign⟧
-      =
-    ⟦entry.env, ⟨rhs, hrbound⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkGateCached_IsPrefix_env
+    ⟦env, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkGateCached_entry ⟨env, start, h⟩]
 
 /--
 The central equality theorem between `mkGateCached` and `mkGate`.
@@ -280,12 +270,18 @@ theorem mkConstCached_IsPrefix_env : IsPrefix env.decls (mkConstCached val env).
   . apply mkConstCached_le_size
 
 @[simp]
-theorem denote_mkConstCached_lt (entry : Entrypoint) {h} :
+theorem denote_mkConstCached_entry (entry : Entrypoint) {h} :
     ⟦(entry.env.mkConstCached val).env, ⟨entry.start, h⟩, assign⟧
       =
     ⟦entry, assign⟧ := by
   apply denote.eq_of_env_eq
   apply mkConstCached_IsPrefix_env
+
+theorem denote_mkConstCached_mem_prefix {env : Env} (h) :
+    ⟦(env.mkConstCached val).env, ⟨start, by apply lt_mkConstCached_size_of_lt_env_size; assumption⟩, assign⟧
+      =
+    ⟦env, ⟨start, h⟩, assign⟧ := by
+  rw [denote_mkConstCached_entry ⟨env, start, h⟩]
 
 /--
 The central equality theorem between `mkConstCached` and `mkConst`.
