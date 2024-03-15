@@ -72,6 +72,7 @@ Lookup a `decl` in a `cache`.
 
 If this returns `some i`, `Cache.find?_poperty` can be used to demonstrate: `decls[i] = decl`.
 -/
+@[irreducible]
 def Cache.find? (cache : Cache decls) (decl : Decl) : Option Nat :=
   cache.val.find? decl
 
