@@ -50,9 +50,6 @@ where
         have := mkImpCached_le_size rhsEntry.env lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         ⟨ret, by dsimp [ret] at *; omega⟩
 
-
-#eval ofBoolExprNatCached (.gate .and (.gate .and (.literal 0) (.literal 0)) (.gate .and (.literal 0) (.literal 0))) |>.env.decls
-
 theorem ofBoolExprNatCached.go_decls_size_le (expr : BoolExprNat) (env : Env) :
     env.decls.size ≤ (ofBoolExprNatCached.go expr env).val.env.decls.size := by
   exact (ofBoolExprNatCached.go expr env).property
