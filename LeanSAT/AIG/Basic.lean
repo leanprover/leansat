@@ -1,4 +1,3 @@
-import LeanSAT.Reflect.Tactics.Reflect
 import Std.Data.HashMap
 open Std
 
@@ -57,13 +56,14 @@ def Cache (decls : Array Decl) := { map : HashMap Decl Nat // Cache.WF decls map
 /--
 Create an empty `Cache`, valid with respect to any `Array Decl`.
 -/
+@[irreducible]
 def Cache.empty (decls : Array Decl) : Cache decl := ⟨HashMap.empty, WF.empty⟩
 
-@[inherit_doc Cache.WF.push_id]
+@[inherit_doc Cache.WF.push_id, irreducible]
 def Cache.noUpdate (cache : Cache decls) : Cache (decls.push decl) :=
   ⟨cache.val, Cache.WF.push_id cache.property⟩
 
-@[inherit_doc Cache.WF.push_cache]
+@[inherit_doc Cache.WF.push_cache, irreducible]
 def Cache.insert (cache : Cache decls) (decl : Decl) : Cache (decls.push decl) :=
   ⟨cache.val.insert decl decls.size, Cache.WF.push_cache cache.property⟩
 
