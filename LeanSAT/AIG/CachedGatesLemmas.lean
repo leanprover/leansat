@@ -1,10 +1,29 @@
 import LeanSAT.AIG.CachedGates
 
-theorem not_as_and (b : Bool) : (true && !b) = !b := by cases b <;> decide
-theorem or_as_and (a b : Bool) : (!(!a && !b)) = (a || b) := by cases a <;> cases b <;> decide
-theorem xor_as_and (a b : Bool) : (!(a && b) && !(!a && !b)) = (xor a b) := by cases a <;> cases b <;> decide
-theorem beq_as_and (a b : Bool) : (!(a && !b) && !(!a && b)) = (a == b) := by cases a <;> cases b <;> decide
-theorem imp_as_and (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cases b <;> decide
+/--
+Encoding not as boolen expression in AIG form.
+-/
+theorem not_as_aig (b : Bool) : (true && !b) = !b := by cases b <;> decide
+
+/--
+Encoding or as boolen expression in AIG form.
+-/
+theorem or_as_aig (a b : Bool) : (!(!a && !b)) = (a || b) := by cases a <;> cases b <;> decide
+
+/--
+Encoding XOR as boolen expression in AIG form.
+-/
+theorem xor_as_aig (a b : Bool) : (!(a && b) && !(!a && !b)) = (xor a b) := by cases a <;> cases b <;> decide
+
+/--
+Encoding BEq as boolen expression in AIG form.
+-/
+theorem beq_as_aig (a b : Bool) : (!(a && !b) && !(!a && b)) = (a == b) := by cases a <;> cases b <;> decide
+
+/--
+Encoding implication as boolen expression in AIG form.
+-/
+theorem imp_as_aig (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cases b <;> decide
 
 namespace Env
 
@@ -34,9 +53,9 @@ theorem denote_mkNotCached {env : Env} {hgate} :
     ⟦env.mkNotCached gate hgate, assign⟧
       =
     !⟦env, ⟨gate, hgate⟩, assign⟧ := by
-  rw [← not_as_and]
-  simp [mkNotCached]
-  rw [denote_mkConstCached_lt ⟨env, gate, hgate⟩]
+  rw [← not_as_aig]
+  simp [mkNotCached, denote_mkConstCached_mem_prefix hgate]
+
 
 theorem lt_mkNotCached_size (entry : Entrypoint) (gate : Nat) (hgate) : entry.start < (entry.env.mkNotCached gate hgate).env.decls.size := by
   have h1 := entry.inv
@@ -57,13 +76,11 @@ theorem denote_mkNotCached_entry (entry : Entrypoint) {hgate} {h} :
   apply denote.eq_of_env_eq
   apply mkNotCached_IsPrefix_env
 
-@[simp]
-theorem denote_mkNotCached_gate (entry : Entrypoint) {hgate} {h} :
-    ⟦(entry.env.mkNotCached gate hgate).env, ⟨gate, h⟩, assign⟧
+theorem denote_mkNotCached_mem_prefix {env : Env} {hgate} (h) :
+    ⟦(env.mkNotCached gate hgate).env, ⟨start, by apply lt_mkNotCached_size_of_lt_env_size; omega⟩, assign⟧
       =
-    ⟦entry.env, ⟨gate, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkNotCached_IsPrefix_env
+    ⟦env, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkNotCached_entry ⟨env, start, h⟩]
 
 theorem mkAndCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
     : env.decls.size ≤ (env.mkAndCached lhs rhs hl hr).env.decls.size := by
@@ -112,21 +129,11 @@ theorem denote_mkAndCached_entry (entry : Entrypoint) {hl} {hr} {h} :
   apply denote.eq_of_env_eq
   apply mkAndCached_IsPrefix_env
 
-@[simp]
-theorem denote_mkAndCached_lhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkAndCached lhs rhs hl hr).env, ⟨lhs, h⟩, assign⟧
+theorem denote_mkAndCached_mem_prefix {env : Env} {hl} {hr} (h) :
+    ⟦(env.mkAndCached lhs rhs hl hr).env, ⟨start, (by apply lt_mkAndCached_size_of_lt_env_size; omega)⟩, assign⟧
       =
-    ⟦entry.env, ⟨lhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkAndCached_IsPrefix_env
-
-@[simp]
-theorem denote_mkAndCached_rhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkAndCached lhs rhs hl hr).env, ⟨rhs, h⟩, assign⟧
-      =
-    ⟦entry.env, ⟨rhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkAndCached_IsPrefix_env
+    ⟦env, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkAndCached_entry ⟨env, start, h⟩]
 
 theorem mkOrCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
     : env.decls.size ≤ (env.mkOrCached lhs rhs hl hr).env.decls.size := by
@@ -161,7 +168,7 @@ theorem denote_mkOrCached {env : Env} {hl} {hr}:
     ⟦env.mkOrCached lhs rhs hl hr, assign⟧
       =
     (⟦env, ⟨lhs, hl⟩, assign⟧ || ⟦env, ⟨rhs, hr⟩, assign⟧) := by
-  rw [← or_as_and]
+  rw [← or_as_aig]
   simp [mkOrCached]
 
 theorem lt_mkOrCached_size (entry : Entrypoint) (lhs hrs : Nat) (hl) (hr)
@@ -178,20 +185,18 @@ theorem lt_mkOrCached_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (hl hr)
   omega
 
 @[simp]
-theorem denote_mkOrCached_lhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkOrCached lhs rhs hl hr).env, ⟨lhs, h⟩, assign⟧
+theorem denote_mkOrCached_entry (entry : Entrypoint) {hl} {hr} {h} :
+    ⟦(entry.env.mkOrCached lhs rhs hl hr).env, ⟨entry.start, h⟩, assign ⟧
       =
-    ⟦entry.env, ⟨lhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
+    ⟦entry, assign⟧ :=  by
+  apply denote.eq_of_env_eq
   apply mkOrCached_IsPrefix_env
 
-@[simp]
-theorem denote_mkOrCached_rhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkOrCached lhs rhs hl hr).env, ⟨rhs, h⟩, assign⟧
+theorem denote_mkOrCached_mem_prefix {env : Env} {hl} {hr} (h) :
+    ⟦(env.mkOrCached lhs rhs hl hr).env, ⟨start, (by apply lt_mkOrCached_size_of_lt_env_size; omega)⟩, assign⟧
       =
-    ⟦entry.env, ⟨rhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkOrCached_IsPrefix_env
+    ⟦env, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkOrCached_entry ⟨env, start, h⟩]
 
 theorem mkXorCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
     : env.decls.size ≤ (env.mkXorCached lhs rhs hl hr).env.decls.size := by
@@ -226,11 +231,8 @@ theorem denote_mkXorCached {env : Env} {hl} {hr} :
     ⟦env.mkXorCached lhs rhs hl hr, assign⟧
       =
     xor ⟦env, ⟨lhs, hl⟩, assign⟧ ⟦env, ⟨rhs, hr⟩, assign⟧ := by
-  rw [← xor_as_and]
-  simp only [mkXorCached, mkGateCached_eval_eq_mkGate_eval, denote_mkGate,
-    denote_mkGateCached_entry, Bool.xor_false, Bool.xor_true, denote_projected_entry]
-  rw [denote_mkGateCached_lhs ⟨env, lhs, hl⟩]
-  rw [denote_mkGateCached_rhs ⟨env, rhs, hr⟩]
+  rw [← xor_as_aig]
+  simp [mkXorCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
 
 theorem lt_mkXorCached_size (entry : Entrypoint) (lhs hrs : Nat) (hl) (hr)
     : entry.start < (entry.env.mkXorCached lhs rhs hl hr).env.decls.size := by
@@ -246,20 +248,18 @@ theorem lt_mkXorCached_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (hl hr)
   omega
 
 @[simp]
-theorem denote_mkXorCached_lhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkXorCached lhs rhs hl hr).env, ⟨lhs, h⟩, assign⟧
+theorem denote_mkXorCached_entry (entry : Entrypoint) {hl} {hr} {h} :
+    ⟦(entry.env.mkXorCached lhs rhs hl hr).env, ⟨entry.start, h⟩, assign ⟧
       =
-    ⟦entry.env, ⟨lhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
+    ⟦entry, assign⟧ :=  by
+  apply denote.eq_of_env_eq
   apply mkXorCached_IsPrefix_env
 
-@[simp]
-theorem denote_mkXorCached_rhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkXorCached lhs rhs hl hr).env, ⟨rhs, h⟩, assign⟧
+theorem denote_mkXorCached_mem_prefix {env : Env} {hl} {hr} (h) :
+    ⟦(env.mkXorCached lhs rhs hl hr).env, ⟨start, (by apply lt_mkXorCached_size_of_lt_env_size; omega)⟩, assign⟧
       =
-    ⟦entry.env, ⟨rhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkXorCached_IsPrefix_env
+    ⟦env, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkXorCached_entry ⟨env, start, h⟩]
 
 theorem mkBEqCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
     : env.decls.size ≤ (env.mkBEqCached lhs rhs hl hr).env.decls.size := by
@@ -294,11 +294,8 @@ theorem denote_mkBEqCached {env : Env} {hl} {hr} :
     ⟦env.mkBEqCached lhs rhs hl hr, assign⟧
       =
     (⟦env, ⟨lhs, hl⟩, assign⟧ == ⟦env, ⟨rhs, hr⟩, assign⟧) := by
-  rw [← beq_as_and]
-  simp only [mkBEqCached, mkGateCached_eval_eq_mkGate_eval, denote_mkGate,
-    denote_mkGateCached_entry, Bool.xor_false, Bool.xor_true, denote_projected_entry]
-  rw [denote_mkGateCached_lhs ⟨env, lhs, hl⟩]
-  rw [denote_mkGateCached_rhs ⟨env, rhs, hr⟩]
+  rw [← beq_as_aig]
+  simp [mkBEqCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
 
 theorem lt_mkBEqCached_size (entry : Entrypoint) (lhs hrs : Nat) (hl) (hr)
     : entry.start < (entry.env.mkBEqCached lhs rhs hl hr).env.decls.size := by
@@ -314,20 +311,18 @@ theorem lt_mkBEqCached_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (hl hr)
   omega
 
 @[simp]
-theorem denote_mkBEqCached_lhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkBEqCached lhs rhs hl hr).env, ⟨lhs, h⟩, assign⟧
+theorem denote_mkBEqCached_entry (entry : Entrypoint) {hl} {hr} {h} :
+    ⟦(entry.env.mkBEqCached lhs rhs hl hr).env, ⟨entry.start, h⟩, assign ⟧
       =
-    ⟦entry.env, ⟨lhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
+    ⟦entry, assign⟧ :=  by
+  apply denote.eq_of_env_eq
   apply mkBEqCached_IsPrefix_env
 
-@[simp]
-theorem denote_mkBEqCached_rhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkBEqCached lhs rhs hl hr).env, ⟨rhs, h⟩, assign⟧
+theorem denote_mkBEqCached_mem_prefix {env : Env} {hl} {hr} (h) :
+    ⟦(env.mkBEqCached lhs rhs hl hr).env, ⟨start, (by apply lt_mkBEqCached_size_of_lt_env_size; omega)⟩, assign⟧
       =
-    ⟦entry.env, ⟨rhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkBEqCached_IsPrefix_env
+    ⟦env, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkBEqCached_entry ⟨env, start, h⟩]
 
 theorem mkImpCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
     : env.decls.size ≤ (env.mkImpCached lhs rhs hl hr).env.decls.size := by
@@ -362,7 +357,7 @@ theorem denote_mkImpCached {env : Env} {hl} {hr} :
     ⟦env.mkImpCached lhs rhs hl hr, assign⟧
       =
     (!⟦env, ⟨lhs, hl⟩, assign⟧ || ⟦env, ⟨rhs, hr⟩, assign⟧) := by
-  rw [← imp_as_and]
+  rw [← imp_as_aig]
   simp [mkImpCached]
 
 theorem lt_mkImpCached_size (entry : Entrypoint) (lhs hrs : Nat) (hl) (hr)
@@ -379,19 +374,17 @@ theorem lt_mkImpCached_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (hl hr)
   omega
 
 @[simp]
-theorem denote_mkImpCached_lhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkImpCached lhs rhs hl hr).env, ⟨lhs, h⟩, assign⟧
+theorem denote_mkImpCached_entry (entry : Entrypoint) {hl} {hr} {h} :
+    ⟦(entry.env.mkImpCached lhs rhs hl hr).env, ⟨entry.start, h⟩, assign ⟧
       =
-    ⟦entry.env, ⟨lhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
+    ⟦entry, assign⟧ :=  by
+  apply denote.eq_of_env_eq
   apply mkImpCached_IsPrefix_env
 
-@[simp]
-theorem denote_mkImpCached_rhs (entry : Entrypoint) {hgate} {hl} {hr} {h} :
-    ⟦(entry.env.mkImpCached lhs rhs hl hr).env, ⟨rhs, h⟩, assign⟧
+theorem denote_mkImpCached_mem_prefix {env : Env} {hl} {hr} (h) :
+    ⟦(env.mkImpCached lhs rhs hl hr).env, ⟨start, (by apply lt_mkImpCached_size_of_lt_env_size; omega)⟩, assign⟧
       =
-    ⟦entry.env, ⟨rhs, hgate⟩, assign⟧ :=  by
-  apply denote.go_eq_of_env_eq
-  apply mkImpCached_IsPrefix_env
+    ⟦env, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkImpCached_entry ⟨env, start, h⟩]
 
 end Env
