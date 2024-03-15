@@ -1,4 +1,5 @@
 import LeanSAT.AIG.Basic
+import LeanSAT.AIG.LawfulOperator
 import LeanSAT.AIG.Lemmas
 import LeanSAT.AIG.Cached
 import LeanSAT.AIG.CachedLemmas

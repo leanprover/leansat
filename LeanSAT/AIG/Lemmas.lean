@@ -1,3 +1,4 @@
+import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.AIG.Basic
 
 namespace Env
