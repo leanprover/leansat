@@ -2,10 +2,22 @@ import LeanSAT.AIG.Basic
 
 namespace Env
 
+/--
+`decls` is a prefix of `decls2`
+-/
 structure IsPrefix (decls1 decls2 : Array Decl) : Prop where
+  /--
+  The prefix may never be longer than the other array.
+  -/
   size_le : decls1.size ≤ decls2.size
+  /--
+  The prefix and the other array must agree on all elements up until the bound of the prefix
+  -/
   idx_eq : ∀ idx (h : idx < decls1.size), decls2[idx]'(by omega) = decls1[idx]'h
 
+/--
+The cannonical way to prove that an array is a prefix of another array.
+-/
 theorem IsPrefix.of {decls1 decls2 : Array Decl}
     (size_le : decls1.size ≤ decls2.size)
     (idx_eq : ∀ idx (h : idx < decls1.size), decls2[idx]'(by omega) = decls1[idx]'h)
@@ -61,9 +73,8 @@ theorem denote.go_lt_push (x : Nat) (decls : Array Decl) {h1} {h2} {h3} :
   . simp_arith
 
 @[inherit_doc denote.go_eq_of_env_eq ]
-theorem denote.eq_of_env_eq (entry : Entrypoint) (newEnv : Env) (hprefix : IsPrefix entry.env.decls newEnv.decls)
-    {hbounds} :
-    ⟦newEnv, ⟨entry.start, hbounds⟩, assign⟧
+theorem denote.eq_of_env_eq (entry : Entrypoint) (newEnv : Env) (hprefix : IsPrefix entry.env.decls newEnv.decls) :
+    ⟦newEnv, ⟨entry.start, (by have := entry.inv; have := hprefix.size_le; omega)⟩, assign⟧
       =
     ⟦entry, assign⟧
     := by
@@ -87,7 +98,8 @@ theorem mkGate_le_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
 The AIG produced by `Env.mkGate` agrees with the input AIG on all indices that are valid for both.
 -/
 theorem mkGate_decl_eq idx (env : Env) (lhs rhs : Nat) (linv rinv : Bool) {h : idx < env.decls.size} {hl} {hr} :
-    (env.mkGate lhs rhs linv rinv hl hr).env.decls[idx]'(by simp[mkGate]; omega) = env.decls[idx] := by
+    have := mkGate_le_size env lhs rhs linv rinv hl hr
+    (env.mkGate lhs rhs linv rinv hl hr).env.decls[idx]'(by omega) = env.decls[idx] := by
   simp only [mkGate, Array.get_push]
   split
   . rfl
@@ -132,21 +144,25 @@ theorem denote_mkGate :
       . simp only [heq3, heq4]
 
 /--
-Reusing an `Env.Entrypoint` to build an additional gate will never invalidate the entry node of
-the original entrypoint.
+We can show that something is < the output AIG of `mkGate` by showing that it is < the input AIG.
 -/
-theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
-    : entry.start < (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
-  have h1 := entry.inv
-  have h2 : entry.env.decls.size ≤ (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
-    apply mkGate_le_size
-  omega
-
 theorem lt_mkGate_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < env.decls.size)
     : x < (env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
   have := mkGate_le_size env lhs rhs linv rinv hl hr
   omega
 
+/--
+Reusing an `Env.Entrypoint` to build an additional gate will never invalidate the entry node of
+the original entrypoint.
+-/
+theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
+    : entry.start < (entry.env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
+  apply lt_mkGate_size_of_lt_env_size
+  exact entry.inv
+
+/--
+We can show that something is ≤ the output AIG of `mkGate` by showing that it is ≤ the input AIG.
+-/
 theorem le_mkGate_size_of_le_env_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ env.decls.size)
     : x ≤ (env.mkGate lhs rhs linv rinv hl hr).env.decls.size := by
   have := mkGate_le_size env lhs rhs linv rinv hl hr
@@ -231,21 +247,22 @@ theorem denote_mkAtom_lt (entry : Entrypoint) {h} :
   apply mkAtom_IsPrefix_env
 
 /--
-The AIG produced by `Env.mkConst` agrees with the input AIG on all indices that are valid for both.
--/
-theorem mkConst_decl_eq (env : Env) (val : Bool) (idx : Nat) {h : idx < env.decls.size} {hbound} :
-    (env.mkConst val).env.decls[idx]'hbound = env.decls[idx] := by
-  simp only [mkConst, Array.get_push]
-  split
-  . rfl
-  . contradiction
-
-/--
 `Env.mkConst` never shrinks the underlying AIG.
 -/
 theorem mkConst_le_size (env : Env) (val : Bool)
     : env.decls.size ≤ (env.mkConst val).env.decls.size := by
   simp_arith [mkConst]
+
+/--
+The AIG produced by `Env.mkConst` agrees with the input AIG on all indices that are valid for both.
+-/
+theorem mkConst_decl_eq (env : Env) (val : Bool) (idx : Nat) {h : idx < env.decls.size} :
+    have := mkConst_le_size env val
+    (env.mkConst val).env.decls[idx]'(by omega) = env.decls[idx] := by
+  simp only [mkConst, Array.get_push]
+  split
+  . rfl
+  . contradiction
 
 /--
 The input AIG to an `mkConst` is a prefix to the output AIG.
@@ -273,7 +290,7 @@ theorem denote_mkConst {env : Env} : ⟦(env.mkConst val), assign⟧ = val := by
     contradiction
 
 @[simp]
-theorem denote_mkConst_lt (entry : Entrypoint) {h} :
+theorem denote_mkConst_entry (entry : Entrypoint) {h} :
     ⟦(entry.env.mkConst val).env, ⟨entry.start, h⟩, assign⟧
       =
     ⟦entry, assign⟧ := by
@@ -281,19 +298,23 @@ theorem denote_mkConst_lt (entry : Entrypoint) {h} :
   apply mkConst_IsPrefix_env
 
 /--
-Reusing an `Env.Entrypoint` to build an additional constant will never invalidate the entry node of
-the original entrypoint.
+We can show that something is < the output AIG of `mkConst` by showing that it is < the input AIG.
 -/
-theorem lt_mkConst_size (entry : Entrypoint) (val : Bool) : entry.start < (entry.env.mkConst val).env.decls.size := by
-  have h1 := entry.inv
-  have h2 : entry.env.decls.size ≤ (entry.env.mkConst val).env.decls.size :=
-    mkConst_le_size _ _
-  omega
-
 theorem lt_mkConst_size_of_lt_env_size (env : Env) (val : Bool) (h : x < env.decls.size) : x < (env.mkConst val).env.decls.size := by
   have := mkConst_le_size env val
   omega
 
+/--
+Reusing an `Env.Entrypoint` to build an additional constant will never invalidate the entry node of
+the original entrypoint.
+-/
+theorem lt_mkConst_size (entry : Entrypoint) (val : Bool) : entry.start < (entry.env.mkConst val).env.decls.size := by
+  apply lt_mkConst_size_of_lt_env_size
+  exact entry.inv
+
+/--
+We can show that something is ≤ the output AIG of `mkConst` by showing that it is ≤ the input AIG.
+-/
 theorem le_mkConst_size_of_le_env_size (env : Env) (val : Bool) (h : x ≤ env.decls.size) : x ≤ (env.mkConst val).env.decls.size := by
   have := mkConst_le_size env val
   omega
