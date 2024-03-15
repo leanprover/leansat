@@ -158,7 +158,6 @@ where
       let lval := go lhs decls assign (by omega) h2
       let rval := go rhs decls assign (by omega) h2
       xor lval linv && xor rval rinv
--- ⟦ ⟧
 
 scoped syntax "⟦" term ", " term "⟧" : term
 scoped syntax "⟦" term ", " "⟨" term ", " term "⟩" ", " term "⟧" : term
