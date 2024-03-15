@@ -32,6 +32,11 @@ theorem lt_mkGateCached_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (linv ri
   have := mkGateCached_le_size env lhs rhs linv rinv hl hr
   omega
 
+theorem le_mkGateCached_size_of_le_env_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ env.decls.size)
+    : x ≤ (env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
+  have := mkGateCached_le_size env lhs rhs linv rinv hl hr
+  omega
+
 /--
 Reusing an `Env.Entrypoint` to build an additional gate will never invalidate the entry node of
 the original entrypoint.
@@ -240,6 +245,11 @@ theorem mkConstCached_le_size (env : Env) (val : Bool)
 
 theorem lt_mkConstCached_size_of_lt_env_size (env : Env) (val : Bool) (h : x < env.decls.size) :
     x < (env.mkConstCached val).env.decls.size := by
+  have := mkConstCached_le_size env val
+  omega
+
+theorem le_mkConstCached_size_of_le_env_size (env : Env) (val : Bool) (h : x ≤ env.decls.size) :
+    x ≤ (env.mkConstCached val).env.decls.size := by
   have := mkConstCached_le_size env val
   omega
 

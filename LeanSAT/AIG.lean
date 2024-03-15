@@ -6,3 +6,5 @@ import LeanSAT.AIG.BoolExpr
 import LeanSAT.AIG.BoolExprCached
 import LeanSAT.AIG.Gates
 import LeanSAT.AIG.GatesLemmas
+import LeanSAT.AIG.CachedGates
+import LeanSAT.AIG.CachedGatesLemmas
