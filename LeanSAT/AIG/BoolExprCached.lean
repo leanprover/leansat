@@ -1,6 +1,5 @@
 import LeanSAT.AIG.CachedGates
 import LeanSAT.AIG.CachedGatesLemmas
-import LeanSAT.AIG.BoolExpr
 
 namespace Env
 
@@ -114,52 +113,18 @@ theorem ofBoolExprNatCached.go_denote_entry (entry : Entrypoint) {h}:
   apply denote.eq_of_env_eq
   apply ofBoolExprNatCached.go_IsPrefix_env
 
-theorem ofBoolExprNatCached.go_eval_eq_ofBoolExprgo_eval (expr : BoolExprNat) (assign : List Bool) (env : Env) :
-    ⟦(ofBoolExprNatCached.go expr env).val, assign⟧
-      =
-    ⟦(ofBoolExprNat.go expr env).val, assign⟧ := by
+@[simp]
+theorem ofBoolExprNatCached.go_eval_eq_eval (expr : BoolExprNat) (env : Env) (assign : List Bool) :
+    ⟦go expr env, assign⟧ = expr.eval assign := by
   induction expr generalizing env with
-  | const =>
-    dsimp [go]
-    simp
-  | literal =>
-    dsimp [go]
-    simp
-  | not expr ih =>
-    dsimp [go]
-    simp [ih]
-  | gate g lhs rhs lih rih =>
-    cases g with
-    | and =>
-      dsimp [go]
-      simp [Gate.eval, rih, lih]
-    | or =>
-      dsimp [go]
-      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
-      simp [rih, lih]
-    | xor =>
-      dsimp [go]
-      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
-      simp [rih, lih]
-    | beq =>
-      dsimp [go]
-      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
-      simp [rih, lih]
-    | imp =>
-      dsimp [go]
-      simp only [ofBoolExprNat.go_eval_eq_eval, BoolExprNat.eval_gate, Gate.eval]
-      simp [rih, lih]
-
-theorem ofBoolExprNatCached_eval_eq_ofBoolExpr_eval (expr : BoolExprNat) (assign : List Bool) :
-    ⟦ofBoolExprNatCached expr, assign⟧ = ⟦ofBoolExprNat expr, assign⟧ := by
-  unfold ofBoolExprNatCached
-  rw [ofBoolExprNatCached.go_eval_eq_ofBoolExprgo_eval]
-  unfold ofBoolExprNat
-  rfl
+  | const => simp [go]
+  | literal => simp [go]
+  | not expr ih => simp [go, ih]
+  | gate g lhs rhs lih rih => cases g <;> simp [go, Gate.eval, lih, rih]
 
 @[simp]
 theorem ofBoolExprCached_eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
     ⟦ofBoolExprNatCached expr, assign⟧ = expr.eval assign := by
-  simp [ofBoolExprNatCached_eval_eq_ofBoolExpr_eval]
+  apply ofBoolExprNatCached.go_eval_eq_eval
 
 end Env
