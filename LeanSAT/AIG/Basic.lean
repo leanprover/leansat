@@ -157,13 +157,13 @@ structure Entrypoint where
 /--
 Evaluate an `Env.Entrypoint` using some assignment for atoms.
 -/
-def denote (entry : Entrypoint) (assign : List Bool) : Bool :=
+def denote (entry : Entrypoint) (assign : Nat → Bool) : Bool :=
   go entry.start entry.env.decls assign entry.inv entry.env.inv
 where
-  go (x : Nat) (decls : Array Decl) (assign : List Bool) (h1 : x < decls.size) (h2 : IsDag decls) :=
+  go (x : Nat) (decls : Array Decl) (assign : Nat → Bool) (h1 : x < decls.size) (h2 : IsDag decls) :=
     match h3 : decls[x] with
     | .const b => b
-    | .atom v => assign.getD v false
+    | .atom v => assign v
     | .gate lhs rhs linv rinv =>
       have := h2 x _ _ _ _ h1 h3
       let lval := go lhs decls assign (by omega) h2
@@ -182,6 +182,9 @@ def unexpandDenote : Lean.PrettyPrinter.Unexpander
   | `($(_) {env := $env, start := $start, inv := $hbound} $assign) => `(⟦$env, ⟨$start, $hbound⟩, $assign⟧)
   | `($(_) $entry $assign) => `(⟦$entry, $assign⟧)
   | _ => throw ()
+
+def unsatAt (env : Env) (start : Nat) (h : start < env.decls.size) : Prop := ∀ assign, ⟦env, ⟨start, h⟩, assign⟧ = false
+def Entrypoint.unsat (entry : Entrypoint) : Prop := entry.env.unsatAt entry.start entry.inv
 
 /--
 Build an AIG gate in `env`. Note that his version is only meant for proving,

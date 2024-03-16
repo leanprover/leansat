@@ -1,6 +1,6 @@
 import LeanSAT.AIG.BoolExprCached
 
-def mkSharedTree (n : Nat) : BoolExprNat :=
+def mkSharedTree (n : Nat) : BoolExpr Nat :=
   match n with
   | 0 => .literal 0
   | n + 1 =>
