@@ -53,6 +53,9 @@ def unsat (g : CNF α) : Prop := ∀ f, eval f g = false
 @[simp] theorem unsat_nil_iff_false : unsat ([] : CNF α) ↔ False :=
   ⟨fun h => by simp [unsat] at h, by simp⟩
 
+@[simp] theorem sat_nil : sat ([] : CNF α) assign ↔ True := by
+  simp [sat]
+
 @[simp] theorem unsat_nil_cons : unsat ([] :: g) ↔ True := by
   simp [unsat]
 

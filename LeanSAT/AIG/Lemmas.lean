@@ -225,7 +225,7 @@ theorem mkAtom_IsPrefix_env (env : Env) (var : Nat) :
 
 @[simp]
 theorem denote_mkAtom {env : Env} :
-    ⟦(env.mkAtom var), assign⟧ = assign.getD var false := by
+    ⟦(env.mkAtom var), assign⟧ = assign var := by
   unfold denote denote.go
   split
   . next heq =>
