@@ -60,6 +60,8 @@ set_option linter.all false
 set_option trace.profiler true
 set_option profiler true
 
+namespace SatStress
+
 -- All of these are ~subsecond
 theorem t1 (_ : x = true) (x1 : Bool) (x0 : Bool) (_ : (x0 && x1) = x) : x0 = true := by sat_decide
 theorem t2 (_ : x = true) (x1 : Bool) (x0 : Bool) (_ : (x0 && x1) = x) (x11 : Bool) (x10 : Bool) (_ : (x10 && x11) = x1) (x01 : Bool) (x00 : Bool) (_ : (x00 && x01) = x0) : x00 = true := by sat_decide

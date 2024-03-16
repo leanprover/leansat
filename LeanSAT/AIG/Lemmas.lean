@@ -225,7 +225,7 @@ theorem mkAtom_IsPrefix_env (env : Env) (var : Nat) :
 
 @[simp]
 theorem denote_mkAtom {env : Env} :
-    ⟦(env.mkAtom var), assign⟧ = assign.getD var false := by
+    ⟦(env.mkAtom var), assign⟧ = assign var := by
   unfold denote denote.go
   split
   . next heq =>
@@ -319,5 +319,44 @@ We can show that something is ≤ the output AIG of `mkConst` by showing that it
 theorem le_mkConst_size_of_le_env_size (env : Env) (val : Bool) (h : x ≤ env.decls.size) : x ≤ (env.mkConst val).env.decls.size := by
   have := mkConst_le_size env val
   omega
+
+/--
+If an index contains a `Decl.const` we know how to denote it.
+-/
+theorem denote_idx_const (h : env.decls[start] = .const b) :
+    ⟦env, ⟨start, hstart⟩, assign⟧ = b := by
+  unfold denote denote.go
+  split <;> simp_all
+
+/--
+If an index contains a `Decl.atom` we know how to denote it.
+-/
+theorem denote_idx_atom (h : env.decls[start] = .atom a) :
+    ⟦env, ⟨start, hstart⟩, assign⟧ = assign a := by
+  unfold denote denote.go
+  split <;> simp_all
+
+/--
+If an index contains a `Decl.gate` we know how to denote it.
+-/
+theorem denote_idx_gate (h : env.decls[start] = .gate lhs rhs linv rinv) :
+    ⟦env, ⟨start, hstart⟩, assign⟧
+      =
+    (
+      (xor ⟦env, ⟨lhs, by have := env.inv start lhs rhs linv rinv hstart h; omega⟩, assign⟧ linv)
+        &&
+      (xor ⟦env, ⟨rhs, by have := env.inv start lhs rhs linv rinv hstart h; omega⟩, assign⟧ rinv)
+    ) := by
+  unfold denote
+  conv =>
+    lhs
+    unfold denote.go
+  split
+  . simp_all
+  . simp_all
+  . next heq =>
+    rw [h] at heq
+    simp_all
+
 
 end Env

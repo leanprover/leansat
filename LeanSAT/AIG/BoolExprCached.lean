@@ -10,10 +10,10 @@ namespace Env
 Turn a `BoolExprNat` into an AIG + entrypoint. Note that this version is meant for programming
 purposes. For proving use `Env.ofBoolExprNat` and equality theorems.
 -/
-def ofBoolExprNatCached (expr : BoolExprNat) : Entrypoint :=
+def ofBoolExprNatCached (expr : BoolExpr Nat) : Entrypoint :=
   go expr Env.empty |>.val
 where
-  go (expr : BoolExprNat) (env : Env) : { entry : Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
+  go (expr : BoolExpr Nat) (env : Env) : { entry : Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
     match expr with
     | .literal var => ⟨env.mkAtomCached var, (by apply Env.mkAtomCached_le_size)⟩
     | .const val => ⟨env.mkConstCached val, (by apply Env.mkConstCached_le_size)⟩
@@ -50,7 +50,7 @@ where
         have := mkImpCached_le_size rhsEntry.env lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         ⟨ret, by dsimp [ret] at *; omega⟩
 
-theorem ofBoolExprNatCached.go_decls_size_le (expr : BoolExprNat) (env : Env) :
+theorem ofBoolExprNatCached.go_decls_size_le (expr : BoolExpr Nat) (env : Env) :
     env.decls.size ≤ (ofBoolExprNatCached.go expr env).val.env.decls.size := by
   exact (ofBoolExprNatCached.go expr env).property
 
@@ -111,7 +111,7 @@ theorem ofBoolExprNatCached.go_denote_entry (entry : Entrypoint) {h}:
   apply ofBoolExprNatCached.go_IsPrefix_env
 
 @[simp]
-theorem ofBoolExprNatCached.go_eval_eq_eval (expr : BoolExprNat) (env : Env) (assign : List Bool) :
+theorem ofBoolExprNatCached.go_eval_eq_eval (expr : BoolExpr Nat) (env : Env) (assign) :
     ⟦go expr env, assign⟧ = expr.eval assign := by
   induction expr generalizing env with
   | const => simp [go]
@@ -120,8 +120,15 @@ theorem ofBoolExprNatCached.go_eval_eq_eval (expr : BoolExprNat) (env : Env) (as
   | gate g lhs rhs lih rih => cases g <;> simp [go, Gate.eval, lih, rih]
 
 @[simp]
-theorem ofBoolExprCached_eval_eq_eval (expr : BoolExprNat) (assign : List Bool) :
+theorem ofBoolExprCached_eval_eq_eval (expr : BoolExpr Nat) (assign) :
     ⟦ofBoolExprNatCached expr, assign⟧ = expr.eval assign := by
   apply ofBoolExprNatCached.go_eval_eq_eval
+
+theorem ofBoolExprCached_unsat_iff : (ofBoolExprNatCached expr).unsat ↔ expr.unsat := by
+  constructor
+  all_goals
+    intro h assign
+    specialize h assign
+    simpa using h
 
 end Env
