@@ -3,17 +3,33 @@ import LeanSAT.AIG.CachedGatesLemmas
 
 namespace Env
 
+/-
+Insights:
+
+This is not slow, however the defeq problem is the same as the one from `go`'s Or cache.
+This indicates to me that we need rhsEntry and lhsEntry to refer to something.
+
+theorem notslow (env : Env) (rhsEntry lhsEntry : Entrypoint) {h1}:
+    let ret := rhsEntry.env.mkOrCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv;
+    Array.size env.decls ≤ Array.size ret.env.decls
+      →
+    Array.size env.decls ≤ Array.size (Env.mkOrCached lhsEntry.start rhsEntry.start rhsEntry.env h1 rhsEntry.inv).env.decls := by
+  intro ret h
+  exact h
+
+Insight from adding trace nodes to all Meta.check calls, the slow Meta.check is coming from here:
+https://github.com/leanprover/lean4/blob/173b95696129f5efeac9d2cd5a83a724c48cf7ae/src/Lean/Elab/MutualDef.lean#L710
+Changing the `where go` to a `def go` as seen below makes the slow call go away and speeds us up from 0.5s to 0.1s
+
+This does of course not explain why the call is slow, but it shows how to fix this in the easy case.
+
+-/
+
 -- lines such as: ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
 -- are slow in Meta.check
 -- TODO: minimize
-/--
-Turn a `BoolExprNat` into an AIG + entrypoint. Note that this version is meant for programming
-purposes. For proving use `Env.ofBoolExprNat` and equality theorems.
--/
-def ofBoolExprNatCached (expr : BoolExpr Nat) : Entrypoint :=
-  go expr Env.empty |>.val
-where
-  go (expr : BoolExpr Nat) (env : Env) : { entry : Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
+set_option trace.profiler true in
+def go (expr : BoolExpr Nat) (env : Env) : { entry : Entrypoint // env.decls.size ≤ entry.env.decls.size } :=
     match expr with
     | .literal var => ⟨env.mkAtomCached var, (by apply Env.mkAtomCached_le_size)⟩
     | .const val => ⟨env.mkConstCached val, (by apply Env.mkConstCached_le_size)⟩
@@ -32,7 +48,8 @@ where
       | .and =>
         let ret := rhsEntry.env.mkAndCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         have := mkAndCached_le_size rhsEntry.env lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        ⟨ret, by dsimp [ret] at *; omega⟩
+        sorry
+        --⟨ret, by dsimp [ret] at *; omega⟩
       | .or =>
         let ret := rhsEntry.env.mkOrCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         have := mkOrCached_le_size rhsEntry.env lhsEntry.start rhsEntry.start h1 rhsEntry.inv
@@ -40,16 +57,26 @@ where
       | .xor =>
         let ret := rhsEntry.env.mkXorCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         have := mkXorCached_le_size rhsEntry.env lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        ⟨ret, by dsimp [ret] at *; omega⟩
+        sorry
+        --⟨ret, by dsimp [ret] at *; omega⟩
       | .beq =>
         let ret := rhsEntry.env.mkBEqCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         have := mkBEqCached_le_size rhsEntry.env lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        ⟨ret, by dsimp [ret] at *; omega⟩
+        sorry
+        --⟨ret, by dsimp [ret] at *; omega⟩
       | .imp =>
         let ret := rhsEntry.env.mkImpCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         have := mkImpCached_le_size rhsEntry.env lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        ⟨ret, by dsimp [ret] at *; omega⟩
+        sorry
+        --⟨ret, by dsimp [ret] at *; omega⟩
+/--
+Turn a `BoolExprNat` into an AIG + entrypoint. Note that this version is meant for programming
+purposes. For proving use `Env.ofBoolExprNat` and equality theorems.
+-/
+def ofBoolExprNatCached (expr : BoolExpr Nat) : Entrypoint :=
+  go expr Env.empty |>.val
 
+/-
 theorem ofBoolExprNatCached.go_decls_size_le (expr : BoolExpr Nat) (env : Env) :
     env.decls.size ≤ (ofBoolExprNatCached.go expr env).val.env.decls.size := by
   exact (ofBoolExprNatCached.go expr env).property
@@ -123,5 +150,6 @@ theorem ofBoolExprNatCached.go_eval_eq_eval (expr : BoolExpr Nat) (env : Env) (a
 theorem ofBoolExprCached_eval_eq_eval (expr : BoolExpr Nat) (assign) :
     ⟦ofBoolExprNatCached expr, assign⟧ = expr.eval assign := by
   apply ofBoolExprNatCached.go_eval_eq_eval
+-/
 
 end Env
