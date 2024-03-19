@@ -39,7 +39,11 @@ def CNF.Clause.convertLRAT' (clause : CNF.Clause (PosFin n)) : Option (LRAT.Defa
 Turn a `CNF PosFin` into the representation used by the LRAT checker.
 -/
 def CNF.convertLRAT' (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
-  clauses.map CNF.Clause.convertLRAT'
+  clauses.filterMap (fun clause =>
+    match CNF.Clause.convertLRAT' clause with
+    | some foo => some foo
+    | none => none
+  )
 
 theorem CNF.Clause.mem_lrat_of_mem (clause : CNF.Clause (PosFin n)) (h1 : l ∈ clause)
     (h2 : LRAT.DefaultClause.ofArray clause.toArray = some lratClause) : l ∈ lratClause.clause := by
