@@ -159,7 +159,12 @@ theorem verifyCert_correct : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) ce
       List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
     rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
     simp only [CNF.eval, List.all_eq_true] at h3
-    simp [CNF.Clause.convertLRAT_sat_of_sat reflectClause hrclause2, h3 reflectClause hrclause1]
+    split at hrclause2
+    . next heq =>
+      rw [← heq] at hrclause2
+      simp only [Option.some.injEq] at hrclause2
+      simp [CNF.Clause.convertLRAT_sat_of_sat reflectClause hrclause2, h3 reflectClause hrclause1]
+    . contradiction
   . contradiction
 
 /--
