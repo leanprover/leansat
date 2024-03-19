@@ -10,9 +10,9 @@ programmming, for proving purposes use `Env.mkGate` and equality theorems to thi
 def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
     (hr : rhs < env.decls.size) : Env.Entrypoint :=
   let decl := .gate lhs rhs linv rinv
-  match h:env.cache.find? decl with
-  | some gate =>
-    ⟨env, gate, by apply Cache.find?_bounds _ _ h⟩
+  match env.cache.find? decl with
+  | some hit =>
+    ⟨env, hit.idx, hit.hbound⟩
   | none =>
     let g := env.decls.size
     let decls := env.decls.push decl
@@ -32,9 +32,9 @@ programmming, for proving purposes use `Env.mkAtom` and equality theorems to thi
 -/
 def mkAtomCached (n : Nat) (env : Env) : Entrypoint :=
   let decl := .atom n
-  match h:env.cache.find? decl with
-  | some gate =>
-    ⟨env, gate, by apply Cache.find?_bounds _ _ h⟩
+  match env.cache.find? decl with
+  | some hit =>
+    ⟨env, hit.idx, hit.hbound⟩
   | none =>
     let g := env.decls.size
     let decls := env.decls.push decl
@@ -54,9 +54,9 @@ programmming, for proving purposes use `Env.mkGate` and equality theorems to thi
 -/
 def mkConstCached (val : Bool) (env : Env) : Entrypoint :=
   let decl := .const val
-  match h:env.cache.find? decl with
-  | some gate =>
-    ⟨env, gate, by apply Cache.find?_bounds _ _ h⟩
+  match env.cache.find? decl with
+  | some hit =>
+    ⟨env, hit.idx, hit.hbound⟩
   | none =>
     let g := env.decls.size
     let decls := env.decls.push decl
