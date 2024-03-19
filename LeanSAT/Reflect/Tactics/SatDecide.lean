@@ -229,6 +229,8 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
       return LratFormula.ofCnf cnf
 
+  trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
+
   let cert ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
       runExternal encoded cfg.solver cfg.lratPath
