@@ -5,12 +5,12 @@ namespace Env
 /--
 If we find a cached gate declaration in the AIG, denoting it is equivalent to denoting `Env.mkGate`.
 -/
-theorem denote_mkGate_cached {env : Env} {hl} {hr}
-    (h : env.cache.find? (.gate lhs rhs lpol rpol) = some gate) :
-    ⟦⟨env, gate, Cache.find?_bounds env.cache (.gate lhs rhs lpol rpol) h⟩, assign⟧
+theorem denote_mkGate_cached {env : Env} {hl} {hr} {hit}
+    (h : env.cache.find? (.gate lhs rhs lpol rpol) = some hit) :
+    ⟦⟨env, hit.idx, hit.hbound⟩, assign⟧
       =
     ⟦env.mkGate lhs rhs lpol rpol hl hr, assign⟧ := by
-  have := Cache.find?_property _ _ h
+  have := hit.hvalid
   simp only [denote_mkGate]
   conv =>
     lhs
@@ -55,7 +55,7 @@ theorem lt_mkGateCached_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : B
 /--
 `mkGateCached` does not modify the input AIG upon a cache hit.
 -/
-theorem mkGateCached_hit_env (env : Env) (hcache : env.cache.find? (.gate lhs rhs linv rinv) = some gate) (hl) (hr) :
+theorem mkGateCached_hit_env (env : Env) {hit} (hcache : env.cache.find? (.gate lhs rhs linv rinv) = some hit) (hl) (hr) :
     (env.mkGateCached lhs rhs linv rinv hl hr).env = env := by
   simp only [mkGateCached]
   split <;> simp_all
@@ -124,9 +124,9 @@ theorem mkGateCached_eval_eq_mkGate_eval {env : Env} {hl} {hr} :
 /--
 If we find a cached atom declaration in the AIG, denoting it is equivalent to denoting `Env.mkAtom`.
 -/
-theorem denote_mkAtom_cached {env : Env} (h : env.cache.find? (.atom v) = some gate) :
-    ⟦⟨env, gate, Cache.find?_bounds env.cache (.atom v) h⟩, assign⟧ = ⟦env.mkAtom v, assign⟧ := by
-  have := Cache.find?_property _ _ h
+theorem denote_mkAtom_cached {env : Env} {hit} (h : env.cache.find? (.atom v) = some hit) :
+    ⟦env, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦env.mkAtom v, assign⟧ := by
+  have := hit.hvalid
   simp only [denote_mkAtom]
   unfold denote denote.go
   split <;> simp_all
@@ -134,7 +134,7 @@ theorem denote_mkAtom_cached {env : Env} (h : env.cache.find? (.atom v) = some g
 /--
 `mkAtomCached` does not modify the input AIG upon a cache hit.
 -/
-theorem mkAtomCached_hit_env (env : Env) (hcache : env.cache.find? (.atom var) = some gate) :
+theorem mkAtomCached_hit_env (env : Env) {hit} (hcache : env.cache.find? (.atom var) = some hit) :
     (env.mkAtomCached var).env = env := by
   simp only [mkAtomCached]
   split <;> simp_all
@@ -188,9 +188,9 @@ theorem mkAtomCached_eval_eq_mkAtom_eval {env : Env}
 /--
 If we find a cached const declaration in the AIG, denoting it is equivalent to denoting `Env.mkConst`.
 -/
-theorem denote_mkConst_cached {env : Env} (h : env.cache.find? (.const b) = some gate) :
-    ⟦⟨env, gate, Cache.find?_bounds env.cache (.const b) h⟩, assign⟧ = ⟦env.mkConst b, assign⟧ := by
-  have := Cache.find?_property _ _ h
+theorem denote_mkConst_cached {env : Env} {hit} (h : env.cache.find? (.const b) = some hit) :
+    ⟦env, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦env.mkConst b, assign⟧ := by
+  have := hit.hvalid
   simp only [denote_mkConst]
   unfold denote denote.go
   split <;> simp_all
@@ -198,7 +198,7 @@ theorem denote_mkConst_cached {env : Env} (h : env.cache.find? (.const b) = some
 /--
 `mkConstCached` does not modify the input AIG upon a cache hit.
 -/
-theorem mkConstCached_hit_env (env : Env) (hcache : env.cache.find? (.const val) = some gate) :
+theorem mkConstCached_hit_env (env : Env) {hit} (hcache : env.cache.find? (.const val) = some hit) :
     (env.mkConstCached val).env = env := by
   simp only [mkConstCached]
   split <;> simp_all

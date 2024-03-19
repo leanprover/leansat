@@ -25,7 +25,7 @@ inductive Decl where
   the left or right input.
   -/
   | gate (l r : Nat) (linv rinv : Bool)
-  deriving BEq, Hashable, Repr
+  deriving BEq, Hashable, Repr, DecidableEq
 
 /--
 A `Cache` is valid with respect to a list of declarations iff:
@@ -67,27 +67,37 @@ def Cache.noUpdate (cache : Cache decls) : Cache (decls.push decl) :=
 def Cache.insert (cache : Cache decls) (decl : Decl) : Cache (decls.push decl) :=
   ⟨cache.val.insert decl decls.size, Cache.WF.push_cache cache.property⟩
 
+structure CacheHit (decls : Array Decl) (decl : Decl) where
+  idx : Nat
+  hbound : idx < decls.size
+  hvalid : decls[idx]'hbound = decl
+
 /--
 Lookup a `decl` in a `cache`.
 
 If this returns `some i`, `Cache.find?_poperty` can be used to demonstrate: `decls[i] = decl`.
 -/
 @[irreducible]
-def Cache.find? (cache : Cache decls) (decl : Decl) : Option Nat :=
-  cache.val.find? decl
+def Cache.find? (cache : Cache decls) (decl : Decl) : Option (CacheHit decls decl) :=
+  match cache.val.find? decl with
+  | some hit =>
+    /-
+    TODO: There are two ways around these checks:
+    1. If we are desperate for performance we can axiomatize `Cache.find?_bounds` and
+       `Cache.find?_property`. These theorems are valid even without these checks
+    2. Once we have a proper `HashMap` theory we can use `Cache.WF` to show that the theorems hold
+       without checks.
 
-/--
-This axiom states that all indices, found in a `Cache` that is valid with respect to some `decls`,
-are within bounds of `decls`.
--/
-axiom Cache.find?_bounds {decls : Array Decl} {idx : Nat} (c : Cache decls) (decl : Decl)
-    (h : c.find? decl = some idx) : idx < decls.size
-
-/--
-This axiom states that if `Cache.find? decl` returns `some i`, `decls[i] = decl`, holds.
--/
-axiom Cache.find?_property {decls : Array Decl} {idx : Nat} (c : Cache decls) (decl : Decl)
-    (h : c.find? decl = some idx) : decls[idx]'(Cache.find?_bounds c decl h) = decl
+    Note that both of these checks are only O(1) so this constitutes at most a constant overhead.
+    -/
+    if h1:hit < decls.size then
+      if h2:decls[hit]'h1 = decl then
+        some ⟨hit, h1, h2⟩
+      else
+        none
+    else
+      none
+  | none => none
 
 /--
 An `Array Decl` is a Direct Acyclic Graph (DAG) if this holds.
