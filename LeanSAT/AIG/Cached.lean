@@ -1,73 +1,73 @@
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 
-namespace Env
+namespace AIG
 
 /--
-A version of `Env.mkGate` that uses the subterm cache in `Env`. This version is meant for
-programmming, for proving purposes use `Env.mkGate` and equality theorems to this one.
+A version of `AIG.mkGate` that uses the subterm cache in `AIG`. This version is meant for
+programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
 -/
-def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
-    (hr : rhs < env.decls.size) : Env.Entrypoint :=
+def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG) (hl : lhs < aig.decls.size)
+    (hr : rhs < aig.decls.size) : AIG.Entrypoint :=
   let decl := .gate lhs rhs linv rinv
-  match env.cache.find? decl with
+  match aig.cache.find? decl with
   | some hit =>
-    ⟨env, hit.idx, hit.hbound⟩
+    ⟨aig, hit.idx, hit.hbound⟩
   | none =>
-    let g := env.decls.size
-    let decls := env.decls.push decl
-    let cache := Cache.insert env.cache decl
+    let g := aig.decls.size
+    let decls := aig.decls.push decl
+    let cache := Cache.insert aig.cache decl
     have inv := by
       intro lhs rhs linv rinv i h1 h2
       simp only [decls] at *
       simp only [Array.get_push] at h2
       split at h2
-      . apply env.inv <;> assumption
+      . apply aig.inv <;> assumption
       . injections; omega
-    ⟨{ env with decls, inv, cache }, g, by simp [g, decls]⟩
+    ⟨{ aig with decls, inv, cache }, g, by simp [g, decls]⟩
 
 /--
-A version of `Env.mkAtom` that uses the subterm cache in `Env`. This version is meant for
-programmming, for proving purposes use `Env.mkAtom` and equality theorems to this one.
+A version of `AIG.mkAtom` that uses the subterm cache in `AIG`. This version is meant for
+programmming, for proving purposes use `AIG.mkAtom` and equality theorems to this one.
 -/
-def mkAtomCached (n : Nat) (env : Env) : Entrypoint :=
+def mkAtomCached (n : Nat) (aig : AIG) : Entrypoint :=
   let decl := .atom n
-  match env.cache.find? decl with
+  match aig.cache.find? decl with
   | some hit =>
-    ⟨env, hit.idx, hit.hbound⟩
+    ⟨aig, hit.idx, hit.hbound⟩
   | none =>
-    let g := env.decls.size
-    let decls := env.decls.push decl
-    let cache := env.cache.insert decl
+    let g := aig.decls.size
+    let decls := aig.decls.push decl
+    let cache := aig.cache.insert decl
     have inv := by
       intro i lhs rhs linv rinv h1 h2
       simp only [decls] at *
       simp only [Array.get_push] at h2
       split at h2
-      . apply env.inv <;> assumption
+      . apply aig.inv <;> assumption
       . contradiction
   ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
 
 /--
-A version of `Env.mkConst` that uses the subterm cache in `Env`. This version is meant for
-programmming, for proving purposes use `Env.mkGate` and equality theorems to this one.
+A version of `AIG.mkConst` that uses the subterm cache in `AIG`. This version is meant for
+programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
 -/
-def mkConstCached (val : Bool) (env : Env) : Entrypoint :=
+def mkConstCached (val : Bool) (aig : AIG) : Entrypoint :=
   let decl := .const val
-  match env.cache.find? decl with
+  match aig.cache.find? decl with
   | some hit =>
-    ⟨env, hit.idx, hit.hbound⟩
+    ⟨aig, hit.idx, hit.hbound⟩
   | none =>
-    let g := env.decls.size
-    let decls := env.decls.push decl
-    let cache := env.cache.insert decl
+    let g := aig.decls.size
+    let decls := aig.decls.push decl
+    let cache := aig.cache.insert decl
     have inv := by
       intro i lhs rhs linv rinv h1 h2
       simp only [decls] at *
       simp only [Array.get_push] at h2
       split at h2
-      . apply env.inv <;> assumption
+      . apply aig.inv <;> assumption
       . contradiction
   ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
 
-end Env
+end AIG

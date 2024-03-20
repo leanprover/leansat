@@ -8,7 +8,7 @@ theorem Array.get_push_size (as : Array α) (a : α) : (as.push a)[as.size] = a 
   simp [Array.get_push]
 
 /--
-A circuit node declaration. These are not recursive but instead contain indices into an `Env`.
+A circuit node declaration. These are not recursive but instead contain indices into an `AIG`.
 -/
 inductive Decl where
   /--
@@ -115,7 +115,7 @@ theorem IsDag.empty : IsDag #[] := by
 /--
 An And Inverter Graph (AIG) together with a cache for subterm sharing.
 -/
-structure Env where
+structure AIG where
   /--
   The circuit itself as an `Array Decl` whose members have indices into said array.
   -/
@@ -129,22 +129,22 @@ structure Env where
   -/
   inv : IsDag decls
 
-namespace Env
+namespace AIG
 
 /--
-An `Env` with an empty AIG and cache.
+An `AIG` with an empty AIG and cache.
 -/
-def empty : Env := { decls := #[], cache := Cache.empty #[], inv := IsDag.empty }
+def empty : AIG := { decls := #[], cache := Cache.empty #[], inv := IsDag.empty }
 
 /--
-An entrypoint into an `Env`. This can be used to evaluate a circuit, starting at a certain node,
-with `Env.denote` or to construct bigger circuits
+An entrypoint into an `AIG`. This can be used to evaluate a circuit, starting at a certain node,
+with `AIG.denote` or to construct bigger circuits
 -/
 structure Entrypoint where
   /--
   The AIG that we are in.
   -/
-  env : Env
+  aig : AIG
   /--
   The AIG node at which to begin evaluation.
   -/
@@ -152,13 +152,13 @@ structure Entrypoint where
   /--
   The AIG node must be within bounds.
   -/
-  inv : start < env.decls.size
+  inv : start < aig.decls.size
 
 /--
-Evaluate an `Env.Entrypoint` using some assignment for atoms.
+Evaluate an `AIG.Entrypoint` using some assignment for atoms.
 -/
 def denote (entry : Entrypoint) (assign : Nat → Bool) : Bool :=
-  go entry.start entry.env.decls assign entry.inv entry.env.inv
+  go entry.start entry.aig.decls assign entry.inv entry.aig.inv
 where
   go (x : Nat) (decls : Array Decl) (assign : Nat → Bool) (h1 : x < decls.size) (h2 : IsDag decls) :=
     match h3 : decls[x] with
@@ -175,66 +175,66 @@ scoped syntax "⟦" term ", " "⟨" term ", " term "⟩" ", " term "⟧" : term
 
 macro_rules
 | `(⟦$entry, $assign⟧) => `(denote $entry $assign)
-| `(⟦$env, ⟨$start, $hbound⟩, $assign⟧) => `(denote (Entrypoint.mk $env $start $hbound) $assign)
+| `(⟦$aig, ⟨$start, $hbound⟩, $assign⟧) => `(denote (Entrypoint.mk $aig $start $hbound) $assign)
 
-@[app_unexpander Env.denote]
+@[app_unexpander AIG.denote]
 def unexpandDenote : Lean.PrettyPrinter.Unexpander
-  | `($(_) {env := $env, start := $start, inv := $hbound} $assign) => `(⟦$env, ⟨$start, $hbound⟩, $assign⟧)
+  | `($(_) {aig := $aig, start := $start, inv := $hbound} $assign) => `(⟦$aig, ⟨$start, $hbound⟩, $assign⟧)
   | `($(_) $entry $assign) => `(⟦$entry, $assign⟧)
   | _ => throw ()
 
-def unsatAt (env : Env) (start : Nat) (h : start < env.decls.size) : Prop := ∀ assign, ⟦env, ⟨start, h⟩, assign⟧ = false
-def Entrypoint.unsat (entry : Entrypoint) : Prop := entry.env.unsatAt entry.start entry.inv
+def unsatAt (aig : AIG) (start : Nat) (h : start < aig.decls.size) : Prop := ∀ assign, ⟦aig, ⟨start, h⟩, assign⟧ = false
+def Entrypoint.unsat (entry : Entrypoint) : Prop := entry.aig.unsatAt entry.start entry.inv
 
 /--
-Build an AIG gate in `env`. Note that his version is only meant for proving,
-for production purposes use `Env.mkGateCached` and equality theorems to this one.
+Build an AIG gate in `aig`. Note that his version is only meant for proving,
+for production purposes use `AIG.mkGateCached` and equality theorems to this one.
 -/
-def mkGate (lhs rhs : Nat) (linv rinv : Bool) (env : Env) (hl : lhs < env.decls.size)
-    (hr : rhs < env.decls.size) : Entrypoint :=
-  let g := env.decls.size
-  let decls := env.decls.push (.gate lhs rhs linv rinv)
-  let cache := env.cache.noUpdate
+def mkGate (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG) (hl : lhs < aig.decls.size)
+    (hr : rhs < aig.decls.size) : Entrypoint :=
+  let g := aig.decls.size
+  let decls := aig.decls.push (.gate lhs rhs linv rinv)
+  let cache := aig.cache.noUpdate
   have inv := by
     intro i lhs rhs linv rinv h1 h2
     simp only [decls, Array.get_push] at h2
     split at h2
-    . apply env.inv <;> assumption
+    . apply aig.inv <;> assumption
     . injections; omega
-  ⟨{ env with decls, inv, cache }, g, by simp [g, decls]⟩
+  ⟨{ aig with decls, inv, cache }, g, by simp [g, decls]⟩
 
 /--
-Add a new input node to the AIG in `env`. Note that his version is only meant for proving,
-for production purposes use `Env.mkAtomCached` and equality theorems to this one.
+Add a new input node to the AIG in `aig`. Note that his version is only meant for proving,
+for production purposes use `AIG.mkAtomCached` and equality theorems to this one.
 -/
-def mkAtom (n : Nat) (env : Env) : Entrypoint :=
-  let g := env.decls.size
-  let decls := env.decls.push (.atom n)
-  let cache := env.cache.noUpdate
+def mkAtom (n : Nat) (aig : AIG) : Entrypoint :=
+  let g := aig.decls.size
+  let decls := aig.decls.push (.atom n)
+  let cache := aig.cache.noUpdate
   have inv := by
     intro i lhs rhs linv rinv h1 h2
     simp only [decls] at *
     simp only [Array.get_push] at h2
     split at h2
-    . apply env.inv <;> assumption
+    . apply aig.inv <;> assumption
     . contradiction
   ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
 
 /--
-Build an constant node in `env`. Note that his version is only meant for proving,
-for production purposes use `Env.mkConstCached` and equality theorems to this one.
+Build an constant node in `aig`. Note that his version is only meant for proving,
+for production purposes use `AIG.mkConstCached` and equality theorems to this one.
 -/
-def mkConst (val : Bool) (env : Env) : Entrypoint :=
-  let g := env.decls.size
-  let decls := env.decls.push (.const val)
-  let cache := env.cache.noUpdate
+def mkConst (val : Bool) (aig : AIG) : Entrypoint :=
+  let g := aig.decls.size
+  let decls := aig.decls.push (.const val)
+  let cache := aig.cache.noUpdate
   have inv := by
     intro i lhs rhs linv rinv h1 h2
     simp only [decls] at *
     simp only [Array.get_push] at h2
     split at h2
-    . apply env.inv <;> assumption
+    . apply aig.inv <;> assumption
     . contradiction
   ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
 
-end Env
+end AIG

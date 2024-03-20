@@ -1,15 +1,15 @@
 import LeanSAT.AIG.Cached
 
-namespace Env
+namespace AIG
 
 /--
-If we find a cached gate declaration in the AIG, denoting it is equivalent to denoting `Env.mkGate`.
+If we find a cached gate declaration in the AIG, denoting it is equivalent to denoting `AIG.mkGate`.
 -/
-theorem denote_mkGate_cached {env : Env} {hl} {hr} {hit}
-    (h : env.cache.find? (.gate lhs rhs lpol rpol) = some hit) :
-    ⟦⟨env, hit.idx, hit.hbound⟩, assign⟧
+theorem denote_mkGate_cached {aig : AIG} {hl} {hr} {hit}
+    (h : aig.cache.find? (.gate lhs rhs lpol rpol) = some hit) :
+    ⟦⟨aig, hit.idx, hit.hbound⟩, assign⟧
       =
-    ⟦env.mkGate lhs rhs lpol rpol hl hr, assign⟧ := by
+    ⟦aig.mkGate lhs rhs lpol rpol hl hr, assign⟧ := by
   have := hit.hvalid
   simp only [denote_mkGate]
   conv =>
@@ -18,10 +18,10 @@ theorem denote_mkGate_cached {env : Env} {hl} {hr} {hit}
   split <;> simp_all[denote]
 
 /--
-`Env.mkGateCached` never shrinks the underlying AIG.
+`AIG.mkGateCached` never shrinks the underlying AIG.
 -/
-theorem mkGateCached_le_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) hl hr
-    : env.decls.size ≤ (env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
+theorem mkGateCached_le_size (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) hl hr
+    : aig.decls.size ≤ (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
   dsimp [mkGateCached]
   split
   . simp
@@ -30,66 +30,66 @@ theorem mkGateCached_le_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) hl h
 /--
 We can show that something is < the output AIG of `mkGateCached` by showing that it is < the input AIG.
 -/
-theorem lt_mkGateCached_size_of_lt_env_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < env.decls.size)
-    : x < (env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
-  have := mkGateCached_le_size env lhs rhs linv rinv hl hr
+theorem lt_mkGateCached_size_of_lt_aig_size (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < aig.decls.size)
+    : x < (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
+  have := mkGateCached_le_size aig lhs rhs linv rinv hl hr
   omega
 
 /--
 We can show that something is ≤ the output AIG of `mkGateCached` by showing that it is ≤ the input AIG.
 -/
-theorem le_mkGateCached_size_of_le_env_size (env : Env) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ env.decls.size)
-    : x ≤ (env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
-  have := mkGateCached_le_size env lhs rhs linv rinv hl hr
+theorem le_mkGateCached_size_of_le_aig_size (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ aig.decls.size)
+    : x ≤ (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
+  have := mkGateCached_le_size aig lhs rhs linv rinv hl hr
   omega
 
 /--
-Reusing an `Env.Entrypoint` to build an additional gate will never invalidate the entry node of
+Reusing an `AIG.Entrypoint` to build an additional gate will never invalidate the entry node of
 the original entrypoint.
 -/
 theorem lt_mkGateCached_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) hl hr
-    : entry.start < (entry.env.mkGateCached lhs rhs linv rinv hl hr).env.decls.size := by
-  apply lt_mkGateCached_size_of_lt_env_size
+    : entry.start < (entry.aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
+  apply lt_mkGateCached_size_of_lt_aig_size
   exact entry.inv
 
 /--
 `mkGateCached` does not modify the input AIG upon a cache hit.
 -/
-theorem mkGateCached_hit_env (env : Env) {hit} (hcache : env.cache.find? (.gate lhs rhs linv rinv) = some hit) (hl) (hr) :
-    (env.mkGateCached lhs rhs linv rinv hl hr).env = env := by
+theorem mkGateCached_hit_aig (aig : AIG) {hit} (hcache : aig.cache.find? (.gate lhs rhs linv rinv) = some hit) (hl) (hr) :
+    (aig.mkGateCached lhs rhs linv rinv hl hr).aig = aig := by
   simp only [mkGateCached]
   split <;> simp_all
 
 /--
 `mkGateCached` pushes to the input AIG upon a cache miss.
 -/
-theorem mkGateCached_miss_env (env : Env) (hcache : env.cache.find? (.gate lhs rhs linv rinv) = none) (hl) (hr) :
-    (env.mkGateCached lhs rhs linv rinv hl hr).env.decls = env.decls.push (.gate lhs rhs linv rinv) := by
+theorem mkGateCached_miss_aig (aig : AIG) (hcache : aig.cache.find? (.gate lhs rhs linv rinv) = none) (hl) (hr) :
+    (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls = aig.decls.push (.gate lhs rhs linv rinv) := by
   simp only [mkGateCached]
   split <;> simp_all
 
 /--
-The AIG produced by `Env.mkGateCached` agrees with the input AIG on all indices that are valid for both.
+The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkGateCached_decl_eq idx (env : Env) (lhs rhs : Nat) (linv rinv : Bool)
-    {h : idx < env.decls.size} {hl} {hr} {hbound} :
-    (env.mkGateCached lhs rhs linv rinv hl hr).env.decls[idx]'hbound = env.decls[idx] := by
-  match hcache:env.cache.find? (.gate lhs rhs linv rinv) with
+theorem mkGateCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool)
+    {h : idx < aig.decls.size} {hl} {hr} {hbound} :
+    (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls[idx]'hbound = aig.decls[idx] := by
+  match hcache:aig.cache.find? (.gate lhs rhs linv rinv) with
   | some gate =>
-    have := mkGateCached_hit_env env hcache hl hr
+    have := mkGateCached_hit_aig aig hcache hl hr
     simp [this]
   | none =>
-    have := mkGateCached_miss_env env hcache hl hr
+    have := mkGateCached_miss_aig aig hcache hl hr
     simp only [this, Array.get_push]
     split
     . rfl
     . contradiction
 
 /--
-The input AIG to an `Env.mkGateCached` is a prefix to the output AIG.
+The input AIG to an `AIG.mkGateCached` is a prefix to the output AIG.
 -/
-theorem mkGateCached_IsPrefix_env {env : Env} {hl} {hr} :
-    IsPrefix env.decls (env.mkGateCached lhs rhs lpol rpol hl hr).env.decls := by
+theorem mkGateCached_IsPrefix_aig {aig : AIG} {hl} {hr} :
+    IsPrefix aig.decls (aig.mkGateCached lhs rhs lpol rpol hl hr).aig.decls := by
   apply IsPrefix.of
   . intro idx h
     apply mkGateCached_decl_eq
@@ -97,24 +97,24 @@ theorem mkGateCached_IsPrefix_env {env : Env} {hl} {hr} :
 
 @[simp]
 theorem denote_mkGateCached_entry (entry : Entrypoint) {hlbound} {hrbound} {h} :
-    ⟦(entry.env.mkGateCached lhs rhs lpol rpol hlbound hrbound).env, ⟨entry.start, h⟩, assign ⟧
+    ⟦(entry.aig.mkGateCached lhs rhs lpol rpol hlbound hrbound).aig, ⟨entry.start, h⟩, assign ⟧
       =
     ⟦entry, assign⟧ :=  by
-  apply denote.eq_of_env_eq
-  apply mkGateCached_IsPrefix_env
+  apply denote.eq_of_aig_eq
+  apply mkGateCached_IsPrefix_aig
 
-theorem denote_mkGateCached_mem_prefix {env : Env} {hlbound} {hrbound} (h) :
-    ⟦(env.mkGateCached lhs rhs lpol rpol hlbound hrbound).env, ⟨start, (by apply lt_mkGateCached_size_of_lt_env_size; assumption)⟩, assign ⟧
+theorem denote_mkGateCached_mem_prefix {aig : AIG} {hlbound} {hrbound} (h) :
+    ⟦(aig.mkGateCached lhs rhs lpol rpol hlbound hrbound).aig, ⟨start, (by apply lt_mkGateCached_size_of_lt_aig_size; assumption)⟩, assign ⟧
       =
-    ⟦env, ⟨start, h⟩, assign⟧ :=  by
-  rw [denote_mkGateCached_entry ⟨env, start, h⟩]
+    ⟦aig, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkGateCached_entry ⟨aig, start, h⟩]
 
 /--
 The central equality theorem between `mkGateCached` and `mkGate`.
 -/
 @[simp]
-theorem mkGateCached_eval_eq_mkGate_eval {env : Env} {hl} {hr} :
-    ⟦env.mkGateCached lhs rhs linv rinv hl hr, assign⟧ = ⟦env.mkGate lhs rhs linv rinv hl hr, assign⟧ := by
+theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG} {hl} {hr} :
+    ⟦aig.mkGateCached lhs rhs linv rinv hl hr, assign⟧ = ⟦aig.mkGate lhs rhs linv rinv hl hr, assign⟧ := by
   simp only [mkGateCached]
   split
   . next heq1 =>
@@ -122,10 +122,10 @@ theorem mkGateCached_eval_eq_mkGate_eval {env : Env} {hl} {hr} :
   . simp [mkGate, denote]
 
 /--
-If we find a cached atom declaration in the AIG, denoting it is equivalent to denoting `Env.mkAtom`.
+If we find a cached atom declaration in the AIG, denoting it is equivalent to denoting `AIG.mkAtom`.
 -/
-theorem denote_mkAtom_cached {env : Env} {hit} (h : env.cache.find? (.atom v) = some hit) :
-    ⟦env, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦env.mkAtom v, assign⟧ := by
+theorem denote_mkAtom_cached {aig : AIG} {hit} (h : aig.cache.find? (.atom v) = some hit) :
+    ⟦aig, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦aig.mkAtom v, assign⟧ := by
   have := hit.hvalid
   simp only [denote_mkAtom]
   unfold denote denote.go
@@ -134,40 +134,40 @@ theorem denote_mkAtom_cached {env : Env} {hit} (h : env.cache.find? (.atom v) = 
 /--
 `mkAtomCached` does not modify the input AIG upon a cache hit.
 -/
-theorem mkAtomCached_hit_env (env : Env) {hit} (hcache : env.cache.find? (.atom var) = some hit) :
-    (env.mkAtomCached var).env = env := by
+theorem mkAtomCached_hit_aig (aig : AIG) {hit} (hcache : aig.cache.find? (.atom var) = some hit) :
+    (aig.mkAtomCached var).aig = aig := by
   simp only [mkAtomCached]
   split <;> simp_all
 
 /--
 `mkAtomCached` pushes to the input AIG upon a cache miss.
 -/
-theorem mkAtomCached_miss_env (env : Env) (hcache : env.cache.find? (.atom var) = none) :
-    (env.mkAtomCached var).env.decls = env.decls.push (.atom var) := by
+theorem mkAtomCached_miss_aig (aig : AIG) (hcache : aig.cache.find? (.atom var) = none) :
+    (aig.mkAtomCached var).aig.decls = aig.decls.push (.atom var) := by
   simp only [mkAtomCached]
   split <;> simp_all
 
 /--
-The AIG produced by `Env.mkAtomCached` agrees with the input AIG on all indices that are valid for both.
+The AIG produced by `AIG.mkAtomCached` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkAtomCached_decl_eq (env : Env) (var : Nat) (idx : Nat) {h : idx < env.decls.size} {hbound} :
-    (env.mkAtomCached var).env.decls[idx]'hbound = env.decls[idx] := by
-  match hcache:env.cache.find? (.atom var) with
+theorem mkAtomCached_decl_eq (aig : AIG) (var : Nat) (idx : Nat) {h : idx < aig.decls.size} {hbound} :
+    (aig.mkAtomCached var).aig.decls[idx]'hbound = aig.decls[idx] := by
+  match hcache:aig.cache.find? (.atom var) with
   | some gate =>
-    have := mkAtomCached_hit_env env hcache
+    have := mkAtomCached_hit_aig aig hcache
     simp [this]
   | none =>
-    have := mkAtomCached_miss_env env hcache
+    have := mkAtomCached_miss_aig aig hcache
     simp only [this, Array.get_push]
     split
     . rfl
     . contradiction
 
 /--
-`Env.mkAtomCached` never shrinks the underlying AIG.
+`AIG.mkAtomCached` never shrinks the underlying AIG.
 -/
-theorem mkAtomCached_le_size (env : Env) (var : Nat)
-    : env.decls.size ≤ (env.mkAtomCached var).env.decls.size := by
+theorem mkAtomCached_le_size (aig : AIG) (var : Nat)
+    : aig.decls.size ≤ (aig.mkAtomCached var).aig.decls.size := by
   dsimp [mkAtomCached]
   split
   . simp
@@ -177,8 +177,8 @@ theorem mkAtomCached_le_size (env : Env) (var : Nat)
 The central equality theorem between `mkAtomCached` and `mkAtom`.
 -/
 @[simp]
-theorem mkAtomCached_eval_eq_mkAtom_eval {env : Env}
-    : ⟦env.mkAtomCached var, assign⟧ = ⟦env.mkAtom var, assign⟧ := by
+theorem mkAtomCached_eval_eq_mkAtom_eval {aig : AIG}
+    : ⟦aig.mkAtomCached var, assign⟧ = ⟦aig.mkAtom var, assign⟧ := by
   simp only [mkAtomCached]
   split
   . next heq1 =>
@@ -186,10 +186,10 @@ theorem mkAtomCached_eval_eq_mkAtom_eval {env : Env}
   . simp [mkAtom, denote]
 
 /--
-If we find a cached const declaration in the AIG, denoting it is equivalent to denoting `Env.mkConst`.
+If we find a cached const declaration in the AIG, denoting it is equivalent to denoting `AIG.mkConst`.
 -/
-theorem denote_mkConst_cached {env : Env} {hit} (h : env.cache.find? (.const b) = some hit) :
-    ⟦env, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦env.mkConst b, assign⟧ := by
+theorem denote_mkConst_cached {aig : AIG} {hit} (h : aig.cache.find? (.const b) = some hit) :
+    ⟦aig, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦aig.mkConst b, assign⟧ := by
   have := hit.hvalid
   simp only [denote_mkConst]
   unfold denote denote.go
@@ -198,40 +198,40 @@ theorem denote_mkConst_cached {env : Env} {hit} (h : env.cache.find? (.const b) 
 /--
 `mkConstCached` does not modify the input AIG upon a cache hit.
 -/
-theorem mkConstCached_hit_env (env : Env) {hit} (hcache : env.cache.find? (.const val) = some hit) :
-    (env.mkConstCached val).env = env := by
+theorem mkConstCached_hit_aig (aig : AIG) {hit} (hcache : aig.cache.find? (.const val) = some hit) :
+    (aig.mkConstCached val).aig = aig := by
   simp only [mkConstCached]
   split <;> simp_all
 
 /--
 `mkConstCached` pushes to the input AIG upon a cache miss.
 -/
-theorem mkConstCached_miss_env (env : Env) (hcache : env.cache.find? (.const val) = none) :
-    (env.mkConstCached val).env.decls = env.decls.push (.const val) := by
+theorem mkConstCached_miss_aig (aig : AIG) (hcache : aig.cache.find? (.const val) = none) :
+    (aig.mkConstCached val).aig.decls = aig.decls.push (.const val) := by
   simp only [mkConstCached]
   split <;> simp_all
 
 /--
-The AIG produced by `Env.mkConstCached` agrees with the input AIG on all indices that are valid for both.
+The AIG produced by `AIG.mkConstCached` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkConstCached_decl_eq (env : Env) (val : Bool) (idx : Nat) {h : idx < env.decls.size} {hbound} :
-    (env.mkConstCached val).env.decls[idx]'hbound = env.decls[idx] := by
-  match hcache:env.cache.find? (.const val) with
+theorem mkConstCached_decl_eq (aig : AIG) (val : Bool) (idx : Nat) {h : idx < aig.decls.size} {hbound} :
+    (aig.mkConstCached val).aig.decls[idx]'hbound = aig.decls[idx] := by
+  match hcache:aig.cache.find? (.const val) with
   | some gate =>
-    have := mkConstCached_hit_env env hcache
+    have := mkConstCached_hit_aig aig hcache
     simp [this]
   | none =>
-    have := mkConstCached_miss_env env hcache
+    have := mkConstCached_miss_aig aig hcache
     simp only [this, Array.get_push]
     split
     . rfl
     . contradiction
 
 /--
-`Env.mkConstCached` never shrinks the underlying AIG.
+`AIG.mkConstCached` never shrinks the underlying AIG.
 -/
-theorem mkConstCached_le_size (env : Env) (val : Bool)
-    : env.decls.size ≤ (env.mkConstCached val).env.decls.size := by
+theorem mkConstCached_le_size (aig : AIG) (val : Bool)
+    : aig.decls.size ≤ (aig.mkConstCached val).aig.decls.size := by
   dsimp [mkConstCached]
   split
   . simp
@@ -240,30 +240,30 @@ theorem mkConstCached_le_size (env : Env) (val : Bool)
 /--
 We can show that something is < the output AIG of `mkConstCached` by showing that it is < the input AIG.
 -/
-theorem lt_mkConstCached_size_of_lt_env_size (env : Env) (val : Bool) (h : x < env.decls.size) :
-    x < (env.mkConstCached val).env.decls.size := by
-  have := mkConstCached_le_size env val
+theorem lt_mkConstCached_size_of_lt_aig_size (aig : AIG) (val : Bool) (h : x < aig.decls.size) :
+    x < (aig.mkConstCached val).aig.decls.size := by
+  have := mkConstCached_le_size aig val
   omega
 
 /--
 We can show that something is ≤ the output AIG of `mkConstCached` by showing that it is ≤ the input AIG.
 -/
-theorem le_mkConstCached_size_of_le_env_size (env : Env) (val : Bool) (h : x ≤ env.decls.size) :
-    x ≤ (env.mkConstCached val).env.decls.size := by
-  have := mkConstCached_le_size env val
+theorem le_mkConstCached_size_of_le_aig_size (aig : AIG) (val : Bool) (h : x ≤ aig.decls.size) :
+    x ≤ (aig.mkConstCached val).aig.decls.size := by
+  have := mkConstCached_le_size aig val
   omega
 
 /--
-Reusing an `Env.Entrypoint` to build an additional constant will never invalidate the entry node of
+Reusing an `AIG.Entrypoint` to build an additional constant will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem lt_mkConstCached_size (entry : Entrypoint) : entry.start < (entry.env.mkConstCached val).env.decls.size := by
+theorem lt_mkConstCached_size (entry : Entrypoint) : entry.start < (entry.aig.mkConstCached val).aig.decls.size := by
   have h1 := entry.inv
-  have h2 : entry.env.decls.size ≤ (entry.env.mkConstCached val).env.decls.size :=
-    Env.mkConstCached_le_size _ _
+  have h2 : entry.aig.decls.size ≤ (entry.aig.mkConstCached val).aig.decls.size :=
+    AIG.mkConstCached_le_size _ _
   omega
 
-theorem mkConstCached_IsPrefix_env : IsPrefix env.decls (mkConstCached val env).env.decls := by
+theorem mkConstCached_IsPrefix_aig : IsPrefix aig.decls (mkConstCached val aig).aig.decls := by
   apply IsPrefix.of
   . intro idx h
     apply mkConstCached_decl_eq
@@ -271,28 +271,28 @@ theorem mkConstCached_IsPrefix_env : IsPrefix env.decls (mkConstCached val env).
 
 @[simp]
 theorem denote_mkConstCached_entry (entry : Entrypoint) {h} :
-    ⟦(entry.env.mkConstCached val).env, ⟨entry.start, h⟩, assign⟧
+    ⟦(entry.aig.mkConstCached val).aig, ⟨entry.start, h⟩, assign⟧
       =
     ⟦entry, assign⟧ := by
-  apply denote.eq_of_env_eq
-  apply mkConstCached_IsPrefix_env
+  apply denote.eq_of_aig_eq
+  apply mkConstCached_IsPrefix_aig
 
-theorem denote_mkConstCached_mem_prefix {env : Env} (h) :
-    ⟦(env.mkConstCached val).env, ⟨start, by apply lt_mkConstCached_size_of_lt_env_size; assumption⟩, assign⟧
+theorem denote_mkConstCached_mem_prefix {aig : AIG} (h) :
+    ⟦(aig.mkConstCached val).aig, ⟨start, by apply lt_mkConstCached_size_of_lt_aig_size; assumption⟩, assign⟧
       =
-    ⟦env, ⟨start, h⟩, assign⟧ := by
-  rw [denote_mkConstCached_entry ⟨env, start, h⟩]
+    ⟦aig, ⟨start, h⟩, assign⟧ := by
+  rw [denote_mkConstCached_entry ⟨aig, start, h⟩]
 
 /--
 The central equality theorem between `mkConstCached` and `mkConst`.
 -/
 @[simp]
-theorem mkConstCached_eval_eq_mkConst_eval {env : Env}
-    : ⟦env.mkConstCached val, assign⟧ = ⟦env.mkConst val, assign⟧ := by
+theorem mkConstCached_eval_eq_mkConst_eval {aig : AIG}
+    : ⟦aig.mkConstCached val, assign⟧ = ⟦aig.mkConst val, assign⟧ := by
   simp only [mkConstCached]
   split
   . next heq1 =>
     rw [denote_mkConst_cached heq1]
   . simp [mkConst, denote]
 
-end Env
+end AIG

@@ -9,18 +9,18 @@ def mkSharedTree (n : Nat) : BoolExpr Nat :=
 
 /-- info: #[Decl.atom 0, Decl.gate 0 0 false false] -/
 #guard_msgs in
-#eval Env.ofBoolExprNatCached (mkSharedTree 1) |>.env.decls
+#eval AIG.ofBoolExprNatCached (mkSharedTree 1) |>.aig.decls
 
 /-- info: #[Decl.atom 0, Decl.gate 0 0 false false, Decl.gate 1 1 false false] -/
 #guard_msgs in
-#eval Env.ofBoolExprNatCached (mkSharedTree 2) |>.env.decls
+#eval AIG.ofBoolExprNatCached (mkSharedTree 2) |>.aig.decls
 
 /--
 info: #[Decl.atom 0, Decl.gate 0 0 false false, Decl.gate 1 1 false false, Decl.gate 2 2 false false,
   Decl.gate 3 3 false false]
 -/
 #guard_msgs in
-#eval Env.ofBoolExprNatCached (mkSharedTree 4) |>.env.decls
+#eval AIG.ofBoolExprNatCached (mkSharedTree 4) |>.aig.decls
 
 /--
 info: #[Decl.atom 0, Decl.gate 0 0 false false, Decl.gate 1 1 false false, Decl.gate 2 2 false false,
@@ -30,4 +30,4 @@ info: #[Decl.atom 0, Decl.gate 0 0 false false, Decl.gate 1 1 false false, Decl.
   Decl.gate 15 15 false false]
 -/
 #guard_msgs in
-#eval Env.ofBoolExprNatCached (mkSharedTree 16) |>.env.decls
+#eval AIG.ofBoolExprNatCached (mkSharedTree 16) |>.aig.decls
