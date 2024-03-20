@@ -4,6 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import Std.Data.HashMap
+
+/-!
+This module contains the basic definitions for an AIG (And-Inverter Graph) in the style of AIGNET,
+as described in https://arxiv.org/pdf/1304.7861.pdf section 3. It contains an AIG definition,
+a description of its semantics and basic operations to construct nodes in the AIG.
+-/
+
 open Std
 
 theorem Array.get_push_old (as : Array α) (a : α) (h : i < as.size) : (as.push a)[i]'(by simp; omega) = as[i] := by

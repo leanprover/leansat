@@ -6,6 +6,11 @@ Authors: Henrik Böving
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.AIG.Basic
 
+/-!
+This module provides a basic theory around the naive AIG node creation functions. It is mostly
+fundamental work for the cached versions later on.
+-/
+
 namespace AIG
 
 /--

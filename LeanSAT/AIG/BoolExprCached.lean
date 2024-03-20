@@ -6,6 +6,11 @@ Authors: Henrik Böving
 import LeanSAT.AIG.CachedGates
 import LeanSAT.AIG.CachedGatesLemmas
 
+/-!
+This module contains the logic to turn a `BoolExpr Nat` into an `AIG` with maximum subterm sharing,
+through the use of a cache that re-uses sub-circuits if possible.
+-/
+
 namespace AIG
 
 -- lines such as: ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩

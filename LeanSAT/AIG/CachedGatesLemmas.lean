@@ -6,6 +6,12 @@ Authors: Henrik Böving
 import LeanSAT.AIG.CachedGates
 import LeanSAT.AIG.LawfulOperator
 
+/-!
+This module contains the theory of the cached gate creation functions, mostly enabled by the
+`LawfulOperator` framework. It is mainly concerned with proving lemmas about the denotational
+semantics of the gate functions in different scenarios.
+-/
+
 /--
 Encoding not as boolen expression in AIG form.
 -/

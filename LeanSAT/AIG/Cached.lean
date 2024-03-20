@@ -6,6 +6,12 @@ Authors: Henrik Böving
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 
+/-!
+This module contains functions to construct AIG nodes while making use of the sub-circuit cache
+if possible. For performance reasons these functions should usually be preferred over the naive
+AIG node creation ones.
+-/
+
 namespace AIG
 
 /--
