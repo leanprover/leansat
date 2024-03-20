@@ -26,20 +26,20 @@ Encoding implication as boolen expression in AIG form.
 -/
 theorem imp_as_aig (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cases b <;> decide
 
-namespace Env
+namespace AIG
 
-theorem mkNotCached_le_size (env : Env) (gate : Nat) (hgate)
-    : env.decls.size ≤ (env.mkNotCached gate hgate).env.decls.size := by
+theorem mkNotCached_le_size (aig : AIG) (gate : Nat) (hgate)
+    : aig.decls.size ≤ (aig.mkNotCached gate hgate).aig.decls.size := by
   simp only [mkNotCached]
-  apply le_mkGateCached_size_of_le_env_size
+  apply le_mkGateCached_size_of_le_aig_size
   apply mkConstCached_le_size
 
-theorem mkNotCached_decl_eq idx (env : Env) (gate : Nat) {h : idx < env.decls.size} (hgate) {h2} :
-    (env.mkNotCached gate hgate).env.decls[idx]'h2 = env.decls[idx] := by
+theorem mkNotCached_decl_eq idx (aig : AIG) (gate : Nat) {h : idx < aig.decls.size} (hgate) {h2} :
+    (aig.mkNotCached gate hgate).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkNotCached]
   rw [mkGateCached_decl_eq]
   rw [mkConstCached_decl_eq]
-  apply lt_mkConstCached_size_of_lt_env_size
+  apply lt_mkConstCached_size_of_lt_aig_size
   assumption
 
 instance : LawfulUnaryOperator mkNotCached where
@@ -49,23 +49,23 @@ instance : LawfulUnaryOperator mkNotCached where
     apply mkNotCached_decl_eq
 
 @[simp]
-theorem denote_mkNotCached {env : Env} {hgate} :
-    ⟦env.mkNotCached gate hgate, assign⟧
+theorem denote_mkNotCached {aig : AIG} {hgate} :
+    ⟦aig.mkNotCached gate hgate, assign⟧
       =
-    !⟦env, ⟨gate, hgate⟩, assign⟧ := by
+    !⟦aig, ⟨gate, hgate⟩, assign⟧ := by
   rw [← not_as_aig]
   simp [mkNotCached, denote_mkConstCached_mem_prefix hgate]
 
 
-theorem mkAndCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
-    : env.decls.size ≤ (env.mkAndCached lhs rhs hl hr).env.decls.size := by
+theorem mkAndCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+    : aig.decls.size ≤ (aig.mkAndCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkAndCached]
-  apply le_mkGateCached_size_of_le_env_size
+  apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkAndCached_decl_eq idx (env : Env) (lhs rhs : Nat) {h : idx < env.decls.size}
+theorem mkAndCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
-    (env.mkAndCached lhs rhs hl hr).env.decls[idx]'h2 = env.decls[idx] := by
+    (aig.mkAndCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkAndCached]
   rw [mkGateCached_decl_eq]
 
@@ -74,31 +74,31 @@ instance : LawfulBinaryOperator mkAndCached where
   decl_eq := by intros; apply mkAndCached_decl_eq
 
 @[simp]
-theorem denote_mkAndCached {env : Env} {hl} {hr} :
-    ⟦env.mkAndCached lhs rhs hl hr, assign⟧
+theorem denote_mkAndCached {aig : AIG} {hl} {hr} :
+    ⟦aig.mkAndCached lhs rhs hl hr, assign⟧
       =
-    (⟦env, ⟨lhs, hl⟩, assign⟧ && ⟦env, ⟨rhs, hr⟩, assign⟧) := by
+    (⟦aig, ⟨lhs, hl⟩, assign⟧ && ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
   simp [mkAndCached]
 
-theorem mkOrCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
-    : env.decls.size ≤ (env.mkOrCached lhs rhs hl hr).env.decls.size := by
+theorem mkOrCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+    : aig.decls.size ≤ (aig.mkOrCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkOrCached]
-  apply le_mkGateCached_size_of_le_env_size
-  apply le_mkConstCached_size_of_le_env_size
-  apply le_mkGateCached_size_of_le_env_size
+  apply le_mkGateCached_size_of_le_aig_size
+  apply le_mkConstCached_size_of_le_aig_size
+  apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkOrCached_decl_eq idx (env : Env) (lhs rhs : Nat) {h : idx < env.decls.size}
+theorem mkOrCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
-    (env.mkOrCached lhs rhs hl hr).env.decls[idx]'h2 = env.decls[idx] := by
+    (aig.mkOrCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkOrCached]
   rw [mkGateCached_decl_eq]
   rw [mkConstCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_env_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
-  . apply lt_mkConstCached_size_of_lt_env_size
-    apply lt_mkGateCached_size_of_lt_env_size
+  . apply lt_mkConstCached_size_of_lt_aig_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
 
 instance : LawfulBinaryOperator mkOrCached where
@@ -106,32 +106,32 @@ instance : LawfulBinaryOperator mkOrCached where
   decl_eq := by intros; apply mkOrCached_decl_eq
 
 @[simp]
-theorem denote_mkOrCached {env : Env} {hl} {hr}:
-    ⟦env.mkOrCached lhs rhs hl hr, assign⟧
+theorem denote_mkOrCached {aig : AIG} {hl} {hr}:
+    ⟦aig.mkOrCached lhs rhs hl hr, assign⟧
       =
-    (⟦env, ⟨lhs, hl⟩, assign⟧ || ⟦env, ⟨rhs, hr⟩, assign⟧) := by
+    (⟦aig, ⟨lhs, hl⟩, assign⟧ || ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
   rw [← or_as_aig]
   simp [mkOrCached]
 
-theorem mkXorCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
-    : env.decls.size ≤ (env.mkXorCached lhs rhs hl hr).env.decls.size := by
+theorem mkXorCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+    : aig.decls.size ≤ (aig.mkXorCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkXorCached]
-  apply le_mkGateCached_size_of_le_env_size
-  apply le_mkGateCached_size_of_le_env_size
-  apply le_mkGateCached_size_of_le_env_size
+  apply le_mkGateCached_size_of_le_aig_size
+  apply le_mkGateCached_size_of_le_aig_size
+  apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkXorCached_decl_eq idx (env : Env) (lhs rhs : Nat) {h : idx < env.decls.size}
+theorem mkXorCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
-    (env.mkXorCached lhs rhs hl hr).env.decls[idx]'h2 = env.decls[idx] := by
+    (aig.mkXorCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkXorCached]
   rw [mkGateCached_decl_eq]
   rw [mkGateCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_env_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
-  . apply lt_mkGateCached_size_of_lt_env_size
-    apply lt_mkGateCached_size_of_lt_env_size
+  . apply lt_mkGateCached_size_of_lt_aig_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
 
 instance : LawfulBinaryOperator mkXorCached where
@@ -139,32 +139,32 @@ instance : LawfulBinaryOperator mkXorCached where
   decl_eq := by intros; apply mkXorCached_decl_eq
 
 @[simp]
-theorem denote_mkXorCached {env : Env} {hl} {hr} :
-    ⟦env.mkXorCached lhs rhs hl hr, assign⟧
+theorem denote_mkXorCached {aig : AIG} {hl} {hr} :
+    ⟦aig.mkXorCached lhs rhs hl hr, assign⟧
       =
-    xor ⟦env, ⟨lhs, hl⟩, assign⟧ ⟦env, ⟨rhs, hr⟩, assign⟧ := by
+    xor ⟦aig, ⟨lhs, hl⟩, assign⟧ ⟦aig, ⟨rhs, hr⟩, assign⟧ := by
   rw [← xor_as_aig]
   simp [mkXorCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
 
-theorem mkBEqCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
-    : env.decls.size ≤ (env.mkBEqCached lhs rhs hl hr).env.decls.size := by
+theorem mkBEqCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+    : aig.decls.size ≤ (aig.mkBEqCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkBEqCached]
-  apply le_mkGateCached_size_of_le_env_size
-  apply le_mkGateCached_size_of_le_env_size
-  apply le_mkGateCached_size_of_le_env_size
+  apply le_mkGateCached_size_of_le_aig_size
+  apply le_mkGateCached_size_of_le_aig_size
+  apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkBEqCached_decl_eq idx (env : Env) (lhs rhs : Nat) {h : idx < env.decls.size}
+theorem mkBEqCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
-    (env.mkBEqCached lhs rhs hl hr).env.decls[idx]'h2 = env.decls[idx] := by
+    (aig.mkBEqCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkBEqCached]
   rw [mkGateCached_decl_eq]
   rw [mkGateCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_env_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
-  . apply lt_mkGateCached_size_of_lt_env_size
-    apply lt_mkGateCached_size_of_lt_env_size
+  . apply lt_mkGateCached_size_of_lt_aig_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
 
 instance : LawfulBinaryOperator mkBEqCached where
@@ -172,32 +172,32 @@ instance : LawfulBinaryOperator mkBEqCached where
   decl_eq := by intros; apply mkBEqCached_decl_eq
 
 @[simp]
-theorem denote_mkBEqCached {env : Env} {hl} {hr} :
-    ⟦env.mkBEqCached lhs rhs hl hr, assign⟧
+theorem denote_mkBEqCached {aig : AIG} {hl} {hr} :
+    ⟦aig.mkBEqCached lhs rhs hl hr, assign⟧
       =
-    (⟦env, ⟨lhs, hl⟩, assign⟧ == ⟦env, ⟨rhs, hr⟩, assign⟧) := by
+    (⟦aig, ⟨lhs, hl⟩, assign⟧ == ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
   rw [← beq_as_aig]
   simp [mkBEqCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
 
-theorem mkImpCached_le_size (env : Env) (lhs rhs : Nat) (hl) (hr)
-    : env.decls.size ≤ (env.mkImpCached lhs rhs hl hr).env.decls.size := by
+theorem mkImpCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+    : aig.decls.size ≤ (aig.mkImpCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkImpCached]
-  apply le_mkGateCached_size_of_le_env_size
-  apply le_mkConstCached_size_of_le_env_size
-  apply le_mkGateCached_size_of_le_env_size
+  apply le_mkGateCached_size_of_le_aig_size
+  apply le_mkConstCached_size_of_le_aig_size
+  apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkImpCached_decl_eq idx (env : Env) (lhs rhs : Nat) {h : idx < env.decls.size}
+theorem mkImpCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
-    (env.mkImpCached lhs rhs hl hr).env.decls[idx]'h2 = env.decls[idx] := by
+    (aig.mkImpCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkImpCached]
   rw [mkGateCached_decl_eq]
   rw [mkConstCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_env_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
-  . apply lt_mkConstCached_size_of_lt_env_size
-    apply lt_mkGateCached_size_of_lt_env_size
+  . apply lt_mkConstCached_size_of_lt_aig_size
+    apply lt_mkGateCached_size_of_lt_aig_size
     assumption
 
 instance : LawfulBinaryOperator mkImpCached where
@@ -205,11 +205,11 @@ instance : LawfulBinaryOperator mkImpCached where
   decl_eq := by intros; apply mkImpCached_decl_eq
 
 @[simp]
-theorem denote_mkImpCached {env : Env} {hl} {hr} :
-    ⟦env.mkImpCached lhs rhs hl hr, assign⟧
+theorem denote_mkImpCached {aig : AIG} {hl} {hr} :
+    ⟦aig.mkImpCached lhs rhs hl hr, assign⟧
       =
-    (!⟦env, ⟨lhs, hl⟩, assign⟧ || ⟦env, ⟨rhs, hr⟩, assign⟧) := by
+    (!⟦aig, ⟨lhs, hl⟩, assign⟧ || ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
   rw [← imp_as_aig]
   simp [mkImpCached]
 
-end Env
+end AIG
