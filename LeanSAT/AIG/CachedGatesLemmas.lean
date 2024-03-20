@@ -39,13 +39,15 @@ theorem imp_as_aig (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cas
 
 namespace AIG
 
-theorem mkNotCached_le_size (aig : AIG) (gate : Nat) (hgate)
+variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+
+theorem mkNotCached_le_size (aig : AIG α) (gate : Nat) (hgate)
     : aig.decls.size ≤ (aig.mkNotCached gate hgate).aig.decls.size := by
   simp only [mkNotCached]
   apply le_mkGateCached_size_of_le_aig_size
   apply mkConstCached_le_size
 
-theorem mkNotCached_decl_eq idx (aig : AIG) (gate : Nat) {h : idx < aig.decls.size} (hgate) {h2} :
+theorem mkNotCached_decl_eq idx (aig : AIG α) (gate : Nat) {h : idx < aig.decls.size} (hgate) {h2} :
     (aig.mkNotCached gate hgate).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkNotCached]
   rw [mkGateCached_decl_eq]
@@ -60,7 +62,7 @@ instance : LawfulUnaryOperator mkNotCached where
     apply mkNotCached_decl_eq
 
 @[simp]
-theorem denote_mkNotCached {aig : AIG} {hgate} :
+theorem denote_mkNotCached {aig : AIG α} {hgate} :
     ⟦aig.mkNotCached gate hgate, assign⟧
       =
     !⟦aig, ⟨gate, hgate⟩, assign⟧ := by
@@ -68,13 +70,13 @@ theorem denote_mkNotCached {aig : AIG} {hgate} :
   simp [mkNotCached, denote_mkConstCached_mem_prefix hgate]
 
 
-theorem mkAndCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+theorem mkAndCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
     : aig.decls.size ≤ (aig.mkAndCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkAndCached]
   apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkAndCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
+theorem mkAndCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
     (aig.mkAndCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkAndCached]
@@ -85,13 +87,13 @@ instance : LawfulBinaryOperator mkAndCached where
   decl_eq := by intros; apply mkAndCached_decl_eq
 
 @[simp]
-theorem denote_mkAndCached {aig : AIG} {hl} {hr} :
+theorem denote_mkAndCached {aig : AIG α} {hl} {hr} :
     ⟦aig.mkAndCached lhs rhs hl hr, assign⟧
       =
     (⟦aig, ⟨lhs, hl⟩, assign⟧ && ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
   simp [mkAndCached]
 
-theorem mkOrCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+theorem mkOrCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
     : aig.decls.size ≤ (aig.mkOrCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkOrCached]
   apply le_mkGateCached_size_of_le_aig_size
@@ -99,7 +101,7 @@ theorem mkOrCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
   apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkOrCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
+theorem mkOrCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
     (aig.mkOrCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkOrCached]
@@ -117,14 +119,14 @@ instance : LawfulBinaryOperator mkOrCached where
   decl_eq := by intros; apply mkOrCached_decl_eq
 
 @[simp]
-theorem denote_mkOrCached {aig : AIG} {hl} {hr}:
+theorem denote_mkOrCached {aig : AIG α} {hl} {hr}:
     ⟦aig.mkOrCached lhs rhs hl hr, assign⟧
       =
     (⟦aig, ⟨lhs, hl⟩, assign⟧ || ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
   rw [← or_as_aig]
   simp [mkOrCached]
 
-theorem mkXorCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+theorem mkXorCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
     : aig.decls.size ≤ (aig.mkXorCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkXorCached]
   apply le_mkGateCached_size_of_le_aig_size
@@ -132,7 +134,7 @@ theorem mkXorCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
   apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkXorCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
+theorem mkXorCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
     (aig.mkXorCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkXorCached]
@@ -150,14 +152,14 @@ instance : LawfulBinaryOperator mkXorCached where
   decl_eq := by intros; apply mkXorCached_decl_eq
 
 @[simp]
-theorem denote_mkXorCached {aig : AIG} {hl} {hr} :
+theorem denote_mkXorCached {aig : AIG α} {hl} {hr} :
     ⟦aig.mkXorCached lhs rhs hl hr, assign⟧
       =
     xor ⟦aig, ⟨lhs, hl⟩, assign⟧ ⟦aig, ⟨rhs, hr⟩, assign⟧ := by
   rw [← xor_as_aig]
   simp [mkXorCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
 
-theorem mkBEqCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+theorem mkBEqCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
     : aig.decls.size ≤ (aig.mkBEqCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkBEqCached]
   apply le_mkGateCached_size_of_le_aig_size
@@ -165,7 +167,7 @@ theorem mkBEqCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
   apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkBEqCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
+theorem mkBEqCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
     (aig.mkBEqCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkBEqCached]
@@ -183,14 +185,14 @@ instance : LawfulBinaryOperator mkBEqCached where
   decl_eq := by intros; apply mkBEqCached_decl_eq
 
 @[simp]
-theorem denote_mkBEqCached {aig : AIG} {hl} {hr} :
+theorem denote_mkBEqCached {aig : AIG α} {hl} {hr} :
     ⟦aig.mkBEqCached lhs rhs hl hr, assign⟧
       =
     (⟦aig, ⟨lhs, hl⟩, assign⟧ == ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
   rw [← beq_as_aig]
   simp [mkBEqCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
 
-theorem mkImpCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
+theorem mkImpCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
     : aig.decls.size ≤ (aig.mkImpCached lhs rhs hl hr).aig.decls.size := by
   simp only [mkImpCached]
   apply le_mkGateCached_size_of_le_aig_size
@@ -198,7 +200,7 @@ theorem mkImpCached_le_size (aig : AIG) (lhs rhs : Nat) (hl) (hr)
   apply le_mkGateCached_size_of_le_aig_size
   omega
 
-theorem mkImpCached_decl_eq idx (aig : AIG) (lhs rhs : Nat) {h : idx < aig.decls.size}
+theorem mkImpCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
     (hl) (hr) {h2} :
     (aig.mkImpCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkImpCached]
@@ -216,7 +218,7 @@ instance : LawfulBinaryOperator mkImpCached where
   decl_eq := by intros; apply mkImpCached_decl_eq
 
 @[simp]
-theorem denote_mkImpCached {aig : AIG} {hl} {hr} :
+theorem denote_mkImpCached {aig : AIG α} {hl} {hr} :
     ⟦aig.mkImpCached lhs rhs hl hr, assign⟧
       =
     (!⟦aig, ⟨lhs, hl⟩, assign⟧ || ⟦aig, ⟨rhs, hr⟩, assign⟧) := by

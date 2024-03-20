@@ -13,10 +13,12 @@ cache if possible.
 
 namespace AIG
 
+variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+
 /--
 Create a not gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkNotCached (gate : Nat) (aig : AIG) (hgate : gate < aig.decls.size) : Entrypoint :=
+def mkNotCached (gate : Nat) (aig : AIG α) (hgate : gate < aig.decls.size) : Entrypoint α :=
   -- ¬x = true && invert x
   let constEntry := aig.mkConstCached true
   have := aig.mkConstCached_le_size true
@@ -31,13 +33,13 @@ def mkNotCached (gate : Nat) (aig : AIG) (hgate : gate < aig.decls.size) : Entry
 /--
 Create an and gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkAndCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint :=
+def mkAndCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
   aig.mkGateCached lhs rhs false false hl hr
 
 /--
 Create an or gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkOrCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint :=
+def mkOrCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
   -- x or y = true && (invert (invert x && invert y))
   let auxEntry := aig.mkGateCached lhs rhs true true hl hr
   let constEntry := auxEntry.aig.mkConstCached true
@@ -52,7 +54,7 @@ def mkOrCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rhs
 /--
 Create an xor gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkXorCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint :=
+def mkXorCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
   -- x xor y = (invert (invert (x && y))) && (invert ((invert x) && (invert y)))
   let aux1Entry := aig.mkGateCached lhs rhs false false hl hr
   have := aig.mkGateCached_le_size _ _ false false hl hr
@@ -71,7 +73,7 @@ def mkXorCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rh
 /--
 Create an equality gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkBEqCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint :=
+def mkBEqCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
   -- a == b = (invert (a && (invert b))) && (invert ((invert a) && b))
   let aux1Entry := aig.mkGateCached lhs rhs false true hl hr
   have := aig.mkGateCached_le_size _ _ false true hl hr
@@ -97,7 +99,7 @@ def mkBEqCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rh
 /--
 Create an implication gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkImpCached (lhs rhs : Nat) (aig : AIG) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint :=
+def mkImpCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
   -- a -> b = true && (invert (a and (invert b)))
   let auxEntry :=
     aig.mkGateCached
