@@ -13,17 +13,18 @@ through the use of a cache that re-uses sub-circuits if possible.
 
 namespace AIG
 
+variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+
 -- lines such as: ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
 -- are slow in Meta.check
 -- TODO: minimize
 /--
-Turn a `BoolExprNat` into an AIG + entrypoint. Note that this version is meant for programming
-purposes. For proving use `AIG.ofBoolExprNat` and equality theorems.
+Turn a `BoolExpr` into an AIG + entrypoint.
 -/
-def ofBoolExprNatCached (expr : BoolExpr Nat) : Entrypoint :=
+def ofBoolExprCached (expr : BoolExpr α) : Entrypoint α :=
   go expr AIG.empty |>.val
 where
-  go (expr : BoolExpr Nat) (aig : AIG) : { entry : Entrypoint // aig.decls.size ≤ entry.aig.decls.size } :=
+  go (expr : BoolExpr α) (aig : AIG α) : { entry : Entrypoint α // aig.decls.size ≤ entry.aig.decls.size } :=
     match expr with
     | .literal var => ⟨aig.mkAtomCached var, (by apply AIG.mkAtomCached_le_size)⟩
     | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
@@ -60,12 +61,12 @@ where
         have := mkImpCached_le_size rhsEntry.aig lhsEntry.start rhsEntry.start h1 rhsEntry.inv
         ⟨ret, by dsimp [ret] at *; omega⟩
 
-theorem ofBoolExprNatCached.go_decls_size_le (expr : BoolExpr Nat) (aig : AIG) :
-    aig.decls.size ≤ (ofBoolExprNatCached.go expr aig).val.aig.decls.size := by
-  exact (ofBoolExprNatCached.go expr aig).property
+theorem ofBoolExprCached.go_decls_size_le (expr : BoolExpr α) (aig : AIG α) :
+    aig.decls.size ≤ (ofBoolExprCached.go expr aig).val.aig.decls.size := by
+  exact (ofBoolExprCached.go expr aig).property
 
-theorem ofBoolExprNatCached.go_decl_eq (idx) (aig) (h : idx < aig.decls.size) (hbounds) :
-    (ofBoolExprNatCached.go expr aig).val.aig.decls[idx]'hbounds = aig.decls[idx] := by
+theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG α) (h : idx < aig.decls.size) (hbounds) :
+    (ofBoolExprCached.go expr aig).val.aig.decls[idx]'hbounds = aig.decls[idx] := by
   induction expr generalizing aig with
   | const =>
     simp only [go]
@@ -106,22 +107,22 @@ theorem ofBoolExprNatCached.go_decl_eq (idx) (aig) (h : idx < aig.decls.size) (h
       rw [mkImpCached_decl_eq]
       rw [rih, lih]
 
-theorem ofBoolExprNatCached.go_IsPrefix_aig : IsPrefix aig.decls (go expr aig).val.aig.decls := by
+theorem ofBoolExprCached.go_IsPrefix_aig {aig : AIG α} : IsPrefix aig.decls (go expr aig).val.aig.decls := by
   apply IsPrefix.of
   . intro idx h
-    apply ofBoolExprNatCached.go_decl_eq
-  . apply ofBoolExprNatCached.go_decls_size_le
+    apply ofBoolExprCached.go_decl_eq
+  . apply ofBoolExprCached.go_decls_size_le
 
 @[simp]
-theorem ofBoolExprNatCached.go_denote_entry (entry : Entrypoint) {h}:
+theorem ofBoolExprCached.go_denote_entry (entry : Entrypoint α) {h}:
     ⟦(go expr entry.aig).val.aig, ⟨entry.start, h⟩, assign ⟧
       =
     ⟦entry, assign⟧ := by
   apply denote.eq_of_aig_eq
-  apply ofBoolExprNatCached.go_IsPrefix_aig
+  apply ofBoolExprCached.go_IsPrefix_aig
 
 @[simp]
-theorem ofBoolExprNatCached.go_eval_eq_eval (expr : BoolExpr Nat) (aig : AIG) (assign) :
+theorem ofBoolExprCached.go_eval_eq_eval (expr : BoolExpr α) (aig : AIG α) (assign) :
     ⟦go expr aig, assign⟧ = expr.eval assign := by
   induction expr generalizing aig with
   | const => simp [go]
@@ -130,11 +131,11 @@ theorem ofBoolExprNatCached.go_eval_eq_eval (expr : BoolExpr Nat) (aig : AIG) (a
   | gate g lhs rhs lih rih => cases g <;> simp [go, Gate.eval, lih, rih]
 
 @[simp]
-theorem ofBoolExprCached_eval_eq_eval (expr : BoolExpr Nat) (assign) :
-    ⟦ofBoolExprNatCached expr, assign⟧ = expr.eval assign := by
-  apply ofBoolExprNatCached.go_eval_eq_eval
+theorem ofBoolExprCached_eval_eq_eval (expr : BoolExpr α) (assign) :
+    ⟦ofBoolExprCached expr, assign⟧ = expr.eval assign := by
+  apply ofBoolExprCached.go_eval_eq_eval
 
-theorem ofBoolExprCached_unsat_iff : (ofBoolExprNatCached expr).unsat ↔ expr.unsat := by
+theorem ofBoolExprCached_unsat_iff {expr : BoolExpr α} : (ofBoolExprCached expr).unsat ↔ expr.unsat := by
   constructor
   all_goals
     intro h assign

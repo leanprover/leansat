@@ -13,10 +13,12 @@ fundamental work for the cached versions later on.
 
 namespace AIG
 
+variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+
 /--
 `decls` is a prefix of `decls2`
 -/
-structure IsPrefix (decls1 decls2 : Array Decl) : Prop where
+structure IsPrefix (decls1 decls2 : Array (Decl α)) : Prop where
   /--
   The prefix may never be longer than the other array.
   -/
@@ -29,7 +31,7 @@ structure IsPrefix (decls1 decls2 : Array Decl) : Prop where
 /--
 The cannonical way to prove that an array is a prefix of another array.
 -/
-theorem IsPrefix.of {decls1 decls2 : Array Decl}
+theorem IsPrefix.of {decls1 decls2 : Array (Decl α)}
     (size_le : decls1.size ≤ decls2.size)
     (idx_eq : ∀ idx (h : idx < decls1.size), decls2[idx]'(by omega) = decls1[idx]'h)
     : IsPrefix decls1 decls2 := ⟨size_le, idx_eq⟩
@@ -38,7 +40,7 @@ theorem IsPrefix.of {decls1 decls2 : Array Decl}
 If `decls1` is a prefix of `decls2` and we start evaluating `decls2` at an
 index in bounds of `decls1` we can evluate at `decls1`.
 -/
-theorem denote.go_eq_of_aig_eq (decls1 decls2 : Array Decl) (start : Nat) {hdag1} {hdag2}
+theorem denote.go_eq_of_aig_eq (decls1 decls2 : Array (Decl α)) (start : Nat) {hdag1} {hdag2}
     {hbounds1} {hbounds2} (hprefix : IsPrefix decls1 decls2) :
     denote.go start decls2 assign hbounds2 hdag2
       =
@@ -72,7 +74,7 @@ termination_by sizeOf start
 /--
 Running `AIG.denote.go` on a node that is within bounds of `decls` is equivalent to running it a bigger `decls` array.
 -/
-theorem denote.go_lt_push (x : Nat) (decls : Array Decl) {h1} {h2} {h3} :
+theorem denote.go_lt_push (x : Nat) (decls : Array (Decl α)) {h1} {h2} {h3} :
     (denote.go x (decls.push decl) assign (by simp; omega) h3) = (denote.go x decls assign h1 h2)  := by
   apply denote.go_eq_of_aig_eq
   apply IsPrefix.of
@@ -84,7 +86,7 @@ theorem denote.go_lt_push (x : Nat) (decls : Array Decl) {h1} {h2} {h3} :
   . simp_arith
 
 @[inherit_doc denote.go_eq_of_aig_eq ]
-theorem denote.eq_of_aig_eq (entry : Entrypoint) (newAIG : AIG) (hprefix : IsPrefix entry.aig.decls newAIG.decls) :
+theorem denote.eq_of_aig_eq (entry : Entrypoint α) (newAIG : AIG α) (hprefix : IsPrefix entry.aig.decls newAIG.decls) :
     ⟦newAIG, ⟨entry.start, (by have := entry.inv; have := hprefix.size_le; omega)⟩, assign⟧
       =
     ⟦entry, assign⟧
@@ -94,21 +96,21 @@ theorem denote.eq_of_aig_eq (entry : Entrypoint) (newAIG : AIG) (hprefix : IsPre
   assumption
 
 @[simp]
-theorem denote_projected_entry {entry : AIG.Entrypoint} :
+theorem denote_projected_entry {entry : Entrypoint α} :
     ⟦entry.aig, ⟨entry.start, entry.inv⟩, assign⟧ = ⟦entry, assign⟧ := by
   cases entry; simp
 
 /--
 `AIG.mkGate` never shrinks the underlying AIG.
 -/
-theorem mkGate_le_size (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
+theorem mkGate_le_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
     : aig.decls.size ≤ (aig.mkGate lhs rhs linv rinv hl hr).aig.decls.size := by
   simp_arith [mkGate]
 
 /--
 The AIG produced by `AIG.mkGate` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkGate_decl_eq idx (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) {h : idx < aig.decls.size} {hl} {hr} :
+theorem mkGate_decl_eq idx (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) {h : idx < aig.decls.size} {hl} {hr} :
     have := mkGate_le_size aig lhs rhs linv rinv hl hr
     (aig.mkGate lhs rhs linv rinv hl hr).aig.decls[idx]'(by omega) = aig.decls[idx] := by
   simp only [mkGate, Array.get_push]
@@ -119,7 +121,7 @@ theorem mkGate_decl_eq idx (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) {h : i
 /--
 The input AIG to an `mkGate` is a prefix to the output AIG.
 -/
-theorem mkGate_IsPrefix_aig (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) {hl} {hr} :
+theorem mkGate_IsPrefix_aig (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) {hl} {hr} :
     IsPrefix aig.decls (aig.mkGate lhs rhs linv rinv hl hr).aig.decls := by
   apply IsPrefix.of
   . intro idx h
@@ -127,7 +129,7 @@ theorem mkGate_IsPrefix_aig (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) {hl} 
   . apply mkGate_le_size
 
 @[simp]
-theorem denote_mkGate :
+theorem denote_mkGate {aig : AIG α} {hl} {hr} :
     ⟦aig.mkGate lhs rhs linv rinv hl hr, assign⟧
       =
     ((xor ⟦aig, ⟨lhs, hl⟩, assign⟧ linv) && (xor ⟦aig, ⟨rhs, hr⟩, assign⟧ rinv)) := by
@@ -157,7 +159,7 @@ theorem denote_mkGate :
 /--
 We can show that something is < the output AIG of `mkGate` by showing that it is < the input AIG.
 -/
-theorem lt_mkGate_size_of_lt_aig_size (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < aig.decls.size)
+theorem lt_mkGate_size_of_lt_aig_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < aig.decls.size)
     : x < (aig.mkGate lhs rhs linv rinv hl hr).aig.decls.size := by
   have := mkGate_le_size aig lhs rhs linv rinv hl hr
   omega
@@ -166,7 +168,7 @@ theorem lt_mkGate_size_of_lt_aig_size (aig : AIG) (lhs rhs : Nat) (linv rinv : B
 Reusing an `AIG.Entrypoint` to build an additional gate will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
+theorem lt_mkGate_size (entry : Entrypoint α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr)
     : entry.start < (entry.aig.mkGate lhs rhs linv rinv hl hr).aig.decls.size := by
   apply lt_mkGate_size_of_lt_aig_size
   exact entry.inv
@@ -174,13 +176,13 @@ theorem lt_mkGate_size (entry : Entrypoint) (lhs rhs : Nat) (linv rinv : Bool) (
 /--
 We can show that something is ≤ the output AIG of `mkGate` by showing that it is ≤ the input AIG.
 -/
-theorem le_mkGate_size_of_le_aig_size (aig : AIG) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ aig.decls.size)
+theorem le_mkGate_size_of_le_aig_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ aig.decls.size)
     : x ≤ (aig.mkGate lhs rhs linv rinv hl hr).aig.decls.size := by
   have := mkGate_le_size aig lhs rhs linv rinv hl hr
   omega
 
 @[simp]
-theorem denote_mkGate_entry (entry : Entrypoint) {hlbound} {hrbound} {h} :
+theorem denote_mkGate_entry (entry : Entrypoint α) {hlbound} {hrbound} {h} :
     ⟦(entry.aig.mkGate lhs rhs lpol rpol hlbound hrbound).aig, ⟨entry.start, h⟩, assign ⟧
       =
     ⟦entry, assign⟧ :=  by
@@ -188,7 +190,7 @@ theorem denote_mkGate_entry (entry : Entrypoint) {hlbound} {hrbound} {h} :
   apply mkGate_IsPrefix_aig
 
 @[simp]
-theorem denote_mkGate_lhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
+theorem denote_mkGate_lhs (entry : Entrypoint α) {hlbound} {hrbound} {h} :
     ⟦(entry.aig.mkGate lhs rhs lpol rpol hlbound hrbound).aig, ⟨lhs, h⟩, assign⟧
       =
     ⟦entry.aig, ⟨lhs, hlbound⟩, assign⟧ :=  by
@@ -198,7 +200,7 @@ theorem denote_mkGate_lhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
   . assumption
 
 @[simp]
-theorem denote_mkGate_rhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
+theorem denote_mkGate_rhs (entry : Entrypoint α) {hlbound} {hrbound} {h} :
     ⟦(entry.aig.mkGate lhs rhs lpol rpol hlbound hrbound).aig, ⟨rhs, h⟩, assign⟧
       =
     ⟦entry.aig, ⟨rhs, hrbound⟩, assign⟧ :=  by
@@ -210,13 +212,13 @@ theorem denote_mkGate_rhs (entry : Entrypoint) {hlbound} {hrbound} {h} :
 /--
 `AIG.mkAtom` never shrinks the underlying AIG.
 -/
-theorem mkAtom_le_size (aig : AIG) (var : Nat) : aig.decls.size ≤ (aig.mkAtom var).aig.decls.size := by
+theorem mkAtom_le_size (aig : AIG α) (var : α) : aig.decls.size ≤ (aig.mkAtom var).aig.decls.size := by
   simp_arith [mkAtom]
 
 /--
 The AIG produced by `AIG.mkAtom` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkAtom_decl_eq (aig : AIG) (var : Nat) (idx : Nat) {h : idx < aig.decls.size} {hbound} :
+theorem mkAtom_decl_eq (aig : AIG α) (var : α) (idx : Nat) {h : idx < aig.decls.size} {hbound} :
     (aig.mkAtom var).aig.decls[idx]'hbound = aig.decls[idx] := by
   simp only [mkAtom, Array.get_push]
   split
@@ -226,7 +228,7 @@ theorem mkAtom_decl_eq (aig : AIG) (var : Nat) (idx : Nat) {h : idx < aig.decls.
 /--
 The input AIG to an `mkAtom` is a prefix to the output AIG.
 -/
-theorem mkAtom_IsPrefix_aig (aig : AIG) (var : Nat) :
+theorem mkAtom_IsPrefix_aig (aig : AIG α) (var : α) :
     IsPrefix aig.decls (aig.mkAtom var).aig.decls := by
   apply IsPrefix.of
   . intro idx h
@@ -234,7 +236,7 @@ theorem mkAtom_IsPrefix_aig (aig : AIG) (var : Nat) :
   . apply mkAtom_le_size
 
 @[simp]
-theorem denote_mkAtom {aig : AIG} :
+theorem denote_mkAtom {aig : AIG α} :
     ⟦(aig.mkAtom var), assign⟧ = assign var := by
   unfold denote denote.go
   split
@@ -250,7 +252,7 @@ theorem denote_mkAtom {aig : AIG} :
     contradiction
 
 @[simp]
-theorem denote_mkAtom_lt (entry : Entrypoint) {h} :
+theorem denote_mkAtom_lt (entry : Entrypoint α) {h} :
     ⟦(entry.aig.mkAtom var).aig, ⟨entry.start, h⟩, assign⟧
       =
     ⟦entry, assign⟧ := by
@@ -260,14 +262,14 @@ theorem denote_mkAtom_lt (entry : Entrypoint) {h} :
 /--
 `AIG.mkConst` never shrinks the underlying AIG.
 -/
-theorem mkConst_le_size (aig : AIG) (val : Bool)
+theorem mkConst_le_size (aig : AIG α) (val : Bool)
     : aig.decls.size ≤ (aig.mkConst val).aig.decls.size := by
   simp_arith [mkConst]
 
 /--
 The AIG produced by `AIG.mkConst` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkConst_decl_eq (aig : AIG) (val : Bool) (idx : Nat) {h : idx < aig.decls.size} :
+theorem mkConst_decl_eq (aig : AIG α) (val : Bool) (idx : Nat) {h : idx < aig.decls.size} :
     have := mkConst_le_size aig val
     (aig.mkConst val).aig.decls[idx]'(by omega) = aig.decls[idx] := by
   simp only [mkConst, Array.get_push]
@@ -278,7 +280,7 @@ theorem mkConst_decl_eq (aig : AIG) (val : Bool) (idx : Nat) {h : idx < aig.decl
 /--
 The input AIG to an `mkConst` is a prefix to the output AIG.
 -/
-theorem mkConst_IsPrefix_aig (aig : AIG) (const : Bool) :
+theorem mkConst_IsPrefix_aig (aig : AIG α) (const : Bool) :
     IsPrefix aig.decls (aig.mkConst const).aig.decls := by
   apply IsPrefix.of
   . intro idx h
@@ -286,7 +288,7 @@ theorem mkConst_IsPrefix_aig (aig : AIG) (const : Bool) :
   . apply mkConst_le_size
 
 @[simp]
-theorem denote_mkConst {aig : AIG} : ⟦(aig.mkConst val), assign⟧ = val := by
+theorem denote_mkConst {aig : AIG α} : ⟦(aig.mkConst val), assign⟧ = val := by
   unfold denote denote.go
   split
   . next heq =>
@@ -301,7 +303,7 @@ theorem denote_mkConst {aig : AIG} : ⟦(aig.mkConst val), assign⟧ = val := by
     contradiction
 
 @[simp]
-theorem denote_mkConst_entry (entry : Entrypoint) {h} :
+theorem denote_mkConst_entry (entry : Entrypoint α) {h} :
     ⟦(entry.aig.mkConst val).aig, ⟨entry.start, h⟩, assign⟧
       =
     ⟦entry, assign⟧ := by
@@ -311,7 +313,7 @@ theorem denote_mkConst_entry (entry : Entrypoint) {h} :
 /--
 We can show that something is < the output AIG of `mkConst` by showing that it is < the input AIG.
 -/
-theorem lt_mkConst_size_of_lt_aig_size (aig : AIG) (val : Bool) (h : x < aig.decls.size) : x < (aig.mkConst val).aig.decls.size := by
+theorem lt_mkConst_size_of_lt_aig_size (aig : AIG α) (val : Bool) (h : x < aig.decls.size) : x < (aig.mkConst val).aig.decls.size := by
   have := mkConst_le_size aig val
   omega
 
@@ -319,21 +321,21 @@ theorem lt_mkConst_size_of_lt_aig_size (aig : AIG) (val : Bool) (h : x < aig.dec
 Reusing an `AIG.Entrypoint` to build an additional constant will never invalidate the entry node of
 the original entrypoint.
 -/
-theorem lt_mkConst_size (entry : Entrypoint) (val : Bool) : entry.start < (entry.aig.mkConst val).aig.decls.size := by
+theorem lt_mkConst_size (entry : Entrypoint α) (val : Bool) : entry.start < (entry.aig.mkConst val).aig.decls.size := by
   apply lt_mkConst_size_of_lt_aig_size
   exact entry.inv
 
 /--
 We can show that something is ≤ the output AIG of `mkConst` by showing that it is ≤ the input AIG.
 -/
-theorem le_mkConst_size_of_le_aig_size (aig : AIG) (val : Bool) (h : x ≤ aig.decls.size) : x ≤ (aig.mkConst val).aig.decls.size := by
+theorem le_mkConst_size_of_le_aig_size (aig : AIG α) (val : Bool) (h : x ≤ aig.decls.size) : x ≤ (aig.mkConst val).aig.decls.size := by
   have := mkConst_le_size aig val
   omega
 
 /--
 If an index contains a `Decl.const` we know how to denote it.
 -/
-theorem denote_idx_const (h : aig.decls[start] = .const b) :
+theorem denote_idx_const {aig : AIG α} {hstart} (h : aig.decls[start]'hstart = .const b) :
     ⟦aig, ⟨start, hstart⟩, assign⟧ = b := by
   unfold denote denote.go
   split <;> simp_all
@@ -341,7 +343,7 @@ theorem denote_idx_const (h : aig.decls[start] = .const b) :
 /--
 If an index contains a `Decl.atom` we know how to denote it.
 -/
-theorem denote_idx_atom (h : aig.decls[start] = .atom a) :
+theorem denote_idx_atom {aig : AIG α} {hstart} (h : aig.decls[start] = .atom a) :
     ⟦aig, ⟨start, hstart⟩, assign⟧ = assign a := by
   unfold denote denote.go
   split <;> simp_all
@@ -349,7 +351,7 @@ theorem denote_idx_atom (h : aig.decls[start] = .atom a) :
 /--
 If an index contains a `Decl.gate` we know how to denote it.
 -/
-theorem denote_idx_gate (h : aig.decls[start] = .gate lhs rhs linv rinv) :
+theorem denote_idx_gate {aig : AIG α} {hstart} (h : aig.decls[start] = .gate lhs rhs linv rinv) :
     ⟦aig, ⟨start, hstart⟩, assign⟧
       =
     (

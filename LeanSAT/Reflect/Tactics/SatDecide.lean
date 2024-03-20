@@ -178,7 +178,7 @@ The advantage over running just `verifyCert` is that the Tseitin encoding happen
 in the reflection code as well instead of in the kernel reduction engine.
 -/
 def verifyBoolExpr (b : BoolExprNat) (cert : LratCert) : Bool :=
-  verifyCert (LratFormula.ofCnf (AIG.toCNF (AIG.ofBoolExprNatCached b.toBoolExpr))) cert
+  verifyCert (LratFormula.ofCnf (AIG.toCNF (AIG.ofBoolExprCached b.toBoolExpr))) cert
 
 theorem unsat_of_verifyBoolExpr_eq_true (b : BoolExprNat) (c : LratCert)
     (h : verifyBoolExpr b c = true) : BoolExprNat.unsat b := by
@@ -227,7 +227,7 @@ Prepare an `Expr` that proves `boolExpr.unsat` using `ofReduceBool`.
 def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   let cnf ←
     withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
-      return (AIG.toCNF (AIG.ofBoolExprNatCached boolExpr.toBoolExpr))
+      return (AIG.toCNF (AIG.ofBoolExprCached boolExpr.toBoolExpr))
 
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do

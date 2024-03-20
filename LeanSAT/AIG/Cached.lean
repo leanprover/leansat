@@ -14,12 +14,14 @@ AIG node creation ones.
 
 namespace AIG
 
+variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+
 /--
 A version of `AIG.mkGate` that uses the subterm cache in `AIG`. This version is meant for
 programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
 -/
-def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG) (hl : lhs < aig.decls.size)
-    (hr : rhs < aig.decls.size) : AIG.Entrypoint :=
+def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < aig.decls.size)
+    (hr : rhs < aig.decls.size) : Entrypoint α :=
   let decl := .gate lhs rhs linv rinv
   match aig.cache.find? decl with
   | some hit =>
@@ -41,7 +43,7 @@ def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG) (hl : lhs < aig.
 A version of `AIG.mkAtom` that uses the subterm cache in `AIG`. This version is meant for
 programmming, for proving purposes use `AIG.mkAtom` and equality theorems to this one.
 -/
-def mkAtomCached (n : Nat) (aig : AIG) : Entrypoint :=
+def mkAtomCached (n : α) (aig : AIG α) : Entrypoint α :=
   let decl := .atom n
   match aig.cache.find? decl with
   | some hit =>
@@ -63,7 +65,7 @@ def mkAtomCached (n : Nat) (aig : AIG) : Entrypoint :=
 A version of `AIG.mkConst` that uses the subterm cache in `AIG`. This version is meant for
 programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
 -/
-def mkConstCached (val : Bool) (aig : AIG) : Entrypoint :=
+def mkConstCached (val : Bool) (aig : AIG α) : Entrypoint α :=
   let decl := .const val
   match aig.cache.find? decl with
   | some hit =>

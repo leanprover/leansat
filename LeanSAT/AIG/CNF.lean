@@ -77,7 +77,7 @@ end Decl
 
 namespace AIG
 
-abbrev CNFVar (aig : AIG) := Nat ⊕ (Fin aig.decls.size)
+abbrev CNFVar (aig : AIG Nat) := Nat ⊕ (Fin aig.decls.size)
 
 namespace toCNF
 
@@ -87,7 +87,7 @@ Mix:
 2. An assignment for auxiliary Tseitin variables
 into an assignment that can be used by a CNF produced by our Tseitin transformation.
 -/
-def mixAssigns {aig : AIG} (assign1 : Nat → Bool) (assign2 : Fin aig.decls.size → Bool)
+def mixAssigns {aig : AIG Nat} (assign1 : Nat → Bool) (assign2 : Fin aig.decls.size → Bool)
     : CNFVar aig → Bool
   | .inl var => assign1 var
   | .inr var => assign2 var
@@ -117,7 +117,7 @@ Given an atom assignment, produce an assignment that will always satisfy the CNF
 Tseitin transformation. This is done by combining the atom assignment with an assignment for the
 auxiliary variables, that just evaluates the AIG at the corresponding node.
 -/
-def cnfSatAssignment (aig : AIG) (assign1 : Nat → Bool) : CNFVar aig → Bool :=
+def cnfSatAssignment (aig : AIG Nat) (assign1 : Nat → Bool) : CNFVar aig → Bool :=
   mixAssigns assign1 (fun idx => ⟦aig, ⟨idx.val, idx.isLt⟩, assign1⟧)
 
 @[simp]
@@ -171,7 +171,7 @@ theorem Cache.Inv_init : Inv ([] : CNF (CNFVar aig)) (mkArray aig.decls.size fal
 The CNF cache. It keeps track of AIG nodes that we already turned into CNF to avoid adding the same
 CNF twice.
 -/
-structure Cache (aig : AIG) (cnf : CNF (CNFVar aig)) where
+structure Cache (aig : AIG Nat) (cnf : CNF (CNFVar aig)) where
   /--
   Keeps track of AIG nodes that we already turned into CNF.
   -/
@@ -250,7 +250,7 @@ theorem Cache.IsExtensionBy_set (cache1 : Cache aig cnf1) (cache2 : Cache aig cn
 /--
 A cache with no entries is valid for an empty CNF.
 -/
-def Cache.init (aig : AIG) : Cache aig [] where
+def Cache.init (aig : AIG Nat) : Cache aig [] where
   marks := mkArray aig.decls.size false
   hmarks := by simp
   inv := Inv_init
@@ -436,7 +436,7 @@ theorem State.Inv_atomToCNF (heq : aig.decls[upper] = .atom a)
 /--
 `State.Inv` holds for the CNF that we produce for a `Decl.gate`
 -/
-theorem State.Inv_gateToCNF {aig : AIG} {h} (heq : aig.decls[upper]'h = .gate lhs rhs linv rinv)
+theorem State.Inv_gateToCNF {aig : AIG Nat} {h} (heq : aig.decls[upper]'h = .gate lhs rhs linv rinv)
     : State.Inv
         (aig := aig)
         (Decl.gateToCNF
@@ -452,7 +452,7 @@ theorem State.Inv_gateToCNF {aig : AIG} {h} (heq : aig.decls[upper]'h = .gate lh
 /--
 The state to accumulate CNF clauses as we run our Tseitin transformation on the AIG.
 -/
-structure State (aig : AIG) where
+structure State (aig : AIG Nat) where
   /--
   The CNF clauses so far.
   -/
@@ -469,7 +469,7 @@ structure State (aig : AIG) where
 /--
 An initial state with no CNF clauses and an empty cache.
 -/
-def State.empty (aig : AIG) : State aig where
+def State.empty (aig : AIG Nat) : State aig where
   cnf := []
   cache := Cache.init aig
   inv := State.Inv_nil
@@ -594,16 +594,16 @@ end toCNF
 /--
 Convert an AIG into CNF, starting at some entry node.
 -/
-def toCNF (entry : Entrypoint) : CNF Nat :=
+def toCNF (entry : Entrypoint Nat) : CNF Nat :=
   let ⟨state, _⟩ := go entry.aig entry.start entry.inv (toCNF.State.empty entry.aig)
   let cnf : CNF (CNFVar entry.aig) := [(.inr ⟨entry.start, entry.inv⟩, true)] :: state.cnf
   cnf.relabel inj
 where
-  inj {aig : AIG} (var : CNFVar aig) : Nat :=
+  inj {aig : AIG Nat} (var : CNFVar aig) : Nat :=
     match var with
     | .inl var => aig.decls.size + var
     | .inr var => var.val
-  go (aig : AIG) (upper : Nat) (h : upper < aig.decls.size) (state : toCNF.State aig) :
+  go (aig : AIG Nat) (upper : Nat) (h : upper < aig.decls.size) (state : toCNF.State aig) :
       { out : toCNF.State aig // toCNF.State.IsExtensionBy state out upper h } :=
     if hmarked:state.cache.marks[upper]'(by have := state.cache.hmarks; omega) then
       ⟨state, by apply toCNF.State.IsExtensionBy_rfl <;> assumption⟩
@@ -637,7 +637,7 @@ where
 The function we use to convert from CNF with explicit auxiliary variables to just `Nat` variables
 in `toCNF` is an injection.
 -/
-theorem toCNF.inj_is_injection {aig : AIG} (a b : CNFVar aig) :
+theorem toCNF.inj_is_injection {aig : AIG Nat} (a b : CNFVar aig) :
     toCNF.inj a = toCNF.inj b → a = b := by
   intro h
   cases a with
@@ -676,7 +676,7 @@ theorem toCNF.go_marked :
 /--
 The CNF returned by `go` will always be SAT at `cnfSatAssignment`.
 -/
-theorem toCNF.go_sat (aig : AIG) (start : Nat) (h1 : start < aig.decls.size) (assign1 : Nat → Bool)
+theorem toCNF.go_sat (aig : AIG Nat) (start : Nat) (h1 : start < aig.decls.size) (assign1 : Nat → Bool)
     (state : toCNF.State aig) :
     (go aig start h1 state).val.sat (cnfSatAssignment aig assign1) := by
   have := (go aig start h1 state).val.inv assign1
@@ -685,7 +685,7 @@ theorem toCNF.go_sat (aig : AIG) (start : Nat) (h1 : start < aig.decls.size) (as
 /--
 Connect SAT results about the CNF to SAT results about the AIG.
 -/
-theorem toCNF.go_as_denote (aig : AIG) (start) (h1) (assign1) :
+theorem toCNF.go_as_denote (aig : AIG Nat) (start) (h1) (assign1) :
     ((⟦aig, ⟨start, h1⟩, assign1⟧ && (go aig start h1 (.empty aig)).val.eval (cnfSatAssignment aig assign1)) = sat?)
       →
     (⟦aig, ⟨start, h1⟩, assign1⟧ = sat?) := by
@@ -714,7 +714,7 @@ theorem toCNF.denote_as_go :
 /--
 An AIG is unsat iff its CNF is unsat.
 -/
-theorem toCNF_equisat (entry : Entrypoint) : (toCNF entry).unsat ↔ entry.unsat := by
+theorem toCNF_equisat (entry : Entrypoint Nat) : (toCNF entry).unsat ↔ entry.unsat := by
   dsimp [toCNF]
   rw [CNF.unsat_relabel_iff]
   . constructor
