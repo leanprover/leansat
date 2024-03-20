@@ -6,6 +6,12 @@ Authors: Henrik Böving
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 
+/-!
+The lawful operator framework provides a large amount of free theorems around the typeclasses
+`LawfulUnaryOperator` and `LawfulBinaryOperator`. Their definitions are based on section 3.3 of
+the AIGNET paper.
+-/
+
 namespace AIG
 
 abbrev UnaryOperator := (gate : Nat) → (aig : AIG) → (gate < aig.decls.size) → Entrypoint

@@ -5,6 +5,12 @@ Authors: Henrik Böving
 -/
 import LeanSAT.AIG.Cached
 
+/-!
+This module contains the theory of the cached AIG node creation functions.
+It is mainly concerned with proving lemmas about the denotational semantics of the gate functions
+in different scenarios. In particular reductions to the semantics of the non cached versions.
+-/
+
 namespace AIG
 
 /--

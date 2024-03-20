@@ -6,6 +6,11 @@ Authors: Henrik Böving
 import LeanSAT.AIG.Cached
 import LeanSAT.AIG.CachedLemmas
 
+/-!
+This module contains functions to construct basic logic gates while making use of the sub-circuit
+cache if possible.
+-/
+
 namespace AIG
 
 /--

@@ -11,7 +11,11 @@ import LeanSAT.Reflect.CNF.Relabel
 import LeanSAT.Reflect.BoolExpr.Tseitin.Defs
 import LeanSAT.Reflect.BoolExpr.Tseitin.Lemmas
 
-abbrev CNFVar (aig : AIG) := Nat ⊕ (Fin aig.decls.size)
+/-!
+This module contains an implementation of a verified Tseitin transformation on AIGs. The key results
+are the `toCNF` function and the `toCNF_equisat` correctness statement. The implementation is
+mirrored after section 3.4 of the AIGNET paper.
+-/
 
 namespace Decl
 
@@ -72,6 +76,8 @@ end Decl
 
 
 namespace AIG
+
+abbrev CNFVar (aig : AIG) := Nat ⊕ (Fin aig.decls.size)
 
 namespace toCNF
 
