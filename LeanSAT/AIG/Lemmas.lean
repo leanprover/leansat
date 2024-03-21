@@ -370,5 +370,47 @@ theorem denote_idx_gate {aig : AIG α} {hstart} (h : aig.decls[start] = .gate lh
     rw [h] at heq
     simp_all
 
+theorem idx_trichotomy (aig : AIG α) (hstart : start < aig.decls.size) {prop : Prop}
+    (hconst : ∀ b, aig.decls[start]'hstart = .const b → prop)
+    (hatom : ∀ a, aig.decls[start]'hstart = .atom a → prop)
+    (hgate : ∀ lhs rhs linv rinv, aig.decls[start]'hstart = .gate lhs rhs linv rinv → prop)
+    : prop := by
+  match h:aig.decls[start]'hstart with
+  | .const b => apply hconst; assumption
+  | .atom a => apply hatom; assumption
+  | .gate lhs rhs linv rinv => apply hgate; assumption
+
+theorem denote_idx_trichotomy {aig : AIG α} {hstart : start < aig.decls.size}
+    (hconst : ∀ b, aig.decls[start]'hstart = .const b → ⟦aig, ⟨start, hstart⟩, assign⟧ = res)
+    (hatom : ∀ a, aig.decls[start]'hstart = .atom a → ⟦aig, ⟨start, hstart⟩, assign⟧ = res)
+    (hgate : ∀ lhs rhs linv rinv, aig.decls[start]'hstart = .gate lhs rhs linv rinv → ⟦aig, ⟨start, hstart⟩, assign⟧ = res)
+    : ⟦aig, ⟨start, hstart⟩, assign⟧ = res := by
+  apply idx_trichotomy aig hstart
+  . exact hconst
+  . exact hatom
+  . exact hgate
+
+theorem mem_def {aig : AIG α} {a : α} : (a ∈ aig) = ((.atom a) ∈ aig.decls) := by
+  simp [Membership.mem, mem]
+
+theorem denote_congr (assign1 assign2 : α → Bool) (aig : AIG α) (idx : Nat)
+    (hidx : idx < aig.decls.size) (h : ∀ a, a ∈ aig → assign1 a = assign2 a)
+    : ⟦aig, ⟨idx, hidx⟩, assign1⟧ = ⟦aig, ⟨idx, hidx⟩, assign2⟧ := by
+  apply denote_idx_trichotomy
+  . intro b heq
+    simp [denote_idx_const heq]
+  . intro a heq
+    simp only [denote_idx_atom heq]
+    apply h
+    rw [mem_def]
+    rw [← heq]
+    -- TODO: this should be in the array API
+    rw [Array.mem_def]
+    apply Array.getElem_mem_data
+  . intro lhs rhs linv rinv heq
+    simp [denote_idx_gate heq]
+    have := aig.inv idx lhs rhs linv rinv hidx heq
+    rw [denote_congr assign1 assign2 aig lhs (by omega) h]
+    rw [denote_congr assign1 assign2 aig rhs (by omega) h]
 
 end AIG
