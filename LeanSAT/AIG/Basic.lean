@@ -72,7 +72,7 @@ def Cache (α : Type) [BEq α] [Hashable α] (decls : Array (Decl α)) :=
 Create an empty `Cache`, valid with respect to any `Array Decl`.
 -/
 @[irreducible]
-def Cache.empty (decls : Array (Decl α)) : Cache α decl := ⟨HashMap.empty, WF.empty⟩
+def Cache.empty (decls : Array (Decl α)) : Cache α decls := ⟨HashMap.empty, WF.empty⟩
 
 @[inherit_doc Cache.WF.push_id, irreducible]
 def Cache.noUpdate (cache : Cache α decls) : Cache α (decls.push decl) :=
@@ -150,6 +150,11 @@ namespace AIG
 An `AIG` with an empty AIG and cache.
 -/
 def empty : AIG α := { decls := #[], cache := Cache.empty #[], inv := IsDag.empty }
+
+def mem (a : α) (aig : AIG α) : Prop := (.atom a) ∈ aig.decls
+
+instance : Membership α (AIG α) where
+  mem := mem
 
 /--
 An entrypoint into an `AIG`. This can be used to evaluate a circuit, starting at a certain node,
