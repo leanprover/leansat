@@ -17,29 +17,6 @@ namespace AIG
 variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 
 /--
-A version of `AIG.mkGate` that uses the subterm cache in `AIG`. This version is meant for
-programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
--/
-def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < aig.decls.size)
-    (hr : rhs < aig.decls.size) : Entrypoint α :=
-  let decl := .gate lhs rhs linv rinv
-  match aig.cache.find? decl with
-  | some hit =>
-    ⟨aig, hit.idx, hit.hbound⟩
-  | none =>
-    let g := aig.decls.size
-    let decls := aig.decls.push decl
-    let cache := Cache.insert aig.cache decl
-    have inv := by
-      intro lhs rhs linv rinv i h1 h2
-      simp only [decls] at *
-      simp only [Array.get_push] at h2
-      split at h2
-      . apply aig.inv <;> assumption
-      . injections; omega
-    ⟨{ aig with decls, inv, cache }, g, by simp [g, decls]⟩
-
-/--
 A version of `AIG.mkAtom` that uses the subterm cache in `AIG`. This version is meant for
 programmming, for proving purposes use `AIG.mkAtom` and equality theorems to this one.
 -/
@@ -82,5 +59,42 @@ def mkConstCached (val : Bool) (aig : AIG α) : Entrypoint α :=
       . apply aig.inv <;> assumption
       . contradiction
   ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
+
+/--
+A version of `AIG.mkGate` that uses the subterm cache in `AIG`. This version is meant for
+programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
+
+Beyond caching this function also implements a subset of the optimizations presented in:
+-/
+def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < aig.decls.size)
+    (hr : rhs < aig.decls.size) : Entrypoint α :=
+  let decl := .gate lhs rhs linv rinv
+  match aig.cache.find? decl with
+  | some hit =>
+    ⟨aig, hit.idx, hit.hbound⟩
+  | none =>
+    /-
+    Here we implement the O1 subset of: https://fmv.jku.at/papers/BrummayerBiere-MEMICS06.pdf
+    TODO: rest of the table
+    -/
+    match aig.decls[lhs], aig.decls[rhs], linv, rinv with
+    -- Left Boundedness
+    | .const true, _, true, _ => aig.mkConstCached false
+    | .const false, _, false, _ => aig.mkConstCached false
+    -- Right Boundedness
+    | _, .const true, _, true => aig.mkConstCached false
+    | _, .const false, _, false => aig.mkConstCached false
+    | _, _, _, _ =>
+      let g := aig.decls.size
+      let decls := aig.decls.push decl
+      let cache := Cache.insert aig.cache decl
+      have inv := by
+        intro lhs rhs linv rinv i h1 h2
+        simp only [decls] at *
+        simp only [Array.get_push] at h2
+        split at h2
+        . apply aig.inv <;> assumption
+        . injections; omega
+      ⟨{ aig with decls, inv, cache }, g, by simp [g, decls]⟩
 
 end AIG
