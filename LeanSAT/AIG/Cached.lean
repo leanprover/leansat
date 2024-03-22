@@ -74,7 +74,8 @@ def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < a
     ⟨aig, hit.idx, hit.hbound⟩
   | none =>
     /-
-    Here we implement the O1 subset of: https://fmv.jku.at/papers/BrummayerBiere-MEMICS06.pdf
+    Here we implement the constant propagating subset of:
+    https://fmv.jku.at/papers/BrummayerBiere-MEMICS06.pdf
     TODO: rest of the table
     -/
     match aig.decls[lhs], aig.decls[rhs], linv, rinv with

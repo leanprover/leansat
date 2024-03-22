@@ -37,7 +37,7 @@ inductive Decl (α : Type) where
   the left or right input.
   -/
   | gate (l r : Nat) (linv rinv : Bool)
-  deriving BEq, Hashable, Repr, DecidableEq
+  deriving BEq, Hashable, Repr, DecidableEq, Inhabited
 
 variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 
