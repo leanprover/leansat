@@ -277,6 +277,10 @@ theorem mkGateCached_decl_eq? (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool)
       . apply lt_mkConstCached_size_of_lt_aig_size
         assumption
       . assumption
+    . simp only [Array.getElem?_lt]
+    . simp only [Array.getElem?_lt]
+    . simp only [Array.getElem?_lt]
+    . simp only [Array.getElem?_lt]
     . dsimp
       rw [Array.getElem?_lt, Array.getElem?_lt]
       apply congrArg
@@ -340,6 +344,14 @@ theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG α} {hl} {hr} :
     . next heq _ _ _ _ =>
       simp [denote_idx_const heq]
     . next heq _ _ _ _ =>
+      simp [denote_idx_const heq]
+    . next heq _ _ _ =>
+      simp [denote_idx_const heq]
+    . next heq _ _ _ =>
+      simp [denote_idx_const heq]
+    . next heq _ _ _ _ =>
+      simp [denote_idx_const heq]
+    . next heq _ _ _ =>
       simp [denote_idx_const heq]
     . simp [mkGate, denote]
 end AIG

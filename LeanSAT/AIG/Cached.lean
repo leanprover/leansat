@@ -78,12 +78,16 @@ def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < a
     TODO: rest of the table
     -/
     match aig.decls[lhs], aig.decls[rhs], linv, rinv with
-    -- Left Boundedness
-    | .const true, _, true, _ => aig.mkConstCached false
-    | .const false, _, false, _ => aig.mkConstCached false
-    -- Right Boundedness
-    | _, .const true, _, true => aig.mkConstCached false
-    | _, .const false, _, false => aig.mkConstCached false
+    -- Boundedness
+    | .const true, _, true, _ | .const false, _, false, _
+    | _, .const true, _, true | _, .const false, _, false =>
+      aig.mkConstCached false
+    -- Left Neutrality
+    | .const true, _, false, false | .const false, _, true, false =>
+      ⟨aig, rhs, hr⟩
+    -- Right Neutrality
+    | _, .const true, false, false | _, .const false, false, true =>
+      ⟨aig, lhs, hl⟩
     | _, _, _, _ =>
       let g := aig.decls.size
       let decls := aig.decls.push decl
