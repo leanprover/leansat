@@ -6,3 +6,4 @@ import Test.LRATChecker
 import Test.PHPDemo
 import Test.AIG
 import Test.AIGStress
+import Test.AIGOpt
