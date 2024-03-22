@@ -16,125 +16,6 @@ namespace AIG
 variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 
 /--
-If we find a cached gate declaration in the AIG, denoting it is equivalent to denoting `AIG.mkGate`.
--/
-theorem denote_mkGate_cached {aig : AIG α} {hl} {hr} {hit}
-    (h : aig.cache.find? (.gate lhs rhs lpol rpol) = some hit) :
-    ⟦⟨aig, hit.idx, hit.hbound⟩, assign⟧
-      =
-    ⟦aig.mkGate lhs rhs lpol rpol hl hr, assign⟧ := by
-  have := hit.hvalid
-  simp only [denote_mkGate]
-  conv =>
-    lhs
-    unfold denote denote.go
-  split <;> simp_all[denote]
-
-/--
-`AIG.mkGateCached` never shrinks the underlying AIG.
--/
-theorem mkGateCached_le_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) hl hr
-    : aig.decls.size ≤ (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
-  dsimp [mkGateCached]
-  split
-  . simp
-  . simp_arith
-
-/--
-We can show that something is < the output AIG of `mkGateCached` by showing that it is < the input AIG.
--/
-theorem lt_mkGateCached_size_of_lt_aig_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < aig.decls.size)
-    : x < (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
-  have := mkGateCached_le_size aig lhs rhs linv rinv hl hr
-  omega
-
-/--
-We can show that something is ≤ the output AIG of `mkGateCached` by showing that it is ≤ the input AIG.
--/
-theorem le_mkGateCached_size_of_le_aig_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ aig.decls.size)
-    : x ≤ (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
-  have := mkGateCached_le_size aig lhs rhs linv rinv hl hr
-  omega
-
-/--
-Reusing an `AIG.Entrypoint` to build an additional gate will never invalidate the entry node of
-the original entrypoint.
--/
-theorem lt_mkGateCached_size (entry : Entrypoint α) (lhs rhs : Nat) (linv rinv : Bool) hl hr
-    : entry.start < (entry.aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
-  apply lt_mkGateCached_size_of_lt_aig_size
-  exact entry.inv
-
-/--
-`mkGateCached` does not modify the input AIG upon a cache hit.
--/
-theorem mkGateCached_hit_aig (aig : AIG α) {hit} (hcache : aig.cache.find? (.gate lhs rhs linv rinv) = some hit) (hl) (hr) :
-    (aig.mkGateCached lhs rhs linv rinv hl hr).aig = aig := by
-  simp only [mkGateCached]
-  split <;> simp_all
-
-/--
-`mkGateCached` pushes to the input AIG upon a cache miss.
--/
-theorem mkGateCached_miss_aig (aig : AIG α) (hcache : aig.cache.find? (.gate lhs rhs linv rinv) = none) (hl) (hr) :
-    (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls = aig.decls.push (.gate lhs rhs linv rinv) := by
-  simp only [mkGateCached]
-  split <;> simp_all
-
-/--
-The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
--/
-theorem mkGateCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool)
-    {h : idx < aig.decls.size} {hl} {hr} {hbound} :
-    (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls[idx]'hbound = aig.decls[idx] := by
-  match hcache:aig.cache.find? (.gate lhs rhs linv rinv) with
-  | some gate =>
-    have := mkGateCached_hit_aig aig hcache hl hr
-    simp [this]
-  | none =>
-    have := mkGateCached_miss_aig aig hcache hl hr
-    simp only [this, Array.get_push]
-    split
-    . rfl
-    . contradiction
-
-/--
-The input AIG to an `AIG.mkGateCached` is a prefix to the output AIG.
--/
-theorem mkGateCached_IsPrefix_aig {aig : AIG α} {hl} {hr} :
-    IsPrefix aig.decls (aig.mkGateCached lhs rhs lpol rpol hl hr).aig.decls := by
-  apply IsPrefix.of
-  . intro idx h
-    apply mkGateCached_decl_eq
-  . apply mkGateCached_le_size
-
-@[simp]
-theorem denote_mkGateCached_entry (entry : Entrypoint α) {hlbound} {hrbound} {h} :
-    ⟦(entry.aig.mkGateCached lhs rhs lpol rpol hlbound hrbound).aig, ⟨entry.start, h⟩, assign ⟧
-      =
-    ⟦entry, assign⟧ :=  by
-  apply denote.eq_of_aig_eq
-  apply mkGateCached_IsPrefix_aig
-
-theorem denote_mkGateCached_mem_prefix {aig : AIG α} {hlbound} {hrbound} (h) :
-    ⟦(aig.mkGateCached lhs rhs lpol rpol hlbound hrbound).aig, ⟨start, (by apply lt_mkGateCached_size_of_lt_aig_size; assumption)⟩, assign ⟧
-      =
-    ⟦aig, ⟨start, h⟩, assign⟧ :=  by
-  rw [denote_mkGateCached_entry ⟨aig, start, h⟩]
-
-/--
-The central equality theorem between `mkGateCached` and `mkGate`.
--/
-@[simp]
-theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG α} {hl} {hr} :
-    ⟦aig.mkGateCached lhs rhs linv rinv hl hr, assign⟧ = ⟦aig.mkGate lhs rhs linv rinv hl hr, assign⟧ := by
-  simp only [mkGateCached]
-  split
-  . next heq1 =>
-    rw [denote_mkGate_cached heq1]
-  . simp [mkGate, denote]
-
-/--
 If we find a cached atom declaration in the AIG, denoting it is equivalent to denoting `AIG.mkAtom`.
 -/
 theorem denote_mkAtom_cached {aig : AIG α} {hit} (h : aig.cache.find? (.atom v) = some hit) :
@@ -308,4 +189,157 @@ theorem mkConstCached_eval_eq_mkConst_eval {aig : AIG α}
     rw [denote_mkConst_cached heq1]
   . simp [mkConst, denote]
 
+/--
+If we find a cached gate declaration in the AIG, denoting it is equivalent to denoting `AIG.mkGate`.
+-/
+theorem denote_mkGate_cached {aig : AIG α} {hl} {hr} {hit}
+    (h : aig.cache.find? (.gate lhs rhs lpol rpol) = some hit) :
+    ⟦⟨aig, hit.idx, hit.hbound⟩, assign⟧
+      =
+    ⟦aig.mkGate lhs rhs lpol rpol hl hr, assign⟧ := by
+  have := hit.hvalid
+  simp only [denote_mkGate]
+  conv =>
+    lhs
+    unfold denote denote.go
+  split <;> simp_all[denote]
+
+/--
+`AIG.mkGateCached` never shrinks the underlying AIG.
+-/
+theorem mkGateCached_le_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) hl hr
+    : aig.decls.size ≤ (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
+  dsimp [mkGateCached]
+  split
+  . simp
+  . split <;> simp_arith [mkConstCached_le_size]
+
+/--
+We can show that something is < the output AIG of `mkGateCached` by showing that it is < the input AIG.
+-/
+theorem lt_mkGateCached_size_of_lt_aig_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x < aig.decls.size)
+    : x < (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
+  have := mkGateCached_le_size aig lhs rhs linv rinv hl hr
+  omega
+
+/--
+We can show that something is ≤ the output AIG of `mkGateCached` by showing that it is ≤ the input AIG.
+-/
+theorem le_mkGateCached_size_of_le_aig_size (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool) (hl) (hr) (h : x ≤ aig.decls.size)
+    : x ≤ (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
+  have := mkGateCached_le_size aig lhs rhs linv rinv hl hr
+  omega
+
+/--
+Reusing an `AIG.Entrypoint` to build an additional gate will never invalidate the entry node of
+the original entrypoint.
+-/
+theorem lt_mkGateCached_size (entry : Entrypoint α) (lhs rhs : Nat) (linv rinv : Bool) hl hr
+    : entry.start < (entry.aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size := by
+  apply lt_mkGateCached_size_of_lt_aig_size
+  exact entry.inv
+
+/--
+`mkGateCached` does not modify the input AIG upon a cache hit.
+-/
+theorem mkGateCached_hit_aig (aig : AIG α) {hit} (hcache : aig.cache.find? (.gate lhs rhs linv rinv) = some hit) (hl) (hr) :
+    (aig.mkGateCached lhs rhs linv rinv hl hr).aig = aig := by
+  simp only [mkGateCached]
+  split <;> simp_all
+
+theorem mkGateCached_decl_eq? (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool)
+    (h : idx < aig.decls.size) {hl} {hr} (hbound : idx < (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls.size) :
+    (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls[idx]? = aig.decls[idx]? := by
+  unfold mkGateCached
+  dsimp
+  split
+  . next hcache =>
+    simp [mkGateCached_hit_aig aig hcache hl hr]
+  . next hit hcache =>
+    split
+    . rw [Array.getElem?_lt, Array.getElem?_lt]
+      rw [mkConstCached_decl_eq]
+      . apply lt_mkConstCached_size_of_lt_aig_size
+        assumption
+      . assumption
+    . rw [Array.getElem?_lt, Array.getElem?_lt]
+      rw [mkConstCached_decl_eq]
+      . apply lt_mkConstCached_size_of_lt_aig_size
+        assumption
+      . assumption
+    . rw [Array.getElem?_lt, Array.getElem?_lt]
+      rw [mkConstCached_decl_eq]
+      . apply lt_mkConstCached_size_of_lt_aig_size
+        assumption
+      . assumption
+    . rw [Array.getElem?_lt, Array.getElem?_lt]
+      rw [mkConstCached_decl_eq]
+      . apply lt_mkConstCached_size_of_lt_aig_size
+        assumption
+      . assumption
+    . dsimp
+      rw [Array.getElem?_lt, Array.getElem?_lt]
+      apply congrArg
+      rw [Array.get_push]
+      split
+      . simp
+      . contradiction
+      . simp only [Array.size_push]
+        omega
+      . assumption
+
+/--
+The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
+-/
+theorem mkGateCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) (linv rinv : Bool)
+    {h : idx < aig.decls.size} {hl} {hr} {hbound} :
+    (aig.mkGateCached lhs rhs linv rinv hl hr).aig.decls[idx]'hbound = aig.decls[idx]'h := by
+  have := mkGateCached_decl_eq? aig lhs rhs linv rinv h hbound
+  rw [Array.getElem?_lt, Array.getElem?_lt] at this
+  injection this
+
+/--
+The input AIG to an `AIG.mkGateCached` is a prefix to the output AIG.
+-/
+theorem mkGateCached_IsPrefix_aig {aig : AIG α} {hl} {hr} :
+    IsPrefix aig.decls (aig.mkGateCached lhs rhs lpol rpol hl hr).aig.decls := by
+  apply IsPrefix.of
+  . intro idx h
+    apply mkGateCached_decl_eq
+  . apply mkGateCached_le_size
+
+@[simp]
+theorem denote_mkGateCached_entry (entry : Entrypoint α) {hlbound} {hrbound} {h} :
+    ⟦(entry.aig.mkGateCached lhs rhs lpol rpol hlbound hrbound).aig, ⟨entry.start, h⟩, assign ⟧
+      =
+    ⟦entry, assign⟧ :=  by
+  apply denote.eq_of_aig_eq
+  apply mkGateCached_IsPrefix_aig
+
+theorem denote_mkGateCached_mem_prefix {aig : AIG α} {hlbound} {hrbound} (h) :
+    ⟦(aig.mkGateCached lhs rhs lpol rpol hlbound hrbound).aig, ⟨start, (by apply lt_mkGateCached_size_of_lt_aig_size; assumption)⟩, assign ⟧
+      =
+    ⟦aig, ⟨start, h⟩, assign⟧ :=  by
+  rw [denote_mkGateCached_entry ⟨aig, start, h⟩]
+
+/--
+The central equality theorem between `mkGateCached` and `mkGate`.
+-/
+@[simp]
+theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG α} {hl} {hr} :
+    ⟦aig.mkGateCached lhs rhs linv rinv hl hr, assign⟧ = ⟦aig.mkGate lhs rhs linv rinv hl hr, assign⟧ := by
+  simp only [mkGateCached]
+  split
+  . next heq1 =>
+    rw [denote_mkGate_cached heq1]
+  . split
+    . next heq _ _ =>
+      simp [denote_idx_const heq]
+    . next heq _ _ =>
+      simp [denote_idx_const heq]
+    . next heq _ _ _ _ =>
+      simp [denote_idx_const heq]
+    . next heq _ _ _ _ =>
+      simp [denote_idx_const heq]
+    . simp [mkGate, denote]
 end AIG
