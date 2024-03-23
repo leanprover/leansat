@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.Reflect.BVExpr.Basic
+import LeanSAT.Reflect.BVExpr.BitBlast
 import LeanSAT.Reflect.Tactics.SatDecide
 
 open Lean Meta
@@ -419,6 +420,12 @@ def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : M
       withTraceNode `bv (fun _ => return "Reflecting goal into BVLogicalExpr") do
         reflectBV g'
     trace[bv] "Reflected bv logical expression: {bvLogicalExpr}"
+
+    -- TODO: This is just experimental to estimate how big AIGs get
+    let entry := bvLogicalExpr.bitblast
+    trace[bv] "Created AIG with {entry.aig.decls.size} nodes."
+
+
     let aux := mkApp (mkConst ``BVLogicalExpr.unsat) (toExpr bvLogicalExpr)
     let unsatProof := mkApp2 (mkConst ``sorryAx [.zero]) aux (mkConst ``Bool.false)
     let proveFalse ← f unsatProof
