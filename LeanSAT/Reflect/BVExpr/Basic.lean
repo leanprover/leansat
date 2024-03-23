@@ -55,6 +55,8 @@ def toString : BVExpr w → String
 
 instance : ToString (BVExpr w) := ⟨toString⟩
 
+def width (_expr : BVExpr w) : Nat := w
+
 structure PackedBitVec where
   {w : Nat}
   bv: BitVec w
@@ -71,10 +73,20 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
   | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
   | .un op operand => op.eval (eval assign operand)
 
-@[simp] theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.truncate _ := by rfl
-@[simp] theorem eval_const : eval assign (.const val) = val := by rfl
-@[simp] theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rhs.eval assign) := by rfl
-@[simp] theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) := by rfl
+@[simp]
+theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.truncate _ := by
+  rfl
+
+@[simp]
+theorem eval_const : eval assign (.const val) = val := by rfl
+
+@[simp]
+theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rhs.eval assign) := by
+  rfl
+
+@[simp]
+theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) := by
+  rfl
 
 end BVExpr
 

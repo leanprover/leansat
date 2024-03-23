@@ -1,204 +1,286 @@
-import Std.Data.Fin.Basic
-import Std.Data.BitVec.Lemmas
 import LeanSAT.Reflect.BVExpr.Basic
-
-open Std
+import LeanSAT.AIG
 
 structure BVBit where
   {w : Nat}
   var : Nat
   idx : Fin w
+  deriving Hashable, DecidableEq, Repr
 
 instance : ToString BVBit where
   toString b := s!"x{b.var}[{b.idx.val}]"
 
-abbrev BVBitwise := BoolExpr BVBit
-
-namespace BVBitwise
-
-def eval (assign : BVExpr.Assignment) (expr : BVBitwise) : Bool :=
-  BoolExpr.eval (fun bit => assign.getD bit.var |>.bv.getLsb bit.idx.val) expr
-
-@[simp] theorem eval_literal : eval assign (.literal bit) = (assign.getD bit.var |>.bv.getLsb bit.idx.val) := rfl
-@[simp] theorem eval_const : eval assign (.const b) = b := rfl
-@[simp] theorem eval_not : eval assign (.not x) = !eval assign x := rfl
-@[simp] theorem eval_gate : eval assign (.gate g x y) = g.eval (eval assign x) (eval assign y) := rfl
-
-def sat (x : BVBitwise) (assign : BVExpr.Assignment) : Prop := eval assign x = true
-def unsat (x : BVBitwise) : Prop := ∀ f, eval f x = false
-
-end BVBitwise
-
 namespace BVExpr
 
-def bitblast (expr : BVExpr w) (idx : Fin w) : BVBitwise :=
-  match expr with
-  | .var varIdx => .literal ⟨varIdx, idx⟩
-  | .const val => .const (val.getLsb idx.val)
-  | .bin lhs op rhs =>
-    match op with
-    | .and =>
-      let lhs := bitblast lhs idx
-      let rhs := bitblast rhs idx
-      .gate .and lhs rhs
-  | .un op operand =>
-    match op with
-    | .not =>
-      let operand := bitblast operand idx
-      .not operand
+structure SingleBit where
+  {w : Nat}
+  expr : BVExpr w
+  idx : Nat
+  hidx : idx < w
 
-theorem getLsb_eq_bitblast (expr : BVExpr w) (idx : Fin w) :
-    ∀ assign, (expr.eval assign).getLsb idx.val = (expr.bitblast idx).eval assign := by
-  intro assign
-  induction expr with
-  | var varIdx => simp [bitblast]
-  | const bv => simp [bitblast]
+def bitblast (aig : AIG BVBit) (target : SingleBit) : AIG.Entrypoint BVBit :=
+  go aig target.expr target.idx target.hidx |>.val
+where
+  go {w : Nat} (aig : AIG BVBit) (expr : BVExpr w) (idx : Nat) (hidx : idx < w)
+      : AIG.ExtendingEntrypoint aig :=
+    match expr with
+    | .var a => ⟨aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩, by apply AIG.LawfulOperator.le_size⟩
+    | .const val => ⟨aig.mkConstCached (val.getLsb idx), by apply AIG.LawfulOperator.le_size⟩
+    | .bin lhs op rhs =>
+      match op with
+      | .and =>
+        let ⟨lhsEntry, hlhs⟩ := go aig lhs idx hidx
+        let ⟨rhsEntry, hrhs⟩ := go lhsEntry.aig rhs idx hidx
+        let lhsRef := AIG.Ref.ofEntrypoint lhsEntry |>.cast (by omega)
+        let rhsRef := AIG.Ref.ofEntrypoint rhsEntry
+        ⟨
+          rhsEntry.aig.mkAndCached ⟨lhsRef, rhsRef⟩,
+          by
+            apply AIG.LawfulOperator.le_size_of_le_aig_size
+            omega
+        ⟩
+    | .un op expr =>
+      match op with
+      | .not =>
+        let ⟨gateEntry, hgate⟩ := go aig expr idx hidx
+        ⟨
+          gateEntry.aig.mkNotCached <| AIG.Ref.ofEntrypoint gateEntry,
+          by
+            apply AIG.LawfulOperator.le_size_of_le_aig_size
+            omega
+        ⟩
+
+theorem bitblast_le_size (aig : AIG BVBit) (target : SingleBit)
+    : aig.decls.size ≤ (bitblast aig target).aig.decls.size := by
+  have := bitblast.go aig target.expr target.idx target.hidx |>.property
+  unfold bitblast
+  omega
+
+theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w) (bitidx : Nat) (hidx : bitidx < w)
+    {h : idx < aig.decls.size} :
+    have := (bitblast.go aig expr bitidx hidx).property
+    (go aig expr bitidx hidx).val.aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
+  induction expr generalizing aig with
+  | var =>
+    dsimp [go]
+    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAtomCached)]
+  | const =>
+    dsimp [go]
+    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
   | bin lhs op rhs lih rih =>
     cases op with
-    | and => simp[bitblast, Gate.eval, lih, rih]
-  | un op operand ih =>
+    | and =>
+      dsimp [go]
+      rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAndCached)]
+      rw [rih, lih]
+  | un op expr ih =>
     cases op with
-    | not => simp[ih, bitblast]
+    | not =>
+      dsimp [go]
+      rw [AIG.LawfulOperator.decl_eq (f := AIG.mkNotCached)]
+      rw [ih]
+
+theorem bitblast_decl_eq (aig : AIG BVBit) (target : SingleBit) {h : idx < aig.decls.size} :
+    have := bitblast_le_size aig target
+    (bitblast aig target).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
+  unfold bitblast
+  dsimp
+  rw [bitblast.go_decl_eq]
+
+instance : AIG.LawfulOperator BVBit (fun _ => SingleBit) bitblast where
+  le_size := bitblast_le_size
+  decl_eq := by intros; apply bitblast_decl_eq
+
+structure BitPair where
+  {w : Nat}
+  lhs : BVExpr w
+  rhs : BVExpr w
+  idx : Nat
+  hidx : idx < w
+
+def BitPair.leftBit (pair : BitPair) : SingleBit :=
+  {
+    expr := pair.lhs
+    idx := pair.idx
+    hidx := pair.hidx
+  }
+
+def BitPair.rightBit (pair : BitPair) : SingleBit :=
+  {
+    expr := pair.rhs
+    idx := pair.idx
+    hidx := pair.hidx
+  }
+
+def mkBitEq (aig : AIG BVBit) (pair : BitPair) : AIG.Entrypoint BVBit :=
+  let lhsEntry := bitblast aig pair.leftBit
+  let rhsEntry := bitblast lhsEntry.aig pair.rightBit
+  let lhsRef := AIG.Ref.ofEntrypoint lhsEntry |>.cast <| by
+    intros
+    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
+    assumption
+  let rhsRef := AIG.Ref.ofEntrypoint rhsEntry
+  rhsEntry.aig.mkBEqCached ⟨lhsRef, rhsRef⟩
+
+theorem mkBitEq_le_size (aig : AIG BVBit) (target : BitPair)
+    : aig.decls.size ≤ (mkBitEq aig target).aig.decls.size := by
+  unfold mkBitEq
+  dsimp
+  apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkBEqCached)
+  apply AIG.LawfulOperator.le_size_of_le_aig_size (f := bitblast)
+  apply AIG.LawfulOperator.le_size
+
+theorem mkBitEq_decl_eq (aig : AIG BVBit) (target : BitPair) {h : idx < aig.decls.size} :
+    have := mkBitEq_le_size aig target
+    (mkBitEq aig target).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
+  unfold mkBitEq
+  dsimp
+  rw [AIG.LawfulOperator.decl_eq (f := AIG.mkBEqCached)]
+  rw [AIG.LawfulOperator.decl_eq (f := bitblast)]
+  . rw [AIG.LawfulOperator.decl_eq (f := bitblast)]
+    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
+    assumption
+  . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
+    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
+    assumption
+
+instance : AIG.LawfulOperator BVBit (fun _ => BitPair) mkBitEq where
+  le_size := mkBitEq_le_size
+  decl_eq := by intros; apply mkBitEq_decl_eq
 
 end BVExpr
 
 namespace BVPred
 
-def bitblast (expr : BVPred) : BVBitwise :=
-  match expr with
-  | @bin w lhs op rhs =>
+structure ExprPair where
+  {w : Nat}
+  lhs : BVExpr w
+  rhs : BVExpr w
+
+-- FIXME: workaround Meta.check perf issue
+def mkEq.go {w : Nat} (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat) (_hidx : idx ≤ w)
+    : AIG.ExtendingEntrypoint aig :=
+  match h:idx with
+  | 0 => ⟨aig.mkConstCached true, by apply AIG.LawfulOperator.le_size⟩
+  | nextBit + 1 =>
+    let ⟨others, _⟩ := go aig lhs rhs nextBit (by omega)
+    let gate := BVExpr.mkBitEq others.aig ⟨lhs, rhs, nextBit, by omega⟩
+    let othersRef := AIG.Ref.ofEntrypoint others |>.cast <| by
+      intros
+      apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := BVExpr.mkBitEq)
+      assumption
+    let gateRef := AIG.Ref.ofEntrypoint gate
+    ⟨
+      gate.aig.mkAndCached ⟨gateRef, othersRef⟩,
+      by
+        apply AIG.LawfulOperator.le_size_of_le_aig_size
+        apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
+        assumption
+    ⟩
+
+def mkEq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
+  mkEq.go aig pair.lhs pair.rhs pair.lhs.width (by simp [BVExpr.width])
+
+
+theorem mkEq.go_le_size (aig : AIG BVBit) (target : ExprPair) (start : Nat)
+    : aig.decls.size ≤ (mkEq.go aig target.lhs target.rhs start sorry).val.aig.decls.size := by
+  exact (mkEq.go aig target.lhs target.rhs start sorry).property
+
+theorem mkEq_le_size (aig : AIG BVBit) (target : ExprPair)
+    : aig.decls.size ≤ (mkEq aig target).aig.decls.size := by
+  unfold mkEq
+  exact (mkEq.go aig target.lhs target.rhs (BVExpr.width target.lhs) (by simp [BVExpr.width])).property
+
+
+theorem mkEq.go_decl_eq (aig : AIG BVBit) (target : ExprPair) (start : Nat) {h : idx < aig.decls.size} :
+    have := mkEq.go_le_size aig target start
+    (mkEq.go aig target.lhs target.rhs start sorry).val.aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
+  -- simp [go] again gets crushed by Meta.check here.
+  induction start with
+  | zero => sorry
+  | succ curr ih => sorry
+
+theorem mkEq_decl_eq (aig : AIG BVBit) (target : ExprPair) {h : idx < aig.decls.size} :
+    have := mkEq_le_size aig target
+    (mkEq aig target).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
+  unfold mkEq
+  exact mkEq.go_decl_eq aig target _
+
+instance : AIG.LawfulOperator BVBit (fun _ => ExprPair) mkEq where
+  le_size := mkEq_le_size
+  decl_eq := by intros; apply mkEq_decl_eq
+
+def mkNeq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
+  let gate := mkEq aig pair
+  gate.aig.mkNotCached (AIG.Ref.ofEntrypoint gate)
+
+theorem mkNeq_le_size (aig : AIG BVBit) (target : ExprPair)
+    : aig.decls.size ≤ (mkNeq aig target).aig.decls.size := by
+  unfold mkNeq
+  dsimp
+  apply AIG.LawfulOperator.le_size_of_le_aig_size
+  apply AIG.LawfulOperator.le_size
+
+theorem mkNeq_decl_eq (aig : AIG BVBit) (target : ExprPair) {h : idx < aig.decls.size} :
+    have := mkNeq_le_size aig target
+    (mkNeq aig target).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
+  unfold mkNeq
+  dsimp
+  rw [AIG.LawfulOperator.decl_eq]
+  rw [AIG.LawfulOperator.decl_eq (f := mkEq)]
+  apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := mkEq)
+  assumption
+
+instance : AIG.LawfulOperator BVBit (fun _ => ExprPair) mkNeq where
+  le_size := mkNeq_le_size
+  decl_eq := by intros; apply mkNeq_decl_eq
+
+def bitblast (aig : AIG BVBit) (pred : BVPred) : AIG.Entrypoint BVBit :=
+  match pred with
+  | .bin lhs op rhs =>
     match op with
-    | .eq => goEq lhs rhs w (by omega)
-    | .neq => .not (goEq lhs rhs w (by omega))
-where
-  mkEqBit {w : Nat} (lhs rhs : BVExpr w) (bit : Nat) (h : bit < w) : BVBitwise :=
-    let blhs := lhs.bitblast ⟨bit, h⟩
-    let brhs := rhs.bitblast ⟨bit, h⟩
-    .gate .beq blhs brhs
+    | .eq => mkEq aig ⟨lhs, rhs⟩
+    | .neq => mkNeq aig ⟨lhs, rhs⟩
 
-  goEq {w : Nat} (lhs rhs : BVExpr w) (bit : Nat) (h : bit ≤ w) :=
-    match h:bit with
-    | 0 => .const true
-    | rem + 1 =>
-      let eq := mkEqBit lhs rhs rem (by omega)
-      .gate .and eq (goEq lhs rhs rem (by omega))
-
-theorem bitblast.mkEqBit_correct (idx : Fin w) :
-    (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign
-      =
-    ((lhs.eval assign).getLsb idx.val = (rhs.eval assign).getLsb idx.val) := by
-  simp[mkEqBit, Gate.eval, BVExpr.getLsb_eq_bitblast]
-
-
-theorem bitblast.mkEqBit_correct' :
-    (∀ (idx : Fin w), (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign)
-      =
-    (lhs.eval assign = rhs.eval assign) := by
-  simp only [eq_iff_iff]
-  constructor
-  . intro h;
-    apply BitVec.eq_of_getLsb_eq
-    intro idx
-    rw [← bitblast.mkEqBit_correct]
-    apply h
-  . intro h idx
-    simp [bitblast.mkEqBit_correct, h]
-
-theorem Fin.forall_succ (p : Fin (n + 1) → Prop) [DecidablePred p] :
-    (∀ (x : Fin (n + 1)), p x) ↔ (p (Fin.last _) ∧ ∀ (x : Fin n), p (x.castAdd 1)) :=
-  ⟨fun w => ⟨w _, fun i => w _⟩, fun ⟨h, w⟩ x =>
-    if p : x = Fin.last _ then by
-      subst p; exact h
-    else by
-      -- This line is needed now that `omega` doesn't check defeq on atoms.
-      simp [Fin.last, ← Fin.val_ne_iff] at p
-      have t : x < n := by omega
-      rw [show x = Fin.castAdd 1 ⟨x, by omega⟩ by rfl]
-      apply w⟩
-
-theorem bitblast.aux :
-   (∀ (idx : Fin w), (bitblast.mkEqBit lhs rhs idx.val idx.isLt).eval assign)
-     =
-   (goEq lhs rhs w (by omega)).eval assign := by
-  induction w with
-  | zero =>
-    simp[goEq]
-    intro idx
-    cases idx.isLt
-  | succ w ih =>
-    simp only [goEq, BVBitwise.eval_gate, Gate.eval, Bool.and_eq_true, eq_iff_iff]
-    constructor
-    . intro h
-      constructor
-      . apply h ⟨w, (by omega)⟩
-      . rw [Fin.forall_succ] at h
-        rcases h with ⟨h1, h2⟩
-        -- TODO: this is almost IH now
-        sorry
-    . intro h
-      rw [Fin.forall_succ]
-      rcases h with ⟨h1, h2⟩
-      constructor
-      . simp[h1]
-      . intro x
-        simp only [Fin.coe_castAdd]
-        -- TODO: this is almost IH now
-        sorry
-
-theorem bitblast.goEq_correct' {lhs rhs : BVExpr w} :
-    ((goEq lhs rhs w (by omega)).eval assign)
-      ↔
-    ((BVPred.bin lhs .eq rhs).eval assign) := by
-  rw [← bitblast.aux]
-  rw [bitblast.mkEqBit_correct']
-  simp
-
--- TODO: unclear how to get from ' to here
-theorem bitblast.goEq_correct {lhs rhs : BVExpr w} :
-    ((goEq lhs rhs w (by omega)).eval assign)
-      =
-    ((BVPred.bin lhs .eq rhs).eval assign) := by
-  sorry
-
-theorem eq_bitblast (expr : BVPred) : ∀ assign, expr.eval assign = expr.bitblast.eval assign := by
-  intro assign
-  cases expr with
-  | @bin w lhs op rhs =>
+theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred)
+    : aig.decls.size ≤ (bitblast aig pred).aig.decls.size := by
+  cases pred with
+  | bin lhs op rhs =>
     cases op with
-    | eq => simp [bitblast, bitblast.goEq_correct]
-    | neq => sorry
+    | eq =>
+      simp only [bitblast]
+      apply AIG.LawfulOperator.le_size
+    | neq =>
+      simp only [bitblast]
+      apply AIG.LawfulOperator.le_size
+
+theorem bitblast_decl_eq (aig : AIG BVBit) (pred : BVPred) {h : idx < aig.decls.size} :
+    have := bitblast_le_size aig pred
+    (bitblast aig pred).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
+  cases pred with
+  | bin lhs op rhs =>
+    cases op with
+    | eq =>
+      simp only [bitblast]
+      rw [AIG.LawfulOperator.decl_eq (f := mkEq)]
+    | neq =>
+      simp only [bitblast]
+      rw [AIG.LawfulOperator.decl_eq (f := mkNeq)]
+
+instance : AIG.LawfulOperator BVBit (fun _ => BVPred) bitblast where
+  le_size := bitblast_le_size
+  decl_eq := by intros; apply bitblast_decl_eq
 
 end BVPred
 
 namespace BVLogicalExpr
 
-def bitblast (expr : BVLogicalExpr) : BVBitwise :=
-  match expr with
-  | .literal pred => pred.bitblast
-  | .gate g x y => .gate g (bitblast x) (bitblast y)
-  | .not x => .not (bitblast x)
-  | .const b => .const b
-
-theorem eq_bitblast (expr : BVLogicalExpr) : ∀ assign, expr.eval assign = expr.bitblast.eval assign := by
-  intro assign
-  induction expr with
-  | literal pred => simp[bitblast, BVPred.eq_bitblast]
-  | gate g lhs rhs lih rih => simp[bitblast, lih, rih]
-  | not op ih => simp[bitblast, ih]
-  | const b => simp[bitblast]
-
-theorem unsat_iff_bitblast_unsat (expr : BVLogicalExpr) : expr.unsat ↔ expr.bitblast.unsat := by
-  constructor
-  . intro h assign
-    rw[← eq_bitblast]
-    apply h
-  . intro h assign
-    rw [eq_bitblast]
-    apply h
+def bitblast (expr : BVLogicalExpr) : AIG.Entrypoint BVBit :=
+  AIG.ofBoolExprCached expr BVPred.bitblast
 
 end BVLogicalExpr
 
 open BitVec
 #eval
-  let pred : BVLogicalExpr := .literal (.bin (.bin (w := 2) (.var 1) .and (.var 0)) .eq (.bin (.var 0) .and (.var 1)))
-  toString pred.bitblast
+  let pred : BVLogicalExpr := .literal (.bin (.bin (w := 8) (.var 1) .and (.var 0)) .eq (.bin (.var 0) .and (.var 1)))
+  pred.bitblast.aig.decls.size

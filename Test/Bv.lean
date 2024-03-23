@@ -8,5 +8,5 @@ theorem foo (h1 : 0#1 = 1#1) (h2 : (2 : BitVec 2) = 3) (h3 : x = 4#3)
   bv_decide
 
 set_option trace.bv true in
-theorem all_features {x y : BitVec 10} (h : x = y) : (~~~x) &&& 1 = (~~~y) &&& 1#10 := by
+theorem all_features {x y : BitVec 256} (h : x = y) : (~~~x) &&& 1 = (~~~y) &&& 1#256 := by
   bv_decide
