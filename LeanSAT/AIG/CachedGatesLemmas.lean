@@ -41,188 +41,213 @@ namespace AIG
 
 variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 
-theorem mkNotCached_le_size (aig : AIG α) (gate : Nat) (hgate)
-    : aig.decls.size ≤ (aig.mkNotCached gate hgate).aig.decls.size := by
+@[simp]
+theorem BinaryInput_asGateInput_lhs {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool)
+    : (input.asGateInput linv rinv).lhs = ⟨input.lhs, linv⟩ := rfl
+
+@[simp]
+theorem BinaryInput_asGateInput_rhs {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool)
+    : (input.asGateInput linv rinv).rhs = ⟨input.rhs, rinv⟩ := rfl
+
+theorem mkNotCached_le_size (aig : AIG α) (gate : Ref aig)
+    : aig.decls.size ≤ (aig.mkNotCached gate).aig.decls.size := by
   simp only [mkNotCached]
-  apply le_mkGateCached_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
   apply mkConstCached_le_size
 
-theorem mkNotCached_decl_eq idx (aig : AIG α) (gate : Nat) {h : idx < aig.decls.size} (hgate) {h2} :
-    (aig.mkNotCached gate hgate).aig.decls[idx]'h2 = aig.decls[idx] := by
+theorem mkNotCached_decl_eq idx (aig : AIG α) (gate : Ref aig) {h : idx < aig.decls.size} {h2} :
+    (aig.mkNotCached gate).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkNotCached]
   rw [mkGateCached_decl_eq]
   rw [mkConstCached_decl_eq]
-  apply lt_mkConstCached_size_of_lt_aig_size
+  apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
   assumption
 
-instance : LawfulUnaryOperator mkNotCached where
+instance : LawfulOperator α Ref mkNotCached where
   le_size := mkNotCached_le_size
   decl_eq := by
     intros
     apply mkNotCached_decl_eq
 
 @[simp]
-theorem denote_mkNotCached {aig : AIG α} {hgate} :
-    ⟦aig.mkNotCached gate hgate, assign⟧
+theorem denote_mkNotCached {aig : AIG α} {gate : Ref aig} :
+    ⟦aig.mkNotCached gate, assign⟧
       =
-    !⟦aig, ⟨gate, hgate⟩, assign⟧ := by
+    !⟦aig, ⟨gate.gate, gate.hgate⟩, assign⟧ := by
   rw [← not_as_aig]
-  simp [mkNotCached, denote_mkConstCached_mem_prefix hgate]
+  simp [mkNotCached, LawfulOperator.denote_mem_prefix (f := mkConstCached) gate.hgate]
 
-
-theorem mkAndCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
-    : aig.decls.size ≤ (aig.mkAndCached lhs rhs hl hr).aig.decls.size := by
+theorem mkAndCached_le_size (aig : AIG α) (input : BinaryInput aig)
+    : aig.decls.size ≤ (aig.mkAndCached input).aig.decls.size := by
   simp only [mkAndCached]
-  apply le_mkGateCached_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
   omega
 
-theorem mkAndCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
-    (hl) (hr) {h2} :
-    (aig.mkAndCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
+theorem mkAndCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : idx < aig.decls.size}
+    {h2} :
+    (aig.mkAndCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkAndCached]
   rw [mkGateCached_decl_eq]
 
-instance : LawfulBinaryOperator mkAndCached where
+instance : LawfulOperator α BinaryInput mkAndCached where
   le_size := mkAndCached_le_size
   decl_eq := by intros; apply mkAndCached_decl_eq
 
 @[simp]
-theorem denote_mkAndCached {aig : AIG α} {hl} {hr} :
-    ⟦aig.mkAndCached lhs rhs hl hr, assign⟧
+theorem denote_mkAndCached {aig : AIG α} {input : BinaryInput aig} :
+    ⟦aig.mkAndCached input, assign⟧
       =
-    (⟦aig, ⟨lhs, hl⟩, assign⟧ && ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
+    (⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
+      &&
+    ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧) := by
   simp [mkAndCached]
 
-theorem mkOrCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
-    : aig.decls.size ≤ (aig.mkOrCached lhs rhs hl hr).aig.decls.size := by
+theorem mkOrCached_le_size (aig : AIG α) (input : BinaryInput aig)
+    : aig.decls.size ≤ (aig.mkOrCached input).aig.decls.size := by
   simp only [mkOrCached]
-  apply le_mkGateCached_size_of_le_aig_size
-  apply le_mkConstCached_size_of_le_aig_size
-  apply le_mkGateCached_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
+  apply LawfulOperator.le_size_of_le_aig_size
   omega
 
-theorem mkOrCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
-    (hl) (hr) {h2} :
-    (aig.mkOrCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
+theorem mkOrCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : idx < aig.decls.size}
+    {h2} :
+    (aig.mkOrCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkOrCached]
   rw [mkGateCached_decl_eq]
   rw [mkConstCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_aig_size
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
-  . apply lt_mkConstCached_size_of_lt_aig_size
-    apply lt_mkGateCached_size_of_lt_aig_size
+  . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
 
-instance : LawfulBinaryOperator mkOrCached where
+instance : LawfulOperator α BinaryInput mkOrCached where
   le_size := mkOrCached_le_size
   decl_eq := by intros; apply mkOrCached_decl_eq
 
 @[simp]
-theorem denote_mkOrCached {aig : AIG α} {hl} {hr}:
-    ⟦aig.mkOrCached lhs rhs hl hr, assign⟧
+theorem denote_mkOrCached {aig : AIG α} {input : BinaryInput aig} :
+    ⟦aig.mkOrCached input, assign⟧
       =
-    (⟦aig, ⟨lhs, hl⟩, assign⟧ || ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
+    (⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
+      ||
+     ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧) := by
   rw [← or_as_aig]
-  simp [mkOrCached]
+  simp [mkOrCached, LawfulOperator.denote_input_entry (f := mkConstCached)]
 
-theorem mkXorCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
-    : aig.decls.size ≤ (aig.mkXorCached lhs rhs hl hr).aig.decls.size := by
+
+theorem mkXorCached_le_size (aig : AIG α) {input : BinaryInput aig}
+    : aig.decls.size ≤ (aig.mkXorCached input).aig.decls.size := by
   simp only [mkXorCached]
-  apply le_mkGateCached_size_of_le_aig_size
-  apply le_mkGateCached_size_of_le_aig_size
-  apply le_mkGateCached_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
   omega
 
-theorem mkXorCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
-    (hl) (hr) {h2} :
-    (aig.mkXorCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
+theorem mkXorCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : idx < aig.decls.size}
+    {h2} :
+    (aig.mkXorCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkXorCached]
   rw [mkGateCached_decl_eq]
   rw [mkGateCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_aig_size
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
-  . apply lt_mkGateCached_size_of_lt_aig_size
-    apply lt_mkGateCached_size_of_lt_aig_size
+  . apply LawfulOperator.lt_size_of_lt_aig_size
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
 
-instance : LawfulBinaryOperator mkXorCached where
+instance : LawfulOperator α BinaryInput mkXorCached where
   le_size := mkXorCached_le_size
   decl_eq := by intros; apply mkXorCached_decl_eq
 
 @[simp]
-theorem denote_mkXorCached {aig : AIG α} {hl} {hr} :
-    ⟦aig.mkXorCached lhs rhs hl hr, assign⟧
+theorem denote_mkXorCached {aig : AIG α} {input : BinaryInput aig} :
+    ⟦aig.mkXorCached input, assign⟧
       =
-    xor ⟦aig, ⟨lhs, hl⟩, assign⟧ ⟦aig, ⟨rhs, hr⟩, assign⟧ := by
+    xor
+      ⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
+      ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧
+    := by
   rw [← xor_as_aig]
-  simp [mkXorCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
+  simp [
+    mkXorCached,
+    LawfulOperator.denote_mem_prefix (f := mkGateCached) input.lhs.hgate,
+    LawfulOperator.denote_mem_prefix (f := mkGateCached) input.rhs.hgate
+  ]
 
-theorem mkBEqCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
-    : aig.decls.size ≤ (aig.mkBEqCached lhs rhs hl hr).aig.decls.size := by
+theorem mkBEqCached_le_size (aig : AIG α) {input : BinaryInput aig}
+    : aig.decls.size ≤ (aig.mkBEqCached input).aig.decls.size := by
   simp only [mkBEqCached]
-  apply le_mkGateCached_size_of_le_aig_size
-  apply le_mkGateCached_size_of_le_aig_size
-  apply le_mkGateCached_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
   omega
 
-theorem mkBEqCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
-    (hl) (hr) {h2} :
-    (aig.mkBEqCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
+theorem mkBEqCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : idx < aig.decls.size}
+    {h2} :
+    (aig.mkBEqCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkBEqCached]
   rw [mkGateCached_decl_eq]
   rw [mkGateCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_aig_size
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
-  . apply lt_mkGateCached_size_of_lt_aig_size
-    apply lt_mkGateCached_size_of_lt_aig_size
+  . apply LawfulOperator.lt_size_of_lt_aig_size
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
 
-instance : LawfulBinaryOperator mkBEqCached where
+instance : LawfulOperator α BinaryInput mkBEqCached where
   le_size := mkBEqCached_le_size
   decl_eq := by intros; apply mkBEqCached_decl_eq
 
 @[simp]
-theorem denote_mkBEqCached {aig : AIG α} {hl} {hr} :
-    ⟦aig.mkBEqCached lhs rhs hl hr, assign⟧
+theorem denote_mkBEqCached {aig : AIG α} {input : BinaryInput aig} :
+    ⟦aig.mkBEqCached input, assign⟧
       =
-    (⟦aig, ⟨lhs, hl⟩, assign⟧ == ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
+    (⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
+       ==
+     ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧) := by
   rw [← beq_as_aig]
-  simp [mkBEqCached, denote_mkGateCached_mem_prefix hl, denote_mkGateCached_mem_prefix hr]
+  simp [
+    mkBEqCached,
+    LawfulOperator.denote_mem_prefix (f := mkGateCached) input.lhs.hgate,
+    LawfulOperator.denote_mem_prefix (f := mkGateCached) input.rhs.hgate
+  ]
 
-theorem mkImpCached_le_size (aig : AIG α) (lhs rhs : Nat) (hl) (hr)
-    : aig.decls.size ≤ (aig.mkImpCached lhs rhs hl hr).aig.decls.size := by
+theorem mkImpCached_le_size (aig : AIG α) (input : BinaryInput aig)
+    : aig.decls.size ≤ (aig.mkImpCached input).aig.decls.size := by
   simp only [mkImpCached]
-  apply le_mkGateCached_size_of_le_aig_size
-  apply le_mkConstCached_size_of_le_aig_size
-  apply le_mkGateCached_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size
+  apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
+  apply LawfulOperator.le_size_of_le_aig_size
   omega
 
-theorem mkImpCached_decl_eq idx (aig : AIG α) (lhs rhs : Nat) {h : idx < aig.decls.size}
-    (hl) (hr) {h2} :
-    (aig.mkImpCached lhs rhs hl hr).aig.decls[idx]'h2 = aig.decls[idx] := by
+theorem mkImpCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : idx < aig.decls.size}
+    {h2} :
+    (aig.mkImpCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkImpCached]
   rw [mkGateCached_decl_eq]
   rw [mkConstCached_decl_eq]
   . rw [mkGateCached_decl_eq]
-    apply lt_mkGateCached_size_of_lt_aig_size
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
-  . apply lt_mkConstCached_size_of_lt_aig_size
-    apply lt_mkGateCached_size_of_lt_aig_size
+  . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
+    apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
 
-instance : LawfulBinaryOperator mkImpCached where
+instance : LawfulOperator α BinaryInput mkImpCached where
   le_size := mkImpCached_le_size
   decl_eq := by intros; apply mkImpCached_decl_eq
 
 @[simp]
-theorem denote_mkImpCached {aig : AIG α} {hl} {hr} :
-    ⟦aig.mkImpCached lhs rhs hl hr, assign⟧
+theorem denote_mkImpCached {aig : AIG α} {input : BinaryInput aig} :
+    ⟦aig.mkImpCached input, assign⟧
       =
-    (!⟦aig, ⟨lhs, hl⟩, assign⟧ || ⟦aig, ⟨rhs, hr⟩, assign⟧) := by
+    (!⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧ || ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧) := by
   rw [← imp_as_aig]
-  simp [mkImpCached]
+  simp [mkImpCached, LawfulOperator.denote_input_entry (f := mkConstCached)]
 
 end AIG

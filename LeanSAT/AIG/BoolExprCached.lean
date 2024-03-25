@@ -30,35 +30,36 @@ where
     | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
     | .not expr =>
       let ⟨exprEntry, _⟩ := go expr aig
-      let ret := exprEntry.aig.mkNotCached exprEntry.start exprEntry.inv
-      have := mkNotCached_le_size exprEntry.aig exprEntry.start exprEntry.inv
+      let exprRef := Ref.ofEntrypoint exprEntry
+      let ret := exprEntry.aig.mkNotCached exprRef
+      have := LawfulOperator.le_size (f := mkNotCached) exprEntry.aig exprRef
       ⟨ret, by dsimp [ret] at *; omega⟩
     | .gate g lhs rhs =>
       let ⟨lhsEntry, _⟩ := go lhs aig
       let ⟨rhsEntry, _⟩ := go rhs lhsEntry.aig
-      have h1 : lhsEntry.start < Array.size rhsEntry.aig.decls := by
-        have := lhsEntry.inv
-        omega
+      let lhsRef := Ref.ofEntrypoint lhsEntry |>.cast (by omega)
+      let rhsRef := Ref.ofEntrypoint rhsEntry
+      let input := ⟨lhsRef, rhsRef⟩
       match g with
       | .and =>
-        let ret := rhsEntry.aig.mkAndCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        have := mkAndCached_le_size rhsEntry.aig lhsEntry.start rhsEntry.start h1 rhsEntry.inv
+        let ret := rhsEntry.aig.mkAndCached input
+        have := LawfulOperator.le_size (f := mkAndCached) rhsEntry.aig input
         ⟨ret, by dsimp [ret] at *; omega⟩
       | .or =>
-        let ret := rhsEntry.aig.mkOrCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        have := mkOrCached_le_size rhsEntry.aig lhsEntry.start rhsEntry.start h1 rhsEntry.inv
+        let ret := rhsEntry.aig.mkOrCached input
+        have := LawfulOperator.le_size (f := mkOrCached) rhsEntry.aig input
         ⟨ret, by dsimp [ret] at *; omega⟩
       | .xor =>
-        let ret := rhsEntry.aig.mkXorCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        have := mkXorCached_le_size rhsEntry.aig lhsEntry.start rhsEntry.start h1 rhsEntry.inv
+        let ret := rhsEntry.aig.mkXorCached input
+        have := LawfulOperator.le_size (f := mkXorCached) rhsEntry.aig input
         ⟨ret, by dsimp [ret] at *; omega⟩
       | .beq =>
-        let ret := rhsEntry.aig.mkBEqCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        have := mkBEqCached_le_size rhsEntry.aig lhsEntry.start rhsEntry.start h1 rhsEntry.inv
+        let ret := rhsEntry.aig.mkBEqCached input
+        have := LawfulOperator.le_size (f := mkBEqCached) rhsEntry.aig input
         ⟨ret, by dsimp [ret] at *; omega⟩
       | .imp =>
-        let ret := rhsEntry.aig.mkImpCached lhsEntry.start rhsEntry.start h1 rhsEntry.inv
-        have := mkImpCached_le_size rhsEntry.aig lhsEntry.start rhsEntry.start h1 rhsEntry.inv
+        let ret := rhsEntry.aig.mkImpCached input
+        have := LawfulOperator.le_size (f := mkImpCached) rhsEntry.aig input
         ⟨ret, by dsimp [ret] at *; omega⟩
 
 theorem ofBoolExprCached.go_decls_size_le (expr : BoolExpr α) (aig : AIG α) :

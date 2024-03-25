@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import Std.Data.HashMap
+import LeanSAT.Reflect.Tactics.Reflect
 
 /-!
 This module contains the basic definitions for an AIG (And-Inverter Graph) in the style of AIGNET,
@@ -207,27 +208,79 @@ def unsatAt (aig : AIG α) (start : Nat) (h : start < aig.decls.size) : Prop := 
 def Entrypoint.unsat (entry : Entrypoint α) : Prop := entry.aig.unsatAt entry.start entry.inv
 
 /--
+A reference to a node within an AIG.
+-/
+structure Ref (aig : AIG α) where
+  gate : Nat
+  hgate : gate < aig.decls.size
+
+def Ref.ofEntrypoint (entry : Entrypoint α) : Ref entry.aig :=
+  {
+    gate := entry.start,
+    hgate := entry.inv
+  }
+
+def Ref.cast {aig1 aig2 : AIG α} (ref : Ref aig1)
+    (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size) : Ref aig2 :=
+  { ref with hgate := h ref.hgate }
+
+/--
+An input to an AIG gate.
+-/
+structure Fanin (aig : AIG α) where
+  /--
+  The node we are referring to.
+  -/
+  ref : Ref aig
+  /--
+  Whether the node is inverted
+  -/
+  inv : Bool
+
+def Fanin.cast {aig1 aig2 : AIG α} (fanin : Fanin aig1)
+    (h : fanin.ref.gate < aig1.decls.size → fanin.ref.gate < aig2.decls.size)
+    : Fanin aig2 :=
+  { fanin with ref := fanin.ref.cast h }
+
+/--
+The input type for creating AIG and gates from scratch.
+-/
+structure GateInput (aig : AIG α) where
+  lhs : Fanin aig
+  rhs : Fanin aig
+
+def GateInput.cast {aig1 aig2 : AIG α} (input : GateInput aig1)
+    (h1 : input.lhs.ref.gate < aig1.decls.size → input.lhs.ref.gate < aig2.decls.size)
+    (h2 : input.rhs.ref.gate < aig1.decls.size → input.rhs.ref.gate < aig2.decls.size)
+    : GateInput aig2 :=
+  { input with lhs := input.lhs.cast h1, rhs := input.rhs.cast h2 }
+
+/--
 Build an AIG gate in `aig`. Note that his version is only meant for proving,
 for production purposes use `AIG.mkGateCached` and equality theorems to this one.
 -/
-def mkGate (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < aig.decls.size)
-    (hr : rhs < aig.decls.size) : Entrypoint α :=
+def mkGate (aig : AIG α) (input : GateInput aig) : Entrypoint α :=
+  let lhs := input.lhs
+  let rhs := input.rhs
   let g := aig.decls.size
-  let decls := aig.decls.push (.gate lhs rhs linv rinv)
+  let decls := aig.decls.push (.gate lhs.ref.gate rhs.ref.gate lhs.inv rhs.inv)
   let cache := aig.cache.noUpdate
   have inv := by
-    intro i lhs rhs linv rinv h1 h2
+    intro i lhs' rhs' linv' rinv' h1 h2
     simp only [decls, Array.get_push] at h2
     split at h2
     . apply aig.inv <;> assumption
-    . injections; omega
+    . injections
+      have := lhs.ref.hgate
+      have := rhs.ref.hgate
+      omega
   ⟨{ aig with decls, inv, cache }, g, by simp [g, decls]⟩
 
 /--
 Add a new input node to the AIG in `aig`. Note that his version is only meant for proving,
 for production purposes use `AIG.mkAtomCached` and equality theorems to this one.
 -/
-def mkAtom (n : α) (aig : AIG α) : Entrypoint α :=
+def mkAtom (aig : AIG α) (n : α) : Entrypoint α :=
   let g := aig.decls.size
   let decls := aig.decls.push (.atom n)
   let cache := aig.cache.noUpdate
@@ -244,7 +297,7 @@ def mkAtom (n : α) (aig : AIG α) : Entrypoint α :=
 Build an constant node in `aig`. Note that his version is only meant for proving,
 for production purposes use `AIG.mkConstCached` and equality theorems to this one.
 -/
-def mkConst (val : Bool) (aig : AIG α) : Entrypoint α :=
+def mkConst (aig : AIG α) (val : Bool) : Entrypoint α :=
   let g := aig.decls.size
   let decls := aig.decls.push (.const val)
   let cache := aig.cache.noUpdate

@@ -20,7 +20,7 @@ variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 A version of `AIG.mkAtom` that uses the subterm cache in `AIG`. This version is meant for
 programmming, for proving purposes use `AIG.mkAtom` and equality theorems to this one.
 -/
-def mkAtomCached (n : α) (aig : AIG α) : Entrypoint α :=
+def mkAtomCached (aig : AIG α) (n : α) : Entrypoint α :=
   let decl := .atom n
   match aig.cache.find? decl with
   | some hit =>
@@ -42,7 +42,7 @@ def mkAtomCached (n : α) (aig : AIG α) : Entrypoint α :=
 A version of `AIG.mkConst` that uses the subterm cache in `AIG`. This version is meant for
 programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
 -/
-def mkConstCached (val : Bool) (aig : AIG α) : Entrypoint α :=
+def mkConstCached (aig : AIG α) (val : Bool) : Entrypoint α :=
   let decl := .const val
   match aig.cache.find? decl with
   | some hit =>
@@ -66,8 +66,13 @@ programmming, for proving purposes use `AIG.mkGate` and equality theorems to thi
 
 Beyond caching this function also implements a subset of the optimizations presented in:
 -/
-def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < aig.decls.size)
-    (hr : rhs < aig.decls.size) : Entrypoint α :=
+def mkGateCached (aig : AIG α) (input : GateInput aig) : Entrypoint α :=
+  let lhs := input.lhs.ref.gate
+  let rhs := input.rhs.ref.gate
+  let linv := input.lhs.inv
+  let rinv := input.rhs.inv
+  have := input.lhs.ref.hgate
+  have := input.rhs.ref.hgate
   let decl := .gate lhs rhs linv rinv
   match aig.cache.find? decl with
   | some hit =>
@@ -85,10 +90,10 @@ def mkGateCached (lhs rhs : Nat) (linv rinv : Bool) (aig : AIG α) (hl : lhs < a
       aig.mkConstCached false
     -- Left Neutrality
     | .const true, _, false, false | .const false, _, true, false =>
-      ⟨aig, rhs, hr⟩
+      ⟨aig, rhs, (by assumption)⟩
     -- Right Neutrality
     | _, .const true, false, false | _, .const false, false, true =>
-      ⟨aig, lhs, hl⟩
+      ⟨aig, lhs, (by assumption)⟩
     | _, _, _, _ =>
       let g := aig.decls.size
       let decls := aig.decls.push decl
