@@ -18,106 +18,148 @@ variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 /--
 Create a not gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkNotCached (gate : Nat) (aig : AIG α) (hgate : gate < aig.decls.size) : Entrypoint α :=
+def mkNotCached (aig : AIG α) (gate : Ref aig) : Entrypoint α :=
   -- ¬x = true && invert x
   let constEntry := aig.mkConstCached true
   have := aig.mkConstCached_le_size true
   constEntry.aig.mkGateCached
-    constEntry.start
-    gate
-    false
-    true
-    constEntry.inv
-    (by apply lt_mkConstCached_size_of_lt_aig_size _ _ hgate)
+    {
+      lhs := {
+        ref := Ref.ofEntrypoint constEntry
+        inv := false
+      }
+      rhs := {
+        ref := gate.cast <| by
+          intros
+          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
+          assumption
+        inv := true
+      }
+    }
+
+structure BinaryInput (aig : AIG α) where
+  lhs : Ref aig
+  rhs : Ref aig
+
+def BinaryInput.asGateInput {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool) : GateInput aig :=
+  {
+    lhs := {
+      ref := input.lhs
+      inv := linv
+    },
+    rhs := {
+      ref := input.rhs
+      inv := rinv
+    }
+  }
 
 /--
 Create an and gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkAndCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
-  aig.mkGateCached lhs rhs false false hl hr
+def mkAndCached (aig : AIG α) (input : BinaryInput aig)  : Entrypoint α :=
+  aig.mkGateCached <| input.asGateInput false false
 
 /--
 Create an or gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkOrCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
+def mkOrCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- x or y = true && (invert (invert x && invert y))
-  let auxEntry := aig.mkGateCached lhs rhs true true hl hr
+  let auxEntry := aig.mkGateCached <| input.asGateInput true true
   let constEntry := auxEntry.aig.mkConstCached true
   constEntry.aig.mkGateCached
-    constEntry.start
-    auxEntry.start
-    false
-    true
-    constEntry.inv
-    (by apply lt_mkConstCached_size)
+    {
+      lhs := {
+        ref := Ref.ofEntrypoint constEntry
+        inv := false
+      },
+      rhs := {
+        ref := Ref.ofEntrypoint auxEntry |>.cast <| by
+          intros
+          apply LawfulOperator.lt_size (f := mkConstCached)
+        inv := true
+      }
+    }
 
 /--
 Create an xor gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkXorCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
+def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- x xor y = (invert (invert (x && y))) && (invert ((invert x) && (invert y)))
-  let aux1Entry := aig.mkGateCached lhs rhs false false hl hr
-  have := aig.mkGateCached_le_size _ _ false false hl hr
-  have h3 : lhs < aux1Entry.aig.decls.size := by
-    dsimp [aux1Entry] at *
-    omega
-  let aux2Entry := aux1Entry.aig.mkGateCached
-      lhs
-      rhs
-      true
-      true
-      h3
-      (by apply lt_mkGateCached_size_of_lt_aig_size; omega)
-  aux2Entry.aig.mkGateCached aux1Entry.start aux2Entry.start true true (by apply lt_mkGateCached_size) aux2Entry.inv
+  let aux1Entry := aig.mkGateCached <| input.asGateInput false false
+  let aux2Entry := aux1Entry.aig.mkGateCached <| (input.asGateInput true true).cast
+    (by
+      intros
+      apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
+      assumption)
+    (by
+      intros
+      apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
+      assumption)
+  aux2Entry.aig.mkGateCached
+    {
+      lhs := {
+        ref := Ref.ofEntrypoint aux1Entry |>.cast <| by
+          intro h
+          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
+          assumption
+        inv := true
+      },
+      rhs := {
+        ref := Ref.ofEntrypoint aux2Entry
+        inv := true
+      }
+    }
 
 /--
 Create an equality gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkBEqCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
+def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- a == b = (invert (a && (invert b))) && (invert ((invert a) && b))
-  let aux1Entry := aig.mkGateCached lhs rhs false true hl hr
-  have := aig.mkGateCached_le_size _ _ false true hl hr
-  have h3 : lhs < aux1Entry.aig.decls.size := by
-    dsimp [aux1Entry] at *
-    omega
-  let aux2Entry :=
-    aux1Entry.aig.mkGateCached
-      lhs
-      rhs
-      true
-      false
-      h3
-      (by apply lt_mkGateCached_size_of_lt_aig_size; omega)
+  let aux1Entry := aig.mkGateCached <| input.asGateInput false true
+  let aux2Entry := aux1Entry.aig.mkGateCached <| (input.asGateInput true false).cast
+    (by
+      intros
+      apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
+      assumption)
+    (by
+      intros
+      apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
+      assumption)
   aux2Entry.aig.mkGateCached
-    aux1Entry.start
-    aux2Entry.start
-    true
-    true
-    (by apply lt_mkGateCached_size)
-    aux2Entry.inv
+    {
+      lhs := {
+        ref := Ref.ofEntrypoint aux1Entry |>.cast <| by
+          intro h
+          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
+          assumption
+        inv := true
+      },
+      rhs := {
+        ref := Ref.ofEntrypoint aux2Entry
+        inv := true
+      }
+    }
 
 /--
 Create an implication gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
 -/
-def mkImpCached (lhs rhs : Nat) (aig : AIG α) (hl : lhs < aig.decls.size) (hr : rhs < aig.decls.size) : Entrypoint α :=
+def mkImpCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- a -> b = true && (invert (a and (invert b)))
-  let auxEntry :=
-    aig.mkGateCached
-      lhs
-      rhs
-      false
-      true
-      hl
-      hr
-  have := aig.mkGateCached_le_size _ _ false true hl hr
-  let constEntry := mkConstCached true auxEntry.aig
-  have := auxEntry.aig.mkConstCached_le_size true
+  let auxEntry := aig.mkGateCached <| input.asGateInput false true
+  let constEntry := auxEntry.aig.mkConstCached true
   constEntry.aig.mkGateCached
-    constEntry.start
-    auxEntry.start
-    false
-    true
-    constEntry.inv
-    (by apply lt_mkConstCached_size)
+    {
+      lhs := {
+        ref := Ref.ofEntrypoint constEntry
+        inv := false
+      },
+      rhs := {
+        ref := Ref.ofEntrypoint auxEntry |>.cast <| by
+          intros
+          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
+          assumption
+        inv := true
+      }
+    }
 
 end AIG
