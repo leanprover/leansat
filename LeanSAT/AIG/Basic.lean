@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import Std.Data.HashMap
-import LeanSAT.Reflect.Tactics.Reflect
 
 /-!
 This module contains the basic definitions for an AIG (And-Inverter Graph) in the style of AIGNET,
