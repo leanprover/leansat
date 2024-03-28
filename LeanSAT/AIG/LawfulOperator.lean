@@ -74,6 +74,9 @@ theorem denote.eq_of_aig_eq (entry : Entrypoint α) (newAIG : AIG α) (hprefix :
   apply denote.go_eq_of_aig_eq
   assumption
 
+abbrev ExtendingEntrypoint (aig : AIG α) : Type :=
+  { entry : Entrypoint α // aig.decls.size ≤ entry.aig.decls.size }
+
 class LawfulOperator (α : Type) [BEq α] [Hashable α] [DecidableEq α]
     (β : AIG α → Type) (f : (aig : AIG α) → β aig → Entrypoint α)  where
   le_size : ∀ (aig : AIG α) (input : β aig), aig.decls.size ≤ (f aig input).aig.decls.size
