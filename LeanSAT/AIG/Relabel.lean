@@ -81,25 +81,25 @@ def relabel (f : α → β) (aig : AIG α) : AIG β :=
   }
 
 @[simp]
-theorem relabel_size_eq {aig : AIG α} {f : α → β} : (aig.relabel f).decls.size = aig.decls.size := by
+theorem relabel_size_eq_size {aig : AIG α} {f : α → β} : (aig.relabel f).decls.size = aig.decls.size := by
   simp [relabel]
 
 theorem relabel_const {aig : AIG α} {f : α → β} {hidx : idx < (relabel f aig).decls.size}
     (h : (relabel f aig).decls[idx]'hidx = .const b)
-    : aig.decls[idx]'(by rw [← relabel_size_eq (f := f)]; omega) = .const b := by
+    : aig.decls[idx]'(by rw [← relabel_size_eq_size (f := f)]; omega) = .const b := by
   apply Decl.relabel_const
   simpa [relabel] using h
 
 
 theorem relabel_atom {aig : AIG α} {f : α → β} {hidx : idx < (relabel f aig).decls.size}
     (h : (relabel f aig).decls[idx]'hidx = .atom a)
-    : ∃ x, aig.decls[idx]'(by rw [← relabel_size_eq (f := f)]; omega) = .atom x ∧ a = f x := by
+    : ∃ x, aig.decls[idx]'(by rw [← relabel_size_eq_size (f := f)]; omega) = .atom x ∧ a = f x := by
   apply Decl.relabel_atom
   simpa [relabel] using h
 
 theorem relabel_gate {aig : AIG α} {f : α → β} {hidx : idx < (relabel f aig).decls.size}
     (h : (relabel f aig).decls[idx]'hidx = .gate lhs rhs linv rinv)
-    : aig.decls[idx]'(by rw [← relabel_size_eq (f := f)]; omega) = .gate lhs rhs linv rinv := by
+    : aig.decls[idx]'(by rw [← relabel_size_eq_size (f := f)]; omega) = .gate lhs rhs linv rinv := by
   apply Decl.relabel_gate
   simpa [relabel] using h
 
@@ -108,7 +108,7 @@ theorem denote_relabel (aig : AIG α) (f : α → β) (start : Nat) {hidx}
     (assign : β → Bool)
     : ⟦aig.relabel f, ⟨start, hidx⟩, assign⟧
         =
-      ⟦aig, ⟨start, by rw [← relabel_size_eq (f := f)]; omega⟩, (assign ∘ f)⟧ := by
+      ⟦aig, ⟨start, by rw [← relabel_size_eq_size (f := f)]; omega⟩, (assign ∘ f)⟧ := by
   apply denote_idx_trichotomy
   . intro b heq1
     have heq2 := relabel_const heq1
@@ -124,7 +124,7 @@ theorem denote_relabel (aig : AIG α) (f : α → β) (start : Nat) {hidx}
     have heq2 := relabel_gate heq1
     rw [denote_idx_gate heq1]
     rw [denote_idx_gate heq2]
-    have := aig.inv start lhs rhs linv rinv (by rw [← relabel_size_eq (f := f)]; omega) heq2
+    have := aig.inv start lhs rhs linv rinv (by rw [← relabel_size_eq_size (f := f)]; omega) heq2
     rw [denote_relabel aig f lhs assign]
     rw [denote_relabel aig f rhs assign]
 
@@ -135,7 +135,7 @@ theorem unsat_relabel {aig : AIG α} (f : α → β) {hidx}
   simp [h]
 
 theorem relabel_unsat_iff [Nonempty α] {aig : AIG α} {f : α → β} {hidx1} {hidx2}
-    (hinj : ∀ x y, f x = f y → x = y)
+    (hinj : ∀ x y, x ∈ aig → y ∈ aig → f x = f y → x = y)
     : (aig.relabel f).unsatAt idx hidx1 ↔ aig.unsatAt idx hidx2 := by
   constructor
   . intro h assign
@@ -152,7 +152,7 @@ theorem relabel_unsat_iff [Nonempty α] {aig : AIG α} {f : α → β} {hidx1} {
       split
       . next h =>
         rcases Exists.choose_spec h with ⟨_, heq⟩
-        specialize hinj _ _ heq
+        specialize hinj _ _ (by assumption) (by assumption) heq
         simp [hinj]
       . next h =>
         simp only [not_exists, not_and] at h
@@ -175,7 +175,7 @@ theorem relabel_size_eq {entry : Entrypoint α} {f : α → β} :
 
 -- TODO: I believe it is possible to get rid of the Nonempty constraint
 theorem relabel_unsat_iff [Nonempty α] {entry : Entrypoint α} {f : α → β}
-    (hinj : ∀ x y, f x = f y → x = y)
+    (hinj : ∀ x y, x ∈ entry.aig → y ∈ entry.aig → f x = f y → x = y)
     : (entry.relabel f).unsat ↔ entry.unsat := by
   simp [relabel, unsat]
   rw [AIG.relabel_unsat_iff]
