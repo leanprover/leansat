@@ -78,8 +78,13 @@ def Cache.empty (decls : Array (Decl α)) : Cache α decls := ⟨HashMap.empty, 
 def Cache.noUpdate (cache : Cache α decls) : Cache α (decls.push decl) :=
   ⟨cache.val, Cache.WF.push_id cache.property⟩
 
+/-
+We require the `decls` as an explicit attribute because we use `decls.size` so accidentally mutating
+`decls` before calling `Cache.insert` will destroy `decl` linearity.
+-/
 @[inherit_doc Cache.WF.push_cache, irreducible]
-def Cache.insert (cache : Cache α decls) (decl : Decl α) : Cache α (decls.push decl) :=
+def Cache.insert (decls : Array (Decl α)) (cache : Cache α decls) (decl : Decl α)
+    : Cache α (decls.push decl) :=
   ⟨cache.val.insert decl decls.size, Cache.WF.push_cache cache.property⟩
 
 structure CacheHit (decls : Array (Decl α)) (decl : Decl α) where
@@ -213,12 +218,7 @@ structure Ref (aig : AIG α) where
   gate : Nat
   hgate : gate < aig.decls.size
 
-def Ref.ofEntrypoint (entry : Entrypoint α) : Ref entry.aig :=
-  {
-    gate := entry.start,
-    hgate := entry.inv
-  }
-
+@[inline]
 def Ref.cast {aig1 aig2 : AIG α} (ref : Ref aig1)
     (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size) : Ref aig2 :=
   { ref with hgate := h ref.hgate }
@@ -236,6 +236,7 @@ structure Fanin (aig : AIG α) where
   -/
   inv : Bool
 
+@[inline]
 def Fanin.cast {aig1 aig2 : AIG α} (fanin : Fanin aig1)
     (h : fanin.ref.gate < aig1.decls.size → fanin.ref.gate < aig2.decls.size)
     : Fanin aig2 :=
@@ -248,6 +249,7 @@ structure GateInput (aig : AIG α) where
   lhs : Fanin aig
   rhs : Fanin aig
 
+@[inline]
 def GateInput.cast {aig1 aig2 : AIG α} (input : GateInput aig1)
     (h1 : input.lhs.ref.gate < aig1.decls.size → input.lhs.ref.gate < aig2.decls.size)
     (h2 : input.rhs.ref.gate < aig1.decls.size → input.rhs.ref.gate < aig2.decls.size)

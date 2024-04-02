@@ -21,44 +21,46 @@ A version of `AIG.mkAtom` that uses the subterm cache in `AIG`. This version is 
 programmming, for proving purposes use `AIG.mkAtom` and equality theorems to this one.
 -/
 def mkAtomCached (aig : AIG α) (n : α) : Entrypoint α :=
+  let ⟨decls, cache, inv⟩ := aig
   let decl := .atom n
-  match aig.cache.find? decl with
+  match cache.find? decl with
   | some hit =>
-    ⟨aig, hit.idx, hit.hbound⟩
+    ⟨⟨decls, cache, inv⟩ , hit.idx, hit.hbound⟩
   | none =>
-    let g := aig.decls.size
-    let decls := aig.decls.push decl
-    let cache := aig.cache.insert decl
+    let g := decls.size
+    let cache := cache.insert decls decl
+    let decls := decls.push decl
     have inv := by
       intro i lhs rhs linv rinv h1 h2
       simp only [decls] at *
       simp only [Array.get_push] at h2
       split at h2
-      . apply aig.inv <;> assumption
+      . apply inv <;> assumption
       . contradiction
-  ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
+  ⟨⟨decls, cache, inv⟩, g, by simp [g, decls]⟩
 
 /--
 A version of `AIG.mkConst` that uses the subterm cache in `AIG`. This version is meant for
 programmming, for proving purposes use `AIG.mkGate` and equality theorems to this one.
 -/
 def mkConstCached (aig : AIG α) (val : Bool) : Entrypoint α :=
+  let ⟨decls, cache, inv⟩ := aig
   let decl := .const val
-  match aig.cache.find? decl with
+  match cache.find? decl with
   | some hit =>
-    ⟨aig, hit.idx, hit.hbound⟩
+    ⟨⟨decls, cache, inv⟩, hit.idx, hit.hbound⟩
   | none =>
-    let g := aig.decls.size
-    let decls := aig.decls.push decl
-    let cache := aig.cache.insert decl
+    let g := decls.size
+    let cache := cache.insert decls decl
+    let decls := decls.push decl
     have inv := by
       intro i lhs rhs linv rinv h1 h2
       simp only [decls] at *
       simp only [Array.get_push] at h2
       split at h2
-      . apply aig.inv <;> assumption
+      . apply inv <;> assumption
       . contradiction
-  ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
+  ⟨⟨decls, cache, inv⟩, g, by simp [g, decls]⟩
 
 /--
 A version of `AIG.mkGate` that uses the subterm cache in `AIG`. This version is meant for
@@ -67,6 +69,7 @@ programmming, for proving purposes use `AIG.mkGate` and equality theorems to thi
 Beyond caching this function also implements a subset of the optimizations presented in:
 -/
 def mkGateCached (aig : AIG α) (input : GateInput aig) : Entrypoint α :=
+  let ⟨decls, cache, inv⟩ := aig
   let lhs := input.lhs.ref.gate
   let rhs := input.rhs.ref.gate
   let linv := input.lhs.inv
@@ -74,37 +77,37 @@ def mkGateCached (aig : AIG α) (input : GateInput aig) : Entrypoint α :=
   have := input.lhs.ref.hgate
   have := input.rhs.ref.hgate
   let decl := .gate lhs rhs linv rinv
-  match aig.cache.find? decl with
+  match cache.find? decl with
   | some hit =>
-    ⟨aig, hit.idx, hit.hbound⟩
+    ⟨⟨decls, cache, inv⟩, hit.idx, hit.hbound⟩
   | none =>
     /-
     Here we implement the constant propagating subset of:
     https://fmv.jku.at/papers/BrummayerBiere-MEMICS06.pdf
     TODO: rest of the table
     -/
-    match aig.decls[lhs], aig.decls[rhs], linv, rinv with
+    match decls[lhs], decls[rhs], linv, rinv with
     -- Boundedness
     | .const true, _, true, _ | .const false, _, false, _
     | _, .const true, _, true | _, .const false, _, false =>
-      aig.mkConstCached false
+      mkConstCached ⟨decls, cache, inv⟩ false
     -- Left Neutrality
     | .const true, _, false, false | .const false, _, true, false =>
-      ⟨aig, rhs, (by assumption)⟩
+      ⟨⟨decls, cache, inv⟩, rhs, (by assumption)⟩
     -- Right Neutrality
     | _, .const true, false, false | _, .const false, false, true =>
-      ⟨aig, lhs, (by assumption)⟩
+      ⟨⟨decls, cache, inv⟩, lhs, (by assumption)⟩
     | _, _, _, _ =>
-      let g := aig.decls.size
-      let decls := aig.decls.push decl
-      let cache := Cache.insert aig.cache decl
+      let g := decls.size
+      let cache := cache.insert decls decl
+      let decls := decls.push decl
       have inv := by
         intro lhs rhs linv rinv i h1 h2
         simp only [decls] at *
         simp only [Array.get_push] at h2
         split at h2
-        . apply aig.inv <;> assumption
+        . apply inv <;> assumption
         . injections; omega
-      ⟨{ aig with decls, inv, cache }, g, by simp [g, decls]⟩
+      ⟨⟨decls, cache, inv⟩, g, by simp [g, decls]⟩
 
 end AIG
