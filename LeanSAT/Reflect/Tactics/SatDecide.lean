@@ -22,7 +22,7 @@ namespace SatDecide
 The context for the `sat_decide` tactic.
 -/
 structure TacticContext where
-  boolExprDef : Name
+  exprDef : Name
   certDef : Name
   reflectionDef : Name
   solver : String
@@ -199,24 +199,39 @@ def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
     safety := .safe
   }
 
-def LratCert.toReflectionProof (cert : LratCert) (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
-  withTraceNode `sat (fun _ => return "Compiling BoolExpr term") do
-    mkAuxDecl cfg.boolExprDef (toExpr boolExpr) (toTypeExpr (BoolExprNat))
+/--
+Turn an `LratCert` into a proof that some `reflected` expression is UNSAT by providing a `verifier`
+function together with a correctenss theorem for it.
+
+- `verifier` is expected to have type `α → LratCert → Bool`
+- `unsat_of_verifier_eq_true` is expected to have type
+  `∀ (b : α) (c : LratCert), verifier b c = true → unsat b`
+-/
+def LratCert.toReflectionProof [ToExpr α] (cert : LratCert) (cfg : TacticContext) (reflected : α)
+    (verifier : Name) (unsat_of_verifier_eq_true : Name)
+    : MetaM Expr := do
+  withTraceNode `sat (fun _ => return "Compiling expr term") do
+    mkAuxDecl cfg.exprDef (toExpr reflected) (toTypeExpr α)
 
   let certType := toTypeExpr LratCert
 
   withTraceNode `sat (fun _ => return "Compiling proof certificate term") do
     mkAuxDecl cfg.certDef (toExpr cert) certType
 
-  let boolExpr := mkConst cfg.boolExprDef
+  let reflectedExpr := mkConst cfg.exprDef
   let certExpr := mkConst cfg.certDef
 
   withTraceNode `sat (fun _ => return "Compiling reflection proof term") do
-    let auxValue := mkApp2 (mkConst ``verifyBoolExpr) boolExpr certExpr
+    let auxValue := mkApp2 (mkConst verifier) reflectedExpr certExpr
     mkAuxDecl cfg.reflectionDef auxValue (mkConst ``Bool)
 
-  let nativeProof := mkApp3 (mkConst ``Lean.ofReduceBool) (mkConst cfg.reflectionDef) (toExpr true) (← mkEqRefl (toExpr true))
-  return mkApp3 (mkConst ``unsat_of_verifyBoolExpr_eq_true) boolExpr certExpr nativeProof
+  let nativeProof :=
+    mkApp3
+      (mkConst ``Lean.ofReduceBool)
+      (mkConst cfg.reflectionDef)
+      (toExpr true)
+      (← mkEqRefl (toExpr true))
+  return mkApp3 (mkConst unsat_of_verifier_eq_true) reflectedExpr certExpr nativeProof
 
 /--
 Prepare an `Expr` that proves `boolExpr.unsat` using `ofReduceBool`.
@@ -236,7 +251,7 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
       runExternal encoded cfg.solver cfg.lratPath
 
-  cert.toReflectionProof cfg boolExpr
+  cert.toReflectionProof cfg boolExpr ``verifyBoolExpr ``unsat_of_verifyBoolExpr_eq_true
 
 def _root_.Lean.MVarId.closeWithBoolReflection (g : MVarId) (unsatProver : BoolExprNat → MetaM Expr) : MetaM Unit := M.run do
   let g' ← falseOrByContra g
@@ -272,11 +287,11 @@ register_option sat.solver : String := {
 }
 
 def SatDecide.TacticContext.new (lratPath : System.FilePath) : TermElabM TacticContext := do
-  let boolExprDef ← Term.mkAuxName `_boolExpr_def
+  let exprDef ← Term.mkAuxName `_expr_def
   let certDef ← Term.mkAuxName `_cert_def
   let reflectionDef ← Term.mkAuxName `_reflection_def
   let solver := sat.solver.get (← getOptions)
-  return { boolExprDef, certDef, reflectionDef, solver, lratPath }
+  return { exprDef, certDef, reflectionDef, solver, lratPath }
 
 open Elab.Tactic
 elab_rules : tactic

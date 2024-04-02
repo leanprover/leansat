@@ -10,6 +10,14 @@ structure BVBit where
 instance : ToString BVBit where
   toString b := s!"x{b.var}[{b.idx.val}]"
 
+instance : Inhabited BVBit where
+  default :=
+    {
+        w := 1
+        var := 0
+        idx := 0
+    }
+
 namespace BVExpr
 
 structure SingleBit where

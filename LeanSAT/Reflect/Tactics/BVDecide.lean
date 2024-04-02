@@ -5,7 +5,12 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Reflect.BVExpr.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast
+import LeanSAT.Reflect.BVExpr.BitBlastLemmas
 import LeanSAT.Reflect.Tactics.SatDecide
+
+import LeanSAT.LRAT.LRATChecker
+import LeanSAT.LRAT.LRATCheckerSound
+import LeanSAT.External.Solver
 
 open Lean Meta
 
@@ -342,7 +347,7 @@ partial def of (h : Expr) : M (Option ReifiedBVLogical) := do
   | Not w =>
     -- TODO: support negations other than equality on BitVec
     match_expr w with
-    | Eq α _ _ _ =>
+    | Eq α _ _ =>
       let_expr BitVec _ := α | return none
       goPred h
     | _ => return none
@@ -400,11 +405,57 @@ Given a goal `g`, which should be `False`, returns
 * a function which takes an expression representing a proof of `e.unsat`,
   and returns a proof of `False` valid in the context of `g`.
 -/
+def verifyBVExpr (bv : BVLogicalExpr) (cert : SatDecide.LratCert) : Bool :=
+  SatDecide.verifyCert (SatDecide.LratFormula.ofCnf (AIG.toCNF bv.bitblast.relabelNat)) cert
+
+theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : SatDecide.LratCert)
+    (h : verifyBVExpr bv c = true) : bv.unsat := by
+  apply BVLogicalExpr.unsat_of_bitblast
+  rw [← AIG.Entrypoint.relabelNat_unsat_iff]
+  rw [← AIG.toCNF_equisat]
+  apply SatDecide.verifyCert_correct
+  rw [verifyBVExpr] at h
+  assumption
+
+def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr) : MetaM Expr := do
+  let entry ←
+    withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
+      return bv.bitblast
+  trace[bv] s!"AIG has {entry.aig.decls.size} nodes."
+
+  let cnf ←
+    withTraceNode `sat (fun _ => return "Converting AIG to CNF") do
+      return (AIG.toCNF (entry.relabelNat))
+
+  let encoded ←
+    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
+      return SatDecide.LratFormula.ofCnf cnf
+
+  trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
+
+  let cert ←
+    withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
+      SatDecide.runExternal encoded cfg.solver cfg.lratPath
+
+  cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
+
 def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
   let sats ← hyps.filterMapM ReifiedBVLogical.of
   let sat := sats.foldl (init := ReifiedBVLogical.trivial) ReifiedBVLogical.and
   return (sat.bvExpr, sat.proveFalse)
+
+def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId) (unsatProver : BVLogicalExpr → MetaM Expr) : MetaM Unit := M.run do
+  let g' ← falseOrByContra g
+  g'.withContext do
+    let (bvLogicalExpr, f) ←
+      withTraceNode `bv (fun _ => return "Reflecting goal into BVLogicalExpr") do
+        reflectBV g'
+    trace[bv] "Reflected bv logical expression: {bvLogicalExpr}"
+
+    let bvExprUnsat ← unsatProver bvLogicalExpr
+    let proveFalse ← f bvExprUnsat
+    g'.assign proveFalse
 
 /--
 Close a goal by:
@@ -414,22 +465,10 @@ Close a goal by:
 4. Verifying the LRAT proof using proof by reflection.
 -/
 def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := M.run do
-  let g' ← falseOrByContra g
-  g'.withContext do
-    let (bvLogicalExpr, f) ←
-      withTraceNode `bv (fun _ => return "Reflecting goal into BVLogicalExpr") do
-        reflectBV g'
-    trace[bv] "Reflected bv logical expression: {bvLogicalExpr}"
-
-    -- TODO: This is just experimental to estimate how big AIGs get
-    let entry := bvLogicalExpr.bitblast
-    trace[bv] "Created AIG with {entry.aig.decls.size} nodes."
-
-
-    let aux := mkApp (mkConst ``BVLogicalExpr.unsat) (toExpr bvLogicalExpr)
-    let unsatProof := mkApp2 (mkConst ``sorryAx [.zero]) aux (mkConst ``Bool.false)
-    let proveFalse ← f unsatProof
-    g'.assign proveFalse
+  let unsatProver (exp : BVLogicalExpr) : MetaM Expr := do
+    withTraceNode `bv (fun _ => return "Preparing LRAT reflection term") do
+      lratBitblaster cfg exp
+  g.closeWithBVReflection unsatProver
 
 @[inherit_doc _root_.Lean.MVarId.bvDecide]
 syntax (name := bvDecideSyntax) "bv_decide" : tactic
