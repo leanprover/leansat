@@ -22,31 +22,35 @@ def bitblast (aig : AIG BVBit) (target : SingleBit) : AIG.Entrypoint BVBit :=
   go aig target.expr target.idx target.hidx |>.val
 where
   go {w : Nat} (aig : AIG BVBit) (expr : BVExpr w) (idx : Nat) (hidx : idx < w)
-      : AIG.ExtendingEntrypoint aig :=
+    : AIG.ExtendingEntrypoint aig :=
     match expr with
     | .var a => ⟨aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩, by apply AIG.LawfulOperator.le_size⟩
     | .const val => ⟨aig.mkConstCached (val.getLsb idx), by apply AIG.LawfulOperator.le_size⟩
     | .bin lhs op rhs =>
       match op with
       | .and =>
-        let ⟨lhsEntry, hlhs⟩ := go aig lhs idx hidx
-        let ⟨rhsEntry, hrhs⟩ := go lhsEntry.aig rhs idx hidx
-        let lhsRef := AIG.Ref.ofEntrypoint lhsEntry |>.cast (by omega)
-        let rhsRef := AIG.Ref.ofEntrypoint rhsEntry
+        let ⟨⟨aig, lhsEntry, linv⟩, hlhs⟩ := go aig lhs idx hidx
+        let ⟨⟨aig, rhsEntry, rinv⟩, hrhs⟩ := go aig rhs idx hidx
+        let lhsRef := AIG.Ref.mk lhsEntry linv |>.cast <| by
+          dsimp at hrhs ⊢
+          omega
+        let rhsRef := AIG.Ref.mk rhsEntry rinv
         ⟨
-          rhsEntry.aig.mkAndCached ⟨lhsRef, rhsRef⟩,
+          aig.mkAndCached ⟨lhsRef, rhsRef⟩,
           by
             apply AIG.LawfulOperator.le_size_of_le_aig_size
+            dsimp at hrhs hlhs ⊢
             omega
         ⟩
     | .un op expr =>
       match op with
       | .not =>
-        let ⟨gateEntry, hgate⟩ := go aig expr idx hidx
+        let ⟨⟨aig, gateEntry, ginv⟩, hgate⟩ := go aig expr idx hidx
         ⟨
-          gateEntry.aig.mkNotCached <| AIG.Ref.ofEntrypoint gateEntry,
+          aig.mkNotCached <| AIG.Ref.mk gateEntry ginv,
           by
             apply AIG.LawfulOperator.le_size_of_le_aig_size
+            dsimp at hgate
             omega
         ⟩
 
@@ -113,14 +117,18 @@ def BitPair.rightBit (pair : BitPair) : SingleBit :=
   }
 
 def mkBitEq (aig : AIG BVBit) (pair : BitPair) : AIG.Entrypoint BVBit :=
-  let lhsEntry := bitblast aig pair.leftBit
-  let rhsEntry := bitblast lhsEntry.aig pair.rightBit
-  let lhsRef := AIG.Ref.ofEntrypoint lhsEntry |>.cast <| by
-    intros
-    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
-    assumption
-  let rhsRef := AIG.Ref.ofEntrypoint rhsEntry
-  rhsEntry.aig.mkBEqCached ⟨lhsRef, rhsRef⟩
+  let ⟨laig, lhsEntry, linv⟩ := bitblast aig pair.leftBit
+  match hr:bitblast laig pair.rightBit with
+  | ⟨raig, rhsEntry, rinv⟩ =>
+    let lhsRef := AIG.Ref.mk lhsEntry linv |>.cast <| by
+      intro h
+      dsimp at h ⊢
+      have : raig = (bitblast laig pair.rightBit).aig := by simp [hr]
+      rw [this]
+      apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
+      assumption
+    let rhsRef := AIG.Ref.mk rhsEntry rinv
+    raig.mkBEqCached ⟨lhsRef, rhsRef⟩
 
 theorem mkBitEq_le_size (aig : AIG BVBit) (target : BitPair)
     : aig.decls.size ≤ (mkBitEq aig target).aig.decls.size := by
@@ -163,20 +171,24 @@ def mkEq.go {w : Nat} (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat) (_hidx 
   match h:idx with
   | 0 => ⟨aig.mkConstCached true, by apply AIG.LawfulOperator.le_size⟩
   | nextBit + 1 =>
-    let ⟨others, _⟩ := go aig lhs rhs nextBit (by omega)
-    let gate := BVExpr.mkBitEq others.aig ⟨lhs, rhs, nextBit, by omega⟩
-    let othersRef := AIG.Ref.ofEntrypoint others |>.cast <| by
-      intros
-      apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := BVExpr.mkBitEq)
-      assumption
-    let gateRef := AIG.Ref.ofEntrypoint gate
-    ⟨
-      gate.aig.mkAndCached ⟨gateRef, othersRef⟩,
-      by
-        apply AIG.LawfulOperator.le_size_of_le_aig_size
-        apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
-        assumption
-    ⟩
+      let ⟨⟨aig, others, hothers⟩, hlt⟩ := go aig lhs rhs nextBit (by omega)
+      match h2:BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩ with
+      | ⟨naig, gate, hgate⟩ =>
+        have : naig = (BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩).aig := by simp [h2]
+        let othersRef := AIG.Ref.mk others hothers |>.cast <| by
+          intro h
+          rw [this]
+          apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := BVExpr.mkBitEq)
+          assumption
+        let gateRef := AIG.Ref.mk gate hgate
+        ⟨
+          naig.mkAndCached ⟨gateRef, othersRef⟩,
+          by
+            apply AIG.LawfulOperator.le_size_of_le_aig_size
+            rw [this]
+            apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
+            assumption
+        ⟩
 
 def mkEq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
   mkEq.go aig pair.lhs pair.rhs pair.lhs.width (by simp [BVExpr.width])
@@ -211,8 +223,8 @@ instance : AIG.LawfulOperator BVBit (fun _ => ExprPair) mkEq where
   decl_eq := by intros; apply mkEq_decl_eq
 
 def mkNeq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
-  let gate := mkEq aig pair
-  gate.aig.mkNotCached (AIG.Ref.ofEntrypoint gate)
+  let ⟨aig, gate, hgate⟩ := mkEq aig pair
+  aig.mkNotCached (AIG.Ref.mk gate hgate)
 
 theorem mkNeq_le_size (aig : AIG BVBit) (target : ExprPair)
     : aig.decls.size ≤ (mkNeq aig target).aig.decls.size := by

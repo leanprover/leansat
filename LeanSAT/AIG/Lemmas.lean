@@ -21,10 +21,6 @@ theorem Ref_cast {aig1 aig2 : AIG α} (ref : Ref aig1)
     : (ref.cast h).gate = ref.gate := rfl
 
 @[simp]
-theorem Ref_ofEntrypoint (entry : Entrypoint α)
-    : (Ref.ofEntrypoint entry).gate = entry.start := rfl
-
-@[simp]
 theorem Fanin_cast_ref {aig1 aig2 : AIG α} (fanin : Fanin aig1)
     (h : fanin.ref.gate < aig1.decls.size → fanin.ref.gate < aig2.decls.size)
     : (fanin.cast h).ref = fanin.ref.cast h := rfl

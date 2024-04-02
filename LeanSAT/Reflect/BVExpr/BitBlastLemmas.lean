@@ -29,8 +29,8 @@ theorem bitblast.go_denote_eq_eval (aig : AIG BVBit) (expr : BVExpr w) (idx : Na
   | bin lhs op rhs lih rih =>
     cases op with
     | and =>
-      simp only [go, denote_mkAndCached, Ref_cast, Ref_ofEntrypoint, rih, eval_bin,
-        BVBinOp.eval_and, BitVec.getLsb_and]
+      simp only [go, denote_mkAndCached, Ref_cast, rih, eval_bin, BVBinOp.eval_and,
+        BitVec.getLsb_and]
       simp only [bitblast.go_val_eq_bitblast (go aig lhs idx hidx).val.aig]
       rw [LawfulOperator.denote_input_entry (f := bitblast)]
       rw [lih]
@@ -160,7 +160,7 @@ end BVPred
 namespace BVLogicalExpr
 
 theorem bitblast.go_eval_eq_eval (expr : BVLogicalExpr) (aig : AIG BVBit) (assign : BVExpr.Assignment) :
-    ⟦ofBoolExprCached.go BVPred.bitblast expr aig, assign.toAIGAssignment⟧ = expr.eval assign := by
+    ⟦ofBoolExprCached.go expr aig BVPred.bitblast, assign.toAIGAssignment⟧ = expr.eval assign := by
   induction expr generalizing aig with
   | const => simp [ofBoolExprCached.go]
   | literal => simp [ofBoolExprCached.go]

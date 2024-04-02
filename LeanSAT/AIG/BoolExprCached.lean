@@ -15,62 +15,65 @@ namespace AIG
 
 variable {β : Type} [BEq β] [Hashable β] [DecidableEq β]
 
--- lines such as: ⟨ret, by dsimp [auxEntry, constEntry, ret] at *; omega⟩
--- are slow in Meta.check
--- TODO: minimize
+
+def ofBoolExprCached.go (expr : BoolExpr α) (aig : AIG β) (atomHandler : AIG β → α → Entrypoint β)
+    [LawfulOperator β (fun _ => α) atomHandler]
+    : ExtendingEntrypoint aig :=
+  match expr with
+  | .literal var => ⟨atomHandler aig var, by apply LawfulOperator.le_size⟩
+  | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
+  | .not expr =>
+    let ⟨⟨aig, exprEntry, hexpr⟩, _⟩ := go expr aig atomHandler
+    let exprRef := Ref.mk exprEntry hexpr
+    let ret := aig.mkNotCached exprRef
+    have := LawfulOperator.le_size (f := mkNotCached) aig exprRef
+    ⟨ret, by dsimp [ret] at *; omega⟩
+  | .gate g lhs rhs =>
+    let ⟨⟨aig, lhsEntry, linv⟩, lextend⟩ := go lhs aig atomHandler
+    let ⟨⟨aig, rhsEntry, rinv⟩, rextend⟩ := go rhs aig atomHandler
+    let lhsRef := Ref.mk lhsEntry linv |>.cast <| by
+      dsimp at rextend ⊢
+      omega
+    let rhsRef := Ref.mk rhsEntry rinv
+    let input := ⟨lhsRef, rhsRef⟩
+    match g with
+    | .and =>
+      let ret := aig.mkAndCached input
+      have := LawfulOperator.le_size (f := mkAndCached) aig input
+      -- TODO: why two dsimp calls???????
+      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+    | .or =>
+      let ret := aig.mkOrCached input
+      have := LawfulOperator.le_size (f := mkOrCached) aig input
+      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+    | .xor =>
+      let ret := aig.mkXorCached input
+      have := LawfulOperator.le_size (f := mkXorCached) aig input
+      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+    | .beq =>
+      let ret := aig.mkBEqCached input
+      have := LawfulOperator.le_size (f := mkBEqCached) aig input
+      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+    | .imp =>
+      let ret := aig.mkImpCached input
+      have := LawfulOperator.le_size (f := mkImpCached) aig input
+      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+
 /--
 Turn a `BoolExpr` into an AIG + entrypoint.
 -/
 def ofBoolExprCached (expr : BoolExpr α) (atomHandler : AIG β → α → Entrypoint β)
     [LawfulOperator β (fun _ => α) atomHandler] : Entrypoint β :=
-  go expr AIG.empty |>.val
-where
-  go (expr : BoolExpr α) (aig : AIG β) : ExtendingEntrypoint aig :=
-    match expr with
-    | .literal var => ⟨atomHandler aig var, by apply LawfulOperator.le_size⟩
-    | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
-    | .not expr =>
-      let ⟨exprEntry, _⟩ := go expr aig
-      let exprRef := Ref.ofEntrypoint exprEntry
-      let ret := exprEntry.aig.mkNotCached exprRef
-      have := LawfulOperator.le_size (f := mkNotCached) exprEntry.aig exprRef
-      ⟨ret, by dsimp [ret] at *; omega⟩
-    | .gate g lhs rhs =>
-      let ⟨lhsEntry, _⟩ := go lhs aig
-      let ⟨rhsEntry, _⟩ := go rhs lhsEntry.aig
-      let lhsRef := Ref.ofEntrypoint lhsEntry |>.cast (by omega)
-      let rhsRef := Ref.ofEntrypoint rhsEntry
-      let input := ⟨lhsRef, rhsRef⟩
-      match g with
-      | .and =>
-        let ret := rhsEntry.aig.mkAndCached input
-        have := LawfulOperator.le_size (f := mkAndCached) rhsEntry.aig input
-        ⟨ret, by dsimp [ret] at *; omega⟩
-      | .or =>
-        let ret := rhsEntry.aig.mkOrCached input
-        have := LawfulOperator.le_size (f := mkOrCached) rhsEntry.aig input
-        ⟨ret, by dsimp [ret] at *; omega⟩
-      | .xor =>
-        let ret := rhsEntry.aig.mkXorCached input
-        have := LawfulOperator.le_size (f := mkXorCached) rhsEntry.aig input
-        ⟨ret, by dsimp [ret] at *; omega⟩
-      | .beq =>
-        let ret := rhsEntry.aig.mkBEqCached input
-        have := LawfulOperator.le_size (f := mkBEqCached) rhsEntry.aig input
-        ⟨ret, by dsimp [ret] at *; omega⟩
-      | .imp =>
-        let ret := rhsEntry.aig.mkImpCached input
-        have := LawfulOperator.le_size (f := mkImpCached) rhsEntry.aig input
-        ⟨ret, by dsimp [ret] at *; omega⟩
+  ofBoolExprCached.go expr AIG.empty atomHandler |>.val
 
 variable (atomHandler : AIG β → α → Entrypoint β) [LawfulOperator β (fun _ => α) atomHandler]
 
 theorem ofBoolExprCached.go_decls_size_le (expr : BoolExpr α) (aig : AIG β) :
-    aig.decls.size ≤ (ofBoolExprCached.go atomHandler expr aig).val.aig.decls.size := by
-  exact (ofBoolExprCached.go atomHandler expr aig).property
+    aig.decls.size ≤ (ofBoolExprCached.go expr aig atomHandler).val.aig.decls.size := by
+  exact (ofBoolExprCached.go expr aig atomHandler).property
 
 theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.size) (hbounds) :
-    (ofBoolExprCached.go atomHandler expr aig).val.aig.decls[idx]'hbounds = aig.decls[idx] := by
+    (ofBoolExprCached.go expr aig atomHandler).val.aig.decls[idx]'hbounds = aig.decls[idx] := by
   induction expr generalizing aig with
   | const =>
     simp only [go]
@@ -86,9 +89,9 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
     assumption
   | gate g lhs rhs lih rih =>
     have := go_decls_size_le atomHandler lhs aig
-    have := go_decls_size_le atomHandler rhs (go atomHandler lhs aig).val.aig
+    have := go_decls_size_le atomHandler rhs (go lhs aig atomHandler).val.aig
     specialize lih aig (by omega) (by omega)
-    specialize rih (go atomHandler lhs aig).val.aig (by omega) (by omega)
+    specialize rih (go lhs aig atomHandler).val.aig (by omega) (by omega)
     cases g with
     | and =>
       simp only [go]
@@ -112,7 +115,7 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
       rw [rih, lih]
 
 theorem ofBoolExprCached.go_IsPrefix_aig {aig : AIG β}
-    : IsPrefix aig.decls (go atomHandler expr aig).val.aig.decls := by
+    : IsPrefix aig.decls (go expr aig atomHandler).val.aig.decls := by
   apply IsPrefix.of
   . intro idx h
     apply ofBoolExprCached.go_decl_eq
@@ -121,7 +124,7 @@ theorem ofBoolExprCached.go_IsPrefix_aig {aig : AIG β}
 
 @[simp]
 theorem ofBoolExprCached.go_denote_entry (entry : Entrypoint β) {h}:
-    ⟦(go atomHandler expr entry.aig).val.aig, ⟨entry.start, h⟩, assign ⟧
+    ⟦(go expr entry.aig atomHandler).val.aig, ⟨entry.start, h⟩, assign ⟧
       =
     ⟦entry, assign⟧ := by
   apply denote.eq_of_aig_eq
@@ -133,7 +136,7 @@ def ofBoolExprCachedDirect (expr : BoolExpr α) : Entrypoint α :=
 
 @[simp]
 theorem ofBoolExprCached.go_eval_eq_eval (expr : BoolExpr α) (aig : AIG α) (assign) :
-    ⟦go mkAtomCached expr aig, assign⟧ = expr.eval assign := by
+    ⟦go expr aig mkAtomCached, assign⟧ = expr.eval assign := by
   induction expr generalizing aig with
   | const => simp [go]
   | literal => simp [go]
