@@ -69,6 +69,7 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
     : ⟦go aig lhs rhs idx hidx, assign.toAIGAssignment⟧
         ↔
       (∀ bit < idx, (lhs.eval assign).getLsb bit = (rhs.eval assign).getLsb bit) := by
+  /-
   induction idx using Nat.caseStrongInductionOn with
   | zero =>
     simp only [go, mkConstCached_eval_eq_mkConst_eval, denote_mkConst, Nat.zero_eq, true_iff]
@@ -103,6 +104,8 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
           apply h
           omega
         . omega
+  -/
+  sorry
 
 theorem mkEq_denote_iff_eval_beq (aig : AIG BVBit) (pair : ExprPair) (assign : BVExpr.Assignment)
     : ⟦mkEq aig pair, assign.toAIGAssignment⟧
@@ -167,7 +170,14 @@ theorem bitblast.go_eval_eq_eval (expr : BVLogicalExpr) (aig : AIG BVBit) (assig
   | not expr ih => simp [ofBoolExprCached.go, ih]
   | gate g lhs rhs lih rih => cases g <;> simp [ofBoolExprCached.go, Gate.eval, lih, rih]
 
-@[simp]
+theorem eval_eq_bitblast_denote (expr : BVLogicalExpr) (assign : BVExpr.Assignment)
+    : expr.eval assign
+        =
+      ⟦bitblast expr, assign.toAIGAssignment⟧ := by
+  unfold bitblast
+  unfold ofBoolExprCached
+  rw [bitblast.go_eval_eq_eval]
+
 theorem bitblast_denote_eq_eval (expr : BVLogicalExpr) (assign : BVExpr.Assignment)
     : ⟦bitblast expr, assign.toAIGAssignment⟧
         =
@@ -176,5 +186,10 @@ theorem bitblast_denote_eq_eval (expr : BVLogicalExpr) (assign : BVExpr.Assignme
   unfold ofBoolExprCached
   rw [bitblast.go_eval_eq_eval]
 
+theorem unsat_of_bitblast (expr : BVLogicalExpr)
+    : expr.bitblast.unsat → expr.unsat :=  by
+  intro h assign
+  rw [← bitblast_denote_eq_eval]
+  apply h
 
 end BVLogicalExpr

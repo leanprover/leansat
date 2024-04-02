@@ -23,7 +23,11 @@ Prepare an `Expr` that proofs `boolExpr.unsat` using `ofReduceBool`.
 -/
 def lratChecker (cfg : SatDecide.TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   let cert ← SatDecide.LratCert.ofFile cfg.lratPath
-  cert.toReflectionProof cfg boolExpr
+  cert.toReflectionProof
+    cfg
+    boolExpr
+    ``SatDecide.verifyBoolExpr
+    ``SatDecide.unsat_of_verifyBoolExpr_eq_true
 
 /--
 Close a goal by:
