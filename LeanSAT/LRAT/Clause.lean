@@ -156,7 +156,6 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
     have nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
       intro l'
       simp only [List.contains, Bool.not_eq_true] at heq1
-      have heq1 := List.not_mem_of_elem_eq_false heq1
       simp only [List.find?, List.mem_cons, not_or, clause]
       by_cases l' = l.1
       . next l'_eq_l =>
@@ -165,22 +164,21 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
           constructor
           . intro heq
             simp only [← heq] at hl
-          . simp only [hl, ← l'_eq_l, Bool.not_true] at heq1
-            exact heq1
+          . simpa [hl, ← l'_eq_l] using heq1
         . simp only [Bool.not_eq_true] at hl
           apply Or.inl
           constructor
           . intro heq
             simp only [← heq] at hl
-          . simp only [← l'_eq_l, hl, Bool.not_false] at heq1
-            exact heq1
+          . simpa [hl, ← l'_eq_l] using heq1
       . next l'_ne_l =>
         rcases c.nodupkey l' with h | h <;> [apply Or.inl; apply Or.inr] <;>
         · apply And.intro _ h
           intro heq
           simp only [← heq, not_true] at l'_ne_l
     have nodup : List.Nodup clause := by
-      simp [c.nodup, List.not_mem_of_elem_eq_false, heq2, clause]
+      simp only [List.elem_eq_mem, decide_eq_true_eq] at heq2
+      simp [c.nodup, heq2, clause]
     some ⟨clause, nodupkey, nodup⟩
 
 def ofArray {n : Nat} (ls : Array (Literal (PosFin n))) : Option (DefaultClause n) :=

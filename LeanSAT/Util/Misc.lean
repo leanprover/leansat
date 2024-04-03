@@ -179,12 +179,6 @@ def List.foldlRecOn {C : β → Sort _} (l : List α) (op : β → α → β) (b
     · intro y hy x hx
       exact hl y hy x (List.mem_cons_of_mem hd hx)
 
-theorem List.not_mem_of_elem_eq_false {α : Type u} [BEq α] [LawfulBEq α] {a : α} {as : List α} :
-  List.elem a as = false → a ∉ as := by
-  intro h1 h2
-  have h3 := List.elem_eq_true_of_mem h2
-  simp only [h1] at h3
-
 theorem Nat.eq_one_of_mul_eq_one_right (H : m * n = 1) : m = 1 :=
   Nat.eq_one_of_dvd_one ⟨n, H.symm⟩
 
