@@ -69,13 +69,12 @@ def mkTemp : IO System.FilePath := do
   return out.stdout.trim
 
 def LratCert.ofFile (lratPath : System.FilePath) : IO LratCert := do
-  let lines ← IO.FS.lines lratPath
+  let proof ← IO.FS.readFile lratPath
   -- This is just a sanity check to verify that the proof does indeed parse.
   -- The parsing relevant for the reflection proof happens in the reflection term.
-  if LRAT.parseLRATProof lines |>.isNone then
+  if LRAT.parseLRATProof proof |>.isNone then
     throw <| IO.userError "SAT solver produced invalid LRAT"
-  -- XXX String.intercalate wit Array
-  return String.intercalate "\n" lines.toList
+  return proof
 
 /--
 Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
@@ -97,9 +96,7 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
 Verify that a proof certificate is valid for a given formula.
 -/
 def verifyCert (formula : LratFormula) (cert : LratCert) : Bool :=
-  -- XXX String.splitOn with Array
-  let lines := cert.splitOn "\n" |>.toArray
-  match LRAT.parseLRATProof lines with
+  match LRAT.parseLRATProof cert with
   | some lratProof =>
     -- XXX
     let lratProof := lratProof.toList
