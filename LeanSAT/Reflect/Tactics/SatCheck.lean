@@ -22,7 +22,7 @@ def mkContext (lratPath : System.FilePath) : TermElabM SatDecide.TacticContext :
 Prepare an `Expr` that proofs `boolExpr.unsat` using `ofReduceBool`.
 -/
 def lratChecker (cfg : SatDecide.TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
-  let cert ← SatDecide.LratCert.ofFile cfg.lratPath
+  let cert ← SatDecide.LratCert.ofFile cfg.lratPath cfg.prevalidate
   cert.toReflectionProof
     cfg
     boolExpr

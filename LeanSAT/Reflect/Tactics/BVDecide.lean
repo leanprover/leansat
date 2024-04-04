@@ -420,22 +420,24 @@ theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : SatDecide.LratCe
 def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr) : MetaM Expr := do
   let entry ←
     withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
-      return bv.bitblast
+      -- lazyPure to prevent compiler lifting
+      IO.lazyPure (fun _ => bv.bitblast)
   trace[bv] s!"AIG has {entry.aig.decls.size} nodes."
 
   let cnf ←
     withTraceNode `sat (fun _ => return "Converting AIG to CNF") do
-      return (AIG.toCNF (entry.relabelNat))
+      -- lazyPure to prevent compiler lifting
+      IO.lazyPure (fun _ => AIG.toCNF (entry.relabelNat))
 
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
-      return SatDecide.LratFormula.ofCnf cnf
-
+      -- lazyPure to prevent compiler lifting
+      IO.lazyPure (fun _ => SatDecide.LratFormula.ofCnf cnf)
   trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
 
   let cert ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      SatDecide.runExternal encoded cfg.solver cfg.lratPath
+      SatDecide.runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate
 
   cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
 
