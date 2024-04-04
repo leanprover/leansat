@@ -27,6 +27,7 @@ structure TacticContext where
   reflectionDef : Name
   solver : String
   lratPath : System.FilePath
+  prevalidate : Bool
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
@@ -68,12 +69,24 @@ def mkTemp : IO System.FilePath := do
   let out ← IO.Process.output { cmd := "mktemp" }
   return out.stdout.trim
 
-def LratCert.ofFile (lratPath : System.FilePath) : IO LratCert := do
-  let proof ← IO.FS.readFile lratPath
+/--
+A quicker version of `IO.FS.readFile` for big files. Note that this assumes the file contains valid
+UTF-8. As we only use this to parse trusted input from a SAT solver this is fine.
+-/
+def readFileQuick (path : System.FilePath) : IO String := do
+  let mdata ← path.metadata
+  let handle ← IO.FS.Handle.mk path .read
+  let bytes ← handle.read mdata.byteSize.toUSize
+  return String.fromUTF8Unchecked bytes
+
+def LratCert.ofFile (lratPath : System.FilePath) (prevalidate : Bool) : IO LratCert := do
+  let proof ← readFileQuick lratPath
   -- This is just a sanity check to verify that the proof does indeed parse.
   -- The parsing relevant for the reflection proof happens in the reflection term.
-  if LRAT.parseLRATProof proof |>.isNone then
-    throw <| IO.userError "SAT solver produced invalid LRAT"
+  -- As parsing can be expensive this is configured through a default-disabled option.
+  if prevalidate then
+    if LRAT.parseLRATProof proof |>.isNone then
+      throw <| IO.userError "SAT solver produced invalid LRAT"
   return proof
 
 /--
@@ -81,13 +94,18 @@ Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
 
 This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
 -/
-def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath) : IO LratCert := do
-  let formula := formula.formula
-  -- TODO: In the future we might want to cache these
+def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath)
+    (prevalidate : Bool)
+    : MetaM LratCert := do
   let cnfPath ← mkTemp
-  IO.FS.writeFile cnfPath <| formula.dimacs
-  satQuery solver cnfPath lratPath
-  let lratProof ← LratCert.ofFile lratPath
+  withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
+    -- lazyPure to prevent compiler lifting
+    IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => formula.formula.dimacs))
+  withTraceNode `sat (fun _ => return "Running SAT solver") do
+    satQuery solver cnfPath lratPath
+  let lratProof ←
+    withTraceNode `sat (fun _ => return "Obtaining LRAT certificate") do
+      LratCert.ofFile lratPath prevalidate
   -- cleanup files such that we don't pollute /tmp
   IO.FS.removeFile cnfPath
   return lratProof
@@ -239,17 +257,19 @@ Prepare an `Expr` that proves `boolExpr.unsat` using `ofReduceBool`.
 def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   let cnf ←
     withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
-      return (AIG.toCNF (AIG.ofBoolExprCachedDirect boolExpr.toBoolExpr))
+      -- lazyPure to prevent compiler lifting
+      IO.lazyPure (fun _ => AIG.toCNF (AIG.ofBoolExprCachedDirect boolExpr.toBoolExpr))
 
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
-      return LratFormula.ofCnf cnf
+      -- lazyPure to prevent compiler lifting
+      IO.lazyPure (fun _ => LratFormula.ofCnf cnf)
 
   trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
 
   let cert ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      runExternal encoded cfg.solver cfg.lratPath
+      runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate
 
   cert.toReflectionProof cfg boolExpr ``verifyBoolExpr ``unsat_of_verifyBoolExpr_eq_true
 
@@ -281,17 +301,13 @@ syntax (name := satDecideSyntax) "sat_decide" : tactic
 
 end SatDecide
 
-register_option sat.solver : String := {
-  defValue := "cadical"
-  descr := "name of the SAT solver used by LeanSAT tactics"
-}
-
 def SatDecide.TacticContext.new (lratPath : System.FilePath) : TermElabM TacticContext := do
   let exprDef ← Term.mkAuxName `_expr_def
   let certDef ← Term.mkAuxName `_cert_def
   let reflectionDef ← Term.mkAuxName `_reflection_def
   let solver := sat.solver.get (← getOptions)
-  return { exprDef, certDef, reflectionDef, solver, lratPath }
+  let prevalidate := sat.prevalidate.get (← getOptions)
+  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate }
 
 open Elab.Tactic
 elab_rules : tactic

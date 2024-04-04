@@ -9,3 +9,14 @@ open Lean
 
 initialize registerTraceClass `sat
 initialize registerTraceClass `bv
+
+register_option sat.solver : String := {
+  defValue := "cadical"
+  descr := "name of the SAT solver used by LeanSAT tactics"
+}
+
+register_option sat.prevalidate : Bool := {
+  defValue := false
+  descr := "Usually the LRAT proof is only parsed in the kernel. If this is enabled its additionally parsed before as well for better error reporting."
+}
+
