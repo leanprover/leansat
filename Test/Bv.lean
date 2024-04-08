@@ -11,10 +11,10 @@ set_option trace.bv true in
 theorem all_features {x y : BitVec 256} (h : x = y) : (~~~x) &&& 1 = (~~~y) &&& 1#256 := by
   bv_decide
 
-theorem axiomCheck (x : BitVec 1) : x = x := by bv_decide
+theorem bv_axiomCheck (x : BitVec 1) : x = x := by bv_decide
 
 /--
-info: 'axiomCheck' depends on axioms: [propext,
+info: 'bv_axiomCheck' depends on axioms: [propext,
  Quot.sound,
  Classical.choice,
  AIG.RelabelNat.State.Inv1.property,
@@ -22,4 +22,4 @@ info: 'axiomCheck' depends on axioms: [propext,
  Lean.ofReduceBool]
 -/
 #guard_msgs in
-#print axioms axiomCheck
+#print axioms bv_axiomCheck

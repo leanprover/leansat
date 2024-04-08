@@ -308,8 +308,3 @@ def bitblast (expr : BVLogicalExpr) : AIG.Entrypoint BVBit :=
   AIG.ofBoolExprCached expr BVPred.bitblast
 
 end BVLogicalExpr
-
-open BitVec
-#eval
-  let pred : BVLogicalExpr := .literal (.bin (.bin (w := 8) (.var 1) .and (.var 0)) .eq (.bin (.var 0) .and (.var 1)))
-  pred.bitblast.aig.decls.size
