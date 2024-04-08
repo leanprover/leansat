@@ -173,52 +173,61 @@ structure ExprPair where
   lhs : BVExpr w
   rhs : BVExpr w
 
--- FIXME: workaround Meta.check perf issue
-def mkEq.go {w : Nat} (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat) (_hidx : idx ≤ w)
-    : AIG.ExtendingEntrypoint aig :=
-  match h:idx with
-  | 0 => ⟨aig.mkConstCached true, by apply AIG.LawfulOperator.le_size⟩
-  | nextBit + 1 =>
-      let ⟨⟨aig, others, hothers⟩, hlt⟩ := go aig lhs rhs nextBit (by omega)
-      match h2:BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩ with
-      | ⟨naig, gate, hgate⟩ =>
-        have : naig = (BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩).aig := by simp [h2]
-        let othersRef := AIG.Ref.mk others hothers |>.cast <| by
-          intro h
-          rw [this]
-          apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := BVExpr.mkBitEq)
-          assumption
-        let gateRef := AIG.Ref.mk gate hgate
-        ⟨
-          naig.mkAndCached ⟨gateRef, othersRef⟩,
-          by
-            apply AIG.LawfulOperator.le_size_of_le_aig_size
-            rw [this]
-            apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
-            assumption
-        ⟩
-
 def mkEq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
-  mkEq.go aig pair.lhs pair.rhs pair.lhs.width (by simp [BVExpr.width])
+  go aig pair.lhs pair.rhs pair.lhs.width (by simp [BVExpr.width])
+where
+  go {w : Nat} (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat) (_hidx : idx ≤ w)
+      : AIG.ExtendingEntrypoint aig :=
+    match h:idx with
+    | 0 => ⟨aig.mkConstCached true, by apply AIG.LawfulOperator.le_size⟩
+    | nextBit + 1 =>
+        let ⟨⟨aig, others, hothers⟩, hlt⟩ := go aig lhs rhs nextBit (by omega)
+        match h2:BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩ with
+        | ⟨naig, gate, hgate⟩ =>
+          have : naig = (BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩).aig := by simp [h2]
+          let othersRef := AIG.Ref.mk others hothers |>.cast <| by
+            intro h
+            rw [this]
+            apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := BVExpr.mkBitEq)
+            assumption
+          let gateRef := AIG.Ref.mk gate hgate
+          ⟨
+            naig.mkAndCached ⟨gateRef, othersRef⟩,
+            by
+              apply AIG.LawfulOperator.le_size_of_le_aig_size
+              rw [this]
+              apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
+              assumption
+          ⟩
 
-
-theorem mkEq.go_le_size (aig : AIG BVBit) (target : ExprPair) (start : Nat)
-    : aig.decls.size ≤ (mkEq.go aig target.lhs target.rhs start sorry).val.aig.decls.size := by
-  exact (mkEq.go aig target.lhs target.rhs start sorry).property
+theorem mkEq.go_le_size (aig : AIG BVBit) (target : ExprPair) (start : Nat) {h}
+    : aig.decls.size ≤ (mkEq.go aig target.lhs target.rhs start h).val.aig.decls.size := by
+  exact (mkEq.go aig target.lhs target.rhs start h).property
 
 theorem mkEq_le_size (aig : AIG BVBit) (target : ExprPair)
     : aig.decls.size ≤ (mkEq aig target).aig.decls.size := by
   unfold mkEq
-  exact (mkEq.go aig target.lhs target.rhs (BVExpr.width target.lhs) (by simp [BVExpr.width])).property
+  apply mkEq.go_le_size
 
 
-theorem mkEq.go_decl_eq (aig : AIG BVBit) (target : ExprPair) (start : Nat) {h : idx < aig.decls.size} :
+theorem mkEq.go_decl_eq (aig : AIG BVBit) (target : ExprPair) (start : Nat) {h : idx < aig.decls.size}
+    {h2} :
     have := mkEq.go_le_size aig target start
-    (mkEq.go aig target.lhs target.rhs start sorry).val.aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
-  -- simp [go] again gets crushed by Meta.check here.
+    (mkEq.go aig target.lhs target.rhs start h2).val.aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
   induction start with
-  | zero => sorry
-  | succ curr ih => sorry
+  | zero =>
+    simp only [go]
+    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+  | succ curr ih =>
+    simp only [go]
+    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAndCached)]
+    rw [AIG.LawfulOperator.decl_eq (f := BVExpr.mkBitEq)]
+    . exact ih
+    . apply Nat.lt_of_lt_of_le
+      . exact h
+      . apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
+        apply mkEq.go_le_size
+
 
 theorem mkEq_decl_eq (aig : AIG BVBit) (target : ExprPair) {h : idx < aig.decls.size} :
     have := mkEq_le_size aig target

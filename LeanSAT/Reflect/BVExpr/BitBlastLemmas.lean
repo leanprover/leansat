@@ -69,7 +69,6 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
     : ⟦go aig lhs rhs idx hidx, assign.toAIGAssignment⟧
         ↔
       (∀ bit < idx, (lhs.eval assign).getLsb bit = (rhs.eval assign).getLsb bit) := by
-  /-
   induction idx using Nat.caseStrongInductionOn with
   | zero =>
     simp only [go, mkConstCached_eval_eq_mkConst_eval, denote_mkConst, Nat.zero_eq, true_iff]
@@ -79,7 +78,7 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
     constructor
     . intro h bit hbit
       specialize ih idx (by omega) (by omega)
-      simp only [go, denote_mkAndCached, Ref_ofEntrypoint, denote_projected_entry,
+      simp only [go, denote_mkAndCached, denote_projected_entry,
         BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Ref_cast, Bool.and_eq_true, beq_iff_eq] at h
       rcases h with ⟨hl, hr⟩
       rw [LawfulOperator.denote_input_entry (f := BVExpr.mkBitEq)] at hr
@@ -93,7 +92,7 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
         apply ih
         assumption
     . intro h
-      simp only [go, denote_mkAndCached, Ref_ofEntrypoint, denote_projected_entry,
+      simp only [go, denote_mkAndCached, denote_projected_entry,
         BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Ref_cast, Bool.and_eq_true, beq_iff_eq]
       constructor
       . apply h
@@ -104,8 +103,6 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
           apply h
           omega
         . omega
-  -/
-  sorry
 
 theorem mkEq_denote_iff_eval_beq (aig : AIG BVBit) (pair : ExprPair) (assign : BVExpr.Assignment)
     : ⟦mkEq aig pair, assign.toAIGAssignment⟧

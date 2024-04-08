@@ -16,7 +16,14 @@ namespace AIG
 variable {β : Type} [BEq β] [Hashable β] [DecidableEq β]
 
 
-def ofBoolExprCached.go (expr : BoolExpr α) (aig : AIG β) (atomHandler : AIG β → α → Entrypoint β)
+/--
+Turn a `BoolExpr` into an AIG + entrypoint.
+-/
+def ofBoolExprCached (expr : BoolExpr α) (atomHandler : AIG β → α → Entrypoint β)
+    [LawfulOperator β (fun _ => α) atomHandler] : Entrypoint β :=
+  go expr AIG.empty atomHandler |>.val
+where
+go (expr : BoolExpr α) (aig : AIG β) (atomHandler : AIG β → α → Entrypoint β)
     [LawfulOperator β (fun _ => α) atomHandler]
     : ExtendingEntrypoint aig :=
   match expr with
@@ -59,12 +66,6 @@ def ofBoolExprCached.go (expr : BoolExpr α) (aig : AIG β) (atomHandler : AIG �
       have := LawfulOperator.le_size (f := mkImpCached) aig input
       ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
 
-/--
-Turn a `BoolExpr` into an AIG + entrypoint.
--/
-def ofBoolExprCached (expr : BoolExpr α) (atomHandler : AIG β → α → Entrypoint β)
-    [LawfulOperator β (fun _ => α) atomHandler] : Entrypoint β :=
-  ofBoolExprCached.go expr AIG.empty atomHandler |>.val
 
 variable (atomHandler : AIG β → α → Entrypoint β) [LawfulOperator β (fun _ => α) atomHandler]
 
