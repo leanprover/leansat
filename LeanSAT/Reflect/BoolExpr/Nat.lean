@@ -99,7 +99,7 @@ instance : ToString (BoolExprNat) := ⟨toString⟩
   | gate g x y => simp [eval, toBoolExpr, eval_ofFn]
 
 @[simp] theorem eval_if (f : List Bool) :
-    (toBoolExpr x).eval (fun i => if i < (toBoolExpr x).vars then f.getD i false else false) =
+    (toBoolExpr x).eval (fun i => i < (toBoolExpr x).vars && f.getD i false) =
       x.eval f := by
   match x with
   | literal a => simp [toBoolExpr]
@@ -109,10 +109,10 @@ instance : ToString (BoolExprNat) := ⟨toString⟩
     simp [toBoolExpr]
     rw [BoolExpr.eval_congr, eval_if f, BoolExpr.eval_congr, eval_if f]
     · intro i h
-      rw [if_pos h, if_pos]
+      simp only [h, decide_True, Bool.true_and, Bool.and_iff_right_iff_imp, decide_eq_true_eq]
       omega
     · intro i h
-      rw [if_pos h, if_pos]
+      simp only [h, decide_True, Bool.true_and, Bool.and_iff_right_iff_imp, decide_eq_true_eq]
       omega
 
 theorem sat_iff (x : BoolExprNat) (f : List Bool) :

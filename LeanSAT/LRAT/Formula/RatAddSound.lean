@@ -381,8 +381,8 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
       omega
     rw [Array.foldl_induction in_bounds_motive in_bounds_base in_bounds_inductive]
     exact i.2.2
-  simp only [getElem!, i_in_bounds, dite_true] at h1
-  simp only [instHSatLiteral._eq_1, HSat.eval._eq_1]
+  simp only [getElem!, i_in_bounds, dite_true, Array.get_eq_getElem] at h1
+  simp only [instHSatLiteral.eq_1, HSat.eval.eq_1]
   by_cases hb : b
   . rw [hb]
     rw [hb] at h
@@ -445,7 +445,8 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
       exact i.2
     rw [i_eq_range_i]
     apply Misc.Array.mem_filter i.1 i_in_bounds
-    simp only [getElem!, Array.range_idx i_lt_f_clauses_size, i_lt_f_clauses_size, dite_true, c'_in_f, DefaultClause.contains_iff]
+    simp only [getElem!, Array.range_idx i_lt_f_clauses_size, i_lt_f_clauses_size, dite_true,
+      c'_in_f, DefaultClause.contains_iff, Array.get_eq_getElem]
     rw [Clause.toList, instClausePosFinDefaultClause] at negPivot_in_c'
     exact negPivot_in_c'
   rcases List.get_of_mem h with ⟨j, h'⟩
@@ -535,7 +536,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
       have p'_rw : p' = (fun a => if a = pivot.1 then pivot.2 else p a) := rfl
       have p'_entails_c : p' ⊨ c := by
         specialize pivot_in_c p'
-        simp only [instHSatLiteral._eq_1, HSat.eval._eq_1, ite_eq_left_iff, not_true, false_implies, forall_const, p'] at pivot_in_c
+        simp only [instHSatLiteral.eq_1, HSat.eval.eq_1, ite_eq_left_iff, not_true, false_implies, forall_const, p'] at pivot_in_c
         exact pivot_in_c
       specialize fc_unsat p'
       simp only [← p'_rw, formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Misc.not_forall, exists_prop] at fc_unsat
@@ -587,12 +588,12 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
             . apply Exists.intro l ∘ Or.inr
               simp only [← l_def, Clause.unit_eq, List.mem_singleton, decide_eq_true_eq, true_and, HSat.eval, instHSatLiteral]
               have h := (pc l).1 l_in_negc
-              simp only [instHSatLiteral._eq_1, HSat.eval._eq_1, Bool.not_eq_false] at h
+              simp only [instHSatLiteral.eq_1, HSat.eval.eq_1, Bool.not_eq_false] at h
               assumption
             . apply Exists.intro l ∘ Or.inl
               simp only [← l_def, Clause.unit_eq, List.mem_singleton, decide_eq_true_eq, true_and, HSat.eval, instHSatLiteral]
               have h := (pc l).2 l_in_negc
-              simp only [instHSatLiteral._eq_1, HSat.eval._eq_1, Bool.not_eq_true] at h
+              simp only [instHSatLiteral.eq_1, HSat.eval.eq_1, Bool.not_eq_true] at h
               assumption
           . simp only [instHSatPosFinDefaultFormula, formulaHSat, List.any_eq_true, Prod.exists, Bool.exists_bool,
               Bool.decide_coe, List.all_eq_true] at pf

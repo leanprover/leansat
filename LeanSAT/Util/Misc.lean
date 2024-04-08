@@ -358,8 +358,7 @@ theorem Array.range_size {n : Nat} : (Array.range n).size = n := by
 
 theorem Array.range_idx {n : Nat} {x : Nat} (h : x < n) : (Array.range n)[x]'(by rw [Array.range_size]; exact h) = x := by
   induction n
-  . simp only [Nat.zero_eq] at h
-    exact False.elim $ Nat.not_lt_zero x h
+  . contradiction
   . next n ih =>
     rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ h with x_lt_n | x_eq_n
     . specialize ih x_lt_n

@@ -692,7 +692,7 @@ theorem toCNF.denote_as_go :
     have heval2 := (go aig start h1 (.empty aig)).val.cache.inv.heval
     specialize heval2 assign heval1 start h1 go_marked
     simp [h] at heval2
-    simp [← heval2]
+    simp [heval2]
   | false =>
     simp [heval1]
 
