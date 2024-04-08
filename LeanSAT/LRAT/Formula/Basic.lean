@@ -108,7 +108,7 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
       have hsize : (ofArray_fold_fn acc cOpt).size = n := by rw [ofArray_fold_fn_preserves_assignments_size, ih.1]
       apply Exists.intro hsize
       intro i b h
-      simp only [ofArray_fold_fn._eq_1] at h
+      simp only [ofArray_fold_fn] at h
       split at h
       . exact ih.2 i b h
       . next cOpt c =>
@@ -480,7 +480,8 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
                 have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact idx.2
-              simp only [getElem!, id_eq_idx, idx_in_bounds2, dite_true, Array.getElem_eq_data_get] at heq
+              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDite,
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_get] at heq
               rw [hidx, hl] at heq
               simp only [unit, Option.some.injEq, DefaultClause.mk.injEq, List.cons.injEq, and_true] at heq
               simp only [← heq, not] at l_ne_b
@@ -517,7 +518,8 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
                 have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact idx.2
-              simp only [getElem!, id_eq_idx, idx_in_bounds2, dite_true, Array.getElem_eq_data_get] at heq
+              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDite,
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_get] at heq
               rw [hidx, hl] at heq
               simp only [unit, Option.some.injEq, DefaultClause.mk.injEq, List.cons.injEq, and_true] at heq
               have i_eq_l : i = l.1 := by rw [← heq]
@@ -578,7 +580,8 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
                 have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact idx.2
-              simp only [getElem!, id_eq_idx, idx_in_bounds2, dite_true, Array.getElem_eq_data_get] at heq
+              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDite,
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_get] at heq
               rw [hidx] at heq
               simp only [Option.some.injEq] at heq
               rw [← heq] at hl

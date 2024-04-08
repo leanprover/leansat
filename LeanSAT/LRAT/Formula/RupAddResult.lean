@@ -98,12 +98,13 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
         refine ⟨mostRecentUnitIdx, l.2, i_gt_zero, ?_⟩
         simp only [insertUnit, h3, Prod.mk.eta, ite_false, Array.get_push_eq, i_eq_l]
         constructor
-        . conv => lhs; rw [← @Prod.mk.eta (PosFin n) Bool l]
+        . rfl
         . constructor
           . rw [Array.get_modify_at_idx l_in_bounds]
             simp only [← i_eq_l, h1]
           . constructor
-            . simp only [Bool.not_eq_true, getElem!, l_in_bounds, dite_true] at h3
+            . simp only [getElem!, l_in_bounds, ↓reduceDite, Array.get_eq_getElem,
+              Bool.not_eq_true] at h3
               simp only [← i_eq_l, ← h1]
               simp only [i_eq_l, h3]
             . intro k hk
@@ -168,7 +169,8 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
         match hb : b, hl : l.2 with
         | true, true =>
           exfalso
-          have assignments_i_rw : assignments[i.1]! = assignments[i.1] := by simp only [getElem!, i_in_bounds, dite_true]
+          have assignments_i_rw : assignments[i.1]! = assignments[i.1] := by
+            simp only [getElem!, i_in_bounds, ↓reduceDite, Array.get_eq_getElem]
           rw [hl, ← i_eq_l, assignments_i_rw, h2] at h5
           exact h5 (has_of_add _ true)
         | true, false =>
@@ -191,7 +193,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                   | neg =>
                     simp only [addAssignment, addPosAssignment, h, ite_true] at h2
                     simp only [i_eq_l] at h2
-                    simp only [hasAssignment, hl, getElem!, l_in_bounds, h2, dite_true, ite_false, not_true, Bool.not_eq_true, hasNegAssignment] at h5
+                    simp [hasAssignment, hl, getElem!, l_in_bounds, h2, hasNegAssignment] at h5
                   | both => simp (config := {decide := true}) only [h] at h3
                 . intro k k_ne_j k_ne_l
                   rw [Array.get_push]
@@ -228,7 +230,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                   | pos =>
                     simp only [addAssignment, h, ite_false, addNegAssignment] at h2
                     simp only [i_eq_l] at h2
-                    simp only [hasAssignment, hl, getElem!, l_in_bounds, h2, dite_true, ite_true, Bool.not_eq_true, hasPosAssignment, not_true] at h5
+                    simp [hasAssignment, hl, getElem!, l_in_bounds, h2, hasPosAssignment] at h5
                   | neg  => simp (config := {decide := true}) only [h] at h3
                   | both => simp (config := {decide := true}) only [h] at h3
                 . intro k k_ne_l k_ne_j
@@ -249,7 +251,8 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                       exact k_ne_l rfl
         | false, false =>
           exfalso
-          have assignments_i_rw : assignments[i.1]! = assignments[i.1] := by simp only [getElem!, i_in_bounds, dite_true]
+          have assignments_i_rw : assignments[i.1]! = assignments[i.1] := by
+            simp [getElem!, i_in_bounds]
           rw [hl, ← i_eq_l, assignments_i_rw, h2] at h5
           exact h5 (has_of_add _ false)
       . next i_ne_l =>
@@ -344,8 +347,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                   . exact k_eq_units_size
                 simp only [k_eq_units_size, Array.get_push_eq, ne_eq]
                 intro l_eq_i
-                simp only [getElem!, l_eq_i, i_in_bounds, h3, dite_true, Bool.not_eq_true, has_of_both] at h
-                exact h ⟨⟩
+                simp [getElem!, l_eq_i, i_in_bounds, h3, has_of_both] at h
 
 theorem insertUnit_fold_preserves_invariant {n : Nat} (assignments0 : Array Assignment)
     (assignments0_size : assignments0.size = n) (rupUnits : Array (Literal (PosFin n)))
@@ -786,7 +788,8 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
         . simp only [l_eq_i, Array.get_modify_at_idx i_in_bounds, List.get, h1]
         . constructor
           . simp only [List.get, Bool.not_eq_true]
-            simp only [getElem!, l_in_bounds, dite_true, Bool.not_eq_true] at h
+            simp only [getElem!, l_in_bounds, ↓reduceDite, Array.get_eq_getElem,
+              Bool.not_eq_true] at h
             simp only [l_eq_i, h1] at h
             exact h
           . intro k k_ne_zero
@@ -831,7 +834,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
         intro l_eq_l'
         rw [l_eq_i] at h
         simp only [l'] at l_eq_l'
-        simp only [getElem!, i_in_bounds, h1, ← l_eq_l', dite_true, has_of_add, not_true] at h
+        simp [getElem!, i_in_bounds, h1, ← l_eq_l', has_of_add] at h
       by_cases l.2
       . next l_eq_true =>
         rw [l_eq_true] at l_ne_l'
@@ -854,8 +857,9 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
             . constructor
               . simp only [l'] at l'_eq_false
                 simp only [l'_eq_false, hasAssignment, ite_false] at h2
-                simp only [hasAssignment, l_eq_true, getElem!, l_eq_i, i_in_bounds, h1, addAssignment, l'_eq_false,
-                  ite_false, dite_true, ite_true, hasPos_of_addNeg] at h
+                simp only [hasAssignment, l_eq_true, getElem!, l_eq_i, i_in_bounds,
+                  Array.get_eq_getElem, ↓reduceIte, ↓reduceDite, h1, addAssignment, l'_eq_false,
+                  hasPos_of_addNeg] at h
                 exact unassigned_of_has_neither _ h h2
               . intro k k_ne_zero k_ne_j_succ
                 have k_eq_succ : ∃ k' : Nat, ∃ k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length, k = ⟨k' + 1, k'_succ_in_bounds⟩ := by
@@ -903,8 +907,8 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
             . constructor
               . simp only [l'] at l'_eq_true
                 simp only [hasAssignment, l'_eq_true, ite_true] at h2
-                simp only [hasAssignment, l'_eq_true, getElem!, l_eq_i, i_in_bounds, h1, addAssignment, l_eq_false,
-                  ite_false, dite_true, ite_true, hasNeg_of_addPos] at h
+                simp only [hasAssignment, l_eq_false, ↓reduceIte, getElem!, l_eq_i, i_in_bounds,
+                  Array.get_eq_getElem, h1, addAssignment, l'_eq_true, hasNeg_of_addPos] at h
                 exact unassigned_of_has_neither _ h2 h
               . intro k k_ne_j_succ k_ne_zero
                 have k_eq_succ : ∃ k' : Nat, ∃ k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length, k = ⟨k' + 1, k'_succ_in_bounds⟩ := by
@@ -982,8 +986,9 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
     have l_ne_i : l.1.1 ≠ i.1 := by
       intro l_eq_i
       simp only [hasAssignment, Bool.not_eq_true] at h
-      split at h <;>
-      simp (config := {decide := true}) only [getElem!, l_eq_i, i_in_bounds, h1, dite_true] at h
+      split at h
+      all_goals
+        simp (config := {decide := true}) [getElem!, l_eq_i, i_in_bounds, h1] at h
     constructor
     . rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i]
       exact h1
@@ -1203,7 +1208,7 @@ theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormu
     . apply Nat.zero_le
     . constructor
       . simp only [derivedLits_arr_def, getElem_fin, Array.getElem_eq_data_get, ← j_eq_i]
-        conv => lhs; rw [← @Prod.mk.eta (PosFin n) Bool (derivedLits.get ⟨j.1, _⟩)]
+        rfl
       . apply And.intro h1 ∘ And.intro h2
         intro k _ k_ne_j
         have k_in_bounds : k < derivedLits.length := by
@@ -1230,11 +1235,11 @@ theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormu
     constructor
     . simp only [derivedLits_arr_def, getElem_fin, Array.getElem_eq_data_get, ← j1_eq_i]
       rw [← j1_eq_true]
-      conv => lhs; rw [← @Prod.mk.eta (PosFin n) Bool (derivedLits.get ⟨j1.1, _⟩)]
+      rfl
     . constructor
       . simp only [derivedLits_arr_def, getElem_fin, Array.getElem_eq_data_get, ← j2_eq_i]
         rw [← j2_eq_false]
-        conv => lhs; rw [← @Prod.mk.eta (PosFin n) Bool (derivedLits.get ⟨j2.1, _⟩)]
+        rfl
       . apply And.intro h1 ∘ And.intro h2
         intro k _ k_ne_j1 k_ne_j2
         have k_in_bounds : k < derivedLits.length := by
