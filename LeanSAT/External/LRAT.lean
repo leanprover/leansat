@@ -157,7 +157,6 @@ def lineToAction (line : String) : Option IntAction :=
   | .ok action => some action
   | .error .. => none
 
-set_option trace.compiler.ir.result true in
 def parseLRATProof (proof : String) : Option (Array IntAction) := Id.run do
   match Parser.parseLines |>.run proof with
   | .ok actions => return some actions

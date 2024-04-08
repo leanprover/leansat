@@ -23,48 +23,48 @@ def ofBoolExprCached (expr : BoolExpr α) (atomHandler : AIG β → α → Entry
     [LawfulOperator β (fun _ => α) atomHandler] : Entrypoint β :=
   go expr AIG.empty atomHandler |>.val
 where
-go (expr : BoolExpr α) (aig : AIG β) (atomHandler : AIG β → α → Entrypoint β)
-    [LawfulOperator β (fun _ => α) atomHandler]
-    : ExtendingEntrypoint aig :=
-  match expr with
-  | .literal var => ⟨atomHandler aig var, by apply LawfulOperator.le_size⟩
-  | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
-  | .not expr =>
-    let ⟨⟨aig, exprEntry, hexpr⟩, _⟩ := go expr aig atomHandler
-    let exprRef := Ref.mk exprEntry hexpr
-    let ret := aig.mkNotCached exprRef
-    have := LawfulOperator.le_size (f := mkNotCached) aig exprRef
-    ⟨ret, by dsimp [ret] at *; omega⟩
-  | .gate g lhs rhs =>
-    let ⟨⟨aig, lhsEntry, linv⟩, lextend⟩ := go lhs aig atomHandler
-    let ⟨⟨aig, rhsEntry, rinv⟩, rextend⟩ := go rhs aig atomHandler
-    let lhsRef := Ref.mk lhsEntry linv |>.cast <| by
-      dsimp at rextend ⊢
-      omega
-    let rhsRef := Ref.mk rhsEntry rinv
-    let input := ⟨lhsRef, rhsRef⟩
-    match g with
-    | .and =>
-      let ret := aig.mkAndCached input
-      have := LawfulOperator.le_size (f := mkAndCached) aig input
-      -- TODO: why two dsimp calls???????
-      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
-    | .or =>
-      let ret := aig.mkOrCached input
-      have := LawfulOperator.le_size (f := mkOrCached) aig input
-      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
-    | .xor =>
-      let ret := aig.mkXorCached input
-      have := LawfulOperator.le_size (f := mkXorCached) aig input
-      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
-    | .beq =>
-      let ret := aig.mkBEqCached input
-      have := LawfulOperator.le_size (f := mkBEqCached) aig input
-      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
-    | .imp =>
-      let ret := aig.mkImpCached input
-      have := LawfulOperator.le_size (f := mkImpCached) aig input
-      ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+  go (expr : BoolExpr α) (aig : AIG β) (atomHandler : AIG β → α → Entrypoint β)
+      [LawfulOperator β (fun _ => α) atomHandler]
+      : ExtendingEntrypoint aig :=
+    match expr with
+    | .literal var => ⟨atomHandler aig var, by apply LawfulOperator.le_size⟩
+    | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
+    | .not expr =>
+      let ⟨⟨aig, exprEntry, hexpr⟩, _⟩ := go expr aig atomHandler
+      let exprRef := Ref.mk exprEntry hexpr
+      let ret := aig.mkNotCached exprRef
+      have := LawfulOperator.le_size (f := mkNotCached) aig exprRef
+      ⟨ret, by dsimp [ret] at *; omega⟩
+    | .gate g lhs rhs =>
+      let ⟨⟨aig, lhsEntry, linv⟩, lextend⟩ := go lhs aig atomHandler
+      let ⟨⟨aig, rhsEntry, rinv⟩, rextend⟩ := go rhs aig atomHandler
+      let lhsRef := Ref.mk lhsEntry linv |>.cast <| by
+        dsimp at rextend ⊢
+        omega
+      let rhsRef := Ref.mk rhsEntry rinv
+      let input := ⟨lhsRef, rhsRef⟩
+      match g with
+      | .and =>
+        let ret := aig.mkAndCached input
+        have := LawfulOperator.le_size (f := mkAndCached) aig input
+        -- TODO: why two dsimp calls???????
+        ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+      | .or =>
+        let ret := aig.mkOrCached input
+        have := LawfulOperator.le_size (f := mkOrCached) aig input
+        ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+      | .xor =>
+        let ret := aig.mkXorCached input
+        have := LawfulOperator.le_size (f := mkXorCached) aig input
+        ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+      | .beq =>
+        let ret := aig.mkBEqCached input
+        have := LawfulOperator.le_size (f := mkBEqCached) aig input
+        ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
+      | .imp =>
+        let ret := aig.mkImpCached input
+        have := LawfulOperator.le_size (f := mkImpCached) aig input
+        ⟨ret, by dsimp [ret] at *; dsimp at rextend; omega⟩
 
 
 variable (atomHandler : AIG β → α → Entrypoint β) [LawfulOperator β (fun _ => α) atomHandler]
