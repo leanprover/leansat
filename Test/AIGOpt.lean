@@ -41,11 +41,10 @@ def mkConstantCollapsible (n : Nat) : BoolExpr Nat :=
 #guard_msgs in
 #eval
   let entry := AIG.ofBoolExprCachedDirect (mkConstantCollapsible 1)
-  (entry.aig.decls.size, entry.aig.decls[entry.start]!)
+  (entry.aig.decls.size, entry.aig.decls[entry.ref.gate]!)
 
 /-- info: (2, Decl.const false) -/
 #guard_msgs in
 #eval
   let entry := AIG.ofBoolExprCachedDirect (mkConstantCollapsible 16)
-  have := entry.inv
-  (entry.aig.decls.size, entry.aig.decls[entry.start]!)
+  (entry.aig.decls.size, entry.aig.decls[entry.ref.gate]!)

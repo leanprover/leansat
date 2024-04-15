@@ -37,7 +37,7 @@ def mkAtomCached (aig : AIG α) (n : α) : Entrypoint α :=
       split at h2
       . apply inv <;> assumption
       . contradiction
-  ⟨⟨decls, cache, inv⟩, g, by simp [g, decls]⟩
+  ⟨⟨decls, cache, inv⟩, ⟨g, by simp [g, decls]⟩⟩
 
 /--
 A version of `AIG.mkConst` that uses the subterm cache in `AIG`. This version is meant for
@@ -60,7 +60,7 @@ def mkConstCached (aig : AIG α) (val : Bool) : Entrypoint α :=
       split at h2
       . apply inv <;> assumption
       . contradiction
-  ⟨⟨decls, cache, inv⟩, g, by simp [g, decls]⟩
+  ⟨⟨decls, cache, inv⟩, ⟨g, by simp [g, decls]⟩⟩
 
 /--
 A version of `AIG.mkGate` that uses the subterm cache in `AIG`. This version is meant for
@@ -79,7 +79,7 @@ def mkGateCached (aig : AIG α) (input : GateInput aig) : Entrypoint α :=
   let decl := .gate lhs rhs linv rinv
   match cache.find? decl with
   | some hit =>
-    ⟨⟨decls, cache, inv⟩, hit.idx, hit.hbound⟩
+    ⟨⟨decls, cache, inv⟩, ⟨hit.idx, hit.hbound⟩⟩
   | none =>
     /-
     Here we implement the constant propagating subset of:
@@ -108,6 +108,6 @@ def mkGateCached (aig : AIG α) (input : GateInput aig) : Entrypoint α :=
         split at h2
         . apply inv <;> assumption
         . injections; omega
-      ⟨⟨decls, cache, inv⟩, g, by simp [g, decls]⟩
+      ⟨⟨decls, cache, inv⟩, ⟨g, by simp [g, decls]⟩⟩
 
 end AIG

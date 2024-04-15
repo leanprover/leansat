@@ -30,10 +30,10 @@ theorem bitblast.go_denote_eq_eval (aig : AIG BVBit) (expr : BVExpr w) (idx : Na
     cases op with
     | and =>
       simp only [go, denote_mkAndCached, Ref_cast, rih, eval_bin, BVBinOp.eval_and,
-        BitVec.getLsb_and]
-      simp only [bitblast.go_val_eq_bitblast (go aig lhs idx hidx).val.aig]
+        BitVec.getLsb_and, Ref_cast']
+      simp only [bitblast.go_val_eq_bitblast]
       rw [LawfulOperator.denote_input_entry (f := bitblast)]
-      rw [lih]
+      rw [bitblast, lih]
   | un op expr ih =>
     cases op with
     | not =>
@@ -78,8 +78,8 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
     constructor
     . intro h bit hbit
       specialize ih idx (by omega) (by omega)
-      simp only [go, denote_mkAndCached, denote_projected_entry,
-        BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Ref_cast, Bool.and_eq_true, beq_iff_eq] at h
+      simp only [go, Nat.succ_eq_add_one, Ref_cast', denote_mkAndCached, denote_projected_entry,
+        BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Bool.and_eq_true, beq_iff_eq] at h
       rcases h with ⟨hl, hr⟩
       rw [LawfulOperator.denote_input_entry (f := BVExpr.mkBitEq)] at hr
       simp only [hr, true_iff] at ih
@@ -87,13 +87,13 @@ theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat
       cases Nat.eq_or_lt_of_le this with
       | inl h =>
         rw [h]
-        assumption
+        simpa using hl
       | inr h =>
         apply ih
         assumption
     . intro h
-      simp only [go, denote_mkAndCached, denote_projected_entry,
-        BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Ref_cast, Bool.and_eq_true, beq_iff_eq]
+      simp only [go, Nat.succ_eq_add_one, Ref_cast', denote_mkAndCached, denote_projected_entry,
+        BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Bool.and_eq_true, beq_iff_eq]
       constructor
       . apply h
         omega

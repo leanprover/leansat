@@ -162,6 +162,19 @@ instance : Membership α (AIG α) where
   mem := mem
 
 /--
+A reference to a node within an AIG.
+-/
+structure Ref (aig : AIG α) where
+  gate : Nat
+  hgate : gate < aig.decls.size
+
+@[inline]
+def Ref.cast {aig1 aig2 : AIG α} (ref : Ref aig1)
+    (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size) : Ref aig2 :=
+  { ref with hgate := h ref.hgate }
+
+
+/--
 An entrypoint into an `AIG`. This can be used to evaluate a circuit, starting at a certain node,
 with `AIG.denote` or to construct bigger circuits
 -/
@@ -171,19 +184,15 @@ structure Entrypoint (α : Type) [BEq α] [Hashable α] where
   -/
   aig : AIG α
   /--
-  The AIG node at which to begin evaluation.
+  The reference to the node in `aig` that this `Entrypoint` targets.
   -/
-  start : Nat
-  /--
-  The AIG node must be within bounds.
-  -/
-  inv : start < aig.decls.size
+  ref : Ref aig
 
 /--
 Evaluate an `AIG.Entrypoint` using some assignment for atoms.
 -/
 def denote (entry : Entrypoint α) (assign : α → Bool) : Bool :=
-  go entry.start entry.aig.decls assign entry.inv entry.aig.inv
+  go entry.ref.gate entry.aig.decls assign entry.ref.hgate entry.aig.inv
 where
   go (x : Nat) (decls : Array (Decl α)) (assign : α → Bool) (h1 : x < decls.size) (h2 : IsDag α decls) :=
     match h3 : decls[x] with
@@ -196,11 +205,11 @@ where
       xor lval linv && xor rval rinv
 
 scoped syntax "⟦" term ", " term "⟧" : term
-scoped syntax "⟦" term ", " "⟨" term ", " term "⟩" ", " term "⟧" : term
+scoped syntax "⟦" term ", " term ", " term "⟧" : term
 
 macro_rules
 | `(⟦$entry, $assign⟧) => `(denote $entry $assign)
-| `(⟦$aig, ⟨$start, $hbound⟩, $assign⟧) => `(denote (Entrypoint.mk $aig $start $hbound) $assign)
+| `(⟦$aig, $ref, $assign⟧) => `(denote (Entrypoint.mk $aig $ref) $assign)
 
 @[app_unexpander AIG.denote]
 def unexpandDenote : Lean.PrettyPrinter.Unexpander
@@ -209,19 +218,7 @@ def unexpandDenote : Lean.PrettyPrinter.Unexpander
   | _ => throw ()
 
 def unsatAt (aig : AIG α) (start : Nat) (h : start < aig.decls.size) : Prop := ∀ assign, ⟦aig, ⟨start, h⟩, assign⟧ = false
-def Entrypoint.unsat (entry : Entrypoint α) : Prop := entry.aig.unsatAt entry.start entry.inv
-
-/--
-A reference to a node within an AIG.
--/
-structure Ref (aig : AIG α) where
-  gate : Nat
-  hgate : gate < aig.decls.size
-
-@[inline]
-def Ref.cast {aig1 aig2 : AIG α} (ref : Ref aig1)
-    (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size) : Ref aig2 :=
-  { ref with hgate := h ref.hgate }
+def Entrypoint.unsat (entry : Entrypoint α) : Prop := entry.aig.unsatAt entry.ref.gate entry.ref.hgate
 
 /--
 An input to an AIG gate.
@@ -275,7 +272,7 @@ def mkGate (aig : AIG α) (input : GateInput aig) : Entrypoint α :=
       have := lhs.ref.hgate
       have := rhs.ref.hgate
       omega
-  ⟨{ aig with decls, inv, cache }, g, by simp [g, decls]⟩
+  ⟨{ aig with decls, inv, cache }, ⟨g, by simp [g, decls]⟩⟩
 
 /--
 Add a new input node to the AIG in `aig`. Note that his version is only meant for proving,
@@ -292,7 +289,7 @@ def mkAtom (aig : AIG α) (n : α) : Entrypoint α :=
     split at h2
     . apply aig.inv <;> assumption
     . contradiction
-  ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
+  ⟨{ decls, inv, cache }, ⟨g, by simp [g, decls]⟩⟩
 
 /--
 Build an constant node in `aig`. Note that his version is only meant for proving,
@@ -309,6 +306,6 @@ def mkConst (aig : AIG α) (val : Bool) : Entrypoint α :=
     split at h2
     . apply aig.inv <;> assumption
     . contradiction
-  ⟨{ decls, inv, cache }, g, by simp [g, decls]⟩
+  ⟨{ decls, inv, cache }, ⟨g, by simp [g, decls]⟩⟩
 
 end AIG

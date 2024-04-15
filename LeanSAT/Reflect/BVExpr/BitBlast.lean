@@ -37,12 +37,11 @@ where
     | .bin lhs op rhs =>
       match op with
       | .and =>
-        let ⟨⟨aig, lhsEntry, linv⟩, hlhs⟩ := go aig lhs idx hidx
-        let ⟨⟨aig, rhsEntry, rinv⟩, hrhs⟩ := go aig rhs idx hidx
-        let lhsRef := AIG.Ref.mk lhsEntry linv |>.cast <| by
+        let ⟨⟨aig, lhsRef⟩, hlhs⟩ := go aig lhs idx hidx
+        let ⟨⟨aig, rhsRef⟩, hrhs⟩ := go aig rhs idx hidx
+        let lhsRef := lhsRef.cast <| by
           dsimp at hrhs ⊢
           omega
-        let rhsRef := AIG.Ref.mk rhsEntry rinv
         ⟨
           aig.mkAndCached ⟨lhsRef, rhsRef⟩,
           by
@@ -53,9 +52,9 @@ where
     | .un op expr =>
       match op with
       | .not =>
-        let ⟨⟨aig, gateEntry, ginv⟩, hgate⟩ := go aig expr idx hidx
+        let ⟨⟨aig, gateRef⟩, hgate⟩ := go aig expr idx hidx
         ⟨
-          aig.mkNotCached <| AIG.Ref.mk gateEntry ginv,
+          aig.mkNotCached gateRef,
           by
             apply AIG.LawfulOperator.le_size_of_le_aig_size
             dsimp at hgate
@@ -125,12 +124,11 @@ def BitPair.rightBit (pair : BitPair) : SingleBit :=
   }
 
 def mkBitEq (aig : AIG BVBit) (pair : BitPair) : AIG.Entrypoint BVBit :=
-  let ⟨laig, lhsEntry, linv⟩ := bitblast aig pair.leftBit
+  let ⟨laig, lhsRef⟩ := bitblast aig pair.leftBit
   match hr:bitblast laig pair.rightBit with
   | ⟨raig, rhsEntry, rinv⟩ =>
-    let lhsRef := AIG.Ref.mk lhsEntry linv |>.cast <| by
+    let lhsRef := lhsRef.cast <| by
       intro h
-      dsimp at h ⊢
       have : raig = (bitblast laig pair.rightBit).aig := by simp [hr]
       rw [this]
       apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
@@ -181,16 +179,15 @@ where
     match h:idx with
     | 0 => ⟨aig.mkConstCached true, by apply AIG.LawfulOperator.le_size⟩
     | nextBit + 1 =>
-        let ⟨⟨aig, others, hothers⟩, hlt⟩ := go aig lhs rhs nextBit (by omega)
+        let ⟨⟨aig, othersRef⟩, hlt⟩ := go aig lhs rhs nextBit (by omega)
         match h2:BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩ with
-        | ⟨naig, gate, hgate⟩ =>
+        | ⟨naig, gateRef⟩ =>
           have : naig = (BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩).aig := by simp [h2]
-          let othersRef := AIG.Ref.mk others hothers |>.cast <| by
+          let othersRef := othersRef.cast <| by
             intro h
             rw [this]
             apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := BVExpr.mkBitEq)
             assumption
-          let gateRef := AIG.Ref.mk gate hgate
           ⟨
             naig.mkAndCached ⟨gateRef, othersRef⟩,
             by

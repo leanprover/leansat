@@ -97,9 +97,9 @@ instance : LawfulOperator α BinaryInput mkAndCached where
 theorem denote_mkAndCached {aig : AIG α} {input : BinaryInput aig} :
     ⟦aig.mkAndCached input, assign⟧
       =
-    (⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
+    (⟦aig, input.lhs, assign⟧
       &&
-    ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧) := by
+    ⟦aig, input.rhs, assign⟧) := by
   simp [mkAndCached]
 
 theorem mkOrCached_le_size (aig : AIG α) (input : BinaryInput aig)
@@ -131,9 +131,9 @@ instance : LawfulOperator α BinaryInput mkOrCached where
 theorem denote_mkOrCached {aig : AIG α} {input : BinaryInput aig} :
     ⟦aig.mkOrCached input, assign⟧
       =
-    (⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
+    (⟦aig, input.lhs, assign⟧
       ||
-     ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧) := by
+     ⟦aig, input.rhs, assign⟧) := by
   rw [← or_as_aig]
   simp [mkOrCached, LawfulOperator.denote_input_entry (f := mkConstCached)]
 
@@ -168,8 +168,8 @@ theorem denote_mkXorCached {aig : AIG α} {input : BinaryInput aig} :
     ⟦aig.mkXorCached input, assign⟧
       =
     xor
-      ⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
-      ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧
+      ⟦aig, input.lhs, assign⟧
+      ⟦aig, input.rhs, assign⟧
     := by
   rw [← xor_as_aig]
   simp [
@@ -207,9 +207,9 @@ instance : LawfulOperator α BinaryInput mkBEqCached where
 theorem denote_mkBEqCached {aig : AIG α} {input : BinaryInput aig} :
     ⟦aig.mkBEqCached input, assign⟧
       =
-    (⟦aig, ⟨input.lhs.gate, input.lhs.hgate⟩, assign⟧
+    (⟦aig, input.lhs, assign⟧
        ==
-     ⟦aig, ⟨input.rhs.gate, input.rhs.hgate⟩, assign⟧) := by
+     ⟦aig, input.rhs, assign⟧) := by
   rw [← beq_as_aig]
   simp [
     mkBEqCached,
