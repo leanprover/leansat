@@ -580,8 +580,8 @@ end toCNF
 Convert an AIG into CNF, starting at some entry node.
 -/
 def toCNF (entry : Entrypoint Nat) : CNF Nat :=
-  let ⟨state, _⟩ := go entry.aig entry.start entry.inv (toCNF.State.empty entry.aig)
-  let cnf : CNF (CNFVar entry.aig) := [(.inr ⟨entry.start, entry.inv⟩, true)] :: state.cnf
+  let ⟨state, _⟩ := go entry.aig entry.ref.gate entry.ref.hgate (toCNF.State.empty entry.aig)
+  let cnf : CNF (CNFVar entry.aig) := [(.inr ⟨entry.ref.gate, entry.ref.hgate⟩, true)] :: state.cnf
   cnf.relabel inj
 where
   inj {aig : AIG Nat} (var : CNFVar aig) : Nat :=

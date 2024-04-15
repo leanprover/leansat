@@ -20,6 +20,11 @@ theorem Ref_cast {aig1 aig2 : AIG α} (ref : Ref aig1)
     (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size)
     : (ref.cast h).gate = ref.gate := rfl
 
+@[simp 100]
+theorem Ref_cast' {aig1 aig2 : AIG α} (ref : Ref aig1)
+    (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size)
+    : (ref.cast h) = ⟨ref.gate, h ref.hgate⟩ := rfl
+
 @[simp]
 theorem Fanin_cast_ref {aig1 aig2 : AIG α} (fanin : Fanin aig1)
     (h : fanin.ref.gate < aig1.decls.size → fanin.ref.gate < aig2.decls.size)
@@ -44,7 +49,12 @@ theorem GateInput_cast_rhs {aig1 aig2 : AIG α} (input : GateInput aig1)
 
 @[simp]
 theorem denote_projected_entry {entry : Entrypoint α} :
-    ⟦entry.aig, ⟨entry.start, entry.inv⟩, assign⟧ = ⟦entry, assign⟧ := by
+    ⟦entry.aig, entry.ref, assign⟧ = ⟦entry, assign⟧ := by
+  cases entry; simp
+
+@[simp]
+theorem denote_projected_entry' {entry : Entrypoint α} :
+    ⟦entry.aig, ⟨entry.ref.gate, entry.ref.hgate⟩, assign⟧ = ⟦entry, assign⟧ := by
   cases entry; simp
 
 /--
@@ -76,9 +86,9 @@ theorem denote_mkGate {aig : AIG α} {input : GateInput aig} :
     ⟦aig.mkGate input, assign⟧
       =
     (
-      (xor ⟦aig, ⟨input.lhs.ref.gate, input.lhs.ref.hgate⟩, assign⟧ input.lhs.inv)
+      (xor ⟦aig, input.lhs.ref, assign⟧ input.lhs.inv)
         &&
-      (xor ⟦aig, ⟨input.rhs.ref.gate, input.rhs.ref.hgate⟩, assign⟧ input.rhs.inv)
+      (xor ⟦aig, input.rhs.ref, assign⟧ input.rhs.inv)
     ) := by
   conv =>
     lhs

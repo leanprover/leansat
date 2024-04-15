@@ -278,7 +278,7 @@ identifiers.
 def relabelNat (entry : Entrypoint α) : Entrypoint Nat :=
   { entry with
       aig := entry.aig.relabelNat
-      inv := by simp[entry.inv]
+      ref.hgate := by simp[entry.ref.hgate]
   }
 
 /--

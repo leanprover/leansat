@@ -21,11 +21,11 @@ Create a not gate in the input AIG. This uses the builtin cache to enable automa
 def mkNotCached (aig : AIG α) (gate : Ref aig) : Entrypoint α :=
   -- ¬x = true && invert x
   match h:aig.mkConstCached true with
-  | ⟨taig, constEntry, hconst⟩ =>
+  | ⟨taig, constRef⟩ =>
     taig.mkGateCached
       {
         lhs := {
-          ref := Ref.mk constEntry hconst
+          ref := constRef
           inv := false
         }
         rhs := {
@@ -69,11 +69,11 @@ def mkOrCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- x or y = true && (invert (invert x && invert y))
   let ⟨aig, auxEntry, haux⟩ := aig.mkGateCached <| input.asGateInput true true
   match h:aig.mkConstCached true with
-  | ⟨caig, constEntry, hconst⟩ =>
+  | ⟨caig, constRef⟩ =>
     caig.mkGateCached
       {
         lhs := {
-          ref := Ref.mk constEntry hconst
+          ref := constRef
           inv := false
         },
         rhs := {
@@ -93,7 +93,7 @@ Create an xor gate in the input AIG. This uses the builtin cache to enable autom
 def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- x xor y = (invert (invert (x && y))) && (invert ((invert x) && (invert y)))
   match h1:aig.mkGateCached <| input.asGateInput false false with
-  | ⟨laig, aux1Entry, haux1⟩ =>
+  | ⟨laig, aux1Ref⟩ =>
     have hlaig : laig = (aig.mkGateCached <| input.asGateInput false false).aig := by simp [h1]
     let rinput :=
       (input.asGateInput true true).cast
@@ -108,12 +108,12 @@ def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
           apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
           assumption)
     match h2:laig.mkGateCached rinput with
-    | ⟨raig, aux2Entry, haux2⟩ =>
+    | ⟨raig, aux2Ref⟩ =>
       have hraig : raig = (laig.mkGateCached rinput).aig := by simp [h2]
       raig.mkGateCached
         {
           lhs := {
-            ref := Ref.mk aux1Entry haux1 |>.cast <| by
+            ref := aux1Ref.cast <| by
               intro h
               rw [hraig]
               apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
@@ -121,7 +121,7 @@ def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
             inv := true
           },
           rhs := {
-            ref := Ref.mk aux2Entry haux2
+            ref := aux2Ref
             inv := true
           }
         }
@@ -132,7 +132,7 @@ Create an equality gate in the input AIG. This uses the builtin cache to enable 
 def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- a == b = (invert (a && (invert b))) && (invert ((invert a) && b))
   match h1:aig.mkGateCached <| input.asGateInput false true with
-  | ⟨laig, aux1Entry, haux1⟩ =>
+  | ⟨laig, aux1Ref⟩ =>
     have hlaig : laig = (aig.mkGateCached <| input.asGateInput false true).aig := by simp [h1]
     let rinput :=
       (input.asGateInput true false).cast
@@ -147,12 +147,12 @@ def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
           apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
           assumption)
     match h2:laig.mkGateCached rinput with
-    | ⟨raig, aux2Entry, haux2⟩ =>
+    | ⟨raig, aux2Ref⟩ =>
       have hraig : raig = (laig.mkGateCached rinput).aig := by simp [h2]
       raig.mkGateCached
         {
           lhs := {
-            ref := Ref.mk aux1Entry haux1 |>.cast <| by
+            ref := aux1Ref.cast <| by
               intro h
               rw [hraig]
               apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
@@ -160,7 +160,7 @@ def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
             inv := true
           },
           rhs := {
-            ref := Ref.mk aux2Entry haux2
+            ref := aux2Ref
             inv := true
           }
         }
@@ -172,11 +172,11 @@ def mkImpCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- a -> b = true && (invert (a and (invert b)))
   let ⟨aig, auxEntry, haux⟩ := aig.mkGateCached <| input.asGateInput false true
   match h:aig.mkConstCached true with
-  | ⟨caig, constEntry, hconst⟩ =>
+  | ⟨caig, constRef⟩ =>
     caig.mkGateCached
       {
         lhs := {
-          ref := Ref.mk constEntry hconst
+          ref := constRef
           inv := false
         },
         rhs := {

@@ -30,18 +30,16 @@ where
     | .literal var => ⟨atomHandler aig var, by apply LawfulOperator.le_size⟩
     | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
     | .not expr =>
-      let ⟨⟨aig, exprEntry, hexpr⟩, _⟩ := go expr aig atomHandler
-      let exprRef := Ref.mk exprEntry hexpr
+      let ⟨⟨aig, exprRef⟩, _⟩ := go expr aig atomHandler
       let ret := aig.mkNotCached exprRef
       have := LawfulOperator.le_size (f := mkNotCached) aig exprRef
       ⟨ret, by dsimp [ret] at *; omega⟩
     | .gate g lhs rhs =>
-      let ⟨⟨aig, lhsEntry, linv⟩, lextend⟩ := go lhs aig atomHandler
-      let ⟨⟨aig, rhsEntry, rinv⟩, rextend⟩ := go rhs aig atomHandler
-      let lhsRef := Ref.mk lhsEntry linv |>.cast <| by
+      let ⟨⟨aig, lhsRef⟩, lextend⟩ := go lhs aig atomHandler
+      let ⟨⟨aig, rhsRef⟩, rextend⟩ := go rhs aig atomHandler
+      let lhsRef := lhsRef.cast <| by
         dsimp at rextend ⊢
         omega
-      let rhsRef := Ref.mk rhsEntry rinv
       let input := ⟨lhsRef, rhsRef⟩
       match g with
       | .and =>
@@ -125,7 +123,7 @@ theorem ofBoolExprCached.go_IsPrefix_aig {aig : AIG β}
 
 @[simp]
 theorem ofBoolExprCached.go_denote_entry (entry : Entrypoint β) {h}:
-    ⟦(go expr entry.aig atomHandler).val.aig, ⟨entry.start, h⟩, assign ⟧
+    ⟦(go expr entry.aig atomHandler).val.aig, ⟨entry.ref.gate, h⟩, assign ⟧
       =
     ⟦entry, assign⟧ := by
   apply denote.eq_of_aig_eq

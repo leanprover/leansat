@@ -165,7 +165,7 @@ namespace Entrypoint
 def relabel (f : α → β) (entry : Entrypoint α) : Entrypoint β :=
   { entry with
       aig := entry.aig.relabel f
-      inv := by simp [entry.inv]
+      ref.hgate := by simp [entry.ref.hgate]
   }
 
 @[simp]
