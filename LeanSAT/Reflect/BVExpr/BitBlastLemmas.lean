@@ -12,97 +12,43 @@ theorem Assignment.toAIGAssignment_apply (assign : Assignment) (bit : BVBit)
     : assign.toAIGAssignment bit = (assign.getD bit.var).bv.getLsb bit.idx := by
   rfl
 
-theorem bitblast.go_val_eq_bitblast (aig : AIG BVBit) (expr : BVExpr w) (idx : Nat) (hidx : idx < w)
-    : (go aig expr idx hidx).val = bitblast aig ⟨expr, idx, hidx⟩ := by
-  rfl
+-- TODO: denotational theory for blastVar
+-- TODO: denotational theory for blastConst
 
-theorem bitblast.go_denote_eq_eval (aig : AIG BVBit) (expr : BVExpr w) (idx : Nat) (hidx : idx < w)
-    (assign : Assignment)
-    : ⟦(bitblast.go aig expr idx hidx).val, assign.toAIGAssignment⟧
-        =
-      (expr.eval assign).getLsb idx := by
+-- TODO: replace these two with theory that every bit in the stream returned by bitblast corresponds
+-- to a getLsb from the target
+
+@[simp]
+theorem bitblast_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
+    : ∀ (idx : Nat) (hidx : idx < w),
+        ⟦(expr.bitblast aig).1.1, (expr.bitblast aig).2.getRef idx hidx, assign.toAIGAssignment⟧
+          =
+        (expr.eval assign).getLsb idx
+    := by
+  intro idx hidx
   induction expr generalizing aig with
-  | var =>
-    simp [go, hidx]
   | const =>
-    simp [go]
+    simp [bitblast]
+    -- TODO: blastConst denotation
+    sorry
+  | var =>
+    simp [bitblast, hidx]
+    -- TODO: blastVar denotation
+    sorry
   | bin lhs op rhs lih rih =>
     cases op with
     | and =>
-      simp only [go, denote_mkAndCached, Ref_cast, rih, eval_bin, BVBinOp.eval_and,
-        BitVec.getLsb_and, Ref_cast']
-      simp only [bitblast.go_val_eq_bitblast]
-      rw [LawfulOperator.denote_input_entry (f := bitblast)]
-      rw [bitblast, lih]
+      simp [bitblast, lih, rih]
+      -- TODO: very easy with LawfulOperator style reasoning
+      sorry
   | un op expr ih =>
-    cases op with
-    | not =>
-      simp [go, ih, hidx]
+    cases op with 
+    | not => simp [bitblast, ih, hidx]
 
-@[simp]
-theorem bitblast_denote_eq_eval_getLsb (aig : AIG BVBit) (target : SingleBit) (assign : Assignment)
-    : ⟦bitblast aig target, assign.toAIGAssignment⟧
-        =
-      (target.expr.eval assign).getLsb target.idx := by
-  unfold bitblast
-  rw [bitblast.go_denote_eq_eval]
-
-@[simp]
-theorem mkBitEq_denote_eq_eval_getLsb_eq (aig : AIG BVBit) (pair : BitPair) (assign : Assignment)
-    : ⟦mkBitEq aig pair, assign.toAIGAssignment⟧
-        =
-      (
-        (pair.lhs.eval assign).getLsb pair.idx
-          ==
-        (pair.rhs.eval assign).getLsb pair.idx
-      ) := by
-  unfold mkBitEq
-  -- TODO: potentially more theory around BitPair
-  simp [LawfulOperator.denote_input_entry (f := bitblast), BitPair.leftBit, BitPair.rightBit]
 
 end BVExpr
 
 namespace BVPred
-
-theorem mkEq.go_denote_eq_eval (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat) (hidx : idx ≤ w)
-    (assign : BVExpr.Assignment)
-    : ⟦go aig lhs rhs idx hidx, assign.toAIGAssignment⟧
-        ↔
-      (∀ bit < idx, (lhs.eval assign).getLsb bit = (rhs.eval assign).getLsb bit) := by
-  induction idx using Nat.caseStrongInductionOn with
-  | zero =>
-    simp only [go, mkConstCached_eval_eq_mkConst_eval, denote_mkConst, Nat.zero_eq, true_iff]
-    intro bit hbit
-    contradiction
-  | ind idx ih =>
-    constructor
-    . intro h bit hbit
-      specialize ih idx (by omega) (by omega)
-      simp only [go, Nat.succ_eq_add_one, Ref_cast', denote_mkAndCached, denote_projected_entry,
-        BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Bool.and_eq_true, beq_iff_eq] at h
-      rcases h with ⟨hl, hr⟩
-      rw [LawfulOperator.denote_input_entry (f := BVExpr.mkBitEq)] at hr
-      simp only [hr, true_iff] at ih
-      have : bit ≤ idx := by omega
-      cases Nat.eq_or_lt_of_le this with
-      | inl h =>
-        rw [h]
-        simpa using hl
-      | inr h =>
-        apply ih
-        assumption
-    . intro h
-      simp only [go, Nat.succ_eq_add_one, Ref_cast', denote_mkAndCached, denote_projected_entry,
-        BVExpr.mkBitEq_denote_eq_eval_getLsb_eq, Bool.and_eq_true, beq_iff_eq]
-      constructor
-      . apply h
-        omega
-      . rw [LawfulOperator.denote_input_entry (f := BVExpr.mkBitEq)]
-        rw [ih]
-        . intro bit hbit
-          apply h
-          omega
-        . omega
 
 theorem mkEq_denote_iff_eval_beq (aig : AIG BVBit) (pair : ExprPair) (assign : BVExpr.Assignment)
     : ⟦mkEq aig pair, assign.toAIGAssignment⟧
@@ -110,16 +56,19 @@ theorem mkEq_denote_iff_eval_beq (aig : AIG BVBit) (pair : ExprPair) (assign : B
       (pair.lhs.eval assign == pair.rhs.eval assign) := by
   rw [beq_iff_eq]
   unfold mkEq
-  rw [mkEq.go_denote_eq_eval]
+  dsimp
+  -- TODO: simp only this after we got bitblast's denotation back
+  simp
   constructor
   . intro h
     apply BitVec.eq_of_getLsb_eq
     intro i
     specialize h i.val i.isLt
-    assumption
-  . intro h _ _
-    rw [h]
-
+    -- TODO: fix this after we got bitblast's denotation back
+    sorry
+  . intro h idx hidx
+    -- TODO: fix this after we got bitblast's denotation back
+    sorry
 
 @[simp]
 theorem mkEq_denote_eq_eval_beq (aig : AIG BVBit) (pair : ExprPair) (assign : BVExpr.Assignment)

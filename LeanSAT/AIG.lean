@@ -14,3 +14,4 @@ import LeanSAT.AIG.CachedGatesLemmas
 import LeanSAT.AIG.CNF
 import LeanSAT.AIG.Relabel
 import LeanSAT.AIG.RelabelNat
+import LeanSAT.AIG.RefStream

@@ -20,147 +20,159 @@ instance : Inhabited BVBit where
 
 namespace BVExpr
 
-structure SingleBit where
-  {w : Nat}
-  expr : BVExpr w
-  idx : Nat
-  hidx : idx < w
+-- TODO: Idea for LawfulOperator refactor:
+-- TODO: Currently LawfulOperator is only allowed to return Entrypoints. We could instead envision
+-- parametrising it over some container that must contain at least an AIG. This would allow the
+-- blastVar, blastConst and RefStream APIs to become part of LawfulOperator
 
-def bitblast (aig : AIG BVBit) (target : SingleBit) : AIG.Entrypoint BVBit :=
-  go aig target.expr target.idx target.hidx |>.val
-where
-  go {w : Nat} (aig : AIG BVBit) (expr : BVExpr w) (idx : Nat) (hidx : idx < w)
-    : AIG.ExtendingEntrypoint aig :=
-    match expr with
-    | .var a => ⟨aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩, by apply AIG.LawfulOperator.le_size⟩
-    | .const val => ⟨aig.mkConstCached (val.getLsb idx), by apply AIG.LawfulOperator.le_size⟩
-    | .bin lhs op rhs =>
-      match op with
-      | .and =>
-        let ⟨⟨aig, lhsRef⟩, hlhs⟩ := go aig lhs idx hidx
-        let ⟨⟨aig, rhsRef⟩, hrhs⟩ := go aig rhs idx hidx
-        let lhsRef := lhsRef.cast <| by
-          dsimp at hrhs ⊢
-          omega
+namespace bitblast
+
+def blastVar (w : Nat) (aig : AIG BVBit) (idx : Nat) (s : AIG.RefStream aig idx) (a : Nat)
+    (hidx : idx ≤ w)
+    : (aig : AIG BVBit) × AIG.RefStream aig w :=
+  if hidx:idx < w then
+    match haig:aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩ with
+    | ⟨newAig, bitRef⟩ =>
+      let s := s.cast <| by
+        intros
+        have : newAig = (aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩).aig := by rw [haig]
+        rw[this]
+        apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkAtomCached)
+        assumption
+      let s := s.pushRef bitRef
+      blastVar w newAig (idx + 1) s a (by omega)
+  else
+    have hidx : idx = w := by omega
+    ⟨aig, hidx ▸ s⟩
+termination_by w - idx
+
+theorem blastVar_le_size {aig : AIG BVBit} (idx : Nat) (s : AIG.RefStream aig idx) (a : Nat)
+    (hidx : idx ≤ w)
+    : aig.decls.size ≤ (blastVar w aig idx s a hidx).1.decls.size := sorry
+
+theorem blastVar_decl_eq? {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (a : Nat)
+    (hi : i ≤ w)
+    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
+        (blastVar w aig i s a hi).1.decls[idx]? = aig.decls[idx]? := sorry
+
+theorem blastVar_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (a : Nat)
+    (hi : i ≤ w)
+    : ∀ (idx : Nat) (h1) (h2),
+        (blastVar w aig i s a hi).1.decls[idx]'h2 = aig.decls[idx]'h1 := sorry
+
+def blastConst {w : Nat} (aig : AIG BVBit) (idx : Nat) (s : AIG.RefStream aig idx) (val : BitVec w)
+    (hidx : idx ≤ w)
+    : (aig : AIG BVBit) × AIG.RefStream aig w :=
+  if hidx:idx < w then
+    match haig:aig.mkConstCached (val.getLsb idx) with
+    | ⟨newAig, bitRef⟩ =>
+      let s := s.cast <| by
+        intros
+        have : newAig = (aig.mkConstCached (val.getLsb idx)).aig := by rw [haig]
+        rw [this]
+        apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
+        assumption
+      let s := s.pushRef bitRef
+      blastConst newAig (idx + 1) s val (by omega)
+  else
+    have hidx : idx = w := by omega
+    ⟨aig, hidx ▸ s⟩
+termination_by w - idx
+
+theorem blastConst_le_size {aig : AIG BVBit} (idx : Nat) (s : AIG.RefStream aig idx) (val : BitVec w)
+    (hidx : idx ≤ w)
+    : aig.decls.size ≤ (blastConst aig idx s val hidx).1.decls.size := sorry
+
+theorem blastConst_decl_eq? {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (val : BitVec w)
+    (hi : i ≤ w)
+    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
+        (blastConst aig i s val hi).1.decls[idx]? = aig.decls[idx]? := sorry
+
+theorem blastConst_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (val : BitVec w)
+    (hi : i ≤ w)
+    : ∀ (idx : Nat) (h1) (h2),
+        (blastConst aig i s val hi).1.decls[idx]'h2 = aig.decls[idx]'h1 := sorry
+
+end bitblast
+
+def bitblast (aig : AIG BVBit) (expr : BVExpr w) :
+    (newAig : AIG.ExtendingAIG aig) × AIG.RefStream newAig.val w :=
+  match expr with
+  | .var a =>
+    match haig:bitblast.blastVar w aig 0 .empty a (by omega) with
+    | ⟨newAig, s⟩ =>
+      -- TODO: Think of a way to prettify these theorems
+      ⟨
         ⟨
-          aig.mkAndCached ⟨lhsRef, rhsRef⟩,
+          newAig,
           by
-            apply AIG.LawfulOperator.le_size_of_le_aig_size
-            dsimp at hrhs hlhs ⊢
-            omega
-        ⟩
-    | .un op expr =>
-      match op with
-      | .not =>
-        let ⟨⟨aig, gateRef⟩, hgate⟩ := go aig expr idx hidx
+            have : newAig = (bitblast.blastVar w aig 0 .empty a (by omega)).1 :=
+              by simp [haig]
+            rw [this]
+            apply bitblast.blastVar_le_size
+        ⟩,
+        s
+      ⟩
+  | .const val =>
+    match haig:bitblast.blastConst aig 0 .empty val (by omega) with
+    | ⟨newAig, s⟩ =>
+      ⟨
         ⟨
-          aig.mkNotCached gateRef,
+          newAig,
           by
-            apply AIG.LawfulOperator.le_size_of_le_aig_size
-            dsimp at hgate
+            have : newAig = (bitblast.blastConst aig 0 .empty val (by omega)).1 := by
+              simp [haig]
+            rw [this]
+            apply bitblast.blastConst_le_size
+        ⟩,
+        s
+      ⟩
+  | .bin lhs op rhs =>
+    match op with
+    | .and =>
+      match bitblast aig lhs with
+      | ⟨⟨laig, hlaig⟩, lhs⟩ =>
+        match bitblast laig rhs with
+        | ⟨⟨raig, hraig⟩, rhs⟩ =>
+          let lhs := lhs.cast <| by
+            intro i hi
+            dsimp at hi
             omega
-        ⟩
+          match hfinal:AIG.RefStream.zip raig lhs rhs AIG.mkAndCached with
+          | ⟨finalAig, s⟩ => 
+            ⟨
+              ⟨
+                finalAig,
+                by
+                  have : finalAig = (AIG.RefStream.zip raig lhs rhs AIG.mkAndCached).1 := by
+                    simp [hfinal]
+                  rw [this]
+                  refine Nat.le_trans ?_ (by apply AIG.RefStream.zip_le_size)
+                  omega
+              ⟩,
+              s
+            ⟩
+  | .un op expr =>
+    match op with
+    | .not =>
+      match bitblast aig expr with
+      | ⟨⟨eaig, heaig⟩, estream⟩ => 
+        match hfinal:estream.map eaig AIG.mkNotCached with
+        | ⟨finalAig, s⟩ => 
+          ⟨
+            ⟨
+              finalAig,
+              by
+                have : finalAig = (estream.map eaig AIG.mkNotCached).1 := by
+                  simp [hfinal]
+                rw [this]
+                refine Nat.le_trans ?_ (by apply AIG.RefStream.map_le_size)
+                omega
+            ⟩,
+            s
+          ⟩
 
-theorem bitblast_le_size (aig : AIG BVBit) (target : SingleBit)
-    : aig.decls.size ≤ (bitblast aig target).aig.decls.size := by
-  have := bitblast.go aig target.expr target.idx target.hidx |>.property
-  unfold bitblast
-  omega
-
-theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w) (bitidx : Nat) (hidx : bitidx < w)
-    {h : idx < aig.decls.size} :
-    have := (bitblast.go aig expr bitidx hidx).property
-    (go aig expr bitidx hidx).val.aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
-  induction expr generalizing aig with
-  | var =>
-    dsimp [go]
-    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAtomCached)]
-  | const =>
-    dsimp [go]
-    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-  | bin lhs op rhs lih rih =>
-    cases op with
-    | and =>
-      dsimp [go]
-      rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAndCached)]
-      rw [rih, lih]
-  | un op expr ih =>
-    cases op with
-    | not =>
-      dsimp [go]
-      rw [AIG.LawfulOperator.decl_eq (f := AIG.mkNotCached)]
-      rw [ih]
-
-theorem bitblast_decl_eq (aig : AIG BVBit) (target : SingleBit) {h : idx < aig.decls.size} :
-    have := bitblast_le_size aig target
-    (bitblast aig target).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
-  unfold bitblast
-  dsimp
-  rw [bitblast.go_decl_eq]
-
-instance : AIG.LawfulOperator BVBit (fun _ => SingleBit) bitblast where
-  le_size := bitblast_le_size
-  decl_eq := by intros; apply bitblast_decl_eq
-
-structure BitPair where
-  {w : Nat}
-  lhs : BVExpr w
-  rhs : BVExpr w
-  idx : Nat
-  hidx : idx < w
-
-def BitPair.leftBit (pair : BitPair) : SingleBit :=
-  {
-    expr := pair.lhs
-    idx := pair.idx
-    hidx := pair.hidx
-  }
-
-def BitPair.rightBit (pair : BitPair) : SingleBit :=
-  {
-    expr := pair.rhs
-    idx := pair.idx
-    hidx := pair.hidx
-  }
-
-def mkBitEq (aig : AIG BVBit) (pair : BitPair) : AIG.Entrypoint BVBit :=
-  let ⟨laig, lhsRef⟩ := bitblast aig pair.leftBit
-  match hr:bitblast laig pair.rightBit with
-  | ⟨raig, rhsEntry, rinv⟩ =>
-    let lhsRef := lhsRef.cast <| by
-      intro h
-      have : raig = (bitblast laig pair.rightBit).aig := by simp [hr]
-      rw [this]
-      apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
-      assumption
-    let rhsRef := AIG.Ref.mk rhsEntry rinv
-    raig.mkBEqCached ⟨lhsRef, rhsRef⟩
-
-theorem mkBitEq_le_size (aig : AIG BVBit) (target : BitPair)
-    : aig.decls.size ≤ (mkBitEq aig target).aig.decls.size := by
-  unfold mkBitEq
-  dsimp
-  apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkBEqCached)
-  apply AIG.LawfulOperator.le_size_of_le_aig_size (f := bitblast)
-  apply AIG.LawfulOperator.le_size
-
-theorem mkBitEq_decl_eq (aig : AIG BVBit) (target : BitPair) {h : idx < aig.decls.size} :
-    have := mkBitEq_le_size aig target
-    (mkBitEq aig target).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
-  unfold mkBitEq
-  dsimp
-  rw [AIG.LawfulOperator.decl_eq (f := AIG.mkBEqCached)]
-  rw [AIG.LawfulOperator.decl_eq (f := bitblast)]
-  . rw [AIG.LawfulOperator.decl_eq (f := bitblast)]
-    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
-    assumption
-  . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
-    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := bitblast)
-    assumption
-
-instance : AIG.LawfulOperator BVBit (fun _ => BitPair) mkBitEq where
-  le_size := mkBitEq_le_size
-  decl_eq := by intros; apply mkBitEq_decl_eq
+-- TODO: LawfulOperator style theorems for bitblast
 
 end BVExpr
 
@@ -172,65 +184,25 @@ structure ExprPair where
   rhs : BVExpr w
 
 def mkEq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
-  go aig pair.lhs pair.rhs pair.lhs.width (by simp [BVExpr.width])
-where
-  go {w : Nat} (aig : AIG BVBit) (lhs rhs : BVExpr w) (idx : Nat) (_hidx : idx ≤ w)
-      : AIG.ExtendingEntrypoint aig :=
-    match h:idx with
-    | 0 => ⟨aig.mkConstCached true, by apply AIG.LawfulOperator.le_size⟩
-    | nextBit + 1 =>
-        let ⟨⟨aig, othersRef⟩, hlt⟩ := go aig lhs rhs nextBit (by omega)
-        match h2:BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩ with
-        | ⟨naig, gateRef⟩ =>
-          have : naig = (BVExpr.mkBitEq aig ⟨lhs, rhs, nextBit, by omega⟩).aig := by simp [h2]
-          let othersRef := othersRef.cast <| by
-            intro h
-            rw [this]
-            apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := BVExpr.mkBitEq)
-            assumption
-          ⟨
-            naig.mkAndCached ⟨gateRef, othersRef⟩,
-            by
-              apply AIG.LawfulOperator.le_size_of_le_aig_size
-              rw [this]
-              apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
-              assumption
-          ⟩
-
-theorem mkEq.go_le_size (aig : AIG BVBit) (target : ExprPair) (start : Nat) {h}
-    : aig.decls.size ≤ (mkEq.go aig target.lhs target.rhs start h).val.aig.decls.size := by
-  exact (mkEq.go aig target.lhs target.rhs start h).property
+  let ⟨⟨aig, hlaig⟩, lhsRefs⟩ := pair.lhs.bitblast aig
+  let ⟨⟨aig, hraig⟩, rhsRefs⟩ := pair.rhs.bitblast aig
+  let lhsRefs := lhsRefs.cast <| by
+    intro i hi
+    dsimp at hi
+    omega
+  let ⟨aig, bits⟩ := AIG.RefStream.zip aig lhsRefs rhsRefs AIG.mkBEqCached
+  bits.fold aig AIG.mkAndCached
 
 theorem mkEq_le_size (aig : AIG BVBit) (target : ExprPair)
     : aig.decls.size ≤ (mkEq aig target).aig.decls.size := by
   unfold mkEq
-  apply mkEq.go_le_size
-
-
-theorem mkEq.go_decl_eq (aig : AIG BVBit) (target : ExprPair) (start : Nat) {h : idx < aig.decls.size}
-    {h2} :
-    have := mkEq.go_le_size aig target start
-    (mkEq.go aig target.lhs target.rhs start h2).val.aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
-  induction start with
-  | zero =>
-    simp only [go]
-    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-  | succ curr ih =>
-    simp only [go]
-    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAndCached)]
-    rw [AIG.LawfulOperator.decl_eq (f := BVExpr.mkBitEq)]
-    . exact ih
-    . apply Nat.lt_of_lt_of_le
-      . exact h
-      . apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.mkBitEq)
-        apply mkEq.go_le_size
-
+  sorry
 
 theorem mkEq_decl_eq (aig : AIG BVBit) (target : ExprPair) {h : idx < aig.decls.size} :
     have := mkEq_le_size aig target
     (mkEq aig target).aig.decls[idx]'(by omega) = aig.decls[idx]'h := by
   unfold mkEq
-  exact mkEq.go_decl_eq aig target _
+  sorry
 
 instance : AIG.LawfulOperator BVBit (fun _ => ExprPair) mkEq where
   le_size := mkEq_le_size

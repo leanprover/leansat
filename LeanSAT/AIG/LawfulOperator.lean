@@ -74,6 +74,9 @@ theorem denote.eq_of_aig_eq (entry : Entrypoint α) (newAIG : AIG α) (hprefix :
   apply denote.go_eq_of_aig_eq
   assumption
 
+abbrev ExtendingAIG (aig : AIG α) : Type :=
+  { newAig : AIG α // aig.decls.size ≤ newAig.decls.size }
+
 abbrev ExtendingEntrypoint (aig : AIG α) : Type :=
   { entry : Entrypoint α // aig.decls.size ≤ entry.aig.decls.size }
 
