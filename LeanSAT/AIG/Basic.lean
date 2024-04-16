@@ -188,6 +188,15 @@ structure Entrypoint (α : Type) [BEq α] [Hashable α] where
   -/
   ref : Ref aig
 
+structure RefStream (aig : AIG α) (length : Nat) where
+  refs : Array Nat
+  hlen : refs.size = length
+  hrefs : ∀ (h : i < length), refs[i] < aig.decls.size
+
+structure RefStreamEntry (α : Type) [BEq α] [Hashable α] [DecidableEq α] (length : Nat) where
+  aig : AIG α
+  stream : RefStream aig length
+
 /--
 Evaluate an `AIG.Entrypoint` using some assignment for atoms.
 -/
