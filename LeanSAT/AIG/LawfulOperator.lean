@@ -74,11 +74,11 @@ theorem denote.eq_of_aig_eq (entry : Entrypoint α) (newAIG : AIG α) (hprefix :
   apply denote.go_eq_of_aig_eq
   assumption
 
-abbrev ExtendingAIG (aig : AIG α) : Type :=
-  { newAig : AIG α // aig.decls.size ≤ newAig.decls.size }
-
 abbrev ExtendingEntrypoint (aig : AIG α) : Type :=
   { entry : Entrypoint α // aig.decls.size ≤ entry.aig.decls.size }
+
+abbrev ExtendingRefStreamEntry (aig : AIG α) (len : Nat) : Type :=
+  { ref : RefStreamEntry α len // aig.decls.size ≤ ref.aig.decls.size }
 
 class LawfulOperator (α : Type) [BEq α] [Hashable α] [DecidableEq α]
     (β : AIG α → Type) (f : (aig : AIG α) → β aig → Entrypoint α)  where
