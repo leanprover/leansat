@@ -29,13 +29,12 @@ def cast' {aig1 aig2 : AIG α} (s : RefStream aig1 len)
 
 @[inline]
 def cast {aig1 aig2 : AIG α} (s : RefStream aig1 len)
-    (h : ∀ i, i < aig1.decls.size → i < aig2.decls.size)
+    (h : aig1.decls.size ≤ aig2.decls.size)
     : RefStream aig2 len :=
   s.cast' <| by
     intro hall i hi
-    apply h
-    apply hall
-    assumption
+    specialize hall hi
+    omega
 
 @[inline]
 def getRef (s : RefStream aig len) (idx : Nat) (hidx : idx < len) : Ref aig :=
@@ -57,6 +56,33 @@ def pushRef (s : RefStream aig len) (ref : AIG.Ref aig) : RefStream aig (len + 1
         omega
       . apply AIG.Ref.hgate
   ⟩
+
+@[simp]
+theorem getRef_push_ref_eq (s : RefStream aig len) (ref : AIG.Ref aig)
+    : (s.pushRef ref).getRef len (by omega) = ref := by
+  have := s.hlen
+  simp [getRef, pushRef, ← this]
+
+-- This variant exists because it is sometimes hard to rewrite properly with DTT
+theorem getRef_push_ref_eq' (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat) (hidx : idx = len)
+    : (s.pushRef ref).getRef idx (by omega) = ref := by
+  have := s.hlen
+  simp [getRef, pushRef, ← this, hidx]
+
+theorem getRef_push_ref_lt (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat) (hidx : idx < len)
+    : (s.pushRef ref).getRef idx (by omega) = s.getRef idx hidx := by
+  simp [getRef, pushRef]
+  cases ref
+  simp only [Ref.mk.injEq]
+  rw [Array.get_push_lt]
+
+@[simp]
+theorem getRef_cast {aig1 aig2 : AIG α} (s : RefStream aig1 len) (idx : Nat) (hidx : idx < len)
+      (hcast : aig1.decls.size ≤ aig2.decls.size)
+    : (s.cast hcast).getRef idx hidx
+        =
+      (s.getRef idx hidx).cast hcast := by
+  simp [cast, cast', getRef]
 
 @[inline]
 def setRef (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat) (hidx : idx < len)

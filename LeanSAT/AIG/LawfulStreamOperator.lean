@@ -74,7 +74,7 @@ theorem denote_mem_prefix {aig : AIG α} {input : β aig len} (h) :
 
 @[simp]
 theorem denote_input_stream (s : RefStreamEntry α len) {input : β s.aig len} {hcast} :
-    ⟦(f s.aig input).aig, (s.stream.cast hcast).getRef idx hidx, assign⟧
+    ⟦(f s.aig input).aig, (s.stream.getRef idx hidx).cast hcast, assign⟧
       =
     ⟦s.aig, s.stream.getRef idx hidx, assign⟧ :=  by
   rw [denote_mem_prefix]

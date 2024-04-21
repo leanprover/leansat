@@ -170,9 +170,17 @@ structure Ref (aig : AIG α) where
 
 @[inline]
 def Ref.cast {aig1 aig2 : AIG α} (ref : Ref aig1)
-    (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size) : Ref aig2 :=
-  { ref with hgate := h ref.hgate }
+    (h : aig1.decls.size ≤ aig2.decls.size) : Ref aig2 :=
+  { ref with hgate := by have := ref.hgate; omega }
 
+structure BinaryInput (aig : AIG α) where
+  lhs : Ref aig
+  rhs : Ref aig
+
+@[inline]
+def BinaryInput.cast {aig1 aig2 : AIG α} (input : BinaryInput aig1)
+    (h : aig1.decls.size ≤ aig2.decls.size) : BinaryInput aig2 :=
+  { input with lhs := input.lhs.cast h, rhs := input.rhs.cast h }
 
 /--
 An entrypoint into an `AIG`. This can be used to evaluate a circuit, starting at a certain node,
@@ -244,7 +252,7 @@ structure Fanin (aig : AIG α) where
 
 @[inline]
 def Fanin.cast {aig1 aig2 : AIG α} (fanin : Fanin aig1)
-    (h : fanin.ref.gate < aig1.decls.size → fanin.ref.gate < aig2.decls.size)
+    (h : aig1.decls.size ≤ aig2.decls.size)
     : Fanin aig2 :=
   { fanin with ref := fanin.ref.cast h }
 
@@ -257,10 +265,9 @@ structure GateInput (aig : AIG α) where
 
 @[inline]
 def GateInput.cast {aig1 aig2 : AIG α} (input : GateInput aig1)
-    (h1 : input.lhs.ref.gate < aig1.decls.size → input.lhs.ref.gate < aig2.decls.size)
-    (h2 : input.rhs.ref.gate < aig1.decls.size → input.rhs.ref.gate < aig2.decls.size)
+    (h : aig1.decls.size ≤ aig2.decls.size)
     : GateInput aig2 :=
-  { input with lhs := input.lhs.cast h1, rhs := input.rhs.cast h2 }
+  { input with lhs := input.lhs.cast h, rhs := input.rhs.cast h }
 
 /--
 Build an AIG gate in `aig`. Note that his version is only meant for proving,
