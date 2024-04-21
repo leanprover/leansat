@@ -198,7 +198,6 @@ theorem mkGateCached_decl_eq? (aig : AIG α) (input : GateInput aig)
   . split
     . rw [Array.getElem?_lt, Array.getElem?_lt]
       rw [mkConstCached_decl_eq]
-      -- TODO: why does unification fail here?
       . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
         assumption
       . assumption

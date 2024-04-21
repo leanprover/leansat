@@ -119,7 +119,7 @@ theorem le_size_of_le_aig_size (aig : AIG α) (input : β aig) (h : x ≤ aig.de
 
 @[simp]
 theorem denote_input_entry (entry : Entrypoint α) {input} {h} :
-    ⟦(f entry.aig input).aig, ⟨entry.ref.gate, h⟩, assign ⟧
+    ⟦(f entry.aig input).aig, ⟨entry.ref.gate, h⟩, assign⟧
       =
     ⟦entry, assign⟧ :=  by
   apply denote.eq_of_aig_eq

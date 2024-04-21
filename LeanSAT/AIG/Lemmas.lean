@@ -17,35 +17,40 @@ variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 
 @[simp]
 theorem Ref_cast {aig1 aig2 : AIG α} (ref : Ref aig1)
-    (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size)
+    (h : aig1.decls.size ≤ aig2.decls.size)
     : (ref.cast h).gate = ref.gate := rfl
 
-@[simp 100]
+-- XXX: This lemma is both helpful and unhelpful in certain situations :/
+@[simp]
 theorem Ref_cast' {aig1 aig2 : AIG α} (ref : Ref aig1)
-    (h : ref.gate < aig1.decls.size → ref.gate < aig2.decls.size)
-    : (ref.cast h) = ⟨ref.gate, h ref.hgate⟩ := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size)
+    : (ref.cast h) = ⟨ref.gate, by have := ref.hgate; omega⟩ := rfl
 
 @[simp]
 theorem Fanin_cast_ref {aig1 aig2 : AIG α} (fanin : Fanin aig1)
-    (h : fanin.ref.gate < aig1.decls.size → fanin.ref.gate < aig2.decls.size)
+    (h : aig1.decls.size ≤ aig2.decls.size)
     : (fanin.cast h).ref = fanin.ref.cast h := rfl
 
 @[simp]
 theorem Fanin_cast_inv {aig1 aig2 : AIG α} (fanin : Fanin aig1)
-    (h : fanin.ref.gate < aig1.decls.size → fanin.ref.gate < aig2.decls.size)
+    (h : aig1.decls.size ≤ aig2.decls.size)
     : (fanin.cast h).inv = fanin.inv := rfl
 
 @[simp]
 theorem GateInput_cast_lhs {aig1 aig2 : AIG α} (input : GateInput aig1)
-    (h1 : input.lhs.ref.gate < aig1.decls.size → input.lhs.ref.gate < aig2.decls.size)
-    (h2 : input.rhs.ref.gate < aig1.decls.size → input.rhs.ref.gate < aig2.decls.size)
-    : (input.cast h1 h2).lhs = input.lhs.cast h1 := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size)
+    : (input.cast h).lhs = input.lhs.cast h := rfl
 
 @[simp]
 theorem GateInput_cast_rhs {aig1 aig2 : AIG α} (input : GateInput aig1)
-    (h1 : input.lhs.ref.gate < aig1.decls.size → input.lhs.ref.gate < aig2.decls.size)
-    (h2 : input.rhs.ref.gate < aig1.decls.size → input.rhs.ref.gate < aig2.decls.size)
-    : (input.cast h1 h2).rhs = input.rhs.cast h2 := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size)
+    : (input.cast h).rhs = input.rhs.cast h := rfl
+
+@[simp]
+theorem BinaryInput.cast_each {aig1 aig2 : AIG α} (lhs rhs : Ref aig1)
+    (h1 h2 : aig1.decls.size ≤ aig2.decls.size)
+    : BinaryInput.mk (lhs.cast h1) (rhs.cast h2) = (BinaryInput.mk lhs rhs).cast h2 := by
+  simp [BinaryInput.cast]
 
 @[simp]
 theorem denote_projected_entry {entry : Entrypoint α} :

@@ -19,9 +19,7 @@ instance : Inhabited BVBit where
     }
 
 namespace BVExpr
-
 namespace bitblast
-
 
 -- TODO: Probably a more general thing that we should put somewhere else
 structure BVVar (width : Nat) where
@@ -40,8 +38,8 @@ where
         intros
         have : newAig = (aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩).aig := by rw [haig]
         rw[this]
-        apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkAtomCached)
-        assumption
+        apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkAtomCached)
+        omega
       let s := s.pushRef bitRef
       go w newAig (idx + 1) s a (by omega)
   else
@@ -114,8 +112,8 @@ where
           intros
           have : newAig = (aig.mkConstCached (val.getLsb idx)).aig := by rw [haig]
           rw [this]
-          apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
-          assumption
+          apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkConstCached)
+          omega
         let s := s.pushRef bitRef
         go newAig (idx + 1) s val (by omega)
     else
@@ -216,7 +214,6 @@ where
           match go laig rhs with
           | ⟨⟨raig, rhs⟩, hraig⟩ =>
             let lhs := lhs.cast <| by
-              intro i hi
               dsimp at hlaig hraig
               omega
             match hfinal:AIG.RefStream.zip raig ⟨lhs, rhs, AIG.mkAndCached⟩ with
@@ -350,12 +347,11 @@ def mkEq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
     match hr:pair.rhs.bitblast laig with
     | ⟨raig, rhsRefs⟩ =>
       let lhsRefs := lhsRefs.cast <| by
-        intro i hi
         have : raig = (pair.rhs.bitblast laig).aig := by
           simp [hr]
         rw [this]
-        apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
-        assumption
+        apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
+        omega
       let ⟨finalAig, bits⟩ := AIG.RefStream.zip raig ⟨lhsRefs, rhsRefs, AIG.mkBEqCached⟩
       AIG.RefStream.fold finalAig (.mkAnd bits)
 

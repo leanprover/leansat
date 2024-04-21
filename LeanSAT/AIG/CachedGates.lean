@@ -33,15 +33,11 @@ def mkNotCached (aig : AIG α) (gate : Ref aig) : Entrypoint α :=
             intros
             have : taig = (aig.mkConstCached true).aig := by simp[h]
             rw [this]
-            apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
-            assumption
+            apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
+            omega
           inv := true
         }
       }
-
-structure BinaryInput (aig : AIG α) where
-  lhs : Ref aig
-  rhs : Ref aig
 
 @[inline]
 def BinaryInput.asGateInput {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool) : GateInput aig :=
@@ -81,8 +77,8 @@ def mkOrCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
             intros
             have : caig = (aig.mkConstCached true).aig := by simp[h]
             rw [this]
-            apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
-            assumption
+            apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
+            omega
           inv := true
         }
       }
@@ -100,13 +96,8 @@ def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
         (by
           intros
           rw [hlaig]
-          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
-          assumption)
-        (by
-          intros
-          rw [hlaig]
-          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
-          assumption)
+          apply LawfulOperator.le_size_of_le_aig_size (f := mkGateCached)
+          omega)
     match h2:laig.mkGateCached rinput with
     | ⟨raig, aux2Ref⟩ =>
       have hraig : raig = (laig.mkGateCached rinput).aig := by simp [h2]
@@ -114,10 +105,9 @@ def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
         {
           lhs := {
             ref := aux1Ref.cast <| by
-              intro h
               rw [hraig]
-              apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
-              assumption
+              apply LawfulOperator.le_size_of_le_aig_size (f := mkGateCached)
+              omega
             inv := true
           },
           rhs := {
@@ -139,13 +129,8 @@ def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
         (by
           intros
           rw [hlaig]
-          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
-          assumption)
-        (by
-          intros
-          rw [hlaig]
-          apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
-          assumption)
+          apply LawfulOperator.le_size_of_le_aig_size (f := mkGateCached)
+          omega)
     match h2:laig.mkGateCached rinput with
     | ⟨raig, aux2Ref⟩ =>
       have hraig : raig = (laig.mkGateCached rinput).aig := by simp [h2]
@@ -153,10 +138,9 @@ def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
         {
           lhs := {
             ref := aux1Ref.cast <| by
-              intro h
               rw [hraig]
-              apply LawfulOperator.lt_size_of_lt_aig_size (f := mkGateCached)
-              assumption
+              apply LawfulOperator.le_size_of_le_aig_size (f := mkGateCached)
+              omega
             inv := true
           },
           rhs := {
@@ -184,8 +168,8 @@ def mkImpCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
             intros
             have : caig = (aig.mkConstCached true).aig := by simp[h]
             rw [this]
-            apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
-            assumption
+            apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
+            omega
           inv := true
         }
       }
