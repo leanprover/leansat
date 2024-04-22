@@ -38,6 +38,7 @@ instance : ToExpr BVBinOp where
   toExpr x :=
     match x with
     | .and => mkConst ``BVBinOp.and
+    | .or => mkConst ``BVBinOp.or
   toTypeExpr := mkConst ``BVBinOp
 
 instance : ToExpr (BVExpr w) where
@@ -165,6 +166,10 @@ theorem and_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = 
     lhs' &&& rhs' = lhs &&& rhs' := by
   simp[*]
 
+theorem or_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+    lhs' ||| rhs' = lhs ||| rhs' := by
+  simp[*]
+
 theorem not_congr (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
   simp[*]
 
@@ -180,12 +185,14 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     let some rhs ← of rhsExpr | return none
     let bvExpr := .bin lhs.bvExpr .and rhs.bvExpr
     let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (mkConst ``BVBinOp.and) rhs.expr
-    let proof := do
-      let lhsEval ← mkEvalExpr w lhs.expr
-      let lhsProof ← lhs.evalsAtAtoms
-      let rhsProof ← rhs.evalsAtAtoms
-      let rhsEval ← mkEvalExpr w rhs.expr
-      return mkApp7 (mkConst ``and_congr) (toExpr w) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
+    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr ``and_congr
+    return some ⟨bvExpr, proof, expr⟩
+  | HOr.hOr _ _ _ _ lhsExpr rhsExpr =>
+    let some lhs ← of lhsExpr | return none
+    let some rhs ← of rhsExpr | return none
+    let bvExpr := .bin lhs.bvExpr .or rhs.bvExpr
+    let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (mkConst ``BVBinOp.or) rhs.expr
+    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr ``or_congr
     return some ⟨bvExpr, proof, expr⟩
   | Complement.complement _ _ innerExpr =>
     let some inner ← of innerExpr | return none
@@ -207,6 +214,13 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
         panic! "Attempt to reify ill-typed BitVec value"
     | _ => return none
 where
+  binaryCongrProof (lhs rhs : ReifiedBVExpr w) (lhsExpr rhsExpr : Expr) (congrThm : Name) : M Expr := do
+    let lhsEval ← mkEvalExpr w lhs.expr
+    let lhsProof ← lhs.evalsAtAtoms
+    let rhsProof ← rhs.evalsAtAtoms
+    let rhsEval ← mkEvalExpr w rhs.expr
+    return mkApp7 (mkConst congrThm) (toExpr w) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
+
   goBvLit (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     let some ⟨width, bvVal⟩ ← getBitVecValue? x | return none
     if h:width = w then

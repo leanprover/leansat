@@ -241,6 +241,13 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
+    | or =>
+      simp only [go, RefStream.denote_zip, denote_mkOrCached, rih, eval_bin, BVBinOp.eval_or,
+        BitVec.getLsb_or]
+      simp only [go_val_eq_bitblast, RefStream.getRef_cast]
+      rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
+      rw [← go_val_eq_bitblast]
+      rw [lih]
   | un op expr ih =>
     cases op with
     | not => simp [go, ih, hidx]
