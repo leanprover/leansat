@@ -8,21 +8,25 @@ import LeanSAT.Reflect.BoolExpr.Basic
 inductive BVBinOp where
 | and
 | or
+| xor
 
 namespace BVBinOp
 
 def toString : BVBinOp → String
   | and => "&&"
   | or => "||"
+  | xor => "^"
 
 instance : ToString BVBinOp := ⟨toString⟩
 
 def eval : BVBinOp → (BitVec w → BitVec w → BitVec w)
   | and => (· &&& ·)
   | or => (· ||| ·)
+  | xor => (· ^^^ ·)
 
 @[simp] theorem eval_and : eval .and = ((· &&& ·) : BitVec w → BitVec w → BitVec w) := by rfl
 @[simp] theorem eval_or : eval .or = ((· ||| ·) : BitVec w → BitVec w → BitVec w) := by rfl
+@[simp] theorem eval_xor : eval .xor = ((· ^^^ ·) : BitVec w → BitVec w → BitVec w) := by rfl
 
 end BVBinOp
 

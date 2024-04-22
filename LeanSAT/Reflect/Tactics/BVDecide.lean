@@ -39,6 +39,7 @@ instance : ToExpr BVBinOp where
     match x with
     | .and => mkConst ``BVBinOp.and
     | .or => mkConst ``BVBinOp.or
+    | .xor => mkConst ``BVBinOp.xor
   toTypeExpr := mkConst ``BVBinOp
 
 instance : ToExpr (BVExpr w) where
@@ -170,6 +171,10 @@ theorem or_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = r
     lhs' ||| rhs' = lhs ||| rhs' := by
   simp[*]
 
+theorem xor_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+    lhs' ^^^ rhs' = lhs ^^^ rhs' := by
+  simp[*]
+
 theorem not_congr (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
   simp[*]
 
@@ -193,6 +198,13 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     let bvExpr := .bin lhs.bvExpr .or rhs.bvExpr
     let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (mkConst ``BVBinOp.or) rhs.expr
     let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr ``or_congr
+    return some ⟨bvExpr, proof, expr⟩
+  | HXor.hXor _ _ _ _ lhsExpr rhsExpr =>
+    let some lhs ← of lhsExpr | return none
+    let some rhs ← of rhsExpr | return none
+    let bvExpr := .bin lhs.bvExpr .xor rhs.bvExpr
+    let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (mkConst ``BVBinOp.xor) rhs.expr
+    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr ``xor_congr
     return some ⟨bvExpr, proof, expr⟩
   | Complement.complement _ _ innerExpr =>
     let some inner ← of innerExpr | return none
