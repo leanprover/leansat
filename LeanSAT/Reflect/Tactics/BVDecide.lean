@@ -186,26 +186,11 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
   | BitVec.ofNat _ _ => goBvLit x
   | OfNat.ofNat _ _ _ => goBvLit x
   | HAnd.hAnd _ _ _ _ lhsExpr rhsExpr =>
-    let some lhs ← of lhsExpr | return none
-    let some rhs ← of rhsExpr | return none
-    let bvExpr := .bin lhs.bvExpr .and rhs.bvExpr
-    let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (mkConst ``BVBinOp.and) rhs.expr
-    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr ``and_congr
-    return some ⟨bvExpr, proof, expr⟩
+    binaryReflection lhsExpr rhsExpr .and ``and_congr
   | HOr.hOr _ _ _ _ lhsExpr rhsExpr =>
-    let some lhs ← of lhsExpr | return none
-    let some rhs ← of rhsExpr | return none
-    let bvExpr := .bin lhs.bvExpr .or rhs.bvExpr
-    let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (mkConst ``BVBinOp.or) rhs.expr
-    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr ``or_congr
-    return some ⟨bvExpr, proof, expr⟩
+    binaryReflection lhsExpr rhsExpr .or ``or_congr
   | HXor.hXor _ _ _ _ lhsExpr rhsExpr =>
-    let some lhs ← of lhsExpr | return none
-    let some rhs ← of rhsExpr | return none
-    let bvExpr := .bin lhs.bvExpr .xor rhs.bvExpr
-    let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (mkConst ``BVBinOp.xor) rhs.expr
-    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr ``xor_congr
-    return some ⟨bvExpr, proof, expr⟩
+    binaryReflection lhsExpr rhsExpr .xor ``xor_congr
   | Complement.complement _ _ innerExpr =>
     let some inner ← of innerExpr | return none
     let bvExpr : BVExpr w := .un .not inner.bvExpr
@@ -226,6 +211,15 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
         panic! "Attempt to reify ill-typed BitVec value"
     | _ => return none
 where
+  binaryReflection (lhsExpr rhsExpr : Expr) (op : BVBinOp) (congrThm : Name)
+      : M (Option (ReifiedBVExpr w)) := do
+    let some lhs ← of lhsExpr | return none
+    let some rhs ← of rhsExpr | return none
+    let bvExpr := .bin lhs.bvExpr op rhs.bvExpr
+    let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (toExpr op) rhs.expr
+    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr congrThm
+    return some ⟨bvExpr, proof, expr⟩
+
   binaryCongrProof (lhs rhs : ReifiedBVExpr w) (lhsExpr rhsExpr : Expr) (congrThm : Name) : M Expr := do
     let lhsEval ← mkEvalExpr w lhs.expr
     let lhsProof ← lhs.evalsAtAtoms
