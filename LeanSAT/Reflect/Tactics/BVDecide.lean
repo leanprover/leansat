@@ -179,6 +179,18 @@ theorem xor_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = 
 theorem not_congr (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
   simp[*]
 
+theorem shiftLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' <<< n = x <<< n := by
+  simp[*]
+
+def  getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
+  match_expr ty with
+  | Nat =>
+    getNatValue? expr
+  | BitVec _ =>
+    let some ⟨_, distance⟩ ← getBitVecValue? expr | return none
+    return some distance.toNat
+  | _ => return none
+
 /--
 Reify an `Expr` that's a `BitVec`.
 -/
@@ -196,22 +208,36 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     let some inner ← of innerExpr | return none
     let bvExpr : BVExpr w := .un .not inner.bvExpr
     let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr w) (mkConst ``BVUnOp.not) inner.expr
-    let proof := do
-      let innerEval ← mkEvalExpr w inner.expr
-      let innerProof ← inner.evalsAtAtoms
-      return mkApp4 (mkConst ``not_congr) (toExpr w) innerExpr innerEval innerProof
+    let proof := unaryCongrProof inner innerExpr (mkConst ``not_congr)
     return some ⟨bvExpr, proof, expr⟩
-  | _ =>
-    let t ← instantiateMVars (← whnfR (← inferType x))
-    match_expr t with
-    | BitVec widthExpr =>
-      let some width ← getNatValue? widthExpr | return none
-      if h:width = w then
-        h ▸ mkAtom x width
-      else
-        panic! "Attempt to reify ill-typed BitVec value"
-    | _ => return none
+  | HShiftLeft.hShiftLeft _ β _ _ innerExpr distanceExpr =>
+    -- Either the shift values are constant or we abstract the entire term as atoms
+    let some distance ← getNatOrBvValue? β distanceExpr | return ← ofAtom x
+    let some inner ← of innerExpr | return none
+    let bvExpr : BVExpr w := .un (.shiftLeft distance) inner.bvExpr
+    let expr :=
+      mkApp3
+        (mkConst ``BVExpr.un)
+        (toExpr w)
+        (mkApp (mkConst ``BVUnOp.shiftLeft) (toExpr distance))
+        inner.expr
+    let congrProof :=
+      mkApp
+        (mkConst ``shiftLeft_congr)
+        (toExpr distance)
+    let proof := unaryCongrProof inner innerExpr congrProof
+    return some ⟨bvExpr, proof, expr⟩
+  | _ => ofAtom x
 where
+  ofAtom {w : Nat} (x : Expr) : M (Option (ReifiedBVExpr w)) := do
+    let t ← instantiateMVars (← whnfR (← inferType x))
+    let_expr BitVec widthExpr := t | return none
+    let some width ← getNatValue? widthExpr | return none
+    if h:width = w then
+      h ▸ mkAtom x width
+    else
+      panic! "Attempt to reify ill-typed BitVec value"
+
   binaryReflection (lhsExpr rhsExpr : Expr) (op : BVBinOp) (congrThm : Name)
       : M (Option (ReifiedBVExpr w)) := do
     let some lhs ← of lhsExpr | return none
@@ -227,6 +253,11 @@ where
     let rhsProof ← rhs.evalsAtAtoms
     let rhsEval ← mkEvalExpr w rhs.expr
     return mkApp7 (mkConst congrThm) (toExpr w) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
+
+  unaryCongrProof (inner : ReifiedBVExpr w) (innerExpr : Expr) (congrProof : Expr) : M Expr := do
+    let innerEval ← mkEvalExpr w inner.expr
+    let innerProof ← inner.evalsAtAtoms
+    return mkApp4 congrProof (toExpr w) innerExpr innerEval innerProof
 
   goBvLit (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     let some ⟨width, bvVal⟩ ← getBitVecValue? x | return none
