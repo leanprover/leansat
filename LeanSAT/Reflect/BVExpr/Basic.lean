@@ -32,18 +32,27 @@ end BVBinOp
 
 inductive BVUnOp where
 | not
+-- shifting is "unary" because we only allow shifting by constant values for now.
+-- for shift by arbitrary values we would need to implement and verify something like a barell
+-- shifter
+| shiftLeft (n : Nat)
 
 namespace BVUnOp
 
 def toString : BVUnOp → String
   | not => "~"
+  | shiftLeft n => s!"<< {n}"
 
 instance : ToString BVUnOp := ⟨toString⟩
 
 def eval : BVUnOp → (BitVec w → BitVec w)
   | not => (~~~ ·)
+  | shiftLeft n => (· <<< n)
 
 @[simp] theorem eval_not : eval .not = ((~~~ ·) : BitVec w → BitVec w) := by rfl
+@[simp]
+theorem eval_shiftLeft : eval (.shiftLeft n) = ((· <<< n) : BitVec w → BitVec w) := by
+  rfl
 
 end BVUnOp
 

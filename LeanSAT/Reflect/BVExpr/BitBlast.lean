@@ -176,6 +176,84 @@ instance : AIG.LawfulStreamOperator BVBit (fun _ w => BitVec w) blastConst where
   le_size := by intros; apply blastConst_le_size
   decl_eq := by intros; apply blastConst_decl_eq
 
+structure ShiftTarget (aig : AIG BVBit) (w : Nat) where
+  stream : AIG.RefStream aig w
+  distance : Nat
+
+def blastShiftLeft (aig : AIG BVBit) (target : ShiftTarget aig w)
+    : AIG.RefStreamEntry BVBit w :=
+  let ⟨input, distance⟩ := target
+  go aig input distance 0 (by omega) .empty
+where
+  go (aig : AIG BVBit) (input : AIG.RefStream aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
+      (s : AIG.RefStream aig curr)
+    : AIG.RefStreamEntry BVBit w :=
+  if hidx:curr < w then
+    if hdist:curr < distance then
+      match hfinal:aig.mkConstCached false with
+      | ⟨finalAig, zeroRef⟩ =>
+        have hfinal := by
+          have : finalAig = (aig.mkConstCached false).aig := by
+            rw [hfinal]
+          rw [this]
+          apply AIG.LawfulOperator.le_size
+        let s := s.cast hfinal
+        let input := input.cast hfinal
+        let s := s.pushRef zeroRef
+        go finalAig input distance (curr + 1) (by omega) s
+    else
+      let s := s.pushRef (input.getRef (curr - distance) (by omega))
+      go aig input distance (curr + 1) (by omega) s
+  else
+    have hcurr : curr = w := by omega
+    ⟨aig, hcurr ▸ s⟩
+  termination_by w - curr
+
+theorem blastShiftLeft.go_le_size (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+    : aig.decls.size ≤ (go aig input distance curr hcurr s).aig.decls.size := by
+  unfold go
+  split
+  . dsimp
+    split
+    . refine Nat.le_trans ?_ (by apply go_le_size)
+      apply AIG.LawfulOperator.le_size
+    . refine Nat.le_trans ?_ (by apply go_le_size)
+      omega
+  . simp
+termination_by w - curr
+
+theorem blastShiftLeft.go_decl_eq (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+    : ∀ (idx : Nat) (h1) (h2),
+        (go aig input distance curr hcurr s).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+  generalize hgo : go aig input distance curr hcurr s = res
+  unfold go at hgo
+  split at hgo
+  . dsimp at hgo
+    split at hgo
+    . rw [← hgo]
+      intro idx h1 h2
+      rw [blastShiftLeft.go_decl_eq]
+      rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+      apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
+      assumption
+    . rw [← hgo]
+      intro idx h1 h2
+      rw [blastShiftLeft.go_decl_eq]
+  . simp [← hgo]
+termination_by w - curr
+
+instance : AIG.LawfulStreamOperator BVBit ShiftTarget blastShiftLeft where
+  le_size := by
+    intros
+    unfold blastShiftLeft
+    apply blastShiftLeft.go_le_size
+  decl_eq := by
+    intros
+    unfold blastShiftLeft
+    apply blastShiftLeft.go_decl_eq
+
 end bitblast
 
 def bitblast (aig : AIG BVBit) (expr : BVExpr w) : AIG.RefStreamEntry BVBit w :=
@@ -256,21 +334,34 @@ where
                    omega
                ⟩
     | .un op expr =>
-      match op with
-      | .not =>
-        match go aig expr with
-        | ⟨⟨eaig, estream⟩, heaig⟩ =>
-          match hfinal:AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩ with
+      match go aig expr with
+      | ⟨⟨eaig, estream⟩, heaig⟩ =>
+        match op with
+        | .not =>
+            match hfinal:AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩ with
+            | ⟨finalAig, s⟩ =>
+              ⟨
+                ⟨finalAig, s⟩,
+                by
+                  have : finalAig = (AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩).aig := by
+                    simp [hfinal]
+                  simp only [this]
+                  apply AIG.LawfulStreamOperator.le_size_of_le_aig_size
+                  dsimp at heaig
+                  omega
+              ⟩
+        | .shiftLeft distance =>
+          match hfinal:bitblast.blastShiftLeft eaig ⟨estream, distance⟩ with
           | ⟨finalAig, s⟩ =>
             ⟨
               ⟨finalAig, s⟩,
               by
-                have : finalAig = (AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩).aig := by
-                  simp [hfinal]
+                have : finalAig = (bitblast.blastShiftLeft eaig ⟨estream, distance⟩).aig := by
+                  rw [hfinal]
                 simp only [this]
                 apply AIG.LawfulStreamOperator.le_size_of_le_aig_size
                 dsimp at heaig
-                omega
+                assumption
             ⟩
 
 theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w)
@@ -324,8 +415,8 @@ theorem bitblast.go_decl_eq? (aig : AIG BVBit) (expr : BVExpr w)
           . exact (bitblast.go aig lhs).property
           . exact (go (go aig lhs).1.aig rhs).property
   | un op expr ih =>
-    cases op with
-    | not =>
+    cases op
+    all_goals
       dsimp [go]
       rw [Array.getElem?_lt, Array.getElem?_lt]
       rw [AIG.LawfulStreamOperator.decl_eq]

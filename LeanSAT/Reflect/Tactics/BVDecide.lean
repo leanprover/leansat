@@ -32,6 +32,7 @@ instance : ToExpr BVUnOp where
   toExpr x :=
     match x with
     | .not => mkConst ``BVUnOp.not
+    | .shiftLeft n => mkApp (mkConst ``BVUnOp.shiftLeft) (toExpr n)
   toTypeExpr := mkConst ``BVUnOp
 
 instance : ToExpr BVBinOp where
