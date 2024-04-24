@@ -15,6 +15,15 @@ set_option trace.bv true in
 theorem unit_3 {x y : BitVec 256} : ~~~(x &&& y) = (~~~x ||| ~~~y) := by
   bv_decide
 
+set_option trace.bv true in
+theorem unit_4 {x y : BitVec 256} : x <<< 257 = y <<< 258 := by
+  bv_decide
+
+-- This demonstrates we correctly abstract shifts of arbitrary width as atoms instead of giving up.
+set_option trace.bv true in
+theorem unit_5 {x y : BitVec 256} : x <<< y = x <<< y := by
+  bv_decide
+
 theorem bitvec_AndOrXor_135 :
  ∀ (X C1 C2 : BitVec 64), (X ^^^ C1) &&& C2 = X &&& C2 ^^^ C1 &&& C2
 := by bv_decide
