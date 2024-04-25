@@ -5,6 +5,24 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Reflect.BoolExpr.Basic
 
+structure BVBit where
+  {w : Nat}
+  var : Nat
+  idx : Fin w
+  deriving Hashable, DecidableEq, Repr
+
+instance : ToString BVBit where
+  toString b := s!"x{b.var}[{b.idx.val}]"
+
+instance : Inhabited BVBit where
+  default :=
+    {
+        w := 1
+        var := 0
+        idx := 0
+    }
+
+
 inductive BVBinOp where
 | and
 | or
@@ -132,6 +150,11 @@ inductive BVPred where
 | bin (lhs : BVExpr w) (op : BVBinPred) (rhs : BVExpr w)
 
 namespace BVPred
+
+structure ExprPair where
+  {w : Nat}
+  lhs : BVExpr w
+  rhs : BVExpr w
 
 def toString : BVPred → String
   | bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
