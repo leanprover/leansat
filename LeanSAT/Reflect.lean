@@ -20,5 +20,4 @@ import LeanSAT.Reflect.Fin
 import LeanSAT.Reflect.Glue
 import LeanSAT.Reflect.BVExpr.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast
-import LeanSAT.Reflect.BVExpr.BitBlastLemmas
 import LeanSAT.Reflect.Tactics.BVDecide
