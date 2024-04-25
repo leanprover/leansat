@@ -5,7 +5,6 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Reflect.BVExpr.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast
-import LeanSAT.Reflect.BVExpr.BitBlastLemmas
 import LeanSAT.Reflect.Tactics.SatDecide
 
 import LeanSAT.LRAT.LRATChecker
