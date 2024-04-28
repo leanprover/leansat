@@ -109,18 +109,17 @@ where
       (f : (aig : AIG α) → Ref aig → Entrypoint α) [LawfulOperator α Ref f] [LawfulMapOperator α f]
       : RefStreamEntry α len :=
     if hidx:idx < len then
-      match haig:f aig (input.getRef idx hidx) with
-      | ⟨newAig, newRef⟩ =>
-        have := by
-          intros
-          have : newAig = (f aig (input.getRef idx hidx)).aig := by rw [haig]
-          rw [this]
-          apply LawfulOperator.le_size_of_le_aig_size
-          omega
-        let input := input.cast this
-        let s := s.cast this
-        let s := s.pushRef newRef
-        go newAig (idx + 1) (by omega) s input f
+      let res := f aig (input.getRef idx hidx)
+      let aig := res.aig
+      let newRef := res.ref
+      have := by
+        intros
+        apply LawfulOperator.le_size_of_le_aig_size
+        omega
+      let input := input.cast this
+      let s := s.cast this
+      let s := s.pushRef newRef
+      go aig (idx + 1) (by omega) s input f
     else
       have : idx = len := by omega
       ⟨aig, this ▸ s⟩
@@ -202,17 +201,16 @@ where
       [chainable : LawfulZipOperator α f]
       : RefStreamEntry α len :=
     if hidx:idx < len then
-      match haig:f aig ⟨lhs.getRef idx hidx, rhs.getRef idx hidx⟩ with
-      | ⟨newAig, newRef⟩ =>
-        have := by
-          intros
-          have : newAig = (f aig ⟨lhs.getRef idx hidx, rhs.getRef idx hidx⟩).aig := by rw [haig]
-          rw [this]
-          apply LawfulOperator.le_size_of_le_aig_size
-          omega
-        let s := s.cast this
-        let s := s.pushRef newRef
-        go newAig (idx + 1) s (by omega) (lhs.cast this) (rhs.cast this) f
+      let res := f aig ⟨lhs.getRef idx hidx, rhs.getRef idx hidx⟩
+      let aig := res.aig
+      let newRef := res.ref
+      have := by
+        intros
+        apply LawfulOperator.le_size_of_le_aig_size
+        omega
+      let s := s.cast this
+      let s := s.pushRef newRef
+      go aig (idx + 1) s (by omega) (lhs.cast this) (rhs.cast this) f
     else
       have : idx = len := by omega
       ⟨aig, this ▸ s⟩
@@ -292,30 +290,28 @@ def FoldTarget.mkAnd {aig : AIG α} (stream : RefStream aig length) : FoldTarget
 
 @[specialize]
 def fold (aig : AIG α) (target : FoldTarget aig) : Entrypoint α :=
-  match haig:aig.mkConstCached true with
-  | ⟨newAig, acc⟩ =>
-    let input := target.stream.cast <| by
-      intros
-      have : newAig = (aig.mkConstCached true).aig := by rw [haig]
-      rw [this]
-      apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
-      omega
-    go newAig acc 0 target.len input target.func
+  let res := aig.mkConstCached true
+  let aig := res.aig
+  let acc := res.ref
+  let input := target.stream.cast <| by
+    intros
+    apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
+    omega
+  go aig acc 0 target.len input target.func
 where
   @[specialize]
   go (aig : AIG α) (acc : Ref aig) (idx : Nat) (len : Nat) (input : RefStream aig len)
      (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f]
   : Entrypoint α :=
     if hidx:idx < len then
-      match haig:f aig ⟨acc, input.getRef idx hidx⟩ with
-      | ⟨newAig, newAcc⟩ =>
-        let input := input.cast <| by
-          intros
-          have : newAig = (f aig ⟨acc, input.getRef idx hidx⟩).aig := by rw [haig]
-          rw [this]
-          apply LawfulOperator.le_size_of_le_aig_size (f := f)
-          omega
-        go newAig newAcc (idx + 1) len input f
+      let res := f aig ⟨acc, input.getRef idx hidx⟩
+      let aig := res.aig
+      let newAcc := res.ref
+      let input := input.cast <| by
+        intros
+        apply LawfulOperator.le_size_of_le_aig_size (f := f)
+        omega
+      go aig newAcc (idx + 1) len input f
     else
       ⟨aig, acc⟩
   termination_by len - idx

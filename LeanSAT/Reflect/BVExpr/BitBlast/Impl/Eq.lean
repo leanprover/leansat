@@ -3,18 +3,19 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 namespace BVPred
 
 def mkEq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
-  match pair.lhs.bitblast aig with
-  | ⟨laig, lhsRefs⟩ =>
-    match hr:pair.rhs.bitblast laig with
-    | ⟨raig, rhsRefs⟩ =>
-      let lhsRefs := lhsRefs.cast <| by
-        have : raig = (pair.rhs.bitblast laig).aig := by
-          simp [hr]
-        rw [this]
-        apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
-        omega
-      let ⟨finalAig, bits⟩ := AIG.RefStream.zip raig ⟨lhsRefs, rhsRefs, AIG.mkBEqCached⟩
-      AIG.RefStream.fold finalAig (.mkAnd bits)
+  let res := pair.lhs.bitblast aig
+  let aig := res.aig
+  let lhsRefs := res.stream
+  let res := pair.rhs.bitblast aig
+  let aig := res.aig
+  let rhsRefs := res.stream
+  let lhsRefs := lhsRefs.cast <| by
+    simp (config := { zetaDelta := true }) only
+    apply AIG.LawfulStreamOperator.le_size (f := BVExpr.bitblast)
+  let res := AIG.RefStream.zip aig ⟨lhsRefs, rhsRefs, AIG.mkBEqCached⟩
+  let aig := res.aig
+  let bits := res.stream
+  AIG.RefStream.fold aig (.mkAnd bits)
 
 theorem mkEq_le_size (aig : AIG BVBit) (target : ExprPair)
     : aig.decls.size ≤ (mkEq aig target).aig.decls.size := by
