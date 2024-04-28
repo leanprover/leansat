@@ -10,107 +10,89 @@ where
   go (aig : AIG BVBit) (expr : BVExpr w) : AIG.ExtendingRefStreamEntry aig w :=
     match expr with
     | .var a =>
-      match haig:bitblast.blastVar aig ⟨a⟩ with
-      | ⟨newAig, s⟩ =>
-        -- TODO: Think of a way to prettify these theorems
-        ⟨
-          ⟨newAig, s⟩,
-          by
-            have : newAig = (bitblast.blastVar aig ⟨a⟩).aig := by
-              rw [haig]
-            simp only [this]
-            apply AIG.LawfulStreamOperator.le_size
-        ⟩
+      let res := bitblast.blastVar aig ⟨a⟩
+      let aig := res.aig
+      let s := res.stream
+      ⟨
+        ⟨aig, s⟩,
+        by
+          apply AIG.LawfulStreamOperator.le_size (f := bitblast.blastVar)
+      ⟩
     | .const val =>
-      match haig:bitblast.blastConst aig val with
-      | ⟨newAig, s⟩ =>
-        ⟨
-          ⟨newAig, s⟩,
-          by
-            have : newAig = (bitblast.blastConst aig val).aig := by
-              simp [haig]
-            simp only [this]
-            apply AIG.LawfulStreamOperator.le_size
-        ⟩
+      let res := bitblast.blastConst aig val
+      let aig := res.aig
+      let s := res.stream
+      ⟨
+        ⟨aig, s⟩,
+        by
+          apply AIG.LawfulStreamOperator.le_size (f := bitblast.blastConst)
+      ⟩
     | .bin lhs op rhs =>
-      match go aig lhs with
-      | ⟨⟨laig, lhs⟩, hlaig⟩ =>
-        match go laig rhs with
-        | ⟨⟨raig, rhs⟩, hraig⟩ =>
-          let lhs := lhs.cast <| by
-            dsimp at hlaig hraig
-            omega
-          match op with
-          | .and =>
-             match hfinal:AIG.RefStream.zip raig ⟨lhs, rhs, AIG.mkAndCached⟩ with
-             | ⟨finalAig, s⟩ =>
-               ⟨
-                 ⟨finalAig, s⟩,
-                 by
-                   have : finalAig = (AIG.RefStream.zip raig ⟨lhs, rhs, AIG.mkAndCached⟩).aig := by
-                     simp [hfinal]
-                   simp only [this]
-                   apply AIG.LawfulStreamOperator.le_size_of_le_aig_size
-                   dsimp at hlaig hraig
-                   omega
-               ⟩
-          | .or =>
-             match hfinal:AIG.RefStream.zip raig ⟨lhs, rhs, AIG.mkOrCached⟩ with
-             | ⟨finalAig, s⟩ =>
-               ⟨
-                 ⟨finalAig, s⟩,
-                 by
-                   have : finalAig = (AIG.RefStream.zip raig ⟨lhs, rhs, AIG.mkOrCached⟩).aig := by
-                     simp [hfinal]
-                   simp only [this]
-                   apply AIG.LawfulStreamOperator.le_size_of_le_aig_size
-                   dsimp at hlaig hraig
-                   omega
-               ⟩
+      let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
+      let ⟨⟨aig, rhs⟩, hraig⟩ := go aig rhs
+      let lhs := lhs.cast <| by
+        dsimp at hlaig hraig
+        omega
+      match op with
+      | .and =>
+         let res := AIG.RefStream.zip aig ⟨lhs, rhs, AIG.mkAndCached⟩
+         let aig := res.aig
+         let s := res.stream
+         ⟨
+           ⟨aig, s⟩,
+           by
+             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
+             dsimp at hlaig hraig
+             omega
+         ⟩
+      | .or =>
+         let res := AIG.RefStream.zip aig ⟨lhs, rhs, AIG.mkOrCached⟩
+         let aig := res.aig
+         let s := res.stream
+         ⟨
+           ⟨aig, s⟩,
+           by
+             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
+             dsimp at hlaig hraig
+             omega
+         ⟩
 
-          | .xor =>
-             match hfinal:AIG.RefStream.zip raig ⟨lhs, rhs, AIG.mkXorCached⟩ with
-             | ⟨finalAig, s⟩ =>
-               ⟨
-                 ⟨finalAig, s⟩,
-                 by
-                   have : finalAig = (AIG.RefStream.zip raig ⟨lhs, rhs, AIG.mkXorCached⟩).aig := by
-                     simp [hfinal]
-                   simp only [this]
-                   apply AIG.LawfulStreamOperator.le_size_of_le_aig_size
-                   dsimp at hlaig hraig
-                   omega
-               ⟩
+      | .xor =>
+         let res := AIG.RefStream.zip aig ⟨lhs, rhs, AIG.mkXorCached⟩
+         let aig := res.aig
+         let s := res.stream
+         ⟨
+           ⟨aig, s⟩,
+           by
+             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
+             dsimp at hlaig hraig
+             omega
+         ⟩
     | .un op expr =>
-      match go aig expr with
-      | ⟨⟨eaig, estream⟩, heaig⟩ =>
-        match op with
-        | .not =>
-            match hfinal:AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩ with
-            | ⟨finalAig, s⟩ =>
-              ⟨
-                ⟨finalAig, s⟩,
-                by
-                  have : finalAig = (AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩).aig := by
-                    simp [hfinal]
-                  simp only [this]
-                  apply AIG.LawfulStreamOperator.le_size_of_le_aig_size
-                  dsimp at heaig
-                  omega
-              ⟩
-        | .shiftLeft distance =>
-          match hfinal:bitblast.blastShiftLeft eaig ⟨estream, distance⟩ with
-          | ⟨finalAig, s⟩ =>
-            ⟨
-              ⟨finalAig, s⟩,
-              by
-                have : finalAig = (bitblast.blastShiftLeft eaig ⟨estream, distance⟩).aig := by
-                  rw [hfinal]
-                simp only [this]
-                apply AIG.LawfulStreamOperator.le_size_of_le_aig_size
-                dsimp at heaig
-                assumption
-            ⟩
+      let ⟨⟨eaig, estream⟩, heaig⟩ := go aig expr
+      match op with
+      | .not =>
+          let res := AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩
+          let aig := res.aig
+          let s := res.stream
+          ⟨
+            ⟨aig, s⟩,
+            by
+              apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.map)
+              dsimp at heaig
+              omega
+          ⟩
+      | .shiftLeft distance =>
+        let res := bitblast.blastShiftLeft eaig ⟨estream, distance⟩
+        let aig := res.aig
+        let s := res.stream
+        ⟨
+          ⟨aig, s⟩,
+          by
+            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeft)
+            dsimp at heaig
+            assumption
+        ⟩
 
 theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w)
     : aig.decls.size ≤ (bitblast aig expr).aig.decls.size := by

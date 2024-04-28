@@ -18,17 +18,15 @@ where
     : AIG.RefStreamEntry BVBit w :=
   if hidx:curr < w then
     if hdist:curr < distance then
-      match hfinal:aig.mkConstCached false with
-      | ⟨finalAig, zeroRef⟩ =>
-        have hfinal := by
-          have : finalAig = (aig.mkConstCached false).aig := by
-            rw [hfinal]
-          rw [this]
-          apply AIG.LawfulOperator.le_size
-        let s := s.cast hfinal
-        let input := input.cast hfinal
-        let s := s.pushRef zeroRef
-        go finalAig input distance (curr + 1) (by omega) s
+      let res := aig.mkConstCached false
+      let aig := res.aig
+      let zeroRef := res.ref
+      have hfinal := by
+        apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
+      let s := s.cast hfinal
+      let input := input.cast hfinal
+      let s := s.pushRef zeroRef
+      go aig input distance (curr + 1) (by omega) s
     else
       let s := s.pushRef (input.getRef (curr - distance) (by omega))
       go aig input distance (curr + 1) (by omega) s

@@ -15,16 +15,15 @@ where
     (hidx : idx ≤ w)
     : AIG.RefStreamEntry BVBit w :=
   if hidx:idx < w then
-    match haig:aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩ with
-    | ⟨newAig, bitRef⟩ =>
-      let s := s.cast <| by
-        intros
-        have : newAig = (aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩).aig := by rw [haig]
-        rw[this]
-        apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkAtomCached)
-        omega
-      let s := s.pushRef bitRef
-      go w newAig (idx + 1) s a (by omega)
+    let res := aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩
+    let aig := res.aig
+    let bitRef := res.ref
+    let s := s.cast <| by
+      intros
+      apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkAtomCached)
+      omega
+    let s := s.pushRef bitRef
+    go w aig (idx + 1) s a (by omega)
   else
     have hidx : idx = w := by omega
     ⟨aig, hidx ▸ s⟩

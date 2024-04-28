@@ -11,16 +11,15 @@ where
       (hidx : idx ≤ w)
       : AIG.RefStreamEntry BVBit w :=
     if hidx:idx < w then
-      match haig:aig.mkConstCached (val.getLsb idx) with
-      | ⟨newAig, bitRef⟩ =>
-        let s := s.cast <| by
-          intros
-          have : newAig = (aig.mkConstCached (val.getLsb idx)).aig := by rw [haig]
-          rw [this]
-          apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkConstCached)
-          omega
-        let s := s.pushRef bitRef
-        go newAig (idx + 1) s val (by omega)
+      let res := aig.mkConstCached (val.getLsb idx)
+      let aig := res.aig
+      let bitRef := res.ref
+      let s := s.cast <| by
+        intros
+        apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkConstCached)
+        omega
+      let s := s.pushRef bitRef
+      go aig (idx + 1) s val (by omega)
     else
       have hidx : idx = w := by omega
       ⟨aig, hidx ▸ s⟩
