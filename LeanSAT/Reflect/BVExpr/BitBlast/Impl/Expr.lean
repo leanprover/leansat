@@ -1,6 +1,7 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Var
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Const
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftLeft
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Add
 
 namespace BVExpr
 
@@ -68,6 +69,17 @@ where
              dsimp at hlaig hraig
              omega
          ⟩
+      | .add =>
+        let res := bitblast.blastAdd aig ⟨lhs, rhs⟩
+        let aig := res.aig
+        let s := res.stream
+        ⟨
+          ⟨aig, s⟩,
+          by
+            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastAdd)
+            dsimp at hlaig hraig
+            omega
+        ⟩
     | .un op expr =>
       let ⟨⟨eaig, estream⟩, heaig⟩ := go aig expr
       match op with

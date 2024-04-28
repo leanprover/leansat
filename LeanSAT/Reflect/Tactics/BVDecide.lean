@@ -40,6 +40,7 @@ instance : ToExpr BVBinOp where
     | .and => mkConst ``BVBinOp.and
     | .or => mkConst ``BVBinOp.or
     | .xor => mkConst ``BVBinOp.xor
+    | .add => mkConst ``BVBinOp.add
   toTypeExpr := mkConst ``BVBinOp
 
 instance : ToExpr (BVExpr w) where
@@ -181,6 +182,10 @@ theorem not_congr (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
 theorem shiftLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' <<< n = x <<< n := by
   simp[*]
 
+theorem add_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+    lhs' + rhs' = lhs + rhs' := by
+  simp[*]
+
 def  getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
@@ -203,6 +208,8 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     binaryReflection lhsExpr rhsExpr .or ``or_congr
   | HXor.hXor _ _ _ _ lhsExpr rhsExpr =>
     binaryReflection lhsExpr rhsExpr .xor ``xor_congr
+  | HAdd.hAdd _ _ _ _ lhsExpr rhsExpr =>
+    binaryReflection lhsExpr rhsExpr .add ``add_congr
   | Complement.complement _ _ innerExpr =>
     let some inner ← of innerExpr | return none
     let bvExpr : BVExpr w := .un .not inner.bvExpr
