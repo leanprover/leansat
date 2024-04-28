@@ -2,9 +2,10 @@ import LeanSAT.AIG.LawfulOperator
 import LeanSAT.AIG.CachedGatesLemmas
 
 namespace AIG
-namespace RefStream
 
 variable {α : Type} [BEq α] [Hashable α] [DecidableEq α] {aig : AIG α}
+
+namespace RefStream
 
 def empty : RefStream aig 0 where
   refs := #[]
@@ -102,5 +103,21 @@ def setRef (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat) (hidx : idx <
   ⟩
 
 end RefStream
+
+-- TODO: ZipTarget can benefit from this I think?
+structure BinaryRefStream (aig : AIG α) (len : Nat) where
+  lhs : RefStream aig len
+  rhs : RefStream aig len
+
+namespace BinaryRefStream
+
+@[inline]
+def cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len)
+    (h : aig1.decls.size ≤ aig2.decls.size)
+    : BinaryRefStream aig2 len :=
+  let ⟨lhs, rhs⟩ := s
+  ⟨lhs.cast h, rhs.cast h⟩
+
+end BinaryRefStream
 end AIG
 

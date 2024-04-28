@@ -2,6 +2,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Const
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Var
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftLeft
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 
 open AIG
@@ -47,6 +48,17 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
+    | add =>
+      -- TODO: Simp normal form
+      simp [go]
+      apply blastAdd_eq_eval_getLsb
+      . intros
+        rw [← lih]
+        . sorry
+        . sorry
+        . assumption
+      . intros
+        rw [← rih]
   | un op expr ih =>
     cases op with
     | not => simp [go, ih, hidx]
