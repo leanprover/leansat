@@ -118,6 +118,22 @@ def cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len)
   let ⟨lhs, rhs⟩ := s
   ⟨lhs.cast h, rhs.cast h⟩
 
+@[simp]
+theorem lhs_getRef_cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len) (idx : Nat) (hidx : idx < len)
+      (hcast : aig1.decls.size ≤ aig2.decls.size)
+    : (s.cast hcast).lhs.getRef idx hidx
+        =
+      (s.lhs.getRef idx hidx).cast hcast := by
+  simp [cast]
+
+@[simp]
+theorem rhs_getRef_cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len) (idx : Nat) (hidx : idx < len)
+      (hcast : aig1.decls.size ≤ aig2.decls.size)
+    : (s.cast hcast).rhs.getRef idx hidx
+        =
+      (s.rhs.getRef idx hidx).cast hcast := by
+  simp [cast]
+
 end BinaryRefStream
 end AIG
 
