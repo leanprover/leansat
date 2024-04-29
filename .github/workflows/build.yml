@@ -45,3 +45,6 @@ jobs:
         if: always()
         run: |
           ! (find Sat -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Lean$')
+
+      - name: eval
+        run: make eval
