@@ -182,8 +182,7 @@ instance : LawfulStreamOperator α MapTarget map where
   decl_eq := by intros; apply map_decl_eq
 
 structure ZipTarget (aig : AIG α) (len : Nat) where
-  lhs : RefStream aig len
-  rhs : RefStream aig len
+  input : BinaryRefStream aig len
   func : (aig : AIG α) → BinaryInput aig → Entrypoint α
   [lawful : LawfulOperator α BinaryInput func]
   [chainable : LawfulZipOperator α func]
@@ -193,7 +192,7 @@ attribute [instance] ZipTarget.chainable
 
 @[specialize]
 def zip (aig : AIG α) (target : ZipTarget aig len) : RefStreamEntry α len :=
-  go aig 0 .empty (by omega) target.lhs target.rhs target.func
+  go aig 0 .empty (by omega) target.input.lhs target.input.rhs target.func
 where
   @[specialize]
   go (aig : AIG α) (idx : Nat) (s : RefStream aig idx) (hidx : idx ≤ len) (lhs rhs : RefStream aig len)
@@ -581,7 +580,7 @@ theorem denote_zip {aig : AIG α} (target : ZipTarget aig len)
     : ∀ (idx : Nat) (hidx : idx < len),
         ⟦(zip aig target).aig, (zip aig target).stream.getRef idx hidx, assign⟧
           =
-        ⟦target.func aig ⟨target.lhs.getRef idx hidx, target.rhs.getRef idx hidx⟩, assign⟧ := by
+        ⟦target.func aig ⟨target.input.lhs.getRef idx hidx, target.input.rhs.getRef idx hidx⟩, assign⟧ := by
   intros
   apply zip.denote_go
   omega
