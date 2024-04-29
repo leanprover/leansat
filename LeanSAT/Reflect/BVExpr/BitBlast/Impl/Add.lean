@@ -9,6 +9,40 @@ structure FullAdderInput (aig : AIG BVBit) where
   rhs : AIG.Ref aig
   cin : AIG.Ref aig
 
+namespace FullAdderInput
+
+def cast {aig1 aig2 : AIG BVBit} (val : FullAdderInput aig1) (h : aig1.decls.size ≤ aig2.decls.size)
+    : FullAdderInput aig2 :=
+  let ⟨lhs, rhs, cin⟩ := val
+  ⟨lhs.cast h, rhs.cast h, cin.cast h⟩
+
+@[simp]
+theorem lhs_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
+      (hcast : aig1.decls.size ≤ aig2.decls.size)
+    : (s.cast hcast).lhs
+        =
+      s.lhs.cast hcast := by
+  simp [cast]
+
+@[simp]
+theorem rhs_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
+      (hcast : aig1.decls.size ≤ aig2.decls.size)
+    : (s.cast hcast).rhs
+        =
+      s.rhs.cast hcast := by
+  simp [cast]
+
+@[simp]
+theorem cin_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
+      (hcast : aig1.decls.size ≤ aig2.decls.size)
+    : (s.cast hcast).cin
+        =
+      s.cin.cast hcast := by
+  simp [cast]
+
+end FullAdderInput
+
+
 def mkFullAdderOut (aig : AIG BVBit) (input : FullAdderInput aig) : AIG.Entrypoint BVBit :=
   -- let subExpr = XOR lhs rhs
   -- out = XOR subExpr cin
@@ -94,6 +128,32 @@ instance : AIG.LawfulOperator BVBit FullAdderInput mkFullAdderCarry where
       apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkXorCached)
       assumption
 
+-- XXX: Maybe this thing can be generalized to some notion of "stateful binary operator"
+structure FullAdderOutput (old : AIG BVBit) where
+  aig : AIG BVBit
+  out : AIG.Ref aig
+  cout : AIG.Ref aig
+  hle : old.decls.size ≤ aig.decls.size
+
+def mkFullAdder (aig : AIG BVBit) (input : FullAdderInput aig) : FullAdderOutput aig :=
+  let res := mkFullAdderOut aig input
+  let aig := res.aig
+  let outRef := res.ref
+  have haig1 := by
+    apply AIG.LawfulOperator.le_size (f := mkFullAdderOut)
+  let input := input.cast haig1
+  let res := mkFullAdderCarry aig input
+  let aig := res.aig
+  let carryRef := res.ref
+  have haig2 := by
+    apply AIG.LawfulOperator.le_size (f := mkFullAdderCarry)
+  let outRef := outRef.cast haig2
+  have hle := by
+    simp (config := { zetaDelta := true }) only
+    apply AIG.LawfulOperator.le_size_of_le_aig_size (f := mkFullAdderCarry)
+    apply AIG.LawfulOperator.le_size (f := mkFullAdderOut)
+  ⟨aig, outRef, carryRef, hle⟩
+
 def blastAdd (aig : AIG BVBit) (input : AIG.BinaryRefStream aig w) : AIG.RefStreamEntry BVBit w :=
   let res := aig.mkConstCached false
   let aig := res.aig
@@ -109,27 +169,13 @@ where
     if hidx:curr < w then
       let lin := lhs.getRef curr hidx
       let rin := rhs.getRef curr hidx
-      let res := mkFullAdderOut aig ⟨lin, rin, cin⟩
+      let res := mkFullAdder aig ⟨lin, rin, cin⟩
       let aig := res.aig
-      let outRef := res.ref
-      have haig1 := by
-        apply AIG.LawfulOperator.le_size (f := mkFullAdderOut)
-      let lin := lin.cast haig1
-      let rin := rin.cast haig1
-      let cin := cin.cast haig1
-      let res := mkFullAdderCarry aig ⟨lin, rin, cin⟩
-      let aig := res.aig
-      let carryRef := res.ref
-      have haig2 := by
-        apply AIG.LawfulOperator.le_size (f := mkFullAdderCarry)
-      have hchained := by
-        -- TODO: This proof isn't nice
-        simp (config := {zetaDelta := true}) only at haig1 haig2 |-
-        omega
-      let s := s.cast hchained
-      let outRef := outRef.cast haig2
-      let lhs := lhs.cast hchained
-      let rhs := rhs.cast hchained
+      let outRef := res.out
+      let carryRef := res.cout
+      let s := s.cast res.hle
+      let lhs := lhs.cast res.hle
+      let rhs := rhs.cast res.hle
       let s := s.pushRef outRef
       go aig (curr + 1) (by omega) carryRef s lhs rhs
     else
@@ -137,9 +183,58 @@ where
       ⟨aig, hcurr ▸ s⟩
   termination_by w - curr
 
-instance : AIG.LawfulStreamOperator BVBit AIG.BinaryRefStream blastAdd where
-  le_size := sorry
-  decl_eq := sorry
+namespace blastAdd
 
+theorem go_le_size (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
+    (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
+    : aig.decls.size ≤ (go aig curr hcurr cin s lhs rhs).aig.decls.size := by
+  unfold go
+  dsimp
+  split
+  . refine Nat.le_trans ?_ (by apply go_le_size)
+    apply AIG.LawfulOperator.le_size_of_le_aig_size (f := mkFullAdderCarry)
+    apply AIG.LawfulOperator.le_size (f := mkFullAdderOut)
+  . simp
+termination_by w - curr
+
+theorem go_decl_eq (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
+    (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
+    : ∀ (idx : Nat) (h1) (h2),
+        (go aig curr hcurr cin s lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+  generalize hgo : go aig curr hcurr cin s lhs rhs = res
+  unfold go at hgo
+  dsimp at hgo
+  split at hgo
+  . rw [← hgo]
+    intros
+    rw [go_decl_eq]
+    unfold mkFullAdder
+    rw [AIG.LawfulOperator.decl_eq (f := mkFullAdderCarry)]
+    rw [AIG.LawfulOperator.decl_eq (f := mkFullAdderOut)]
+    . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := mkFullAdderOut)
+      assumption
+    . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := mkFullAdderCarry)
+      apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := mkFullAdderOut)
+      assumption
+  . simp [← hgo]
+termination_by w - curr
+
+instance : AIG.LawfulStreamOperator BVBit AIG.BinaryRefStream blastAdd where
+  le_size := by
+    intros
+    unfold blastAdd
+    dsimp
+    refine Nat.le_trans ?_ (by apply go_le_size)
+    apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
+  decl_eq := by
+    intros
+    unfold blastAdd
+    dsimp
+    rw [go_decl_eq]
+    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
+    assumption
+
+end blastAdd
 end bitblast
 end BVExpr

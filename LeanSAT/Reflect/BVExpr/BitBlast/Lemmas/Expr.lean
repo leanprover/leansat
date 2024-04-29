@@ -14,6 +14,22 @@ theorem go_val_eq_bitblast (aig : AIG BVBit) (expr : BVExpr w)
     : (go aig expr).val = bitblast aig expr := by
   rfl
 
+theorem go_denote_mem_prefix (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment) (start : Nat)
+    (hstart)
+  : ⟦
+      (go aig expr).val.aig,
+      ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply (go aig expr).property⟩,
+      assign.toAIGAssignment
+    ⟧
+      =
+    ⟦aig, ⟨start, hstart⟩, assign.toAIGAssignment⟧ := by
+  apply denote.eq_of_aig_eq (entry := ⟨aig, start,hstart⟩)
+  apply IsPrefix.of
+  . intros
+    apply go_decl_eq
+  . intros
+    apply (go aig expr).property
+
 theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦(go aig expr).val.aig, (go aig expr).val.stream.getRef idx hidx, assign.toAIGAssignment⟧
@@ -49,14 +65,15 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       rw [← go_val_eq_bitblast]
       rw [lih]
     | add =>
-      -- TODO: Simp normal form
-      simp [go]
+      simp only [go, eval_bin, BVBinOp.eval_add]
       apply blastAdd_eq_eval_getLsb
       . intros
-        rw [← lih]
-        . sorry
-        . sorry
+        dsimp
+        rw [go_denote_mem_prefix]
+        rw [← lih (aig := aig)]
+        . simp
         . assumption
+        . simp [Ref.hgate]
       . intros
         rw [← rih]
   | un op expr ih =>
