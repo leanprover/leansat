@@ -1,3 +1,5 @@
 /.lake
 .DS_Store
 /build
+*/run_success.txt
+*/run_fail.txt

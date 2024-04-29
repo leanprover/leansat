@@ -1,7 +1,7 @@
 # Ensure that panics actually cause the tests to fail
 export LEAN_ABORT_ON_PANIC=1
 
-.PHONY: all build test lint
+.PHONY: all build test lint eval
 
 all: build test
 
@@ -16,3 +16,6 @@ test:
 
 lint: build
 	lake exe runLinter Sat
+
+eval:
+	bash check_eval.bash
