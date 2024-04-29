@@ -12,7 +12,7 @@ def mkEq (aig : AIG BVBit) (pair : ExprPair) : AIG.Entrypoint BVBit :=
   let lhsRefs := lhsRefs.cast <| by
     simp (config := { zetaDelta := true }) only
     apply AIG.LawfulStreamOperator.le_size (f := BVExpr.bitblast)
-  let res := AIG.RefStream.zip aig ⟨lhsRefs, rhsRefs, AIG.mkBEqCached⟩
+  let res := AIG.RefStream.zip aig ⟨⟨lhsRefs, rhsRefs⟩, AIG.mkBEqCached⟩
   let aig := res.aig
   let bits := res.stream
   AIG.RefStream.fold aig (.mkAnd bits)

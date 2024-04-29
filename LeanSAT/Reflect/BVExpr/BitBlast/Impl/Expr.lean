@@ -36,7 +36,7 @@ where
         omega
       match op with
       | .and =>
-         let res := AIG.RefStream.zip aig ⟨lhs, rhs, AIG.mkAndCached⟩
+         let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkAndCached⟩
          let aig := res.aig
          let s := res.stream
          ⟨
@@ -47,7 +47,7 @@ where
              omega
          ⟩
       | .or =>
-         let res := AIG.RefStream.zip aig ⟨lhs, rhs, AIG.mkOrCached⟩
+         let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkOrCached⟩
          let aig := res.aig
          let s := res.stream
          ⟨
@@ -59,7 +59,7 @@ where
          ⟩
 
       | .xor =>
-         let res := AIG.RefStream.zip aig ⟨lhs, rhs, AIG.mkXorCached⟩
+         let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkXorCached⟩
          let aig := res.aig
          let s := res.stream
          ⟨
