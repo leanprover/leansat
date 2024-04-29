@@ -1,2 +1,17 @@
+bitvec_AddSub_1152.lean
+bitvec_AddSub_1156.lean
+bitvec_AddSub_1295.lean
+bitvec_AddSub_1309.lean
 bitvec_AndOrXor_135.lean
 bitvec_AndOrXor_144.lean
+bitvec_AndOrXor_2063__X__C1__C2____X__C2__C1__C2.lean
+bitvec_AndOrXor_2231__A__B__B__C__A___A__B__C.lean
+bitvec_AndOrXor_2243__B__C__A__B___B__A__C.lean
+bitvec_AndOrXor_2263.lean
+bitvec_AndOrXor_2264.lean
+bitvec_AndOrXor_2265.lean
+bitvec_AndOrXor_2284.lean
+bitvec_AndOrXor_2285.lean
+bitvec_AndOrXor_2367.lean
+bitvec_AndOrXor_2595.lean
+bitvec_AndOrXor_2647.lean
