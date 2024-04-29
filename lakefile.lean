@@ -10,6 +10,7 @@ package LeanSAT {
 }
 
 lean_lib Test
+lean_lib Eval
 
 @[default_target]
 lean_lib LeanSAT
