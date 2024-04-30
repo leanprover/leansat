@@ -1,7 +1,7 @@
 import Lake
 open Lake DSL
 
-require std from git "https://github.com/leanprover/std4.git"@"e0eb3090ec2e5044c92e9bba9c269c91375f8d5e"
+require std from git "https://github.com/leanprover/std4.git"@"e9b95dc6dbfaf37a78d0cb41290dc87301462d19"
 
 package LeanSAT {
   precompileModules := true
