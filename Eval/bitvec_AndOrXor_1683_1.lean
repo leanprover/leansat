@@ -1,5 +1,7 @@
 import LeanSAT.Reflect.Tactics.BVDecide
 
+open BitVec
+
 theorem bitvec_AndOrXor_1683_1 :
- ∀ (a b : BitVec 64), (a >ᵤ b) ||| ofBool (a == b) = (a ≥ᵤ b)
+ ∀ (a b : BitVec 64), (b < a) || (a == b) = (b ≤ a)
 := by bv_decide
