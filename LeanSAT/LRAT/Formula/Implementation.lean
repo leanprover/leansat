@@ -91,14 +91,11 @@ def deleteOne {n : Nat} (f : DefaultFormula n) (id : Nat) : DefaultFormula n :=
 
 def delete {n : Nat} (f : DefaultFormula n) (ids : Array Nat) : DefaultFormula n := ids.foldl (fun f id => f.deleteOne id) f
 
-/-- Note: This is never evaluated, it is only present for the sake of reasoning about semantics -/
-def formulaHSat {n : Nat} : HSat (PosFin n) (DefaultFormula n) :=
-  { eval := fun p f => (toList f).all (fun s => p ⊨ s) }
-
-instance {n : Nat} : HSat (PosFin n) (DefaultFormula n) := formulaHSat
+instance {n : Nat} : HSat (PosFin n) (DefaultFormula n) where
+  eval := fun p f => (toList f).all (fun s => p ⊨ s)
 
 def formulaHSat_def {n : Nat} (p : (PosFin n) → Bool) (f : DefaultFormula n) :
-  formulaHSat.eval p f = (toList f).all (fun c => p ⊨ c) := Eq.refl (p ⊨ f)
+  HSat.eval p f = (toList f).all (fun c => p ⊨ c) := Eq.refl (p ⊨ f)
 
 def insertUnit : Array (Literal (PosFin n)) × Array Assignment × Bool →
   Literal (PosFin n) → Array (Literal (PosFin n)) × Array Assignment × Bool :=

@@ -7,7 +7,8 @@ import LeanSAT.Util.Misc
 
 def PosFin (n : Nat) := {x : Nat // 0 < x ∧ x < n}
 
-instance {n : Nat} : DecidableEq (PosFin n) := Subtype.instDecidableEqSubtype
+instance {n : Nat} : DecidableEq (PosFin n) :=
+  inferInstanceAs (DecidableEq {x : Nat // 0 < x ∧ x < n})
 
 instance {n : Nat} : Hashable (PosFin n) where
   hash := fun x => hash x.1

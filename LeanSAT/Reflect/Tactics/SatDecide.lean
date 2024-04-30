@@ -3,6 +3,7 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison, Henrik Böving
 -/
+import Lean.Elab.Tactic.FalseOrByContra
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.BoolExpr.Tseitin.Lemmas
 import LeanSAT.Reflect.Glue
@@ -77,7 +78,7 @@ def readFileQuick (path : System.FilePath) : IO String := do
   let mdata ← path.metadata
   let handle ← IO.FS.Handle.mk path .read
   let bytes ← handle.read mdata.byteSize.toUSize
-  return String.fromUTF8Unchecked bytes
+  return String.fromUTF8! bytes
 
 def LratCert.ofFile (lratPath : System.FilePath) (prevalidate : Bool) : IO LratCert := do
   let proof ← readFileQuick lratPath
@@ -274,7 +275,7 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
   cert.toReflectionProof cfg boolExpr ``verifyBoolExpr ``unsat_of_verifyBoolExpr_eq_true
 
 def _root_.Lean.MVarId.closeWithBoolReflection (g : MVarId) (unsatProver : BoolExprNat → MetaM Expr) : MetaM Unit := M.run do
-  let g' ← falseOrByContra g
+  let g' ← g.falseOrByContra
   g'.withContext do
     let (boolExpr, f) ←
       withTraceNode `sat (fun _ => return "Reflecting goal into BoolExpr") do

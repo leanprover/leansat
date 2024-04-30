@@ -304,8 +304,13 @@ theorem Nat.even_succ_of_odd : Odd n → Even n.succ := by
   intro ⟨r, hr⟩; exists (r+1); simp_arith [*]
 
 theorem Nat.two_div_iff_even : 2 ∣ n ↔ Even n := by
-  unfold Dvd.dvd Nat.instDvdNat Even
-  simp only [Nat.two_mul]
+  unfold Even
+  simp only [← Nat.two_mul]
+  constructor
+  all_goals
+    intro heven
+    rcases heven with ⟨i, hi⟩
+    exists i
 
 theorem Nat.mod_two_ne_zero : ¬n % 2 = 0 ↔ n % 2 = 1 := by
   rcases Nat.mod_two_eq_zero_or_one n with h | h

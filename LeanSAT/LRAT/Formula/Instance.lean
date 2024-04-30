@@ -23,7 +23,7 @@ instance {n : Nat} : Formula (PosFin n) (DefaultClause n) (DefaultFormula n) whe
   delete_readyForRupAdd := delete_readyForRupAdd
   delete_readyForRatAdd := delete_readyForRatAdd
   delete_subset := delete_subset
-  formulaHSat := formulaHSat
+  formulaHSat := inferInstance
   formulaHSat_def := formulaHSat_def
   performRupAdd := performRupAdd
   rupAdd_result := rupAdd_result
