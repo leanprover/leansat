@@ -58,7 +58,7 @@ theorem php3_of_php3_formula_unsat : unsatisfiable (PosFin 13) php3_formula → 
     | ⟨12, _⟩ => f p4 = h3
 
   specialize php3_unsat p
-  simp only [HSat.eval, instHSatPosFinDefaultFormula, formulaHSat, p] at php3_unsat
+  simp only [HSat.eval, p] at php3_unsat
   rw [List.all_eq_not_any_not, Bool.not_eq_true, Bool.not_eq_false', List.any_eq_true] at php3_unsat
   rcases php3_unsat with ⟨c, c_in_php3_formula, php3_unsat⟩
   simp only [List.any_eq_true, Misc.Prod.exists, Misc.Bool.exists_bool, Misc.Bool.decide_coe, Bool.not_eq_true',

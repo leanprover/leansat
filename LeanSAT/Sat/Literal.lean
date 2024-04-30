@@ -16,7 +16,7 @@ instance : HSat α (Literal α) where
   eval := fun p l => (p l.1) = l.2
 
 instance (p : α → Bool) (l : Literal α) : Decidable (p ⊨ l) := by
-  rw [HSat.eval, instHSatLiteral]
+  rw [HSat.eval, instHSat]
   exact Bool.decEq (p l.fst) l.snd
 
 def negateLiteral (l : Literal α) := (l.1, not l.2)

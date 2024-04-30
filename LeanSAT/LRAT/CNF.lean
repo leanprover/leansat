@@ -38,7 +38,7 @@ end Literal
 namespace Clause
 
 theorem sat_iff_exists [Clause α β] (p : α → Bool) (c : β) : p ⊨ c ↔ ∃ l ∈ toList c, p ⊨ l := by
-  rw [instHSat]
+  simp only [(· ⊨ ·)]
   simp only [List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
 
 theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : β) : limplies α l c ↔ l ∈ toList c := by
@@ -47,10 +47,10 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
   . intro h
     -- Construct an assignment p such that p ⊨ l and p ⊭ c ∖ {l}
     let p := fun x : α => if x = l.1 then l.2 else (x, false) ∈ toList c
-    have pl : p ⊨ l := by simp only [instHSatLiteral, ite_true, p]
+    have pl : p ⊨ l := by simp only [(· ⊨ ·), ite_true, p]
     specialize h p pl
     rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
-    . simp only [instHSatLiteral, p] at h2
+    . simp only [(· ⊨ ·), p] at h2
       split at h2
       . next v_eq_l =>
         rw [← @Prod.mk.eta α Bool l, ← v_eq_l, h2]
@@ -59,7 +59,7 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
         simp only [decide_eq_false_iff_not] at h2
         exfalso
         exact h2 h1
-    . simp only [instHSatLiteral, p] at h2
+    . simp only [(· ⊨ ·), p] at h2
       split at h2
       . next v_eq_l =>
         rw [← @Prod.mk.eta α Bool l, ← v_eq_l, h2]
@@ -85,8 +85,8 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
 theorem entails_of_entails_delete [DecidableEq α] [Clause α β] {p : α → Bool} {c : β} {l : Literal α} :
     p ⊨ delete c l → p ⊨ c := by
   intro h
-  simp only [instHSat, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
-  simp only [instHSat, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
+  simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
+  simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
   rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
   . simp only [delete_iff, ne_eq] at h1
     exact Exists.intro v $ Or.inl ⟨h1.2, h2⟩
@@ -99,7 +99,7 @@ namespace Formula
 
 theorem sat_iff_forall [Clause α β] [Formula α β σ] (p : α → Bool) (f : σ) :
     p ⊨ f ↔ ∀ c : β, c ∈ toList f → p ⊨ c := by
-  rw [instHSat, formulaHSat_def p f]
+  simp only [(· ⊨ ·), formulaHSat_def p f]
   simp only [List.all_eq_true, decide_eq_true_eq]
 
 theorem limplies_of_insert [Clause α β] [Formula α β σ] {c : β} {f : σ} : limplies α (insert f c) f := by

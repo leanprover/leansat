@@ -40,7 +40,7 @@ theorem assignments_invariant_of_strong_assignments_invariant {n : Nat} (f : Def
   apply Exists.intro hsize
   intro i b hb p pf
   specialize h i b hb
-  simp only [instHSatPosFinDefaultFormula, formulaHSat, List.any_eq_true, Prod.exists, Bool.exists_bool,
+  simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool,
     Bool.decide_coe, List.all_eq_true] at pf
   specialize pf (unit (i, b)) h
   simp [Clause.instHSat, unit_eq, Clause.toList] at pf
@@ -50,7 +50,7 @@ theorem assignments_invariant_entails_limplies {n : Nat} (f : DefaultFormula n)
   (f_assignments_invariant : assignments_invariant f) : limplies (PosFin n) f f.assignments := by
   intro p pf
   rcases f_assignments_invariant with ⟨hsize, f_assignments_invariant⟩
-  simp only [HSat.eval, instHSatPosFinArrayAssignment, Bool.not_eq_true]
+  simp only [(· ⊨ ·), Bool.not_eq_true]
   intro i
   specialize f_assignments_invariant i (decide (p i = false))
   by_cases hasAssignment (decide (p i = false)) (f.assignments[i.1]'(by rw [hsize]; exact i.2.2))

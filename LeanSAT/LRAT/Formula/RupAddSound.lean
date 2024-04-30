@@ -162,8 +162,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
           simp only [hasAssignment, hasPosAssignment, heq, ite_false]
           decide
         have p_entails_i := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i false hasNegAssignment_fi p pf
-        rw [HSat.eval, Literal.instHSatLiteral] at p_entails_i
-        simp only at p_entails_i
+        simp only [(· ⊨ ·)] at p_entails_i
         simp only [p_entails_i, decide_True]
       . next heq =>
         exfalso
@@ -179,7 +178,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
         have hasPosAssignment_fi : hasAssignment true (f.assignments[i.1]'i_in_bounds) := by
           simp only [hasAssignment, hasPosAssignment, ite_true, heq]
         have p_entails_i := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i true hasPosAssignment_fi p pf
-        rw [HSat.eval, Literal.instHSatLiteral] at p_entails_i
+        simp only [(· ⊨ ·)] at p_entails_i
         exact p_entails_i
       . simp only at h2
       . next heq =>
@@ -205,8 +204,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
       exists_eq_right_right, exists_eq_right, Array.data_toArray, List.find?, List.not_mem_nil, or_false,
       Bool.not_eq_false'] at i_true_in_insertUnit_fold i_false_in_insertUnit_fold
     have c_not_tautology := Clause.not_tautology c (i, true)
-    rw [Clause.toList, instClausePosFinDefaultClause] at c_not_tautology
-    simp only at c_not_tautology
+    simp only [Clause.toList, (· ⊨ ·)] at c_not_tautology
     rw [DefaultClause.toList] at c_not_tautology
     rcases c_not_tautology with i_true_not_in_c | i_false_not_in_c
     . exact i_true_not_in_c i_false_in_insertUnit_fold
@@ -230,12 +228,13 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
   have hsize : (insertRupUnits f units).1.assignments.size = n := by rw [insertRupUnits_preserves_assignments_size, f_readyForRupAdd.2.1]
   apply Exists.intro hsize
   intro i b hb p hp
-  simp only [instHSatPosFinDefaultFormula, formulaHSat, toList, Array.toList_eq, List.append_assoc, Clause.instHSat,
-    Literal.instHSatLiteral.eq_1, HSat.eval.eq_1, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe,
-    List.all_eq_true, List.mem_append, List.mem_filterMap, id_eq, exists_eq_right, List.mem_map] at hp
+  simp only [(· ⊨ ·)] at hp
+  simp only [toList, Array.toList_eq, List.append_assoc, List.any_eq_true, Prod.exists,
+    Bool.exists_bool, Bool.decide_coe, List.all_eq_true, List.mem_append, List.mem_filterMap, id_eq,
+    exists_eq_right, List.mem_map] at hp
   have pf : p ⊨ f := by
-    simp only [instHSatPosFinDefaultFormula, formulaHSat, toList, Array.toList_eq, List.append_assoc, Clause.instHSat,
-      Literal.instHSatLiteral.eq_1, HSat.eval.eq_1, List.any_eq_true, Prod.exists, Bool.exists_bool,
+    simp only [(· ⊨ ·)]
+    simp only [toList, Array.toList_eq, List.append_assoc, List.any_eq_true, Prod.exists, Bool.exists_bool,
       Bool.decide_coe, List.all_eq_true, List.mem_append, List.mem_filterMap, id_eq, exists_eq_right, List.mem_map]
     intro c cf
     rcases cf with cf | cf | cf
@@ -288,13 +287,13 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, getElem_fin, List.find?, j_unit] at hp
       simp only [getElem_fin] at h1
       rcases hp with ⟨i', hp⟩
-      simp only [instClausePosFinDefaultClause.eq_1, h1, Clause.toList.eq_1, unit_eq, List.mem_singleton,
+      simp only [h1, Clause.toList, unit_eq, List.mem_singleton,
         Prod.mk.injEq] at hp
       rcases hp with ⟨hp1, hp2⟩ | ⟨hp1, hp2⟩
-      . simp only [b_eq_b', ← hp1.2, HSat.eval, Literal.instHSatLiteral]
+      . simp only [b_eq_b', ← hp1.2, HSat.eval]
         rw [hp1.1] at hp2
         exact of_decide_eq_true hp2
-      . simp only [b_eq_b', ← hp1.2, HSat.eval, Literal.instHSatLiteral]
+      . simp only [b_eq_b', ← hp1.2, HSat.eval]
         rw [hp1.1] at hp2
         exact hp2
     . next b_ne_b' =>
@@ -343,7 +342,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
     rcases hp2 with ⟨i2, hp2⟩
     simp only [getElem_fin] at h1
     simp only [getElem_fin] at h2
-    simp only [instClausePosFinDefaultClause.eq_1, h1, Clause.toList.eq_1, unit_eq, List.mem_singleton, Prod.mk.injEq,
+    simp only [h1, Clause.toList, unit_eq, List.mem_singleton, Prod.mk.injEq,
       and_false, false_and, and_true, false_or, h2, or_false] at hp1 hp2
     simp only [hp2.1, ← hp1.1, decide_eq_true_eq, true_and] at hp2
     simp only [hp1.2] at hp2
@@ -374,7 +373,7 @@ theorem encounteredBoth_entails_unsat {n : Nat} (c : DefaultClause n) (assignmen
       . split at h <;> simp only at h
       . next heq =>
         intro p hp
-        simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at hp
+        simp only [(· ⊨ ·), Bool.not_eq_true] at hp
         specialize hp l.1
         simp only [heq, has_of_both] at hp
       . simp only at h
@@ -408,8 +407,8 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
               intro i i_lt_idx_add_one p_entails_c_arr_i
               rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
               . exact ih1 i i_lt_idx p_entails_c_arr_i
-              . simp only [Literal.instHSatLiteral.eq_1, HSat.eval.eq_1, i_eq_idx, c_arr_idx_eq_false] at p_entails_c_arr_i
-                simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at p_entails_assignment
+              . simp only [(· ⊨ ·), i_eq_idx, c_arr_idx_eq_false] at p_entails_c_arr_i
+                simp only [(· ⊨ ·), Bool.not_eq_true] at p_entails_assignment
                 specialize p_entails_assignment c_arr[idx.1].1
                 simp (config := { decide := true }) only [p_entails_c_arr_i, decide_True, heq] at p_entails_assignment
             . next h =>
@@ -427,8 +426,8 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
               intro i i_lt_idx_add_one p_entails_c_arr_i
               rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
               . exact ih1 i i_lt_idx p_entails_c_arr_i
-              . simp only [Literal.instHSatLiteral.eq_1, HSat.eval.eq_1, i_eq_idx, c_arr_idx_eq_false] at p_entails_c_arr_i
-                simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at p_entails_assignment
+              . simp only [(· ⊨ ·), i_eq_idx, c_arr_idx_eq_false] at p_entails_c_arr_i
+                simp only [(· ⊨ ·), Bool.not_eq_true] at p_entails_assignment
                 specialize p_entails_assignment c_arr[idx.1].1
                 simp (config := { decide := true }) only [p_entails_c_arr_i, decide_True, heq] at p_entails_assignment
             . next h =>
@@ -453,13 +452,13 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
         . next c_arr_idx_eq_true =>
           simp only [reducedToUnit.injEq] at h
           simp only [h] at c_arr_idx_eq_true
-          simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at hp
+          simp only [(· ⊨ ·), Bool.not_eq_true] at hp
           specialize hp c_arr[idx.val].1
           rw [heq] at hp
           by_cases p c_arr[idx.val].1
           . next p_c_arr_idx_eq_true =>
             simp only [h] at p_c_arr_idx_eq_true
-            simp only [Literal.instHSatLiteral.eq_1, c_arr_idx_eq_true, HSat.eval.eq_1, p_c_arr_idx_eq_true]
+            simp only [(· ⊨ ·), c_arr_idx_eq_true, p_c_arr_idx_eq_true]
           . next p_c_arr_idx_eq_false =>
             simp only [h, Bool.not_eq_true] at p_c_arr_idx_eq_false
             simp (config := { decide := true }) only [h, p_c_arr_idx_eq_false] at hp
@@ -469,7 +468,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
         . next c_arr_idx_eq_true =>
           simp only [reducedToUnit.injEq] at h
           simp only [h, Bool.not_eq_true'] at c_arr_idx_eq_true
-          simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at hp
+          simp only [(· ⊨ ·), Bool.not_eq_true] at hp
           specialize hp c_arr[idx.val].1
           rw [heq] at hp
           by_cases p c_arr[idx.val].1
@@ -478,7 +477,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
             simp (config := { decide := true }) only [h, p_c_arr_idx_eq_true] at hp
           . next p_c_arr_idx_eq_false =>
             simp only [h] at p_c_arr_idx_eq_false
-            simp only [Literal.instHSatLiteral.eq_1, c_arr_idx_eq_true, HSat.eval.eq_1, p_c_arr_idx_eq_false]
+            simp only [(· ⊨ ·), c_arr_idx_eq_true, p_c_arr_idx_eq_false]
         . exact False.elim h
       . simp only at h
       . simp only [reducedToUnit.injEq] at h
@@ -503,8 +502,8 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
             have ih2_precondition : ∃ i : Fin c_arr.size, i.val < idx.val ∧ (p ⊨ c_arr[i]) :=
               (Exists.intro j ∘ And.intro j_lt_idx) p_entails_c_arr_j
             exact ih.2 l rfl p hp ih2_precondition
-          . simp only [j_eq_idx, HSat.eval, Literal.instHSatLiteral, c_arr_idx_eq_false] at p_entails_c_arr_j
-            simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at hp
+          . simp only [j_eq_idx, (· ⊨ ·), c_arr_idx_eq_false] at p_entails_c_arr_j
+            simp only [(· ⊨ ·), Bool.not_eq_true] at hp
             specialize hp c_arr[idx.1].1
             simp (config := { decide := true }) only [p_entails_c_arr_j, decide_True, heq] at hp
       . next heq =>
@@ -518,8 +517,8 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
             have ih2_precondition : ∃ i : Fin c_arr.size, i.val < idx.val ∧ (p ⊨ c_arr[i]) :=
               (Exists.intro j ∘ And.intro j_lt_idx) p_entails_c_arr_j
             exact ih.2 l rfl p hp ih2_precondition
-          . simp only [j_eq_idx, HSat.eval, Literal.instHSatLiteral, c_arr_idx_eq_true] at p_entails_c_arr_j
-            simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true] at hp
+          . simp only [j_eq_idx, (· ⊨ ·), c_arr_idx_eq_true] at p_entails_c_arr_j
+            simp only [(· ⊨ ·), Bool.not_eq_true] at hp
             specialize hp c_arr[idx.1].1
             simp (config := { decide := true }) only [p_entails_c_arr_j, decide_True, heq] at hp
       . simp only at h
@@ -550,10 +549,9 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
     rcases h1 with h1 | h1
     . apply Or.inl
       intro pc
-      simp only [Clause.instHSat, HSat.eval.eq_1, List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
+      simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
       rcases pc with ⟨i, ⟨pc1, pc2⟩ | ⟨pc1, pc2⟩⟩
-      . simp only [instClausePosFinDefaultClause.eq_1, Clause.toList.eq_1, DefaultClause.toList] at pc1
-        simp only [Literal.instHSatLiteral.eq_1] at pc2
+      . simp only [Clause.toList, DefaultClause.toList] at pc1
         rw [c_clause_rw] at pc1
         have idx_exists : ∃ idx : Fin c_arr.size, c_arr[idx] = (i, false) := by
           rcases List.get_of_mem pc1 with ⟨idx, hidx⟩
@@ -563,8 +561,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
         specialize h1 idx idx.2
         rw [hidx] at h1
         exact h1 $ of_decide_eq_true pc2
-      . simp only [instClausePosFinDefaultClause.eq_1, Clause.toList.eq_1, DefaultClause.toList] at pc1
-        simp only [Literal.instHSatLiteral.eq_1] at pc2
+      . simp only [Clause.toList, DefaultClause.toList] at pc1
         rw [c_clause_rw] at pc1
         have idx_exists : ∃ idx : Fin c_arr.size, c_arr[idx] = (i, true) := by
           rcases List.get_of_mem pc1 with ⟨idx, hidx⟩
@@ -577,10 +574,9 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
     . exact Or.inr h1
   . intro l hl p hp pc
     apply h2 l hl p hp
-    simp only [Clause.instHSat, HSat.eval.eq_1, List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
+    simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
     rcases pc with ⟨i, ⟨pc1, pc2⟩ | ⟨pc1, pc2⟩⟩
-    . simp only [instClausePosFinDefaultClause.eq_1, Clause.toList.eq_1, DefaultClause.toList] at pc1
-      simp only [Literal.instHSatLiteral.eq_1] at pc2
+    . simp only [Clause.toList, DefaultClause.toList] at pc1
       rw [c_clause_rw] at pc1
       have idx_exists : ∃ idx : Fin c_arr.size, c_arr[idx] = (i, false) := by
         rcases List.get_of_mem pc1 with ⟨idx, hidx⟩
@@ -589,10 +585,9 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
       rcases idx_exists with ⟨idx, hidx⟩
       apply Exists.intro idx ∘ And.intro idx.2
       rw [hidx]
-      simp only [Literal.instHSatLiteral.eq_1, HSat.eval.eq_1]
+      simp only [(· ⊨ ·)]
       exact of_decide_eq_true pc2
-    . simp only [instClausePosFinDefaultClause.eq_1, Clause.toList.eq_1, DefaultClause.toList] at pc1
-      simp only [Literal.instHSatLiteral.eq_1] at pc2
+    . simp only [Clause.toList, DefaultClause.toList] at pc1
       rw [c_clause_rw] at pc1
       have idx_exists : ∃ idx : Fin c_arr.size, c_arr[idx] = (i, true) := by
         rcases List.get_of_mem pc1 with ⟨idx, hidx⟩
@@ -601,7 +596,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
       rcases idx_exists with ⟨idx, hidx⟩
       apply Exists.intro idx ∘ And.intro idx.2
       rw [hidx]
-      simp only [Literal.instHSatLiteral.eq_1, HSat.eval.eq_1]
+      simp only [(· ⊨ ·)]
       exact of_decide_eq_true pc2
 
 theorem reducedToEmpty_entails_incompatible {n : Nat} (c : DefaultClause n) (assignment : Array Assignment) :
@@ -642,10 +637,9 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
         rcases reducedToEmpty_entails_incompatible c acc.1 heq p with pc | pacc
         . apply Or.inr
           intro pf
-          simp only [instHSatPosFinDefaultFormula, formulaHSat, HSat.eval.eq_1, List.all_eq_true] at pf
+          simp only [(· ⊨ ·), List.all_eq_true] at pf
           specialize pf c c_in_f
-          simp only [HSat.eval, Clause.instHSat] at pc
-          simp only [Clause.instHSat] at pf
+          simp only [(· ⊨ ·)] at pc
           exact pc $ of_decide_eq_true pf
         . exact Or.inl pacc
       . next l b heq =>
@@ -656,11 +650,10 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           intro p pf
           have pacc := h1 p pf
           have pc : p ⊨ c := by
-            simp only [instHSatPosFinDefaultFormula, formulaHSat, HSat.eval.eq_1, List.all_eq_true] at pf
-            rw [HSat.eval, Clause.instHSat]
+            simp only [(· ⊨ ·), List.all_eq_true] at pf
             exact of_decide_eq_true $ pf c c_in_f
           have plb := reducedToUnit_entails_limplies c acc.1 ⟨l, b⟩ heq p pacc pc
-          simp only [instHSatPosFinArrayAssignment, Bool.not_eq_true]
+          simp only [(· ⊨ ·), Bool.not_eq_true]
           intro i
           specialize pacc i
           simp only [Bool.not_eq_true] at pacc
@@ -681,12 +674,12 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
                 exact pacc
               . exfalso -- hb, pi, l_eq_i, and plb are incompatible
                 simp only [Bool.not_eq_true] at hb
-                simp only [Literal.instHSatLiteral.eq_1, hb, HSat.eval.eq_1, Subtype.ext l_eq_i, pi] at plb
+                simp only [(· ⊨ ·), hb, Subtype.ext l_eq_i, pi] at plb
             . simp only [Bool.not_eq_true] at pi
               simp only [pi, decide_True]
               simp only [pi, decide_True] at pacc
               by_cases hb : b
-              . simp only [Literal.instHSatLiteral.eq_1, hb, HSat.eval.eq_1, Subtype.ext l_eq_i, pi] at plb
+              . simp only [(· ⊨ ·), hb, Subtype.ext l_eq_i, pi] at plb
               . simp only [Bool.not_eq_true] at hb
                 simp only [hasAssignment, addAssignment, hb, ite_false, ite_true, hasPos_of_addNeg]
                 simp only [hasAssignment, ite_true] at pacc
@@ -727,7 +720,7 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
   by_cases pc : p ⊨ c
   . exact pc
   . exfalso -- Derive contradiction from pc, pf, and fc_unsat
-    simp only [Clause.instHSat, HSat.eval.eq_1, List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists, not_or,
+    simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists, not_or,
       not_and, Bool.not_eq_true] at pc
     simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Misc.not_forall, exists_prop] at fc_unsat
     rcases fc_unsat with ⟨unsat_c, unsat_c_in_fc, p_unsat_c⟩
@@ -738,31 +731,30 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
       rcases v_in_neg_c with ⟨v', ⟨_, v'_eq_v⟩ | ⟨v'_in_c, v'_eq_v⟩⟩
       . simp only [negateLiteral, Bool.not_false, Prod.mk.injEq, and_false] at v'_eq_v
       . simp only [negateLiteral, Bool.not_true, Prod.mk.injEq, and_true] at v'_eq_v
-        simp only [Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
+        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
           unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
         rw [Clause.unit_eq] at p_unsat_c
         simp only [List.mem_singleton, forall_const, Prod.mk.injEq, and_false, false_implies, and_true] at p_unsat_c
-        simp only [Literal.instHSatLiteral, Bool.not_eq_false] at p_unsat_c
+        simp only [(· ⊨ ·), Bool.not_eq_false] at p_unsat_c
         specialize pc v
         rw [v'_eq_v] at v'_in_c
         have pv := pc.2 v'_in_c
-        simp only [Literal.instHSatLiteral, Bool.not_eq_true] at pv
+        simp only [(· ⊨ ·), Bool.not_eq_true] at pv
         simp only [p_unsat_c] at pv
         cases pv
     . simp only [negate_iff, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨v'_in_c, v'_eq_v⟩ | ⟨_, v'_eq_v⟩⟩
       . simp only [negateLiteral, Bool.not_false, Prod.mk.injEq, and_true] at v'_eq_v
-        simp only [Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
+        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
           unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
         rw [Clause.unit_eq] at p_unsat_c
         simp only [List.mem_singleton, forall_const, Prod.mk.injEq, and_false, false_implies, and_true] at p_unsat_c
-        simp only [Literal.instHSatLiteral, Bool.not_eq_false] at p_unsat_c
         specialize pc v
         rw [v'_eq_v] at v'_in_c
         have pv := pc.1 v'_in_c
-        simp only [Literal.instHSatLiteral, Bool.not_eq_true] at pv
+        simp only [(· ⊨ ·), Bool.not_eq_true] at pv
         simp only [p_unsat_c] at pv
         cases pv
       . simp only [negateLiteral, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
