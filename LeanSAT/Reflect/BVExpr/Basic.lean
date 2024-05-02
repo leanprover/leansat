@@ -5,9 +5,21 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Reflect.BoolExpr.Basic
 
+/--
+The variable definition used by the bitblaster.
+-/
 structure BVBit where
+  /--
+  The width of the BitVec variable.
+  -/
   {w : Nat}
+  /--
+  A numeric identifier for the BitVec variable.
+  -/
   var : Nat
+  /--
+  The which bit we take out of the BitVec variable by getLsb.
+  -/
   idx : Fin w
   deriving Hashable, DecidableEq, Repr
 
@@ -22,11 +34,25 @@ instance : Inhabited BVBit where
         idx := 0
     }
 
-
+/--
+All supported binary operations on `BVExpr`.
+-/
 inductive BVBinOp where
+/--
+Bitwise and.
+-/
 | and
+/--
+Bitwise or.
+-/
 | or
+/--
+Bitwise xor.
+-/
 | xor
+/--
+Addition.
+-/
 | add
 
 namespace BVBinOp
@@ -39,6 +65,9 @@ def toString : BVBinOp → String
 
 instance : ToString BVBinOp := ⟨toString⟩
 
+/--
+The denotational semantics for `BVBinOp`.
+-/
 def eval : BVBinOp → (BitVec w → BitVec w → BitVec w)
   | and => (· &&& ·)
   | or => (· ||| ·)
@@ -52,11 +81,21 @@ def eval : BVBinOp → (BitVec w → BitVec w → BitVec w)
 
 end BVBinOp
 
+/--
+All supported unary operators on `BVExpr`.
+-/
 inductive BVUnOp where
+/--
+Bitwise not.
+-/
 | not
--- shifting is "unary" because we only allow shifting by constant values for now.
--- for shift by arbitrary values we would need to implement and verify something like a barell
--- shifter
+/--
+Shifting left by a constant value.
+
+This operation has a dedicated constant representation as shiftLeft can take `Nat` as a shift amount.
+We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
+constant `Nat` value.
+-/
 | shiftLeftConst (n : Nat)
 
 namespace BVUnOp
@@ -67,6 +106,9 @@ def toString : BVUnOp → String
 
 instance : ToString BVUnOp := ⟨toString⟩
 
+/--
+The denotational semantics for `BVUnOp`.
+-/
 def eval : BVUnOp → (BitVec w → BitVec w)
   | not => (~~~ ·)
   | shiftLeftConst n => (· <<< n)
@@ -78,10 +120,25 @@ theorem eval_shiftLeftConst : eval (shiftLeftConst n) = ((· <<< n) : BitVec w �
 
 end BVUnOp
 
+/--
+All supported expressions involving `BitVec` and operations on them.
+-/
 inductive BVExpr (w : Nat) where
+/--
+A `BitVec` variable, referred to through an index.
+-/
 | var (idx : Nat) : BVExpr w
+/--
+A constant `BitVec` value.
+-/
 | const (val : BitVec w) : BVExpr w
+/--
+A binary operation on two `BVExpr`.
+-/
 | bin (lhs : BVExpr w) (op : BVBinOp) (rhs : BVExpr w) : BVExpr w
+/--
+A unary operation on two `BVExpr`.
+-/
 | un (op : BVUnOp) (operand : BVExpr w) : BVExpr w
 
 namespace BVExpr
@@ -94,16 +151,27 @@ def toString : BVExpr w → String
 
 instance : ToString (BVExpr w) := ⟨toString⟩
 
-def width (_expr : BVExpr w) : Nat := w
-
+/--
+Pack a `BitVec` with its width into a single parameter-less structure.
+-/
 structure PackedBitVec where
   {w : Nat}
   bv: BitVec w
 
+/--
+The notion of variable assignments for `BVExpr`.
+-/
 abbrev Assignment := List PackedBitVec
+
+/--
+Obtaining the value of a `BVExpr.var` from an `Assignment`.
+-/
 def Assignment.getD (assign : Assignment) (idx : Nat) : PackedBitVec :=
   List.getD assign idx ⟨BitVec.zero 0⟩
 
+/--
+The denotational semantics for `BVExpr`.
+-/
 def eval (assign : Assignment) : BVExpr w → BitVec w
   | .var idx =>
     let ⟨bv⟩ := assign.getD idx
@@ -129,8 +197,17 @@ theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) :
 
 end BVExpr
 
+/--
+Supported binary predicates on `BVExpr`.
+-/
 inductive BVBinPred where
+/--
+Equality.
+-/
 | eq
+/--
+Negated equality.
+-/
 | neq
 
 namespace BVBinPred
@@ -141,6 +218,9 @@ def toString : BVBinPred → String
 
 instance : ToString BVBinPred := ⟨toString⟩
 
+/--
+The denotational semantics for `BVBinPred`.
+-/
 def eval : BVBinPred → (BitVec w → BitVec w → Bool)
   | .eq => (· == ·)
   | .neq => (· != ·)
@@ -150,11 +230,20 @@ def eval : BVBinPred → (BitVec w → BitVec w → Bool)
 
 end BVBinPred
 
+/--
+Supported predicates on `BVExpr`.
+-/
 inductive BVPred where
+/--
+A binary predicate on `BVExpr`.
+-/
 | bin (lhs : BVExpr w) (op : BVBinPred) (rhs : BVExpr w)
 
 namespace BVPred
 
+/--
+Pack two `BVExpr` of equivalent width into one parameter-less structure.
+-/
 structure ExprPair where
   {w : Nat}
   lhs : BVExpr w
@@ -165,6 +254,9 @@ def toString : BVPred → String
 
 instance : ToString BVPred := ⟨toString⟩
 
+/--
+The denotational semantics for `BVPred`.
+-/
 def eval (assign : BVExpr.Assignment) : BVPred → Bool
   | bin lhs op rhs => op.eval (lhs.eval assign) (rhs.eval assign)
 
@@ -172,10 +264,16 @@ def eval (assign : BVExpr.Assignment) : BVPred → Bool
 
 end BVPred
 
+/--
+Boolean substructure of problems involving predicates on BitVec as atoms.
+-/
 abbrev BVLogicalExpr := BoolExpr BVPred
 
 namespace BVLogicalExpr
 
+/--
+The denotational semantics of boolean problems involving BitVec predicates as toms.
+-/
 def eval (assign : BVExpr.Assignment) (expr : BVLogicalExpr) : Bool :=
   BoolExpr.eval (·.eval assign) expr
 
@@ -184,7 +282,14 @@ def eval (assign : BVExpr.Assignment) (expr : BVLogicalExpr) : Bool :=
 @[simp] theorem eval_not : eval assign (.not x) = !eval assign x := rfl
 @[simp] theorem eval_gate : eval assign (.gate g x y) = g.eval (eval assign x) (eval assign y) := rfl
 
+/--
+Definitions of satisfiability on `BVLogicalExpr`.
+-/
 def sat (x : BVLogicalExpr) (assign : BVExpr.Assignment) : Prop := eval assign x = true
+
+/--
+Definitions of unsatisfiability on `BVLogicalExpr`.
+-/
 def unsat (x : BVLogicalExpr) : Prop := ∀ f, eval f x = false
 
 theorem sat_and {x y : BVLogicalExpr} {assign} (hx : sat x assign) (hy : sat y assign) : sat (.gate .and x y) assign :=
