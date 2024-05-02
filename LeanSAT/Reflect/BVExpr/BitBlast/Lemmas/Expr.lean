@@ -2,6 +2,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Const
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Var
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftLeft
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 
@@ -80,6 +81,13 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     cases op with
     | not => simp [go, ih, hidx]
     | shiftLeftConst => simp [go, ih, hidx]
+    | shiftRightConst =>
+      simp only [go, blastShiftRight_eq_eval_getLsb, ih, dite_eq_ite, Bool.if_false_right, eval_un,
+        BVUnOp.eval_shiftRightConst, BitVec.getLsb_ushiftRight, Bool.and_iff_right_iff_imp,
+        decide_eq_true_eq]
+      intro h
+      apply BitVec.lt_of_getLsb
+      assumption
 
 end bitblast
 

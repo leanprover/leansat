@@ -1,6 +1,7 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Var
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Const
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftLeft
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Add
 
 namespace BVExpr
@@ -102,6 +103,17 @@ where
           ⟨aig, s⟩,
           by
             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeftConst)
+            dsimp at heaig
+            assumption
+        ⟩
+      | .shiftRightConst distance =>
+        let res := bitblast.blastShiftRightConst eaig ⟨estream, distance⟩
+        let aig := res.aig
+        let s := res.stream
+        ⟨
+          ⟨aig, s⟩,
+          by
+            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRightConst)
             dsimp at heaig
             assumption
         ⟩
