@@ -97,12 +97,21 @@ We can obviously not bitblast a `Nat` but still want to support the case where t
 constant `Nat` value.
 -/
 | shiftLeftConst (n : Nat)
+/--
+Shifting right by a constant value.
+
+This operation has a dedicated constant representation as shiftRight can take `Nat` as a shift amount.
+We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
+constant `Nat` value.
+-/
+| shiftRightConst (n : Nat)
 
 namespace BVUnOp
 
 def toString : BVUnOp → String
   | not => "~"
   | shiftLeftConst n => s!"<< {n}"
+  | shiftRightConst n => s!">> {n}"
 
 instance : ToString BVUnOp := ⟨toString⟩
 
@@ -112,10 +121,16 @@ The denotational semantics for `BVUnOp`.
 def eval : BVUnOp → (BitVec w → BitVec w)
   | not => (~~~ ·)
   | shiftLeftConst n => (· <<< n)
+  | shiftRightConst n => (· >>> n)
 
 @[simp] theorem eval_not : eval .not = ((~~~ ·) : BitVec w → BitVec w) := by rfl
+
 @[simp]
 theorem eval_shiftLeftConst : eval (shiftLeftConst n) = ((· <<< n) : BitVec w → BitVec w) := by
+  rfl
+
+@[simp]
+theorem eval_shiftRightConst : eval (shiftRightConst n) = ((· >>> n) : BitVec w → BitVec w) := by
   rfl
 
 end BVUnOp

@@ -28,6 +28,16 @@ set_option trace.bv true in
 theorem unit_6 {x y : BitVec 256} : x + y = y + x := by
   bv_decide
 
+set_option trace.bv true in
+theorem unit_7 {x y : BitVec 256} : x >>> 257 = y >>> 258 := by
+  bv_decide
+
+-- This demonstrates we correctly abstract shifts of arbitrary width as atoms instead of giving up.
+set_option trace.bv true in
+theorem unit_8 {x y : BitVec 256} : x >>> y = x >>> y := by
+  bv_decide
+
+
 theorem bv_axiomCheck (x : BitVec 1) : x = x := by bv_decide
 
 /--
