@@ -8,7 +8,7 @@ structure ShiftTarget (aig : AIG BVBit) (w : Nat) where
   stream : AIG.RefStream aig w
   distance : Nat
 
-def blastShiftLeft (aig : AIG BVBit) (target : ShiftTarget aig w)
+def blastShiftLeftConst (aig : AIG BVBit) (target : ShiftTarget aig w)
     : AIG.RefStreamEntry BVBit w :=
   let ⟨input, distance⟩ := target
   go aig input distance 0 (by omega) .empty
@@ -35,7 +35,7 @@ where
     ⟨aig, hcurr ▸ s⟩
   termination_by w - curr
 
-theorem blastShiftLeft.go_le_size (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem blastShiftLeftConst.go_le_size (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : aig.decls.size ≤ (go aig input distance curr hcurr s).aig.decls.size := by
   unfold go
@@ -49,7 +49,7 @@ theorem blastShiftLeft.go_le_size (aig : AIG BVBit) (distance : Nat) (input : AI
   . simp
 termination_by w - curr
 
-theorem blastShiftLeft.go_decl_eq (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem blastShiftLeftConst.go_decl_eq (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (h1) (h2),
         (go aig input distance curr hcurr s).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
@@ -60,25 +60,25 @@ theorem blastShiftLeft.go_decl_eq (aig : AIG BVBit) (distance : Nat) (input : AI
     split at hgo
     . rw [← hgo]
       intro idx h1 h2
-      rw [blastShiftLeft.go_decl_eq]
+      rw [blastShiftLeftConst.go_decl_eq]
       rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
       apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
       assumption
     . rw [← hgo]
       intro idx h1 h2
-      rw [blastShiftLeft.go_decl_eq]
+      rw [blastShiftLeftConst.go_decl_eq]
   . simp [← hgo]
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator BVBit ShiftTarget blastShiftLeft where
+instance : AIG.LawfulStreamOperator BVBit ShiftTarget blastShiftLeftConst where
   le_size := by
     intros
-    unfold blastShiftLeft
-    apply blastShiftLeft.go_le_size
+    unfold blastShiftLeftConst
+    apply blastShiftLeftConst.go_le_size
   decl_eq := by
     intros
-    unfold blastShiftLeft
-    apply blastShiftLeft.go_decl_eq
+    unfold blastShiftLeftConst
+    apply blastShiftLeftConst.go_decl_eq
 
 end bitblast
 end BVExpr

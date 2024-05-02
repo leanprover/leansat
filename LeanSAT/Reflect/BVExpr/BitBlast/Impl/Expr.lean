@@ -94,14 +94,14 @@ where
               dsimp at heaig
               omega
           ⟩
-      | .shiftLeft distance =>
-        let res := bitblast.blastShiftLeft eaig ⟨estream, distance⟩
+      | .shiftLeftConst distance =>
+        let res := bitblast.blastShiftLeftConst eaig ⟨estream, distance⟩
         let aig := res.aig
         let s := res.stream
         ⟨
           ⟨aig, s⟩,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeft)
+            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeftConst)
             dsimp at heaig
             assumption
         ⟩

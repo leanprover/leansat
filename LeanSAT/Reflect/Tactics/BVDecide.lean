@@ -31,7 +31,7 @@ instance : ToExpr BVUnOp where
   toExpr x :=
     match x with
     | .not => mkConst ``BVUnOp.not
-    | .shiftLeft n => mkApp (mkConst ``BVUnOp.shiftLeft) (toExpr n)
+    | .shiftLeftConst n => mkApp (mkConst ``BVUnOp.shiftLeftConst) (toExpr n)
   toTypeExpr := mkConst ``BVUnOp
 
 instance : ToExpr BVBinOp where
@@ -220,12 +220,12 @@ partial def of (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     -- Either the shift values are constant or we abstract the entire term as atoms
     let some distance ← getNatOrBvValue? β distanceExpr | return ← ofAtom x
     let some inner ← of innerExpr | return none
-    let bvExpr : BVExpr w := .un (.shiftLeft distance) inner.bvExpr
+    let bvExpr : BVExpr w := .un (.shiftLeftConst distance) inner.bvExpr
     let expr :=
       mkApp3
         (mkConst ``BVExpr.un)
         (toExpr w)
-        (mkApp (mkConst ``BVUnOp.shiftLeft) (toExpr distance))
+        (mkApp (mkConst ``BVUnOp.shiftLeftConst) (toExpr distance))
         inner.expr
     let congrProof :=
       mkApp

@@ -79,7 +79,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
   | un op expr ih =>
     cases op with
     | not => simp [go, ih, hidx]
-    | shiftLeft => simp [go, ih, hidx]
+    | shiftLeftConst => simp [go, ih, hidx]
 
 end bitblast
 
