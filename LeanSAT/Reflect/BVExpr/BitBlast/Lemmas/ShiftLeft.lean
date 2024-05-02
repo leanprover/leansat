@@ -5,7 +5,7 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
-namespace blastShiftLeft
+namespace blastShiftLeftConst
 
 theorem go_getRef_aux (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
@@ -129,14 +129,15 @@ theorem go_eq_eval_getLsb (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStr
   . omega
 termination_by w - curr
 
-end blastShiftLeft
+end blastShiftLeftConst
+
 @[simp]
 theorem blastShiftLeft_eq_eval_getLsb (aig : AIG BVBit) (target : ShiftTarget aig w)
     (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
-          (blastShiftLeft aig target).aig,
-          (blastShiftLeft aig target).stream.getRef idx hidx,
+          (blastShiftLeftConst aig target).aig,
+          (blastShiftLeftConst aig target).stream.getRef idx hidx,
           assign.toAIGAssignment
         ⟧
           =
@@ -146,8 +147,8 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG BVBit) (target : ShiftTarget ai
           ⟦aig, target.stream.getRef (idx - target.distance) (by omega), assign.toAIGAssignment ⟧
         := by
   intros
-  unfold blastShiftLeft
-  apply blastShiftLeft.go_eq_eval_getLsb
+  unfold blastShiftLeftConst
+  apply blastShiftLeftConst.go_eq_eval_getLsb
   omega
 
 end bitblast
