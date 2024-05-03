@@ -48,9 +48,11 @@ instance : ToExpr (BVExpr w) where
   toExpr x := go x
   toTypeExpr := mkApp (mkConst ``BVExpr) (toExpr w)
 where
-  go : BVExpr w → Expr
+  go {w : Nat} : BVExpr w → Expr
 | .var idx => mkApp2 (mkConst ``BVExpr.var) (toExpr w) (toExpr idx)
 | .const val => mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr val)
+| .zeroExtend (w := oldWidth) val inner =>
+  mkApp3 (mkConst ``BVExpr.zeroExtend) (toExpr oldWidth) (toExpr val) (go inner)
 | .bin lhs op rhs => mkApp4 (mkConst ``BVExpr.bin) (toExpr w) (go lhs) (toExpr op) (go rhs)
 | .un op operand => mkApp3 (mkConst ``BVExpr.un) (toExpr w) (toExpr op) (go operand)
 
@@ -132,11 +134,12 @@ end M
 /--
 A reified version of an `Expr` representing a `BVExpr`.
 -/
-structure ReifiedBVExpr (w : Nat) where
+structure ReifiedBVExpr where
+  width : Nat
   /--
   The reified expression.
   -/
-  bvExpr : BVExpr w
+  bvExpr : BVExpr width
   /--
   A proof that `bvExpr.eval atomsAssignment = originalBVExpr`.
   -/
@@ -157,13 +160,13 @@ def mkBVRefl (w : Nat) (expr : Expr) : Expr :=
    (mkApp (mkConst ``BitVec) (toExpr w))
    expr
 
-def mkAtom (e : Expr) (width : Nat) : M (ReifiedBVExpr width) := do
+def mkAtom (e : Expr) (width : Nat) : M ReifiedBVExpr := do
   let ident ← M.lookup e width
   let expr := mkApp2 (mkConst ``BVExpr.var) (toExpr width) (toExpr ident)
   let proof := do
     let evalExpr ← mkEvalExpr width expr
     return mkBVRefl width evalExpr
-  return ⟨.var ident, proof, expr⟩
+  return ⟨width, .var ident, proof, expr⟩
 
 theorem and_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
     lhs' &&& rhs' = lhs &&& rhs' := by
@@ -190,6 +193,10 @@ theorem add_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = 
     lhs' + rhs' = lhs + rhs' := by
   simp[*]
 
+theorem zeroExtend_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
+    BitVec.zeroExtend n x = BitVec.zeroExtend n x' := by
+  simp[*]
+
 def  getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
@@ -202,7 +209,7 @@ def  getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
 /--
 Reify an `Expr` that's a `BitVec`.
 -/
-partial def of {w : Nat} (x : Expr) : M (Option (ReifiedBVExpr w)) := do
+partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
   match_expr x with
   | BitVec.ofNat _ _ => goBvLit x
   | OfNat.ofNat _ _ _ => goBvLit x
@@ -216,10 +223,10 @@ partial def of {w : Nat} (x : Expr) : M (Option (ReifiedBVExpr w)) := do
     binaryReflection lhsExpr rhsExpr .add ``add_congr
   | Complement.complement _ _ innerExpr =>
     let some inner ← of innerExpr | return none
-    let bvExpr : BVExpr w := .un .not inner.bvExpr
-    let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr w) (mkConst ``BVUnOp.not) inner.expr
+    let bvExpr := .un .not inner.bvExpr
+    let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr inner.width) (mkConst ``BVUnOp.not) inner.expr
     let proof := unaryCongrProof inner innerExpr (mkConst ``not_congr)
-    return some ⟨bvExpr, proof, expr⟩
+    return some ⟨inner.width, bvExpr, proof, expr⟩
   | HShiftLeft.hShiftLeft _ β _ _ innerExpr distanceExpr =>
     shiftConstReflection
       β
@@ -236,28 +243,41 @@ partial def of {w : Nat} (x : Expr) : M (Option (ReifiedBVExpr w)) := do
       .shiftRightConst
       ``BVUnOp.shiftRightConst
       ``shiftRight_congr
+  | BitVec.zeroExtend _ newWidthExpr innerExpr =>
+    let some newWidth ← getNatValue? newWidthExpr | return ← ofAtom x
+    let some inner ← of innerExpr | return none
+    let bvExpr := .zeroExtend (w := inner.width) newWidth inner.bvExpr
+    let expr :=
+      mkApp3
+        (mkConst ``BVExpr.zeroExtend)
+        (toExpr inner.width)
+        newWidthExpr
+        inner.expr
+    let proof := do
+      let innerEval ← mkEvalExpr inner.width inner.expr
+      let innerProof ← inner.evalsAtAtoms
+      return mkApp5 (mkConst ``zeroExtend_congr) newWidthExpr (toExpr inner.width) innerExpr innerEval innerProof
+    return some ⟨newWidth, bvExpr, proof, expr⟩
   | _ => ofAtom x
 where
-  ofAtom {w : Nat} (x : Expr) : M (Option (ReifiedBVExpr w)) := do
+  ofAtom (x : Expr) : M (Option ReifiedBVExpr) := do
     let t ← instantiateMVars (← whnfR (← inferType x))
     let_expr BitVec widthExpr := t | return none
     let some width ← getNatValue? widthExpr | return none
-    if h:width = w then
-      h ▸ mkAtom x width
-    else
-      panic! "Attempt to reify ill-typed BitVec value"
+    let atom ← mkAtom x width
+    return some atom
 
-  shiftConstReflection {w : Nat} (β : Expr) (distanceExpr : Expr) (innerExpr : Expr)
+  shiftConstReflection (β : Expr) (distanceExpr : Expr) (innerExpr : Expr)
         (shiftOp : Nat → BVUnOp) (shiftOpName : Name) (congrThm : Name)
-        : M (Option (ReifiedBVExpr w)) := do
+        : M (Option ReifiedBVExpr) := do
     -- Either the shift values are constant or we abstract the entire term as atoms
     let some distance ← getNatOrBvValue? β distanceExpr | return ← ofAtom x
     let some inner ← of innerExpr | return none
-    let bvExpr : BVExpr w := .un (shiftOp distance) inner.bvExpr
+    let bvExpr : BVExpr inner.width := .un (shiftOp distance) inner.bvExpr
     let expr :=
       mkApp3
         (mkConst ``BVExpr.un)
-        (toExpr w)
+        (toExpr inner.width)
         (mkApp (mkConst shiftOpName) (toExpr distance))
         inner.expr
     let congrProof :=
@@ -265,40 +285,40 @@ where
         (mkConst congrThm)
         (toExpr distance)
     let proof := unaryCongrProof inner innerExpr congrProof
-    return some ⟨bvExpr, proof, expr⟩
+    return some ⟨inner.width, bvExpr, proof, expr⟩
 
-  binaryReflection {w : Nat} (lhsExpr rhsExpr : Expr) (op : BVBinOp) (congrThm : Name)
-      : M (Option (ReifiedBVExpr w)) := do
+  binaryReflection (lhsExpr rhsExpr : Expr) (op : BVBinOp) (congrThm : Name)
+      : M (Option ReifiedBVExpr) := do
     let some lhs ← of lhsExpr | return none
     let some rhs ← of rhsExpr | return none
-    let bvExpr := .bin lhs.bvExpr op rhs.bvExpr
-    let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr w) lhs.expr (toExpr op) rhs.expr
-    let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr congrThm
-    return some ⟨bvExpr, proof, expr⟩
+    if h : rhs.width = lhs.width then
+      let bvExpr : BVExpr lhs.width := .bin lhs.bvExpr op (h ▸ rhs.bvExpr)
+      let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr lhs.width) lhs.expr (toExpr op) rhs.expr
+      let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr congrThm
+      return some ⟨lhs.width, bvExpr, proof, expr⟩
+    else
+      return none
 
-  binaryCongrProof {w : Nat} (lhs rhs : ReifiedBVExpr w) (lhsExpr rhsExpr : Expr) (congrThm : Name) : M Expr := do
-    let lhsEval ← mkEvalExpr w lhs.expr
+  binaryCongrProof (lhs rhs : ReifiedBVExpr) (lhsExpr rhsExpr : Expr) (congrThm : Name) : M Expr := do
+    let lhsEval ← mkEvalExpr lhs.width lhs.expr
     let lhsProof ← lhs.evalsAtAtoms
     let rhsProof ← rhs.evalsAtAtoms
-    let rhsEval ← mkEvalExpr w rhs.expr
-    return mkApp7 (mkConst congrThm) (toExpr w) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
+    let rhsEval ← mkEvalExpr rhs.width rhs.expr
+    return mkApp7 (mkConst congrThm) (toExpr lhs.width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
 
-  unaryCongrProof {w : Nat} (inner : ReifiedBVExpr w) (innerExpr : Expr) (congrProof : Expr) : M Expr := do
-    let innerEval ← mkEvalExpr w inner.expr
+  unaryCongrProof (inner : ReifiedBVExpr) (innerExpr : Expr) (congrProof : Expr) : M Expr := do
+    let innerEval ← mkEvalExpr inner.width inner.expr
     let innerProof ← inner.evalsAtAtoms
-    return mkApp4 congrProof (toExpr w) innerExpr innerEval innerProof
+    return mkApp4 congrProof (toExpr inner.width) innerExpr innerEval innerProof
 
-  goBvLit {w : Nat} (x : Expr) : M (Option (ReifiedBVExpr w)) := do
+  goBvLit (x : Expr) : M (Option ReifiedBVExpr) := do
     let some ⟨width, bvVal⟩ ← getBitVecValue? x | return none
-    if h:width = w then
-      let bvExpr := .const (h ▸ bvVal)
-      let expr := mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr bvVal)
-      let proof := do
-        let evalExpr ← mkEvalExpr w expr
-        return mkBVRefl w evalExpr
-      return some ⟨bvExpr, proof, expr⟩
-    else
-      panic! "Attempt to reify ill-typed BitVec literal"
+    let bvExpr : BVExpr width := .const bvVal
+    let expr := mkApp2 (mkConst ``BVExpr.const) (toExpr width) (toExpr bvVal)
+    let proof := do
+      let evalExpr ← mkEvalExpr width expr
+      return mkBVRefl width evalExpr
+    return some ⟨width, bvExpr, proof, expr⟩
 
 end ReifiedBVExpr
 
@@ -336,6 +356,11 @@ theorem ne_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = r
 def mkEvalExpr (expr : Expr) : M Expr := do
   return mkApp2 (mkConst ``BVPred.eval) (← M.atomsAssignment) expr
 
+structure EqPair where
+  fst : ReifiedBVExpr
+  snd : ReifiedBVExpr
+  heq : fst.width = snd.width
+
 /--
 Reify an `Expr` that is a proof of a predicate about `BitVec`.
 -/
@@ -345,47 +370,47 @@ def of (h : Expr) : M (Option ReifiedBVPred) := do
   -- TODO: support negations other than equality
   | Not w =>
     match_expr w with
-    | Eq α lhsExpr rhsExpr =>
-      let_expr BitVec widthExpr := α | return none
-      let some ⟨width, lhs, rhs⟩ ← extractEq widthExpr lhsExpr rhsExpr | return none
-      let bvExpr := .bin (w := width) lhs.bvExpr .neq rhs.bvExpr
-      let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.neq) rhs.expr
+    | Eq _ lhsExpr rhsExpr =>
+      let some ⟨lhs, rhs, heq⟩ ← extractEq lhsExpr rhsExpr | return none
+      let bvExpr := .bin (w := lhs.width) lhs.bvExpr .neq (heq ▸ rhs.bvExpr)
+      let expr := mkApp4 (mkConst ``BVPred.bin) (toExpr lhs.width) lhs.expr (mkConst ``BVBinPred.neq) rhs.expr
       let proof := do
-        let lhsEval ← ReifiedBVExpr.mkEvalExpr width lhs.expr
+        let lhsEval ← ReifiedBVExpr.mkEvalExpr lhs.width lhs.expr
         let lhsProof ← lhs.evalsAtAtoms
-        let rhsEval ← ReifiedBVExpr.mkEvalExpr width rhs.expr
+        let rhsEval ← ReifiedBVExpr.mkEvalExpr rhs.width rhs.expr
         let rhsProof ← rhs.evalsAtAtoms
         let neqProof :=
-          mkApp8 (mkConst ``ne_congr) (toExpr width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof h
+          mkApp8 (mkConst ``ne_congr) (toExpr lhs.width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof h
         return mkApp4
           (mkConst ``bne_eq_true_of_ne)
-          (toExpr width)
+          (toExpr lhs.width)
           lhsEval
           rhsEval
           neqProof
       return some ⟨bvExpr, proof, expr⟩
     | _ => return none
-  | Eq α lhsExpr rhsExpr =>
-    let_expr BitVec widthExpr := α | return none
-    let some ⟨width, lhs, rhs⟩ ← extractEq widthExpr lhsExpr rhsExpr | return none
-    let bvExpr := .bin (w := width) lhs.bvExpr .eq rhs.bvExpr
-    let expr := mkApp4 (mkConst ``BVPred.bin) widthExpr lhs.expr (mkConst ``BVBinPred.eq) rhs.expr
+  | Eq _ lhsExpr rhsExpr =>
+    let some ⟨lhs, rhs, heq⟩ ← extractEq lhsExpr rhsExpr | return none
+    let bvExpr := .bin (w := lhs.width) lhs.bvExpr .eq (heq ▸ rhs.bvExpr)
+    let expr := mkApp4 (mkConst ``BVPred.bin) (toExpr lhs.width) lhs.expr (mkConst ``BVBinPred.eq) rhs.expr
     let proof := do
-      let lhsEval ← ReifiedBVExpr.mkEvalExpr width lhs.expr
+      let lhsEval ← ReifiedBVExpr.mkEvalExpr lhs.width lhs.expr
       let lhsProof ← lhs.evalsAtAtoms
-      let rhsEval ← ReifiedBVExpr.mkEvalExpr width rhs.expr
+      let rhsEval ← ReifiedBVExpr.mkEvalExpr rhs.width rhs.expr
       let rhsProof ← rhs.evalsAtAtoms
       let eqProof :=
-        mkApp8 (mkConst ``eq_congr) (toExpr width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof h
-      return mkApp4 (mkConst ``beq_eq_true_of_eq) (toExpr width) lhsEval rhsEval eqProof
+        mkApp8 (mkConst ``eq_congr) (toExpr lhs.width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof h
+      return mkApp4 (mkConst ``beq_eq_true_of_eq) (toExpr lhs.width) lhsEval rhsEval eqProof
     return some ⟨bvExpr, proof, expr⟩
   | _ => return none
 where
-  extractEq (widthExpr lhsExpr rhsExpr : Expr) : M (Option ((w : Nat) × ReifiedBVExpr w × ReifiedBVExpr w)) := do
-    let some width ← getNatValue? widthExpr | return none
+  extractEq (lhsExpr rhsExpr : Expr) : M (Option EqPair) := do
     let some lhs ← ReifiedBVExpr.of lhsExpr | return none
     let some rhs ← ReifiedBVExpr.of rhsExpr | return none
-    return some ⟨width, lhs, rhs⟩
+    if h:lhs.width = rhs.width then
+      return some ⟨lhs, rhs, h⟩
+    else
+      return none
 
 end ReifiedBVPred
 

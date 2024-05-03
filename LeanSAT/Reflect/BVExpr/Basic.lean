@@ -138,7 +138,7 @@ end BVUnOp
 /--
 All supported expressions involving `BitVec` and operations on them.
 -/
-inductive BVExpr (w : Nat) where
+inductive BVExpr : Nat → Type where
 /--
 A `BitVec` variable, referred to through an index.
 -/
@@ -147,6 +147,7 @@ A `BitVec` variable, referred to through an index.
 A constant `BitVec` value.
 -/
 | const (val : BitVec w) : BVExpr w
+| zeroExtend (v : Nat) (expr : BVExpr w) : BVExpr v
 /--
 A binary operation on two `BVExpr`.
 -/
@@ -161,6 +162,7 @@ namespace BVExpr
 def toString : BVExpr w → String
   | .var idx => s!"var{idx}"
   | .const val => ToString.toString val
+  | .zeroExtend v expr => s!"(zext {v} {expr.toString})"
   | .bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
   | .un op operand => s!"({op.toString} {toString operand})"
 
@@ -192,6 +194,7 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
     let ⟨bv⟩ := assign.getD idx
     bv.truncate w
   | .const val => val
+  | .zeroExtend v expr => BitVec.zeroExtend v (eval assign expr)
   | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
   | .un op operand => op.eval (eval assign operand)
 
@@ -201,6 +204,9 @@ theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.tr
 
 @[simp]
 theorem eval_const : eval assign (.const val) = val := by rfl
+
+@[simp]
+theorem eval_zeroExtend : eval assign (.zeroExtend v expr) = BitVec.zeroExtend v (eval assign expr) := by rfl
 
 @[simp]
 theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rhs.eval assign) := by
