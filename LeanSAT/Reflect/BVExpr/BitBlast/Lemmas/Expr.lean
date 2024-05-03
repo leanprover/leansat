@@ -4,6 +4,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Var
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ZeroExtend
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 
 open AIG
@@ -42,6 +43,11 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     simp [go, blastConst_eq_eval_getLsb]
   | var =>
     simp [go, hidx, blastVar_eq_eval_getLsb]
+  | zeroExtend v inner ih =>
+    simp only [go, blastZeroExtend_eq_eval_getLsb, ih, dite_eq_ite, Bool.if_false_right,
+      eval_zeroExtend, BitVec.getLsb_zeroExtend, hidx, decide_True, Bool.true_and,
+      Bool.and_iff_right_iff_imp, decide_eq_true_eq]
+    apply BitVec.lt_of_getLsb
   | bin lhs op rhs lih rih =>
     cases op with
     | and =>

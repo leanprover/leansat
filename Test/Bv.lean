@@ -37,6 +37,13 @@ set_option trace.bv true in
 theorem unit_8 {x y : BitVec 256} : x >>> y = x >>> y := by
   bv_decide
 
+set_option trace.bv true in
+theorem unit_9 {x : BitVec 256} : x.zeroExtend 128 = x.zeroExtend 128 := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_10 {x : BitVec 256} : (x.zeroExtend 512).zeroExtend 128 = x.zeroExtend 128 := by
+  bv_decide
 
 theorem bv_axiomCheck (x : BitVec 1) : x = x := by bv_decide
 

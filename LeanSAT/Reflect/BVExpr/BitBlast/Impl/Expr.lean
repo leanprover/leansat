@@ -3,13 +3,14 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Const
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Add
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ZeroExtend
 
 namespace BVExpr
 
 def bitblast (aig : AIG BVBit) (expr : BVExpr w) : AIG.RefStreamEntry BVBit w :=
   go aig expr |>.val
 where
-  go (aig : AIG BVBit) (expr : BVExpr w) : AIG.ExtendingRefStreamEntry aig w :=
+  go {w : Nat} (aig : AIG BVBit) (expr : BVExpr w) : AIG.ExtendingRefStreamEntry aig w :=
     match expr with
     | .var a =>
       let res := bitblast.blastVar aig ⟨a⟩
@@ -28,6 +29,18 @@ where
         ⟨aig, s⟩,
         by
           apply AIG.LawfulStreamOperator.le_size (f := bitblast.blastConst)
+      ⟩
+    | .zeroExtend (w := w) v inner =>
+      let ⟨⟨eaig, estream⟩, heaig⟩ := go aig inner
+      let res := bitblast.blastZeroExtend eaig ⟨w, estream⟩
+      let aig := res.aig
+      let s := res.stream
+      ⟨
+        ⟨aig, s⟩,
+        by
+          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastZeroExtend)
+          dsimp at heaig
+          assumption
       ⟩
     | .bin lhs op rhs =>
       let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
@@ -142,8 +155,22 @@ theorem bitblast.go_decl_eq? (aig : AIG BVBit) (expr : BVExpr w)
     . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastConst)
       assumption
     . assumption
+  | zeroExtend w inner ih =>
+      dsimp [go]
+      rw [Array.getElem?_lt, Array.getElem?_lt]
+      rw [AIG.LawfulStreamOperator.decl_eq]
+      rw [← Array.getElem?_lt, ← Array.getElem?_lt]
+      rw [ih]
+      . assumption
+      . assumption
+      . apply Nat.lt_of_lt_of_le
+        . exact hidx
+        . exact (go aig inner).property
+      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size
+        apply Nat.lt_of_lt_of_le
+        . exact hidx
+        . exact (go aig inner).property
   | bin lhs op rhs lih rih =>
-    -- TODO: Proof dedup
     cases op
     all_goals
       dsimp [go]
