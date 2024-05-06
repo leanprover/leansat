@@ -45,32 +45,24 @@ theorem blastVar_le_size {aig : AIG BVBit} (var : BVVar w)
   unfold blastVar
   apply blastVar.go_le_size
 
-theorem blastVar.go_decl_eq? {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (a : Nat)
-    (hi : i ≤ w)
-    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
-        (go w aig i s a hi).aig.decls[idx]? = aig.decls[idx]? := by
-  intro idx hidx
-  unfold go
-  split
-  . dsimp
-    rw [go_decl_eq?]
-    rw [Array.getElem?_lt, Array.getElem?_lt]
-    . rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAtomCached)]
-      . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkAtomCached)
-        assumption
-      . assumption
-    . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkAtomCached)
-      assumption
-  . simp
-termination_by w - i
-
 theorem blastVar.go_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (a : Nat)
     (hi : i ≤ w)
     : ∀ (idx : Nat) (h1) (h2), (go w aig i s a hi).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  intro idx h1 h2
-  have := go_decl_eq? i s a hi idx h1
-  rw [Array.getElem?_lt, Array.getElem?_lt] at this
-  injection this
+  generalize hgo : go w aig i s a hi = res
+  unfold go at hgo
+  split at hgo
+  . dsimp at hgo
+    rw [← hgo]
+    intro idx h1 h2
+    rw [blastVar.go_decl_eq]
+    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkAtomCached)]
+    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkAtomCached)
+    assumption
+  . dsimp at hgo
+    rw [← hgo]
+    intros
+    simp
+termination_by w - i
 
 theorem blastVar_decl_eq {aig : AIG BVBit} (var : BVVar w)
     : ∀ (idx : Nat) (h1) (h2), (blastVar aig var).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by

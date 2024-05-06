@@ -41,33 +41,25 @@ theorem blastConst_le_size {aig : AIG BVBit} (val : BitVec w)
   unfold blastConst
   apply blastConst.go_le_size
 
-theorem blastConst.go_decl_eq? {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (val : BitVec w)
-    (hi : i ≤ w)
-    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
-        (go aig i s val hi).aig.decls[idx]? = aig.decls[idx]? := by
-  intro idx hidx
-  unfold go
-  split
-  . dsimp
-    rw [blastConst.go_decl_eq?]
-    rw [Array.getElem?_lt, Array.getElem?_lt]
-    . rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-      . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
-        assumption
-      . assumption
-    . apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
-      assumption
-  . simp
-termination_by w - i
-
 theorem blastConst.go_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (val : BitVec w)
     (hi : i ≤ w)
     : ∀ (idx : Nat) (h1) (h2),
         (go aig i s val hi).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  intro idx h1 h2
-  have := blastConst.go_decl_eq? i s val hi idx h1
-  rw [Array.getElem?_lt, Array.getElem?_lt] at this
-  injection this
+  generalize hgo : go aig i s val hi = res
+  unfold go at hgo
+  split at hgo
+  . dsimp at hgo
+    rw [← hgo]
+    intro idx h1 h2
+    rw [blastConst.go_decl_eq]
+    rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+    apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
+    assumption
+  . dsimp at hgo
+    rw [← hgo]
+    intros
+    simp
+termination_by w - i
 
 theorem blastConst_decl_eq {aig : AIG BVBit} (val : BitVec w)
     : ∀ (idx : Nat) (h1) (h2),
