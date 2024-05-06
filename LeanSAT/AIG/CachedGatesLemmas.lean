@@ -58,8 +58,8 @@ theorem mkNotCached_le_size (aig : AIG α) (gate : Ref aig)
 theorem mkNotCached_decl_eq idx (aig : AIG α) (gate : Ref aig) {h : idx < aig.decls.size} {h2} :
     (aig.mkNotCached gate).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkNotCached]
-  rw [mkGateCached_decl_eq]
-  rw [mkConstCached_decl_eq]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
+  rw [AIG.LawfulOperator.decl_eq (f := mkConstCached)]
   apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
   assumption
 
@@ -87,7 +87,7 @@ theorem mkAndCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : id
     {h2} :
     (aig.mkAndCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkAndCached]
-  rw [mkGateCached_decl_eq]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
 
 instance : LawfulOperator α BinaryInput mkAndCached where
   le_size := mkAndCached_le_size
@@ -114,9 +114,9 @@ theorem mkOrCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : idx
     {h2} :
     (aig.mkOrCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkOrCached]
-  rw [mkGateCached_decl_eq]
-  rw [mkConstCached_decl_eq]
-  . rw [mkGateCached_decl_eq]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
+  rw [AIG.LawfulOperator.decl_eq (f := mkConstCached)]
+  . rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
     apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
   . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
@@ -150,9 +150,9 @@ theorem mkXorCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : id
     {h2} :
     (aig.mkXorCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkXorCached]
-  rw [mkGateCached_decl_eq]
-  rw [mkGateCached_decl_eq]
-  . rw [mkGateCached_decl_eq]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
+  . rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
     apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
   . apply LawfulOperator.lt_size_of_lt_aig_size
@@ -190,9 +190,9 @@ theorem mkBEqCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : id
     {h2} :
     (aig.mkBEqCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkBEqCached]
-  rw [mkGateCached_decl_eq]
-  rw [mkGateCached_decl_eq]
-  . rw [mkGateCached_decl_eq]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
+  . rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
     apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
   . apply LawfulOperator.lt_size_of_lt_aig_size
@@ -229,9 +229,9 @@ theorem mkImpCached_decl_eq idx (aig : AIG α) (input : BinaryInput aig) {h : id
     {h2} :
     (aig.mkImpCached input).aig.decls[idx]'h2 = aig.decls[idx] := by
   simp only [mkImpCached]
-  rw [mkGateCached_decl_eq]
-  rw [mkConstCached_decl_eq]
-  . rw [mkGateCached_decl_eq]
+  rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
+  rw [AIG.LawfulOperator.decl_eq (f := mkConstCached)]
+  · rw [AIG.LawfulOperator.decl_eq (f := mkGateCached)]
     apply LawfulOperator.lt_size_of_lt_aig_size
     assumption
   . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)

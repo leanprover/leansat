@@ -76,7 +76,7 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
   induction expr generalizing aig with
   | const =>
     simp only [go]
-    apply mkConstCached_decl_eq
+    rw [AIG.LawfulOperator.decl_eq (f := mkConstCached)]
   | literal =>
     simp only [go]
     rw [AIG.LawfulOperator.decl_eq (f := atomHandler)]
@@ -84,7 +84,7 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
     simp only [go]
     have := go_decls_size_le atomHandler expr aig
     specialize ih aig (by omega) (by omega)
-    rw [mkNotCached_decl_eq]
+    rw [AIG.LawfulOperator.decl_eq (f := mkNotCached)]
     assumption
   | gate g lhs rhs lih rih =>
     have := go_decls_size_le atomHandler lhs aig
@@ -94,23 +94,23 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
     cases g with
     | and =>
       simp only [go]
-      rw [mkAndCached_decl_eq]
+      rw [AIG.LawfulOperator.decl_eq (f := mkAndCached)]
       rw [rih, lih]
     | or =>
       simp only [go]
-      rw [mkOrCached_decl_eq]
+      rw [AIG.LawfulOperator.decl_eq (f := mkOrCached)]
       rw [rih, lih]
     | xor =>
       simp only [go]
-      rw [mkXorCached_decl_eq]
+      rw [AIG.LawfulOperator.decl_eq (f := mkXorCached)]
       rw [rih, lih]
     | beq =>
       simp only [go]
-      rw [mkBEqCached_decl_eq]
+      rw [AIG.LawfulOperator.decl_eq (f := mkBEqCached)]
       rw [rih, lih]
     | imp =>
       simp only [go]
-      rw [mkImpCached_decl_eq]
+      rw [AIG.LawfulOperator.decl_eq (f := mkImpCached)]
       rw [rih, lih]
 
 theorem ofBoolExprCached.go_IsPrefix_aig {aig : AIG β}
