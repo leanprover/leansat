@@ -136,90 +136,74 @@ theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w)
   unfold bitblast
   exact (bitblast.go aig expr).property
 
-theorem bitblast.go_decl_eq? (aig : AIG BVBit) (expr : BVExpr w)
-    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
-        (go aig expr).val.aig.decls[idx]? = aig.decls[idx]? := by
-  intro idx hidx
+theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
+    : ∀ (idx : Nat) (h1) (h2),
+        (go aig expr).val.aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+  intros idx h1 h2
   induction expr generalizing aig with
   | var =>
     dsimp [go]
-    rw [Array.getElem?_lt, Array.getElem?_lt]
     rw [AIG.LawfulStreamOperator.decl_eq (f := blastVar)]
-    . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastVar)
-      assumption
-    . assumption
   | const =>
     dsimp [go]
-    rw [Array.getElem?_lt, Array.getElem?_lt]
     rw [AIG.LawfulStreamOperator.decl_eq (f := blastConst)]
-    . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastConst)
-      assumption
-    . assumption
-  | zeroExtend w inner ih =>
-      dsimp [go]
-      rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [AIG.LawfulStreamOperator.decl_eq]
-      rw [← Array.getElem?_lt, ← Array.getElem?_lt]
-      rw [ih]
-      . assumption
-      . assumption
-      . apply Nat.lt_of_lt_of_le
-        . exact hidx
-        . exact (go aig inner).property
-      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size
-        apply Nat.lt_of_lt_of_le
-        . exact hidx
-        . exact (go aig inner).property
   | bin lhs op rhs lih rih =>
-    cases op
-    all_goals
+    match op with
+    | .and | .or | .xor =>
       dsimp [go]
-      rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [AIG.LawfulStreamOperator.decl_eq]
-      rw [← Array.getElem?_lt, ← Array.getElem?_lt]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.zip)]
       rw [rih, lih]
-      -- TODO: for some reason my usual omega attempts fail me here
-      . assumption
       . apply Nat.lt_of_lt_of_le
-        . exact hidx
+        . exact h1
         . exact (bitblast.go aig lhs).property
-      . assumption
       . apply Nat.lt_of_lt_of_le
-        . exact hidx
+        . exact h1
         . apply Nat.le_trans
           . exact (bitblast.go aig lhs).property
           . exact (go (go aig lhs).1.aig rhs).property
-      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size
-        apply Nat.lt_of_lt_of_le
-        . exact hidx
+    | .add =>
+      dsimp [go]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastAdd)]
+      rw [rih, lih]
+      . apply Nat.lt_of_lt_of_le
+        . exact h1
+        . exact (bitblast.go aig lhs).property
+      . apply Nat.lt_of_lt_of_le
+        . exact h1
         . apply Nat.le_trans
           . exact (bitblast.go aig lhs).property
           . exact (go (go aig lhs).1.aig rhs).property
   | un op expr ih =>
-    cases op
-    all_goals
+    match op with
+    | .not =>
       dsimp [go]
-      rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [AIG.LawfulStreamOperator.decl_eq]
-      rw [← Array.getElem?_lt, ← Array.getElem?_lt]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.map)]
       rw [ih]
-      . assumption
-      . assumption
-      . apply Nat.lt_of_lt_of_le
-        . exact hidx
-        . exact (go aig expr).property
-      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size
-        apply Nat.lt_of_lt_of_le
-        . exact hidx
-        . exact (go aig expr).property
+      apply Nat.lt_of_lt_of_le
+      . exact h1
+      . exact (go aig expr).property
+    | .shiftLeftConst _ =>
+      dsimp [go]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeftConst)]
+      rw [ih]
+      apply Nat.lt_of_lt_of_le
+      . exact h1
+      . exact (go aig expr).property
+    | .shiftRightConst _ =>
+      dsimp [go]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftRightConst)]
+      rw [ih]
+      apply Nat.lt_of_lt_of_le
+      . exact h1
+      . exact (go aig expr).property
+  | zeroExtend w inner ih =>
+    dsimp [go]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := blastZeroExtend)]
+    rw [ih]
+    apply Nat.lt_of_lt_of_le
+    . exact h1
+    . exact (go aig inner).property
 
-theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
-    : ∀ (idx : Nat) (h1) (h2),
-        (go aig expr).val.aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  intro idx h1 h2
-  have := go_decl_eq? aig expr idx h1
-  rw [Array.getElem?_lt, Array.getElem?_lt] at this
-  injection this
 
 theorem bitblast_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     : ∀ (idx : Nat) (h1) (h2),

@@ -179,67 +179,48 @@ theorem mkGateCached_le_size (aig : AIG α) (input : GateInput aig)
   . split <;> simp_arith [mkConstCached_le_size]
 
 /--
-`mkGateCached` does not modify the input AIG upon a cache hit.
--/
-theorem mkGateCached_hit_aig (aig : AIG α) {input : GateInput aig} {hit}
-    (hcache : aig.cache.find? (.gate input.lhs.ref.gate input.rhs.ref.gate input.lhs.inv input.rhs.inv) = some hit)
-    : (aig.mkGateCached input).aig = aig := by
-  simp only [mkGateCached]
-  split <;> simp_all
-
-theorem mkGateCached_decl_eq? (aig : AIG α) (input : GateInput aig)
-    (h : idx < aig.decls.size) :
-    (aig.mkGateCached input).aig.decls[idx]? = aig.decls[idx]? := by
-  unfold mkGateCached
-  dsimp
-  split
-  . next hcache =>
-    simp [mkGateCached_hit_aig aig hcache]
-  . split
-    . rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [mkConstCached_decl_eq]
-      . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
-        assumption
-      . assumption
-    . rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [mkConstCached_decl_eq]
-      . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
-        assumption
-      . assumption
-    . rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [mkConstCached_decl_eq]
-      . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
-        assumption
-      . assumption
-    . rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [mkConstCached_decl_eq]
-      . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkConstCached)
-        assumption
-      . assumption
-    . simp only [Array.getElem?_lt]
-    . simp only [Array.getElem?_lt]
-    . simp only [Array.getElem?_lt]
-    . simp only [Array.getElem?_lt]
-    . dsimp
-      rw [Array.getElem?_lt, Array.getElem?_lt]
-      apply congrArg
-      rw [Array.get_push]
-      split
-      . simp
-      . contradiction
-      . simp only [Array.size_push]
-        omega
-      . assumption
-
-/--
 The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkGateCached_decl_eq idx (aig : AIG α) (input : GateInput aig)
-    {h : idx < aig.decls.size} {hbound} :
-    (aig.mkGateCached input).aig.decls[idx]'hbound = aig.decls[idx]'h := by
-  have := mkGateCached_decl_eq? aig input h
-  rw [Array.getElem?_lt, Array.getElem?_lt] at this
-  injection this
+theorem mkGateCached_decl_eq (aig : AIG α) (input : GateInput aig) :
+    ∀ (idx : Nat) (h1) (h2),
+      (aig.mkGateCached input).aig.decls[idx]'h1 = aig.decls[idx]'h2 := by
+    generalize hres : mkGateCached aig input = res
+    unfold mkGateCached at hres
+    dsimp at hres
+    split at hres
+    . rw [← hres]
+      intros
+      simp
+    . split at hres
+      . rw [← hres]
+        intros
+        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+      . rw [← hres]
+        intros
+        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+      . rw [← hres]
+        intros
+        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+      . rw [← hres]
+        intros
+        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+      . rw [← hres]
+        intros
+        simp
+      . rw [← hres]
+        intros
+        simp
+      . rw [← hres]
+        intros
+        simp
+      . rw [← hres]
+        intros
+        simp
+      . rw [← hres]
+        dsimp
+        intro idx h1 h2
+        rw [Array.get_push]
+        simp [h2]
 
 instance : LawfulOperator α GateInput mkGateCached where
   le_size := mkGateCached_le_size

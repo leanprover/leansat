@@ -142,34 +142,25 @@ theorem map_le_size {aig : AIG α} (target : MapTarget aig len)
   unfold map
   apply map.go_le_size
 
-theorem map.go_decl_eq? {aig : AIG α} (i) (hi)
-    (s : RefStream aig i) (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
-    [LawfulOperator α Ref f] [LawfulMapOperator α f]
-    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
-        (go aig i hi s input f).1.decls[idx]? = aig.decls[idx]? := by
-  intro idx hidx
-  unfold go
-  split
-  . dsimp
-    rw [map.go_decl_eq?]
-    rw [Array.getElem?_lt, Array.getElem?_lt]
-    . rw [LawfulOperator.decl_eq]
-      . apply LawfulOperator.lt_size_of_lt_aig_size
-        assumption
-      . assumption
-    . apply LawfulOperator.lt_size_of_lt_aig_size
-      assumption
-  . simp
-  termination_by len - i
-
 theorem map.go_decl_eq {aig : AIG α} (i) (hi)
     (s : RefStream aig i) (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
     [LawfulOperator α Ref f] [LawfulMapOperator α f]
     : ∀ (idx : Nat) (h1) (h2), (go aig i hi s input f).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  intro idx h1 h2
-  have := map.go_decl_eq? i hi s input f idx h1
-  rw [Array.getElem?_lt, Array.getElem?_lt] at this
-  injection this
+  generalize hgo : go aig i hi s input f = res
+  unfold go at hgo
+  split at hgo
+  . dsimp at hgo
+    rw [← hgo]
+    intros
+    rw [go_decl_eq]
+    rw [LawfulOperator.decl_eq]
+    apply LawfulOperator.lt_size_of_lt_aig_size
+    assumption
+  . dsimp at hgo
+    rw [← hgo]
+    intros
+    simp
+termination_by len - i
 
 theorem map_decl_eq {aig : AIG α} (target : MapTarget aig len)
     : ∀ idx (h1 : idx < aig.decls.size) (h2), (map aig target).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
@@ -233,35 +224,26 @@ theorem zip_le_size {aig : AIG α} (target : ZipTarget aig len)
   unfold zip
   apply zip.go_le_size
 
-theorem zip.go_decl_eq? {aig : AIG α} (i) (hi) (lhs rhs : RefStream aig len)
-    (s : RefStream aig i) (f : (aig : AIG α) → BinaryInput aig → Entrypoint α)
-    [LawfulOperator α BinaryInput f] [chainable : LawfulZipOperator α f]
-    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
-        (go aig i s hi lhs rhs f).1.decls[idx]? = aig.decls[idx]? := by
-  intro idx hidx
-  unfold go
-  split
-  . next h =>
-    dsimp
-    rw [zip.go_decl_eq?]
-    rw [Array.getElem?_lt, Array.getElem?_lt]
-    . rw [LawfulOperator.decl_eq]
-      . apply LawfulOperator.lt_size_of_lt_aig_size
-        assumption
-      . assumption
-    . apply LawfulOperator.lt_size_of_lt_aig_size
-      assumption
-  . simp
-  termination_by len - i
-
 theorem zip.go_decl_eq {aig : AIG α} (i) (hi) (lhs rhs : RefStream aig len)
     (s : RefStream aig i) (f : (aig : AIG α) → BinaryInput aig → Entrypoint α)
     [LawfulOperator α BinaryInput f] [chainable : LawfulZipOperator α f]
     : ∀ (idx : Nat) (h1) (h2), (go aig i s hi lhs rhs f).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  intro idx h1 h2
-  have := zip.go_decl_eq? i hi lhs rhs s f idx h1
-  rw [Array.getElem?_lt, Array.getElem?_lt] at this
-  injection this
+  generalize hgo : go aig i s hi lhs rhs f = res
+  unfold go at hgo
+  split at hgo
+  . dsimp at hgo
+    rw [← hgo]
+    intros
+    intros
+    rw [go_decl_eq]
+    rw [LawfulOperator.decl_eq]
+    apply LawfulOperator.lt_size_of_lt_aig_size
+    assumption
+  . dsimp at hgo
+    rw [← hgo]
+    intros
+    simp
+termination_by len - i
 
 theorem zip_decl_eq {aig : AIG α} (target : ZipTarget aig len)
     : ∀ idx (h1 : idx < aig.decls.size) (h2),
@@ -334,34 +316,24 @@ theorem fold_le_size {aig : AIG α} (target : FoldTarget aig)
   refine Nat.le_trans ?_ (by apply fold.go_le_size)
   apply LawfulOperator.le_size (f := mkConstCached)
 
-theorem fold.go_decl_eq? {aig : AIG α} (acc : Ref aig) (i : Nat) (s : RefStream aig len)
-    (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f]
-    : ∀ (idx : Nat) (_hidx : idx < aig.decls.size),
-        (go aig acc i len s f).1.decls[idx]? = aig.decls[idx]? := by
-  intro idx hidx
-  unfold go
-  split
-  . next h =>
-    dsimp
-    rw [fold.go_decl_eq?]
-    . rw [Array.getElem?_lt, Array.getElem?_lt]
-      rw [LawfulOperator.decl_eq]
-      . apply LawfulOperator.lt_size_of_lt_aig_size
-        assumption
-      . assumption
-    . apply LawfulOperator.lt_size_of_lt_aig_size
-      assumption
-  . simp
-  termination_by len - i
-
 theorem fold.go_decl_eq {aig : AIG α} (acc : Ref aig) (i : Nat) (s : RefStream aig len)
     (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f]
     : ∀ (idx : Nat) (h1) (h2),
         (go aig acc i len s f).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  intro idx h1 h2
-  have := fold.go_decl_eq? acc i s f idx h1
-  rw [Array.getElem?_lt, Array.getElem?_lt] at this
-  injection this
+  generalize hgo : go aig acc i len s f = res
+  unfold go at hgo
+  split at hgo
+  . dsimp at hgo
+    rw [← hgo]
+    intros
+    rw [go_decl_eq]
+    rw [LawfulOperator.decl_eq]
+    apply LawfulOperator.lt_size_of_lt_aig_size
+    assumption
+  . rw [← hgo]
+    intros
+    simp
+termination_by len - i
 
 theorem fold_decl_eq {aig : AIG α} (target : FoldTarget aig)
     : ∀ idx (h1 : idx < aig.decls.size) (h2), (fold aig target).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
