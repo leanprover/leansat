@@ -28,7 +28,7 @@ where
       : ExtendingEntrypoint aig :=
     match expr with
     | .literal var => ⟨atomHandler aig var, by apply LawfulOperator.le_size⟩
-    | .const val => ⟨aig.mkConstCached val, (by apply AIG.mkConstCached_le_size)⟩
+    | .const val => ⟨aig.mkConstCached val, (by apply LawfulOperator.le_size)⟩
     | .not expr =>
       let ⟨⟨aig, exprRef⟩, _⟩ := go expr aig atomHandler
       let ret := aig.mkNotCached exprRef
