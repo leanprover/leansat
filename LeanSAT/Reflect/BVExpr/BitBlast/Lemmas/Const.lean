@@ -63,7 +63,9 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx)
 
 theorem go_eq_eval_getLsb (aig : AIG BVBit) (c : BitVec w) (assign : Assignment)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
-    : ∀ (idx : Nat) (hidx1 : idx < w) (hidx2 : curr ≤ idx),
+    : ∀ (idx : Nat) (hidx1 : idx < w),
+        curr ≤ idx
+          →
         ⟦
           (go aig curr s c hcurr).aig,
           (go aig curr s c hcurr).stream.getRef idx hidx1,

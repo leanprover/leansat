@@ -1178,12 +1178,12 @@ theorem derivedLits_nodup {n : Nat} (f : DefaultFormula n) (f_assignments_size :
         simp (config := { decide := true }) only [getElem_fin, Array.getElem_eq_data_get, ne_eq, derivedLits_arr_def, li] at h3
 
 theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
-  (f' : DefaultFormula n) (f'_def : f' = (performRupCheck f rupHints).1) (f'_assignments_size : f'.assignments.size = n)
+  (f' : DefaultFormula n) (_f'_def : f' = (performRupCheck f rupHints).1) (f'_assignments_size : f'.assignments.size = n)
   (derivedLits : List (Literal (PosFin n))) (derivedLits_arr : Array (Literal (PosFin n)))
   (derivedLits_arr_def : derivedLits_arr = {data := derivedLits})
   (derivedLits_satisfies_invariant :
     derivedLits_invariant f f_assignments_size f'.assignments f'_assignments_size derivedLits)
-  (derivedLits_arr_nodup : ∀ (i j : Fin (Array.size derivedLits_arr)), i ≠ j → derivedLits_arr[i] ≠ derivedLits_arr[j]) :
+  (_derivedLits_arr_nodup : ∀ (i j : Fin (Array.size derivedLits_arr)), i ≠ j → derivedLits_arr[i] ≠ derivedLits_arr[j]) :
   clear_insert_induction_motive f f_assignments_size derivedLits_arr 0 f'.assignments := by
   apply Exists.intro f'_assignments_size
   intro i

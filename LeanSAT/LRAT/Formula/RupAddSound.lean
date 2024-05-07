@@ -62,7 +62,7 @@ theorem contradiction_of_insertUnit_fold_success {n : Nat} (assignments : Array 
       ∃ j : PosFin n, insertUnit_fold_res.2.1[j.1]'(by rw [insertUnit_fold_preserves_size, assignments_size]; exact j.2.2) = both := by
   intro insertUnit_fold_res h0 insertUnit_fold_success
   let acc0 := (units, assignments, foundContradiction)
-  have hb : ∃ hsize : acc0.2.1.size = n, acc0.2.2 → ∃ j : PosFin n, acc0.2.1[j.1]'(by rw [assignments_size]; exact j.2.2) = both := by
+  have hb : ∃ _hsize : acc0.2.1.size = n, acc0.2.2 → ∃ j : PosFin n, acc0.2.1[j.1]'(by rw [assignments_size]; exact j.2.2) = both := by
     apply Exists.intro assignments_size
     intro foundContradiction_eq_true
     exact h0 foundContradiction_eq_true
@@ -347,7 +347,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
     simp only [hp2.1, ← hp1.1, decide_eq_true_eq, true_and] at hp2
     simp only [hp1.2] at hp2
 
-def confirmRupHint_fold_entails_hsat_motive {n : Nat} (f : DefaultFormula n) (idx : Nat)
+def confirmRupHint_fold_entails_hsat_motive {n : Nat} (f : DefaultFormula n) (_idx : Nat)
   (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) : Prop :=
   acc.1.size = n ∧ limplies (PosFin n) f acc.1 ∧ (acc.2.2.1 → incompatible (PosFin n) acc.1 f)
 

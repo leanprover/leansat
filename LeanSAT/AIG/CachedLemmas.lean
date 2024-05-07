@@ -18,7 +18,9 @@ variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
 /--
 If we find a cached atom declaration in the AIG, denoting it is equivalent to denoting `AIG.mkAtom`.
 -/
-theorem denote_mkAtom_cached {aig : AIG α} {hit} (h : aig.cache.find? (.atom v) = some hit) :
+theorem denote_mkAtom_cached {aig : AIG α} {hit} :
+    aig.cache.find? (.atom v) = some hit
+      →
     ⟦aig, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦aig.mkAtom v, assign⟧ := by
   have := hit.hvalid
   simp only [denote_mkAtom]
@@ -86,7 +88,9 @@ theorem mkAtomCached_eval_eq_mkAtom_eval {aig : AIG α}
 /--
 If we find a cached const declaration in the AIG, denoting it is equivalent to denoting `AIG.mkConst`.
 -/
-theorem denote_mkConst_cached {aig : AIG α} {hit} (h : aig.cache.find? (.const b) = some hit) :
+theorem denote_mkConst_cached {aig : AIG α} {hit} :
+    aig.cache.find? (.const b) = some hit
+      →
     ⟦aig, ⟨hit.idx, hit.hbound⟩, assign⟧ = ⟦aig.mkConst b, assign⟧ := by
   have := hit.hvalid
   simp only [denote_mkConst]
@@ -157,10 +161,13 @@ theorem mkConstCached_eval_eq_mkConst_eval {aig : AIG α}
 If we find a cached gate declaration in the AIG, denoting it is equivalent to denoting `AIG.mkGate`.
 -/
 theorem denote_mkGate_cached {aig : AIG α} {input} {hit}
-    (h : aig.cache.find? (.gate input.lhs.ref.gate input.rhs.ref.gate input.lhs.inv input.rhs.inv) = some hit) :
+      :
+    aig.cache.find? (.gate input.lhs.ref.gate input.rhs.ref.gate input.lhs.inv input.rhs.inv) = some hit
+      →
     ⟦⟨aig, hit.idx, hit.hbound⟩, assign⟧
       =
     ⟦aig.mkGate input, assign⟧ := by
+  intros
   have := hit.hvalid
   simp only [denote_mkGate]
   conv =>

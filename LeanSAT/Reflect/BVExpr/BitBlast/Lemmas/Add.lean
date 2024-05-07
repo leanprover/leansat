@@ -160,7 +160,9 @@ theorem go_eq_eval_getLsb (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (c
         =
       BitVec.carry curr (lhsExpr.eval assign) (rhsExpr.eval assign) false
     )
-  : ∀ (idx : Nat) (hidx1 : idx < w) (hidx2 : curr ≤ idx),
+  : ∀ (idx : Nat) (hidx1 : idx < w),
+      curr ≤ idx
+        →
       ⟦
         (go aig curr hcurr cin s lhs rhs).aig,
         (go aig curr hcurr cin s lhs rhs).stream.getRef idx hidx1,
