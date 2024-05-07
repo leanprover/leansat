@@ -4,8 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
 import Lean.Data.HashMap
-import Std.Data.Fin.Lemmas
-import LeanSAT.Reflect.Fin
 
 set_option linter.missingDocs false
 
@@ -74,8 +72,9 @@ def eval (f : α → Bool) : BoolExpr α → Bool
 
 def sat (x : BoolExpr α) (f : α → Bool) : Prop := eval f x = true
 
-theorem sat_and {x y : BoolExpr α} {f} (hx : sat x f) (hy : sat y f) : sat (.gate .and x y) f :=
-  congr_arg₂ (· && ·) hx hy
+theorem sat_and {x y : BoolExpr α} {f} (hx : sat x f) (hy : sat y f) : sat (.gate .and x y) f := by
+  simp only [sat] at *
+  simp [hx, hy, Gate.eval]
 
 theorem sat_true : sat (.const true) f := rfl
 

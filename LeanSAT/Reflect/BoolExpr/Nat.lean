@@ -1,6 +1,5 @@
 import LeanSAT.Reflect.BoolExpr.Decidable
-import Std.Data.Array.Lemmas
-import Std
+import Batteries.Data.Array.Lemmas
 
 namespace List
 
@@ -59,8 +58,9 @@ def eval (f : List Bool) : BoolExprNat → Bool
 
 def sat (x : BoolExprNat) (f : List Bool) : Prop := eval f x = true
 
-theorem sat_and {x y : BoolExprNat} {f} (hx : sat x f) (hy : sat y f) : sat (.gate .and x y) f :=
-  congr_arg₂ (· && ·) hx hy
+theorem sat_and {x y : BoolExprNat} {f} (hx : sat x f) (hy : sat y f) : sat (.gate .and x y) f := by
+  simp only [sat] at *
+  simp [hx, hy, Gate.eval]
 
 theorem sat_true : sat (.const true) f := rfl
 

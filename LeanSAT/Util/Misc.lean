@@ -3,7 +3,7 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import Std.Data.Array.Lemmas
+import Batteries.Data.Array.Lemmas
 
 -- Various helper theorems/definitions copied from mathlib
 namespace Misc -- Adding this namespace to avoid naming conflicts with the actual mathlib theorems

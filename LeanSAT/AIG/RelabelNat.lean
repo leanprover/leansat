@@ -1,6 +1,6 @@
 import LeanSAT.AIG.Relabel
 
-open Std
+open Batteries
 
 variable {α : Type} [BEq α] [Hashable α]
 
