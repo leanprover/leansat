@@ -412,7 +412,9 @@ theorem go_denote_mem_prefix {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) 
 theorem denote_go {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
       (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
       [LawfulOperator α Ref f] [LawfulMapOperator α f]
-    : ∀ (idx : Nat) (hidx1 : idx < len) (hidx2 : curr ≤ idx),
+    : ∀ (idx : Nat) (hidx1 : idx < len),
+        curr ≤ idx
+          →
         ⟦(go aig curr hcurr s input f).aig, (go aig curr hcurr s input f).stream.getRef idx hidx1, assign⟧
           =
         ⟦f aig (input.getRef idx hidx1), assign⟧ := by
@@ -515,7 +517,9 @@ theorem go_denote_mem_prefix {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) 
 theorem denote_go {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
       (lhs rhs : RefStream aig len) (f : (aig : AIG α) → BinaryInput aig → Entrypoint α)
       [LawfulOperator α BinaryInput f] [chainable : LawfulZipOperator α f]
-    : ∀ (idx : Nat) (hidx1 : idx < len) (hidx2 : curr ≤ idx),
+    : ∀ (idx : Nat) (hidx1 : idx < len),
+        curr ≤ idx
+          →
         ⟦
           (go aig curr s hcurr lhs rhs f).aig,
           (go aig curr s hcurr lhs rhs f).stream.getRef idx hidx1,
@@ -569,7 +573,7 @@ theorem fold.denote_go_and {aig : AIG α} (acc : AIG.Ref aig) (curr : Nat) (hcur
       (
         ⟦aig, acc, assign⟧
           ∧
-        (∀ (idx : Nat) (hidx1 : idx < len) (hidx2 : curr ≤ idx), ⟦aig, input.getRef idx hidx1, assign⟧)
+        (∀ (idx : Nat) (hidx1 : idx < len), curr ≤ idx → ⟦aig, input.getRef idx hidx1, assign⟧)
       ):= by
   generalize hgo : go aig acc curr len input mkAndCached = res
   unfold go at hgo
