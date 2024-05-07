@@ -313,8 +313,10 @@ Definitions of unsatisfiability on `BVLogicalExpr`.
 -/
 def unsat (x : BVLogicalExpr) : Prop := ∀ f, eval f x = false
 
-theorem sat_and {x y : BVLogicalExpr} {assign} (hx : sat x assign) (hy : sat y assign) : sat (.gate .and x y) assign :=
-  congr_arg₂ (· && ·) hx hy
+theorem sat_and {x y : BVLogicalExpr} {assign} (hx : sat x assign) (hy : sat y assign)
+    : sat (.gate .and x y) assign := by
+  simp only [sat] at *
+  simp [hx, hy, Gate.eval]
 
 theorem sat_true : sat (.const true) assign := rfl
 

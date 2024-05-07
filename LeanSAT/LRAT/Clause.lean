@@ -7,7 +7,6 @@ import LeanSAT.Sat.Basic
 import LeanSAT.Sat.Literal
 import LeanSAT.Util.PosFin
 import LeanSAT.Util.Misc
-import Std.Data.Array.Lemmas
 import LeanSAT.LRAT.Assignment
 
 namespace LRAT

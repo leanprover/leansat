@@ -1,5 +1,6 @@
 import LeanSAT.AIG.RefStream
 import LeanSAT.AIG.LawfulStreamOperator
+import Batteries.Logic -- TODO: This is only here because the built-in HEq theory is lacking
 
 namespace AIG
 namespace  RefStream

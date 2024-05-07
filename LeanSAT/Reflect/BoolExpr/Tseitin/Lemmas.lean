@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.BoolExpr.Tseitin.Defs
-import Std.Data.Sum.Basic
+import Batteries.Data.Sum.Basic
 
 @[simp] theorem false_beq_false : (false == false) = true := rfl
 @[simp] theorem false_beq_true : (false == true) = false := rfl

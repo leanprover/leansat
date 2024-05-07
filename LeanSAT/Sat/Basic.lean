@@ -3,7 +3,6 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import Std.Logic
 
 /-- For variables of type `α` and clauses of type `β`, `HSat.eval p c` is meant to determine whether
     a clause `c` is true under assignment `p`. Likewise, for variables of type `α` and formulas of type
