@@ -45,12 +45,13 @@ set_option trace.bv true in
 theorem unit_10 {x : BitVec 256} : (x.zeroExtend 512).zeroExtend 128 = x.zeroExtend 128 := by
   bv_decide
 
-theorem bv_axiomCheck (x : BitVec 1) : x = x := by bv_decide
+theorem bv_axiomCheck (x y : BitVec 1) : x + y = y + x := by
+  bv_decide
 
 /--
-info: 'bv_axiomCheck' depends on axioms: [propext,
+info: 'bv_axiomCheck' depends on axioms: [Classical.choice,
+ propext,
  Quot.sound,
- Classical.choice,
  AIG.RelabelNat.State.Inv1.property,
  AIG.RelabelNat.State.Inv2.property,
  Lean.ofReduceBool]
