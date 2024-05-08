@@ -439,7 +439,6 @@ theorem beq_congr (lhs rhs lhs' rhs' : Bool) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
   simp[*]
 
 partial def of (t : Expr) : M (Option ReifiedBVLogical) := do
-  trace[bv] m!"Reflecting into bvlogical: {t}"
   match_expr t with
   | Bool.true =>
     let boolExpr := .const true
@@ -494,9 +493,7 @@ where
     return some ⟨boolExpr, proof, expr⟩
 
   goPred (t : Expr) : M (Option ReifiedBVLogical) := do
-    trace[bv] m!"referring to pred: {t}"
     let some bvPred ← ReifiedBVPred.of t | return none
-    trace[bv] m!"pred succesful!"
     let boolExpr := .literal bvPred.bvPred
     let expr := mkApp2 (mkConst ``BoolExpr.literal) (mkConst ``BVPred) bvPred.expr
     let proof := bvPred.evalsAtAtoms
@@ -532,7 +529,6 @@ partial def of (h : Expr) : M (Option SatAtBVLogical) := do
   | Eq α lhsExpr rhsExpr =>
     let_expr Bool := α | return none
     let_expr Bool.true := rhsExpr | return none
-    trace[bv] m!"Did not filter hypothesis of type: {t}"
     -- We now know that `h : lhsExpr = true`
     -- We attempt to reify lhsExpr into a BVLogicalExpr, then prove that evaluating
     -- this BVLogicalExpr must eval to true due to `h`
