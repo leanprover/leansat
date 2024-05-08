@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
 import Lean.Util.Trace
+import Lean.Elab.Tactic.Simp
 
 open Lean
 
@@ -20,3 +21,4 @@ register_option sat.prevalidate : Bool := {
   descr := "Usually the LRAT proof is only parsed in the kernel. If this is enabled its additionally parsed before as well for better error reporting."
 }
 
+register_simp_attr bv_normalize
