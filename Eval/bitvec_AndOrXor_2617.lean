@@ -2,4 +2,4 @@ import LeanSAT.Reflect.Tactics.BVDecide
 
 theorem bitvec_AndOrXor_2617 :
  ∀ (a b : BitVec 64), a &&& (b ^^^ -1) ^^^ (a ^^^ -1) &&& b = a ^^^ b
-:= by bv_decide
+:= by intros; bv_decide
