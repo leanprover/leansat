@@ -670,7 +670,4 @@ end BVDecide
 
 macro_rules
 | `(tactic| bv_decide) =>
-  `(tactic|
-     bv_normalize;
-     bv_unsat
-   )
+  `(tactic| bv_normalize <;> bv_unsat)

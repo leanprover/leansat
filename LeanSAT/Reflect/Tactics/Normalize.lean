@@ -73,6 +73,15 @@ theorem Bool.eq_false (a : Bool) : ((a = true) = False) = ((!a) = true) := by
 theorem Bool.decide_eq_true (a : Bool) : (decide (a = true)) = a := by
   simp
 
+@[bv_normalize]
+theorem not_true : (¬True) = (false = true) := by
+  simp
+
+attribute [bv_normalize] and_true
+attribute [bv_normalize] true_and
+attribute [bv_normalize] or_true
+attribute [bv_normalize] true_or
+
 end Normalize
 end BVDecide
 
