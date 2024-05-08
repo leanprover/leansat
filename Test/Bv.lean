@@ -45,10 +45,40 @@ set_option trace.bv true in
 theorem unit_10 {x : BitVec 256} : (x.zeroExtend 512).zeroExtend 128 = x.zeroExtend 128 := by
   bv_decide
 
-set_option trace.bv true in
 theorem unit_11 {x : BitVec 256} : x = x := by
   bv_decide
 
+theorem unit_12 {x : BitVec 256} (h : ¬(x = x)) : x = 0 := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_13 {x y : BitVec 256} : (x = y) ∨ (x ≠ y) := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_13' {x y : BitVec 256} : (x = y) || (x ≠ y) := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_14 {x y : BitVec 256} : (x = y) → (x + y = y + x) := by
+  bv_decide
+
+theorem unit_15 {x y : BitVec 256} : x = x ∧ y = y := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_16 {x y z : BitVec 256} : (x = y ∧ x = z) → (x = z) := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_17 {x y : BitVec 256} : xor (x = y) (x ≠ y) := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_18 {x y : BitVec 256} : (x = y) ↔ (y = x) := by
+  bv_decide
+
+set_option trace.bv true in
 theorem bv_axiomCheck (x y : BitVec 1) : x + y = y + x := by
   bv_decide
 
