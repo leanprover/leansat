@@ -5,5 +5,5 @@ open BitVec
 
 theorem bitvec_InstCombineShift__422_2 :
  ∀ (Y X C : BitVec 31), (Y + sshiftRight X (BitVec.toNat C)) <<< C = Y <<< C + X &&& (-1 : BitVec _) <<< C
-:= by bv_decide
+:= by intros; bv_decide
 
