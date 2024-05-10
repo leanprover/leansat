@@ -33,6 +33,7 @@ instance : ToExpr BVUnOp where
     | .not => mkConst ``BVUnOp.not
     | .shiftLeftConst n => mkApp (mkConst ``BVUnOp.shiftLeftConst) (toExpr n)
     | .shiftRightConst n => mkApp (mkConst ``BVUnOp.shiftRightConst) (toExpr n)
+    | .neg => mkConst ``BVUnOp.neg
   toTypeExpr := mkConst ``BVUnOp
 
 instance : ToExpr BVBinOp where
@@ -189,15 +190,19 @@ theorem shiftLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' 
 theorem shiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' >>> n = x >>> n := by
   simp[*]
 
-theorem add_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
-    lhs' + rhs' = lhs + rhs' := by
+theorem add_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+    lhs' + rhs' = lhs + rhs := by
   simp[*]
 
 theorem zeroExtend_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
     BitVec.zeroExtend n x = BitVec.zeroExtend n x' := by
   simp[*]
 
-def  getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
+theorem neg_congr (w : Nat) (x x' : BitVec w) (h1 : x = x') :
+    -x' = -x := by
+  simp[*]
+
+def getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
     getNatValue? expr
@@ -222,11 +227,7 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
   | HAdd.hAdd _ _ _ _ lhsExpr rhsExpr =>
     binaryReflection lhsExpr rhsExpr .add ``add_congr
   | Complement.complement _ _ innerExpr =>
-    let some inner ← of innerExpr | return none
-    let bvExpr := .un .not inner.bvExpr
-    let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr inner.width) (mkConst ``BVUnOp.not) inner.expr
-    let proof := unaryCongrProof inner innerExpr (mkConst ``not_congr)
-    return some ⟨inner.width, bvExpr, proof, expr⟩
+    unaryReflection innerExpr .not ``not_congr
   | HShiftLeft.hShiftLeft _ β _ _ innerExpr distanceExpr =>
     shiftConstReflection
       β
@@ -258,6 +259,8 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
       let innerProof ← inner.evalsAtAtoms
       return mkApp5 (mkConst ``zeroExtend_congr) newWidthExpr (toExpr inner.width) innerExpr innerEval innerProof
     return some ⟨newWidth, bvExpr, proof, expr⟩
+  | Neg.neg _ _ innerExpr =>
+    unaryReflection innerExpr .neg ``neg_congr
   | _ => ofAtom x
 where
   ofAtom (x : Expr) : M (Option ReifiedBVExpr) := do
@@ -305,6 +308,13 @@ where
     let rhsProof ← rhs.evalsAtAtoms
     let rhsEval ← mkEvalExpr rhs.width rhs.expr
     return mkApp7 (mkConst congrThm) (toExpr lhs.width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
+
+  unaryReflection (innerExpr : Expr) (op : BVUnOp) (congrThm : Name) : M (Option ReifiedBVExpr) := do
+    let some inner ← of innerExpr | return none
+    let bvExpr := .un op inner.bvExpr
+    let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr inner.width) (toExpr op) inner.expr
+    let proof := unaryCongrProof inner innerExpr (mkConst congrThm)
+    return some ⟨inner.width, bvExpr, proof, expr⟩
 
   unaryCongrProof (inner : ReifiedBVExpr) (innerExpr : Expr) (congrProof : Expr) : M Expr := do
     let innerEval ← mkEvalExpr inner.width inner.expr

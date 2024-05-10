@@ -5,6 +5,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Add
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ZeroExtend
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Neg
 
 namespace BVExpr
 
@@ -131,6 +132,17 @@ where
             dsimp at heaig
             assumption
         ⟩
+      | .neg =>
+          let res := bitblast.blastNeg eaig estream
+          let aig := res.aig
+          let s := res.stream
+          ⟨
+            ⟨aig, s⟩,
+            by
+              apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastNeg)
+              dsimp at heaig
+              omega
+          ⟩
 
 theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w)
     : aig.decls.size ≤ (bitblast aig expr).aig.decls.size := by
@@ -193,6 +205,13 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     | .shiftRightConst _ =>
       dsimp [go]
       rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftRightConst)]
+      rw [ih]
+      apply Nat.lt_of_lt_of_le
+      . exact h1
+      . exact (go aig expr).property
+    | .neg =>
+      dsimp [go]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastNeg)]
       rw [ih]
       apply Nat.lt_of_lt_of_le
       . exact h1
