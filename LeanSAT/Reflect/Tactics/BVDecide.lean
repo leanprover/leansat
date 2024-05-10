@@ -43,6 +43,7 @@ instance : ToExpr BVBinOp where
     | .or => mkConst ``BVBinOp.or
     | .xor => mkConst ``BVBinOp.xor
     | .add => mkConst ``BVBinOp.add
+    | .sub => mkConst ``BVBinOp.sub
   toTypeExpr := mkConst ``BVBinOp
 
 instance : ToExpr (BVExpr w) where
@@ -202,6 +203,10 @@ theorem neg_congr (w : Nat) (x x' : BitVec w) (h1 : x = x') :
     -x' = -x := by
   simp[*]
 
+theorem sub_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+    lhs' - rhs' = lhs - rhs := by
+  simp[*]
+
 def getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
@@ -261,6 +266,8 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
     return some ⟨newWidth, bvExpr, proof, expr⟩
   | Neg.neg _ _ innerExpr =>
     unaryReflection innerExpr .neg ``neg_congr
+  | HSub.hSub _ _ _ _ lhsExpr rhsExpr =>
+    binaryReflection lhsExpr rhsExpr .sub ``sub_congr
   | _ => ofAtom x
 where
   ofAtom (x : Expr) : M (Option ReifiedBVExpr) := do

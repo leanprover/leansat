@@ -7,6 +7,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ZeroExtend
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Neg
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Sub
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 
 open AIG
@@ -76,6 +77,18 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     | add =>
       simp only [go, eval_bin, BVBinOp.eval_add]
       apply blastAdd_eq_eval_getLsb
+      . intros
+        dsimp
+        rw [go_denote_mem_prefix]
+        rw [← lih (aig := aig)]
+        . simp
+        . assumption
+        . simp [Ref.hgate]
+      . intros
+        rw [← rih]
+    | sub =>
+      simp only [go, eval_bin, BVBinOp.eval_sub]
+      apply blastSub_eq_eval_getLsb
       . intros
         dsimp
         rw [go_denote_mem_prefix]
