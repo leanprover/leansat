@@ -1,6 +1,7 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Const
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Var
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Not
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add

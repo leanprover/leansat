@@ -1,5 +1,6 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Var
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Const
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Not
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Add
@@ -98,7 +99,7 @@ where
       let ⟨⟨eaig, estream⟩, heaig⟩ := go aig expr
       match op with
       | .not =>
-          let res := AIG.RefStream.map eaig ⟨estream, AIG.mkNotCached⟩
+          let res := bitblast.blastNot eaig estream
           let aig := res.aig
           let s := res.stream
           ⟨
@@ -177,7 +178,7 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     match op with
     | .not =>
       dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.map)]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastNot)]
       rw [ih]
       apply Nat.lt_of_lt_of_le
       . exact h1
