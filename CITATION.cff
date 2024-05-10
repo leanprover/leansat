@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: LeanSAT
+message: >-
+  This package provides an interface and foundation for
+  verified SAT reasoning.
+type: software
+authors:
+  - given-names: The LeanSAT Developers
+repository-code: 'https://github.com/leanprover/leansat/'
+license: Apache-2.0
