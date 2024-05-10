@@ -169,19 +169,19 @@ def mkAtom (e : Expr) (width : Nat) : M ReifiedBVExpr := do
     return mkBVRefl width evalExpr
   return ⟨width, .var ident, proof, expr⟩
 
-theorem and_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+theorem and_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
     lhs' &&& rhs' = lhs &&& rhs := by
   simp[*]
 
-theorem or_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+theorem or_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
     lhs' ||| rhs' = lhs ||| rhs := by
   simp[*]
 
-theorem xor_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+theorem xor_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
     lhs' ^^^ rhs' = lhs ^^^ rhs := by
   simp[*]
 
-theorem not_congr (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
+theorem not_congr (w : Nat) (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
   simp[*]
 
 theorem shiftLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' <<< n = x <<< n := by
