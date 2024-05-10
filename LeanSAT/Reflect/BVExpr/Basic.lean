@@ -54,6 +54,10 @@ Bitwise xor.
 Addition.
 -/
 | add
+/--
+Subtractin.
+-/
+| sub
 
 namespace BVBinOp
 
@@ -62,6 +66,7 @@ def toString : BVBinOp → String
   | or => "||"
   | xor => "^"
   | add => "+"
+  | sub => "-"
 
 instance : ToString BVBinOp := ⟨toString⟩
 
@@ -73,11 +78,13 @@ def eval : BVBinOp → (BitVec w → BitVec w → BitVec w)
   | or => (· ||| ·)
   | xor => (· ^^^ ·)
   | add => (· + ·)
+  | sub => (· - ·)
 
 @[simp] theorem eval_and : eval .and = ((· &&& ·) : BitVec w → BitVec w → BitVec w) := by rfl
 @[simp] theorem eval_or : eval .or = ((· ||| ·) : BitVec w → BitVec w → BitVec w) := by rfl
 @[simp] theorem eval_xor : eval .xor = ((· ^^^ ·) : BitVec w → BitVec w → BitVec w) := by rfl
 @[simp] theorem eval_add : eval .add = ((· + ·) : BitVec w → BitVec w → BitVec w) := by rfl
+@[simp] theorem eval_sub : eval .sub = ((· - ·) : BitVec w → BitVec w → BitVec w) := by rfl
 
 end BVBinOp
 
