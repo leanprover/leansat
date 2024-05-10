@@ -1,7 +1,7 @@
 import Lake
 open Lake DSL
 
-require batteries from git "https://github.com/leanprover-community/batteries.git"@"main"
+require batteries from git "https://github.com/leanprover-community/batteries.git"@"nightly-testing"
 
 package LeanSAT {
   precompileModules := true

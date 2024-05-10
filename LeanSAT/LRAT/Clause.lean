@@ -217,7 +217,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
     rcases ih with ⟨idx_add_one_le_arr_size, ih⟩
     apply Exists.intro $ Nat.le_of_succ_le idx_add_one_le_arr_size
     intro c' heq
-    simp only [getElem_fin, fold_fn] at heq
+    simp only [Fin.getElem_fin, fold_fn] at heq
     split at heq
     . simp only at heq
     . next acc =>

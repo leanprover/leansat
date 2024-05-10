@@ -116,8 +116,8 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
             apply Array.getElem_mem_data
           . rfl
       specialize hp j_unit ((Or.inr ∘ Or.inr) j_unit_in_insertRatUnits_res)
-      simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, getElem_fin, List.find?, j_unit] at hp
-      simp only [getElem_fin] at h1
+      simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, Fin.getElem_fin, List.find?, j_unit] at hp
+      simp only [Fin.getElem_fin] at h1
       rcases hp with ⟨i', hp⟩
       simp only [h1, Clause.toList, unit_eq, List.mem_singleton, Prod.mk.injEq] at hp
       rcases hp with ⟨hp1, hp2⟩ | ⟨hp1, hp2⟩
@@ -167,13 +167,13 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       . rfl
     have hp1 := hp j1_unit ((Or.inr ∘ Or.inr) j1_unit_in_insertRatUnits_res)
     have hp2 := hp j2_unit ((Or.inr ∘ Or.inr) j2_unit_in_insertRatUnits_res)
-    simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, getElem_fin, List.find?] at hp1 hp2
+    simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, Fin.getElem_fin, List.find?] at hp1 hp2
     rcases hp1 with ⟨i1, hp1⟩
     rcases hp2 with ⟨i2, hp2⟩
-    simp only [getElem_fin] at h1 h2
+    simp only [Fin.getElem_fin] at h1 h2
     simp only [(· ⊨ ·), h1, Clause.toList, unit_eq, List.mem_singleton, Prod.mk.injEq,
       and_false, false_and, and_true, false_or, h2, or_false, j1_unit, j2_unit] at hp1 hp2
-    simp_all only [Bool.decide_eq_false, Bool.not_eq_true', ne_eq, getElem_fin, Prod.mk.injEq,
+    simp_all only [Bool.decide_eq_false, Bool.not_eq_true', ne_eq, Fin.getElem_fin, Prod.mk.injEq,
       and_false, false_and, and_true, false_or, or_false]
     simp [hp2.1, ← hp1.1, hp1.2] at hp2
 
@@ -250,7 +250,7 @@ theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits
   have i_in_bounds : i.1 < f.assignments.size := by rw [hf.2.1]; exact i.2.2
   have h0 : insertUnit_invariant f.assignments hf.2.1 f.ratUnits f.assignments hf.2.1 := by
     intro i
-    simp only [getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
+    simp only [Fin.getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
     apply Or.inl
     intro j
     rw [hf.1] at j
@@ -455,7 +455,7 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   rw [← Array.getElem_eq_data_get] at h'
   simp only [Array.getElem_map] at h'
   apply Exists.intro ⟨j.1, j_in_bounds⟩
-  simp only [getElem!, getElem_fin, h', i_lt_f_clauses_size, dite_true]
+  simp only [getElem!, Fin.getElem_fin, h', i_lt_f_clauses_size, dite_true]
   exact c'_in_f
 
 theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : DefaultFormula n)
@@ -478,7 +478,7 @@ theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : D
   have h_inductive (idx : Fin ratHints.size) (acc : DefaultFormula n × Bool) (ih : motive idx.1 acc) :
     motive (idx.1 + 1) (fold_fn acc ratHints[idx]) := by
     constructor
-    . simp only [getElem_fin, fold_fn_def, ih.1]
+    . simp only [Fin.getElem_fin, fold_fn_def, ih.1]
       split
       . rw [performRatCheck_preserves_formula]
         exact hf
@@ -491,8 +491,8 @@ theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : D
           omega
         rcases i_lt_or_eq_idx with i_lt_idx | i_eq_idx
         . exact ih.2 acc_eq_true ⟨i.1, i_lt_idx⟩
-        . simp only [getElem!, i_eq_idx, idx.2, getElem_fin, dite_true]
-          simp only [getElem_fin, ih.1] at h
+        . simp only [getElem!, i_eq_idx, idx.2, Fin.getElem_fin, dite_true]
+          simp only [Fin.getElem_fin, ih.1] at h
           exact h
       . simp only at h
   have h := (Array.foldl_induction motive h_base h_inductive).2 performRatCheck_fold_success i
@@ -566,7 +566,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
             performRatCheck_success_entails_c_without_negPivot (performRupCheck (insertRupUnits f (negate c)).fst rupHints).1
               ⟨h_performRupCheck_res.1, performRupCheck_res_satisfies_assignments_invariant⟩ (negateLiteral pivot) ratHints[i]
               performRatCheck_success
-          simp only [performRupCheck_preserves_clauses, insertRupUnits_preserves_clauses, getElem_fin] at h
+          simp only [performRupCheck_preserves_clauses, insertRupUnits_preserves_clauses, Fin.getElem_fin] at h
           apply h c' hc' p
           simp only [(· ⊨ ·)]
           simp only [List.any_eq_true, Prod.exists, Bool.exists_bool,

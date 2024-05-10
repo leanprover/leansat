@@ -30,7 +30,7 @@ theorem insertRatUnits_postcondition {n : Nat} (f : DefaultFormula n) (hf : f.ra
   have h0 : insertUnit_invariant f.assignments hf.2 f.ratUnits f.assignments hsize := by
     intro i
     apply Or.inl
-    simp only [getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
+    simp only [Fin.getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
     intro j
     simp only [hf.1, Array.size_toArray, List.length_nil] at j
     exact Fin.elim0 j
@@ -108,7 +108,7 @@ theorem clear_insertRat_base_case {n : Nat} (f : DefaultFormula n) (hf : f.ratUn
   rw [hf.2] at insertRatUnits_assignments_size
   apply Exists.intro insertRatUnits_assignments_size
   intro i
-  simp only [Nat.zero_le, getElem_fin, ne_eq, forall_const, true_and]
+  simp only [Nat.zero_le, Fin.getElem_fin, ne_eq, forall_const, true_and]
   exact insertRatUnits_postcondition f hf units i
 
 theorem clear_insertRat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
