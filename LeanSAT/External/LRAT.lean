@@ -24,30 +24,6 @@ https://www.cs.cmu.edu/~mheule/publications/lrat.pdf
 
 open Parsec
 
-@[inline]
-def tryCatch (p : Parsec α)
-    (csuccess : α → Parsec β)
-    (cerror : Unit → Parsec β)
-    : Parsec β := fun it =>
-  match p it with
-  | .success rem a => csuccess a rem
-  | .error rem err =>
-    -- We assume that it.s never changes as the `Parsec` monad only modifies `it.pos`.
-    if it.pos = rem.pos then cerror () rem else .error rem err
-
--- TODO: upstream, linearity bug in manyCore orig impl
-@[specialize]
-partial def manyCore (p : Parsec α) (acc : Array α) : Parsec $ Array α :=
-  tryCatch p (manyCore p <| acc.push ·) (fun _ => pure acc)
-
--- TODO: delete after manyCore upstream
-@[inline]
-def many (p : Parsec α) : Parsec $ Array α := manyCore p #[]
-
--- TODO: delete after manyCore upstream
-@[inline]
-def many1 (p : Parsec α) : Parsec $ Array α := do manyCore p #[←p]
-
 /--
 Assumes `c` is between `0` and `9`
 -/
