@@ -25,7 +25,6 @@ instance : ToExpr BVBinPred where
   toExpr x :=
     match x with
     | .eq => mkConst ``BVBinPred.eq
-    | .neq => mkConst ``BVBinPred.neq
   toTypeExpr := mkConst ``BVBinPred
 
 instance : ToExpr BVUnOp where

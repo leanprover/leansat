@@ -226,16 +226,11 @@ inductive BVBinPred where
 Equality.
 -/
 | eq
-/--
-Negated equality.
--/
-| neq
 
 namespace BVBinPred
 
 def toString : BVBinPred → String
   | eq => "=="
-  | neq => "!="
 
 instance : ToString BVBinPred := ⟨toString⟩
 
@@ -244,10 +239,8 @@ The denotational semantics for `BVBinPred`.
 -/
 def eval : BVBinPred → (BitVec w → BitVec w → Bool)
   | .eq => (· == ·)
-  | .neq => (· != ·)
 
 @[simp] theorem eval_eq : eval .eq = ((· == ·) : BitVec w → BitVec w → Bool) := by rfl
-@[simp] theorem eval_neq : eval .neq = ((· != ·) : BitVec w → BitVec w → Bool) := by rfl
 
 end BVBinPred
 
