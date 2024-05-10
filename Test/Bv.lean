@@ -78,7 +78,12 @@ set_option trace.bv true in
 theorem unit_18 {x y : BitVec 256} : (x = y) ↔ (y = x) := by
   bv_decide
 
+set_option trace.bv true in
 theorem unit_19 {x : BitVec 256} : -x = (~~~x) + 1 := by
+  bv_decide
+
+set_option trace.bv true in
+theorem unit_20 {x y : BitVec 256} : x - y = x + ((~~~y) + 1) := by
   bv_decide
 
 set_option trace.bv true in
