@@ -100,6 +100,7 @@ termination_by w - curr
 
 end blastVar
 
+@[simp]
 theorem blastVar_eq_eval_getLsb (aig : AIG BVBit) (var : BVVar w) (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦(blastVar aig var).aig, (blastVar aig var).stream.getRef idx hidx, assign.toAIGAssignment⟧
