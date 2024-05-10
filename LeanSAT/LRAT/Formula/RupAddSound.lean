@@ -122,7 +122,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
   have i_in_bounds : i.1 < f.assignments.size := by rw [f_readyForRupAdd.2.1]; exact i.2.2
   have h0 : insertUnit_invariant f.assignments f_readyForRupAdd.2.1 f.rupUnits f.assignments f_readyForRupAdd.2.1 := by
     intro i
-    simp only [getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
+    simp only [Fin.getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
     apply Or.inl
     intro j
     simp only [f_readyForRupAdd.1, Array.size_toArray, List.length_nil] at j
@@ -284,8 +284,8 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
             apply Array.getElem_mem_data
           . rfl
       specialize hp j_unit ((Or.inr ∘ Or.inl) j_unit_in_insertRupUnits_res)
-      simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, getElem_fin, List.find?, j_unit] at hp
-      simp only [getElem_fin] at h1
+      simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, Fin.getElem_fin, List.find?, j_unit] at hp
+      simp only [Fin.getElem_fin] at h1
       rcases hp with ⟨i', hp⟩
       simp only [h1, Clause.toList, unit_eq, List.mem_singleton,
         Prod.mk.injEq] at hp
@@ -337,11 +337,11 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       . rfl
     have hp1 := hp j1_unit ((Or.inr ∘ Or.inl) j1_unit_in_insertRupUnits_res)
     have hp2 := hp j2_unit ((Or.inr ∘ Or.inl) j2_unit_in_insertRupUnits_res)
-    simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, getElem_fin, List.find?, j1_unit, j2_unit] at hp1 hp2
+    simp only [List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe, Fin.getElem_fin, List.find?, j1_unit, j2_unit] at hp1 hp2
     rcases hp1 with ⟨i1, hp1⟩
     rcases hp2 with ⟨i2, hp2⟩
-    simp only [getElem_fin] at h1
-    simp only [getElem_fin] at h2
+    simp only [Fin.getElem_fin] at h1
+    simp only [Fin.getElem_fin] at h2
     simp only [h1, Clause.toList, unit_eq, List.mem_singleton, Prod.mk.injEq,
       and_false, false_and, and_true, false_or, h2, or_false] at hp1 hp2
     simp only [hp2.1, ← hp1.1, decide_eq_true_eq, true_and] at hp2
@@ -388,7 +388,7 @@ def reduce_postcondition_induction_motive (c_arr : Array (Literal (PosFin n))) (
 theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFin n))} {assignment : Array Assignment}
   (idx : Fin c_arr.size) (res : ReduceResult (PosFin n)) (ih : reduce_postcondition_induction_motive c_arr assignment idx.1 res) :
   reduce_postcondition_induction_motive c_arr assignment (idx.1 + 1) (reduce_fold_fn assignment res c_arr[idx]) := by
-  simp only [reduce_postcondition_induction_motive, getElem_fin, forall_exists_index, and_imp, Prod.forall]
+  simp only [reduce_postcondition_induction_motive, Fin.getElem_fin, forall_exists_index, and_imp, Prod.forall]
   constructor
   . intro h p
     rw [reduce_fold_fn] at h
@@ -533,7 +533,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
   rw [reduce, c_clause_rw, ← Array.foldl_eq_foldl_data]
   let motive := reduce_postcondition_induction_motive c_arr assignment
   have h_base : motive 0 reducedToEmpty := by
-    simp only [reduce_postcondition_induction_motive, getElem_fin, forall_exists_index, and_imp, Prod.forall,
+    simp only [reduce_postcondition_induction_motive, Fin.getElem_fin, forall_exists_index, and_imp, Prod.forall,
       forall_const, false_implies, implies_true, and_true, motive]
     intro p
     apply Or.inl
@@ -610,7 +610,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
     (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) (ih : confirmRupHint_fold_entails_hsat_motive f idx.1 acc) :
     confirmRupHint_fold_entails_hsat_motive f (idx.1 + 1) ((confirmRupHint f.clauses) acc rupHints[idx]) := by
   rcases ih with ⟨hsize, h1, h2⟩
-  simp only [confirmRupHint, Bool.or_eq_true, Prod.mk.eta, getElem_fin]
+  simp only [confirmRupHint, Bool.or_eq_true, Prod.mk.eta, Fin.getElem_fin]
   split
   . exact ⟨hsize, h1, h2⟩
   . next acc2_eq_false =>

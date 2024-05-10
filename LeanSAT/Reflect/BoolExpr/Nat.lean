@@ -3,18 +3,37 @@ import Batteries.Data.Array.Lemmas
 
 namespace List
 
--- Sigh... `List.ofFn` should be defined using `Array.data` instead of `Array.toList`.
+theorem length_ofFn_go {f : Fin n → α} {i j : Nat} {h} : length (ofFn.go f i j h) = i := by
+  induction i generalizing j with
+  | zero => simp[ofFn.go]
+  | succ n ih =>
+    dsimp [ofFn.go]
+    rw [ih]
 
-@[simp] theorem length_ofFn {f : Fin k → α} : (List.ofFn f).length = k := by
-  simp [List.ofFn]
+@[simp]
+theorem length_ofFn {f : Fin k → α} : (List.ofFn f).length = k := by
+  simp [ofFn, length_ofFn_go]
 
 @[simp] theorem get_Array_data : (Array.data x).get i = x.get (Fin.cast (by simp) i) := by
   rfl
 
-@[simp] theorem get_ofFn {f : Fin k → α} {i : Fin (List.ofFn f).length} :
+theorem get_ofFn_go {f : Fin k → α} {i j k : Nat} {h} {hk} :
+    (List.ofFn.go f i j h).get ⟨k, hk⟩ = f ⟨j + k, by simp[length_ofFn_go] at hk; omega⟩ := by
+  let i+1 := i
+  cases k with
+  | zero => dsimp [ofFn.go]
+  | succ k =>
+    dsimp [ofFn.go]
+    rw [get_ofFn_go]
+    congr 2
+    simp_arith
+termination_by i
+
+@[simp]
+theorem get_ofFn {f : Fin k → α} {i : Fin (List.ofFn f).length} :
     (List.ofFn f).get i = f (Fin.cast (by simp) i) := by
-  simp [List.ofFn]
-  congr
+  rcases i with ⟨i, hi⟩
+  simp [ofFn, get_ofFn_go]
 
 theorem getD_ofFn {f : Fin k → α} : (List.ofFn f).getD i d = if h : i < k then f ⟨i, h⟩ else d := by
   simp [List.getD]

@@ -400,7 +400,7 @@ theorem Array.mem_filter {a : Array α} {p : α → Bool} :
   have h_inductive (idx : Fin a.size) (acc : Array α) (ih : motive idx.1 acc) : motive (idx.1 + 1) (f acc a[idx]) := by
     intro i i_in_bounds i_lt_idx_add_one
     rw [f_def]
-    simp only [getElem_fin]
+    simp only [Fin.getElem_fin]
     intro pai
     rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
     . have h := ih i i_in_bounds i_lt_idx pai

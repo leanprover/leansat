@@ -28,7 +28,7 @@ theorem c1Nodup :
     i.1 ≠ j.1 → #[(v1, true), (v2, true), (v3, true)][i] ≠ #[(v1, true), (v2, true), (v3, true)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v1, true), (v2, true), (v3, true)].size = 3 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_or_two_of_lt_three i_property
@@ -44,7 +44,7 @@ theorem c2Nodup :
     i.1 ≠ j.1 → #[(v4, true), (v5, true), (v6, true)][i] ≠ #[(v4, true), (v5, true), (v6, true)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v4, true), (v5, true), (v6, true)].size = 3 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_or_two_of_lt_three i_property
@@ -60,7 +60,7 @@ theorem c3Nodup :
     i.1 ≠ j.1 → #[(v7, true), (v8, true), (v9, true)][i] ≠ #[(v7, true), (v8, true), (v9, true)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v7, true), (v8, true), (v9, true)].size = 3 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_or_two_of_lt_three i_property
@@ -76,7 +76,7 @@ theorem c4Nodup :
     i.1 ≠ j.1 → #[(v10, true), (v11, true), (v12, true)][i] ≠ #[(v10, true), (v11, true), (v12, true)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v10, true), (v11, true), (v12, true)].size = 3 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_or_two_of_lt_three i_property
@@ -92,7 +92,7 @@ theorem c5Nodup :
     i.1 ≠ j.1 → #[(v1, false), (v4, false)][i] ≠ #[(v1, false), (v4, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v1, false), (v4, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -108,7 +108,7 @@ theorem c6Nodup :
     i.1 ≠ j.1 → #[(v1, false), (v7, false)][i] ≠ #[(v1, false), (v7, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v1, false), (v7, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -124,7 +124,7 @@ theorem c7Nodup :
     i.1 ≠ j.1 → #[(v1, false), (v10, false)][i] ≠ #[(v1, false), (v10, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v1, false), (v10, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -140,7 +140,7 @@ theorem c8Nodup :
     i.1 ≠ j.1 → #[(v4, false), (v7, false)][i] ≠ #[(v4, false), (v7, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v4, false), (v7, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -156,7 +156,7 @@ theorem c9Nodup :
     i.1 ≠ j.1 → #[(v4, false), (v10, false)][i] ≠ #[(v4, false), (v10, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v4, false), (v10, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -172,7 +172,7 @@ theorem c10Nodup :
     i.1 ≠ j.1 → #[(v7, false), (v10, false)][i] ≠ #[(v7, false), (v10, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v7, false), (v10, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -188,7 +188,7 @@ theorem c11Nodup :
     i.1 ≠ j.1 → #[(v2, false), (v5, false)][i] ≠ #[(v2, false), (v5, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v2, false), (v5, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -204,7 +204,7 @@ theorem c12Nodup :
     i.1 ≠ j.1 → #[(v2, false), (v8, false)][i] ≠ #[(v2, false), (v8, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v2, false), (v8, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -220,7 +220,7 @@ theorem c13Nodup :
     i.1 ≠ j.1 → #[(v2, false), (v11, false)][i] ≠ #[(v2, false), (v11, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v2, false), (v11, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -236,7 +236,7 @@ theorem c14Nodup :
     i.1 ≠ j.1 → #[(v5, false), (v8, false)][i] ≠ #[(v5, false), (v8, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v5, false), (v8, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -252,7 +252,7 @@ theorem c15Nodup :
     i.1 ≠ j.1 → #[(v5, false), (v11, false)][i] ≠ #[(v5, false), (v11, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v5, false), (v11, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -268,7 +268,7 @@ theorem c16Nodup :
     i.1 ≠ j.1 → #[(v8, false), (v11, false)][i] ≠ #[(v8, false), (v11, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v8, false), (v11, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -284,7 +284,7 @@ theorem c17Nodup :
     i.1 ≠ j.1 → #[(v3, false), (v6, false)][i] ≠ #[(v3, false), (v6, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v3, false), (v6, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -300,7 +300,7 @@ theorem c18Nodup :
     i.1 ≠ j.1 → #[(v3, false), (v9, false)][i] ≠ #[(v3, false), (v9, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v3, false), (v9, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -316,7 +316,7 @@ theorem c19Nodup :
     i.1 ≠ j.1 → #[(v3, false), (v12, false)][i] ≠ #[(v3, false), (v12, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v3, false), (v12, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -332,7 +332,7 @@ theorem c20Nodup :
     i.1 ≠ j.1 → #[(v6, false), (v9, false)][i] ≠ #[(v6, false), (v9, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v6, false), (v9, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -348,7 +348,7 @@ theorem c21Nodup :
     i.1 ≠ j.1 → #[(v6, false), (v12, false)][i] ≠ #[(v6, false), (v12, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v6, false), (v12, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
@@ -364,7 +364,7 @@ theorem c22Nodup :
     i.1 ≠ j.1 → #[(v9, false), (v12, false)][i] ≠ #[(v9, false), (v12, false)][j] := by
   intro i j i_ne_j heq
   have hsize : #[(v9, false), (v12, false)].size = 2 := by decide
-  simp only [getElem_fin] at heq
+  simp only [Fin.getElem_fin] at heq
   have i_property := i.2
   simp only [hsize] at i_property
   have i_vals := eq_zero_or_one_of_lt_two i_property
