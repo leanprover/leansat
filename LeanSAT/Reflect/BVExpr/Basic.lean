@@ -105,6 +105,10 @@ We can obviously not bitblast a `Nat` but still want to support the case where t
 constant `Nat` value.
 -/
 | shiftRightConst (n : Nat)
+/--
+Negation in the sense of 2s complement.
+-/
+| neg
 
 namespace BVUnOp
 
@@ -112,6 +116,7 @@ def toString : BVUnOp → String
   | not => "~"
   | shiftLeftConst n => s!"<< {n}"
   | shiftRightConst n => s!">> {n}"
+  | neg => "-"
 
 instance : ToString BVUnOp := ⟨toString⟩
 
@@ -122,6 +127,7 @@ def eval : BVUnOp → (BitVec w → BitVec w)
   | not => (~~~ ·)
   | shiftLeftConst n => (· <<< n)
   | shiftRightConst n => (· >>> n)
+  | neg => (- ·)
 
 @[simp] theorem eval_not : eval .not = ((~~~ ·) : BitVec w → BitVec w) := by rfl
 
@@ -132,6 +138,8 @@ theorem eval_shiftLeftConst : eval (shiftLeftConst n) = ((· <<< n) : BitVec w �
 @[simp]
 theorem eval_shiftRightConst : eval (shiftRightConst n) = ((· >>> n) : BitVec w → BitVec w) := by
   rfl
+
+@[simp] theorem eval_neg : eval .neg = ((- ·) : BitVec w → BitVec w) := by rfl
 
 end BVUnOp
 
