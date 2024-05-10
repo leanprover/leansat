@@ -11,6 +11,8 @@ RUN_FAILS="$LIB/run_fail.txt"
 > $RUN_SUCCESSES
 > $RUN_FAILS
 
+ulimit -s unlimited
+
 # Build every file and memorize the results in run_[success|fail].txt
 for path in $(find "${LIB}" -type f  -name "*.lean" | sort); do
     file_name_wo_suffix=$(basename -s .lean $path)
