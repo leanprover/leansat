@@ -15,6 +15,12 @@ namespace Normalize
 
 open Lean Meta
 
+/-
+This section contains theorems responsible for turning both `Bool` and `BitVec` goals into the
+`x = true` normal form expected by `bv_unsat`.
+-/
+section Normalize
+
 @[bv_normalize]
 theorem BitVec.eq_to_beq (a b : BitVec w) : (a = b) = ((a == b) = true) := by
   simp
@@ -73,16 +79,82 @@ theorem Bool.eq_false (a : Bool) : ((a = true) = False) = ((!a) = true) := by
 theorem Bool.decide_eq_true (a : Bool) : (decide (a = true)) = a := by
   simp
 
-@[bv_normalize]
-theorem not_true : (¬True) = (false = true) := by
-  simp
+end Normalize
 
+/-
+This section is tries to do constant folding in the `Prop` fragment that might be of interest for
+`bv_normalize`.
+-/
+section PropConstant
+
+attribute [bv_normalize] not_true
 attribute [bv_normalize] and_true
 attribute [bv_normalize] true_and
 attribute [bv_normalize] or_true
 attribute [bv_normalize] true_or
 
+end PropConstant
+
+/-
+This section is tries to do constant folding in the `Bool` fragment that might be of interest for
+`bv_normalize`.
+-/
+section BoolConstant
+
+attribute [bv_normalize] Bool.not_true
+attribute [bv_normalize] Bool.not_false
+attribute [bv_normalize] Bool.or_true
+attribute [bv_normalize] Bool.true_or
+attribute [bv_normalize] Bool.or_false
+attribute [bv_normalize] Bool.false_or
+attribute [bv_normalize] Bool.and_true
+attribute [bv_normalize] Bool.true_and
+attribute [bv_normalize] Bool.and_false
+attribute [bv_normalize] Bool.false_and
+attribute [bv_normalize] beq_self_eq_true'
+attribute [bv_normalize] Bool.not_beq_false
+attribute [bv_normalize] Bool.not_beq_true
+attribute [bv_normalize] Bool.beq_true
+attribute [bv_normalize] Bool.true_beq
+attribute [bv_normalize] Bool.beq_false
+attribute [bv_normalize] Bool.false_beq
+attribute [bv_normalize] Bool.beq_not_self
+attribute [bv_normalize] Bool.not_beq_self
+attribute [bv_normalize] Bool.beq_self_left
+attribute [bv_normalize] Bool.beq_self_right
+
+end BoolConstant
+
+/-
+A large fragment of constant folding is already done with the `seval` simpset. The following
+only contains additional lemmas that are of interest
+-/
+
+section BitVecConstant
+
+attribute [bv_normalize] BitVec.add_zero
+attribute [bv_normalize] BitVec.zero_add
+attribute [bv_normalize] BitVec.neg_zero
+attribute [bv_normalize] BitVec.sub_self
+attribute [bv_normalize] BitVec.sub_zero
+attribute [bv_normalize] BitVec.zeroExtend_eq
+attribute [bv_normalize] BitVec.zeroExtend_zero
+
+@[bv_normalize]
+theorem BitVec.shiftLeft_twice (w : Nat) (x : BitVec w) (n m : Nat) :
+    (x <<< n) <<< m = x <<< (n + m) := by
+  sorry
+
+
+@[bv_normalize]
+theorem BitVec.shiftRight_twice (w : Nat) (x : BitVec w) (n m : Nat) :
+    (x >>> n) >>> m = x >>> (n + m) := by
+  sorry
+
+end BitVecConstant
+
 end Normalize
+
 end BVDecide
 
 syntax (name := bvNormalizeSyntax) "bv_normalize" : tactic
@@ -92,5 +164,5 @@ macro_rules
    `(tactic|
       apply Classical.byContradiction;
       intro;
-      simp only [bv_normalize] at *
+      simp only [bv_normalize, seval] at *
    )
