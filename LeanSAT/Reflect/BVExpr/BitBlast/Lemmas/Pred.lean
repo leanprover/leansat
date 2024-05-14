@@ -1,4 +1,5 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Eq
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.GetLsb
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Pred
 
 open AIG
@@ -14,5 +15,7 @@ theorem bitblast_denote_eq_eval (aig : AIG BVBit) (pred : BVPred) (assign : BVEx
   | bin lhs op rhs =>
     cases op with
     | eq => simp [bitblast]
+  | getLsb expr idx =>
+    simp [bitblast]
 
 end BVPred

@@ -1,4 +1,5 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Eq
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.GetLsb
 
 namespace BVPred
 
@@ -7,6 +8,7 @@ def bitblast (aig : AIG BVBit) (pred : BVPred) : AIG.Entrypoint BVBit :=
   | .bin lhs op rhs =>
     match op with
     | .eq => mkEq aig ⟨lhs, rhs⟩
+  | .getLsb expr idx => blastGetLsb aig ⟨expr, idx⟩
 
 theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred)
     : aig.decls.size ≤ (bitblast aig pred).aig.decls.size := by
@@ -16,6 +18,9 @@ theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred)
     | eq =>
       simp only [bitblast]
       apply AIG.LawfulOperator.le_size
+  | getLsb expr idx =>
+    simp only [bitblast]
+    apply AIG.LawfulOperator.le_size
 
 theorem bitblast_decl_eq (aig : AIG BVBit) (pred : BVPred) {h : idx < aig.decls.size} :
     have := bitblast_le_size aig pred
@@ -26,6 +31,9 @@ theorem bitblast_decl_eq (aig : AIG BVBit) (pred : BVPred) {h : idx < aig.decls.
     | eq =>
       simp only [bitblast]
       rw [AIG.LawfulOperator.decl_eq (f := mkEq)]
+  | getLsb expr idx =>
+    simp only [bitblast]
+    rw [AIG.LawfulOperator.decl_eq (f := blastGetLsb)]
 
 instance : AIG.LawfulOperator BVBit (fun _ => BVPred) bitblast where
   le_size := bitblast_le_size
