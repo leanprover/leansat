@@ -65,6 +65,8 @@ where
   go : BVPred → Expr
   | .bin (w := w) lhs op rhs =>
     mkApp4 (mkConst ``BVPred.bin) (toExpr w) (toExpr lhs) (toExpr op) (toExpr rhs)
+  | .getLsb (w := w) expr idx =>
+    mkApp3 (mkConst ``BVPred.getLsb) (toExpr w) (toExpr expr) (toExpr idx)
 
 instance : ToExpr BVLogicalExpr where
   toExpr x := go x
@@ -362,13 +364,12 @@ theorem beq_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = 
     : (lhs == rhs) = (lhs' == rhs') := by
   simp[*]
 
+theorem getLsb_congr (i : Nat) (w : Nat) (e e' : BitVec w) (h : e' = e)
+    : (e.getLsb i) = (e'.getLsb i) := by
+  simp[*]
+
 def mkEvalExpr (expr : Expr) : M Expr := do
   return mkApp2 (mkConst ``BVPred.eval) (← M.atomsAssignment) expr
-
-structure EqPair where
-  fst : ReifiedBVExpr
-  snd : ReifiedBVExpr
-  heq : fst.width = snd.width
 
 /--
 Reify an `Expr` that is a proof of a predicate about `BitVec`.
@@ -402,6 +403,22 @@ def of (t : Expr) : M (Option ReifiedBVPred) := do
       return some ⟨bvExpr, proof, expr⟩
     else
       return none
+  | BitVec.getLsb _ subExpr idxExpr =>
+    let some sub ← ReifiedBVExpr.of subExpr | return none
+    let some idx ← getNatValue? idxExpr | return none
+    let bvExpr : BVPred := .getLsb sub.bvExpr idx
+    let expr := mkApp3 (mkConst ``BVPred.getLsb) (toExpr sub.width) sub.expr idxExpr
+    let proof := do
+      let subEval ← ReifiedBVExpr.mkEvalExpr sub.width sub.expr
+      let subProof ← sub.evalsAtAtoms
+      return mkApp5
+        (mkConst ``getLsb_congr)
+        idxExpr
+        (toExpr sub.width)
+        subExpr
+        subEval
+        subProof
+    return some ⟨bvExpr, proof, expr⟩
   | _ => return none
 
 end ReifiedBVPred
