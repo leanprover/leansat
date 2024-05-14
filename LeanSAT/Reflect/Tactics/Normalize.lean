@@ -147,17 +147,8 @@ attribute [bv_normalize] BitVec.sub_self
 attribute [bv_normalize] BitVec.sub_zero
 attribute [bv_normalize] BitVec.zeroExtend_eq
 attribute [bv_normalize] BitVec.zeroExtend_zero
-
-@[bv_normalize]
-theorem BitVec.shiftLeft_twice (w : Nat) (x : BitVec w) (n m : Nat) :
-    (x <<< n) <<< m = x <<< (n + m) := by
-  sorry
-
-
-@[bv_normalize]
-theorem BitVec.shiftRight_twice (w : Nat) (x : BitVec w) (n m : Nat) :
-    (x >>> n) >>> m = x >>> (n + m) := by
-  sorry
+attribute [bv_normalize] BitVec.BitVec.shiftLeft_shiftLeft
+attribute [bv_normalize] BitVec.BitVec.shiftRight_shiftRight
 
 end BitVecConstant
 
