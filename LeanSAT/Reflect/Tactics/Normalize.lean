@@ -31,6 +31,14 @@ theorem BitVec.ne_to_beq (a b : BitVec w) : (a ≠ b) = ((!(a == b)) = true) := 
 
 theorem Bool.eq_to_beq (a b : Bool) : (a = b) = ((a == b) = true) := by simp
 
+@[bv_normalize]
+theorem BitVec.bne_to_beq (a b : BitVec w) : (a != b) = (!(a == b)) := by
+  simp [bne]
+
+@[bv_normalize]
+theorem Bool.bne_to_beq (a b : Bool) : (a != b) = (!(a == b)) := by
+  simp [bne]
+
 simproc [bv_normalize] eqToBEq (((_ : Bool) = (_ : Bool))) := fun e => do
   let_expr Eq _ lhs rhs := e | return .continue
   match_expr rhs with

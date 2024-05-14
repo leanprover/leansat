@@ -9,15 +9,9 @@ bitvec_AndOrXor_1683_1.lean
 bitvec_AndOrXor_1683_2.lean
 bitvec_AndOrXor_1704.lean
 bitvec_AndOrXor_1705.lean
-bitvec_AndOrXor_1733.lean
 bitvec_AndOrXor_2443.lean
 bitvec_AndOrXor_2663.lean
-bitvec_AndOrXor_698.lean
-bitvec_AndOrXor_709.lean
-bitvec_AndOrXor_716.lean
 bitvec_AndOrXor_794.lean
-bitvec_AndOrXor_827.lean
-bitvec_AndOrXor_887_2.lean
 bitvec_InstCombineShift__239.lean
 bitvec_InstCombineShift__279.lean
 bitvec_InstCombineShift__351.lean
