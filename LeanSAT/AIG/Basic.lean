@@ -182,6 +182,16 @@ def BinaryInput.cast {aig1 aig2 : AIG α} (input : BinaryInput aig1)
     (h : aig1.decls.size ≤ aig2.decls.size) : BinaryInput aig2 :=
   { input with lhs := input.lhs.cast h, rhs := input.rhs.cast h }
 
+structure TernaryInput (aig : AIG α) where
+  discr : Ref aig
+  lhs : Ref aig
+  rhs : Ref aig
+
+@[inline]
+def TernaryInput.cast {aig1 aig2 : AIG α} (input : TernaryInput aig1)
+    (h : aig1.decls.size ≤ aig2.decls.size) : TernaryInput aig2 :=
+  { input with discr := input.discr.cast h, lhs := input.lhs.cast h, rhs := input.rhs.cast h }
+
 /--
 An entrypoint into an `AIG`. This can be used to evaluate a circuit, starting at a certain node,
 with `AIG.denote` or to construct bigger circuits
