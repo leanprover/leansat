@@ -87,6 +87,10 @@ theorem Bool.eq_false (a : Bool) : ((a = true) = False) = ((!a) = true) := by
 theorem Bool.decide_eq_true (a : Bool) : (decide (a = true)) = a := by
   simp
 
+attribute [bv_normalize] BitVec.getLsb_cast
+attribute [bv_normalize] BitVec.msb_eq_getLsb_last
+attribute [bv_normalize] BitVec.testBit_toNat
+
 end Normalize
 
 /-
@@ -149,6 +153,9 @@ attribute [bv_normalize] BitVec.zeroExtend_eq
 attribute [bv_normalize] BitVec.zeroExtend_zero
 attribute [bv_normalize] BitVec.BitVec.shiftLeft_shiftLeft
 attribute [bv_normalize] BitVec.BitVec.shiftRight_shiftRight
+attribute [bv_normalize] BitVec.getLsb_zero
+attribute [bv_normalize] BitVec.getLsb_zero_length
+attribute [bv_normalize] BitVec.getLsb_concat_zero
 
 end BitVecConstant
 
