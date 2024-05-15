@@ -147,7 +147,14 @@ A `BitVec` variable, referred to through an index.
 A constant `BitVec` value.
 -/
 | const (val : BitVec w) : BVExpr w
+/--
+zero extend a `BitVec` by some constant amount.
+-/
 | zeroExtend (v : Nat) (expr : BVExpr w) : BVExpr v
+/--
+Extract a slice from a `BitVec`.
+-/
+| extract (hi lo : Nat) (expr : BVExpr w) : BVExpr (hi - lo + 1)
 /--
 A binary operation on two `BVExpr`.
 -/
@@ -164,6 +171,7 @@ def toString : BVExpr w → String
   | .var idx => s!"var{idx}"
   | .const val => ToString.toString val
   | .zeroExtend v expr => s!"(zext {v} {expr.toString})"
+  | .extract hi lo expr => s!"{expr.toString}[{hi}:{lo}]"
   | .bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
   | .un op operand => s!"({op.toString} {toString operand})"
   | .append lhs rhs => s!"({toString lhs} ++ {toString rhs})"
@@ -197,6 +205,7 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
     bv.truncate w
   | .const val => val
   | .zeroExtend v expr => BitVec.zeroExtend v (eval assign expr)
+  | .extract hi lo expr => BitVec.extractLsb hi lo (eval assign expr)
   | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
   | .un op operand => op.eval (eval assign operand)
   | .append lhs rhs => (eval assign lhs) ++ (eval assign rhs)
@@ -209,7 +218,12 @@ theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.tr
 theorem eval_const : eval assign (.const val) = val := by rfl
 
 @[simp]
-theorem eval_zeroExtend : eval assign (.zeroExtend v expr) = BitVec.zeroExtend v (eval assign expr) := by rfl
+theorem eval_zeroExtend : eval assign (.zeroExtend v expr) = BitVec.zeroExtend v (eval assign expr) := by
+  rfl
+
+@[simp]
+theorem eval_extract : eval assign (.extract hi lo expr) = BitVec.extractLsb hi lo (eval assign expr) := by
+  rfl
 
 @[simp]
 theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rhs.eval assign) := by
