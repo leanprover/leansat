@@ -7,6 +7,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ZeroExtend
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Append
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Extract
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 
 open AIG
@@ -107,9 +108,19 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     . next hsplit =>
       simp only [hsplit, decide_False, cond_false]
       rw [go_denote_mem_prefix, lih]
+  | extract hi lo inner ih =>
+    simp only [go, blastExtract_eq_eval_getLsb, Bool.if_false_right, eval_extract,
+      BitVec.getLsb_extract]
+    have : idx ≤ hi - lo := by omega
+    simp only [this, decide_True, Bool.true_and]
+    split
+    . next hsplit =>
+      rw [ih]
+    . apply Eq.symm
+      apply BitVec.getLsb_ge
+      omega
 
 end bitblast
-
 @[simp]
 theorem bitblast_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
