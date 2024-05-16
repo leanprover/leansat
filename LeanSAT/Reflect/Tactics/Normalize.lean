@@ -151,8 +151,8 @@ attribute [bv_normalize] BitVec.sub_self
 attribute [bv_normalize] BitVec.sub_zero
 attribute [bv_normalize] BitVec.zeroExtend_eq
 attribute [bv_normalize] BitVec.zeroExtend_zero
-attribute [bv_normalize] BitVec.BitVec.shiftLeft_shiftLeft
-attribute [bv_normalize] BitVec.BitVec.shiftRight_shiftRight
+attribute [bv_normalize] BitVec.shiftLeft_shiftLeft
+attribute [bv_normalize] BitVec.shiftRight_shiftRight
 attribute [bv_normalize] BitVec.getLsb_zero
 attribute [bv_normalize] BitVec.getLsb_zero_length
 attribute [bv_normalize] BitVec.getLsb_concat_zero
