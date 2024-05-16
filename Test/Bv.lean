@@ -95,6 +95,10 @@ theorem unit_22 (x y : BitVec 32) : x.getLsb 100 = y.getLsb 120 := by
   bv_decide
 
 set_option trace.bv true in
+theorem unit_23 (x y : BitVec 32) : (x < y) ↔ ¬(y ≤ x) := by
+  bv_decide
+
+set_option trace.bv true in
 theorem bv_axiomCheck (x y : BitVec 1) : x + y = y + x := by
   bv_decide
 
