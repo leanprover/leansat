@@ -26,6 +26,10 @@ bitvec_AndOrXor_1288_A__B__B__C__A___A__B__C.lean
 bitvec_AndOrXor_1294_A__B__A__B___A__B.lean
 bitvec_AndOrXor_135.lean
 bitvec_AndOrXor_144.lean
+bitvec_AndOrXor_1683_1.lean
+bitvec_AndOrXor_1683_2.lean
+bitvec_AndOrXor_1704.lean
+bitvec_AndOrXor_1705.lean
 bitvec_AndOrXor_1733.lean
 bitvec_AndOrXor_2063__X__C1__C2____X__C2__C1__C2.lean
 bitvec_AndOrXor_2113___A__B__A___A__B.lean
@@ -56,6 +60,7 @@ bitvec_AndOrXor_2617.lean
 bitvec_AndOrXor_2627.lean
 bitvec_AndOrXor_2647.lean
 bitvec_AndOrXor_2658.lean
+bitvec_AndOrXor_2663.lean
 bitvec_AndOrXor_698.lean
 bitvec_AndOrXor_709.lean
 bitvec_AndOrXor_716.lean
