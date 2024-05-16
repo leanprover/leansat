@@ -87,9 +87,35 @@ theorem Bool.eq_false (a : Bool) : ((a = true) = False) = ((!a) = true) := by
 theorem Bool.decide_eq_true (a : Bool) : (decide (a = true)) = a := by
   simp
 
+@[bv_normalize]
+theorem Bool.eq_true_eq_true_eq (x y : Bool) : ((x = true) = (y = true)) = (x = y) :=
+  by simp
+
 attribute [bv_normalize] BitVec.getLsb_cast
 attribute [bv_normalize] BitVec.msb_eq_getLsb_last
 attribute [bv_normalize] BitVec.testBit_toNat
+
+@[bv_normalize]
+theorem BitVec.lt_ult (x y : BitVec w) : (x < y) = (BitVec.ult x y = true) := by
+  rw [BitVec.ult]
+  rw [LT.lt]
+  rw [BitVec.instLT]
+  simp
+
+@[bv_normalize]
+theorem BitVec.gt_ult (x y : BitVec w) : (x > y) = (BitVec.ult y x = true) := by
+  simp [GT.gt, BitVec.lt_ult]
+
+@[bv_normalize]
+theorem BitVec.le_ule (x y : BitVec w) : (x ≤ y) = (BitVec.ule x y = true) := by
+  rw [BitVec.ule]
+  rw [LE.le]
+  rw [BitVec.instLE]
+  simp
+
+@[bv_normalize]
+theorem BitVec.ge_ule (x y : BitVec w) : (x ≥ y) = (BitVec.ule y x = true) := by
+  simp [GT.gt, BitVec.le_ule]
 
 end Normalize
 
@@ -134,6 +160,7 @@ attribute [bv_normalize] Bool.beq_not_self
 attribute [bv_normalize] Bool.not_beq_self
 attribute [bv_normalize] Bool.beq_self_left
 attribute [bv_normalize] Bool.beq_self_right
+attribute [bv_normalize] Bool.not_not
 
 end BoolConstant
 
