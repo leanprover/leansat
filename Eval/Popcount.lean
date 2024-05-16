@@ -52,6 +52,6 @@ def optimized (x : BitVec 32) : BitVec 32 :=
 
 example (x : BitVec 32) : pop_spec' x = optimized x := by
   dsimp [pop_spec', pop_spec'.go, optimized]
-  intros; bv_decide
+  bv_decide
 
 end Popcount
