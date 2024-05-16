@@ -4,12 +4,12 @@ namespace BVExpr
 namespace bitblast
 
 structure OverflowInput (aig : AIG BVBit) where
-  {w : Nat}
+  (w : Nat)
   stream : AIG.BinaryRefStream aig w
   cin : AIG.Ref aig
 
 def mkOverflowBit (aig : AIG BVBit) (input : OverflowInput aig) : AIG.Entrypoint BVBit :=
-  let ⟨⟨lhs, rhs⟩, cin⟩ := input
+  let ⟨_, ⟨lhs, rhs⟩, cin⟩ := input
   go aig 0 (by omega) cin lhs rhs
 where
   go {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
