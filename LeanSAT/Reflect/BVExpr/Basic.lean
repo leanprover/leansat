@@ -171,6 +171,7 @@ A binary operation on two `BVExpr`.
 A unary operation on two `BVExpr`.
 -/
 | un (op : BVUnOp) (operand : BVExpr w) : BVExpr w
+| append (lhs : BVExpr l) (rhs : BVExpr r) : BVExpr (l + r)
 
 namespace BVExpr
 
@@ -180,6 +181,7 @@ def toString : BVExpr w → String
   | .zeroExtend v expr => s!"(zext {v} {expr.toString})"
   | .bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
   | .un op operand => s!"({op.toString} {toString operand})"
+  | .append lhs rhs => s!"({toString lhs} ++ {toString rhs})"
 
 instance : ToString (BVExpr w) := ⟨toString⟩
 
@@ -212,6 +214,7 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
   | .zeroExtend v expr => BitVec.zeroExtend v (eval assign expr)
   | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
   | .un op operand => op.eval (eval assign operand)
+  | .append lhs rhs => (eval assign lhs) ++ (eval assign rhs)
 
 @[simp]
 theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.truncate _ := by
@@ -229,6 +232,10 @@ theorem eval_bin : eval assign (.bin lhs op rhs) = op.eval (lhs.eval assign) (rh
 
 @[simp]
 theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) := by
+  rfl
+
+@[simp]
+theorem eval_append : eval assign (.append lhs rhs) = (lhs.eval assign) ++ (rhs.eval assign) := by
   rfl
 
 end BVExpr

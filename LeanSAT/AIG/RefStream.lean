@@ -85,6 +85,41 @@ theorem getRef_cast {aig1 aig2 : AIG α} (s : RefStream aig1 len) (idx : Nat) (h
       (s.getRef idx hidx).cast hcast := by
   simp [cast, cast', getRef]
 
+def append (lhs : RefStream aig lw) (rhs : RefStream aig rw) : RefStream aig (lw + rw) :=
+  let ⟨lrefs, hl1, hl2⟩ := lhs
+  let ⟨rrefs, hr1, hr2⟩ := rhs
+  ⟨
+    lrefs ++ rrefs,
+    by simp [Array.size_append, hl1, hr1],
+    by
+      intro i h
+      by_cases hsplit : i < lrefs.size
+      . rw [Array.get_append_left]
+        apply hl2
+        omega
+      . rw [Array.get_append_right]
+        . apply hr2
+          omega
+        . omega
+  ⟩
+
+theorem getRef_append (lhs : RefStream aig lw) (rhs : RefStream aig rw) (idx : Nat) (hidx : idx < lw + rw)
+    : (lhs.append rhs).getRef idx hidx
+        =
+      if h:idx < lw then
+        lhs.getRef idx h
+      else
+        rhs.getRef (idx - lw) (by omega) := by
+  simp only [getRef, append]
+  split
+  . simp [Ref.mk.injEq]
+    rw [Array.get_append_left]
+  . simp only [Ref.mk.injEq]
+    rw [Array.get_append_right]
+    . simp [lhs.hlen]
+    . rw [lhs.hlen]
+      omega
+
 end RefStream
 
 -- TODO: ZipTarget can benefit from this I think?
