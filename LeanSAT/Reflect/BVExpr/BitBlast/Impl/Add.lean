@@ -4,6 +4,7 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
+-- TODO: unify this with ternary input
 structure FullAdderInput (aig : AIG BVBit) where
   lhs : AIG.Ref aig
   rhs : AIG.Ref aig

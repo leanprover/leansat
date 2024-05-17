@@ -241,11 +241,21 @@ inductive BVBinPred where
 Equality.
 -/
 | eq
+/--
+Unsigned Less Than
+-/
+| ult
+/--
+Unsigned Less Than Or Equal
+-/
+| ule
 
 namespace BVBinPred
 
 def toString : BVBinPred → String
   | eq => "=="
+  | ult => "<u"
+  | ule => "≤u"
 
 instance : ToString BVBinPred := ⟨toString⟩
 
@@ -254,8 +264,12 @@ The denotational semantics for `BVBinPred`.
 -/
 def eval : BVBinPred → (BitVec w → BitVec w → Bool)
   | .eq => (· == ·)
+  | .ult => BitVec.ult
+  | .ule => BitVec.ule
 
 @[simp] theorem eval_eq : eval .eq = ((· == ·) : BitVec w → BitVec w → Bool) := by rfl
+@[simp] theorem eval_ult : eval .ult = (BitVec.ult : BitVec w → BitVec w → Bool) := by rfl
+@[simp] theorem eval_ule : eval .ule = (BitVec.ule : BitVec w → BitVec w → Bool) := by rfl
 
 end BVBinPred
 
