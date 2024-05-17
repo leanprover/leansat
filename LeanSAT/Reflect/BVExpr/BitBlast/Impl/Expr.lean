@@ -18,29 +18,23 @@ where
     match expr with
     | .var a =>
       let res := bitblast.blastVar aig ⟨a⟩
-      let aig := res.aig
-      let s := res.stream
       ⟨
-        ⟨aig, s⟩,
+        res,
         by
           apply AIG.LawfulStreamOperator.le_size (f := bitblast.blastVar)
       ⟩
     | .const val =>
       let res := bitblast.blastConst aig val
-      let aig := res.aig
-      let s := res.stream
       ⟨
-        ⟨aig, s⟩,
+        res,
         by
           apply AIG.LawfulStreamOperator.le_size (f := bitblast.blastConst)
       ⟩
     | .zeroExtend (w := w) v inner =>
       let ⟨⟨eaig, estream⟩, heaig⟩ := go aig inner
       let res := bitblast.blastZeroExtend eaig ⟨w, estream⟩
-      let aig := res.aig
-      let s := res.stream
       ⟨
-        ⟨aig, s⟩,
+        res,
         by
           apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastZeroExtend)
           dsimp at heaig
@@ -55,10 +49,8 @@ where
       match op with
       | .and =>
          let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkAndCached⟩
-         let aig := res.aig
-         let s := res.stream
          ⟨
-           ⟨aig, s⟩,
+           res,
            by
              apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
              dsimp at hlaig hraig
@@ -66,10 +58,8 @@ where
          ⟩
       | .or =>
          let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkOrCached⟩
-         let aig := res.aig
-         let s := res.stream
          ⟨
-           ⟨aig, s⟩,
+           res,
            by
              apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
              dsimp at hlaig hraig
@@ -78,10 +68,8 @@ where
 
       | .xor =>
          let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkXorCached⟩
-         let aig := res.aig
-         let s := res.stream
          ⟨
-           ⟨aig, s⟩,
+           res,
            by
              apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
              dsimp at hlaig hraig
@@ -89,10 +77,8 @@ where
          ⟩
       | .add =>
         let res := bitblast.blastAdd aig ⟨lhs, rhs⟩
-        let aig := res.aig
-        let s := res.stream
         ⟨
-          ⟨aig, s⟩,
+          res,
           by
             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastAdd)
             dsimp at hlaig hraig
@@ -100,10 +86,8 @@ where
         ⟩
       | .sub =>
         let res := bitblast.blastSub aig ⟨lhs, rhs⟩
-        let aig := res.aig
-        let s := res.stream
         ⟨
-          ⟨aig, s⟩,
+          res,
           by
             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastSub)
             dsimp at hlaig hraig
@@ -114,10 +98,8 @@ where
       match op with
       | .not =>
           let res := bitblast.blastNot eaig estream
-          let aig := res.aig
-          let s := res.stream
           ⟨
-            ⟨aig, s⟩,
+            res,
             by
               apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.map)
               dsimp at heaig
@@ -125,10 +107,8 @@ where
           ⟩
       | .shiftLeftConst distance =>
         let res := bitblast.blastShiftLeftConst eaig ⟨estream, distance⟩
-        let aig := res.aig
-        let s := res.stream
         ⟨
-          ⟨aig, s⟩,
+          res,
           by
             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeftConst)
             dsimp at heaig
@@ -136,10 +116,8 @@ where
         ⟩
       | .shiftRightConst distance =>
         let res := bitblast.blastShiftRightConst eaig ⟨estream, distance⟩
-        let aig := res.aig
-        let s := res.stream
         ⟨
-          ⟨aig, s⟩,
+          res,
           by
             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRightConst)
             dsimp at heaig
@@ -147,10 +125,8 @@ where
         ⟩
       | .neg =>
           let res := bitblast.blastNeg eaig estream
-          let aig := res.aig
-          let s := res.stream
           ⟨
-            ⟨aig, s⟩,
+            res,
             by
               apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastNeg)
               dsimp at heaig
