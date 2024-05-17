@@ -53,12 +53,18 @@ instance : ToExpr (BVExpr w) where
   toTypeExpr := mkApp (mkConst ``BVExpr) (toExpr w)
 where
   go {w : Nat} : BVExpr w → Expr
-| .var idx => mkApp2 (mkConst ``BVExpr.var) (toExpr w) (toExpr idx)
-| .const val => mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr val)
-| .zeroExtend (w := oldWidth) val inner =>
-  mkApp3 (mkConst ``BVExpr.zeroExtend) (toExpr oldWidth) (toExpr val) (go inner)
-| .bin lhs op rhs => mkApp4 (mkConst ``BVExpr.bin) (toExpr w) (go lhs) (toExpr op) (go rhs)
-| .un op operand => mkApp3 (mkConst ``BVExpr.un) (toExpr w) (toExpr op) (go operand)
+  | .var idx => mkApp2 (mkConst ``BVExpr.var) (toExpr w) (toExpr idx)
+  | .const val => mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr val)
+  | .zeroExtend (w := oldWidth) val inner =>
+    mkApp3 (mkConst ``BVExpr.zeroExtend) (toExpr oldWidth) (toExpr val) (go inner)
+  | .bin lhs op rhs => mkApp4 (mkConst ``BVExpr.bin) (toExpr w) (go lhs) (toExpr op) (go rhs)
+  | .un op operand => mkApp3 (mkConst ``BVExpr.un) (toExpr w) (toExpr op) (go operand)
+  | .append (l := l) (r := r) lhs rhs =>
+    mkApp4 (mkConst ``BVExpr.append)
+      (toExpr l)
+      (toExpr r)
+      (go lhs)
+      (go rhs)
 
 instance : ToExpr BVPred where
   toExpr x := go x
@@ -211,6 +217,10 @@ theorem sub_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2
     lhs' - rhs' = lhs - rhs := by
   simp[*]
 
+theorem append_congr (lw rw : Nat) (lhs lhs' : BitVec lw) (rhs rhs' : BitVec rw) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+    lhs' ++ rhs' = lhs ++ rhs := by
+  simp[*]
+
 def getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
@@ -272,6 +282,22 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
     unaryReflection innerExpr .neg ``neg_congr
   | HSub.hSub _ _ _ _ lhsExpr rhsExpr =>
     binaryReflection lhsExpr rhsExpr .sub ``sub_congr
+  | HAppend.hAppend _ _ _ _ lhsExpr rhsExpr =>
+    let some lhs ← of lhsExpr | return none
+    let some rhs ← of rhsExpr | return none
+    let bvExpr := .append lhs.bvExpr rhs.bvExpr
+    let expr := mkApp4 (mkConst ``BVExpr.append) (toExpr lhs.width) (toExpr rhs.width) lhs.expr rhs.expr
+    let proof := do
+      let lhsEval ← mkEvalExpr lhs.width lhs.expr
+      let lhsProof ← lhs.evalsAtAtoms
+      let rhsProof ← rhs.evalsAtAtoms
+      let rhsEval ← mkEvalExpr rhs.width rhs.expr
+      return mkApp8 (mkConst ``append_congr)
+        (toExpr lhs.width) (toExpr rhs.width)
+        lhsExpr lhsEval
+        rhsExpr rhsEval
+        lhsProof rhsProof
+    return some ⟨lhs.width + rhs.width, bvExpr, proof, expr⟩
   | _ => ofAtom x
 where
   ofAtom (x : Expr) : M (Option ReifiedBVExpr) := do
