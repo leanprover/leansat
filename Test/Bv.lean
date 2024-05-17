@@ -99,6 +99,10 @@ theorem unit_23 (x y : BitVec 32) : (x < y) ↔ ¬(y ≤ x) := by
   bv_decide
 
 set_option trace.bv true in
+theorem unit_24 (x : BitVec 32) : x ^^^ Nat.cast 0 = 0 ^^^ x := by
+  bv_decide
+
+set_option trace.bv true in
 theorem bv_axiomCheck (x y : BitVec 1) : x + y = y + x := by
   bv_decide
 
