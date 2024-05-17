@@ -85,23 +85,6 @@ theorem getRef_cast {aig1 aig2 : AIG α} (s : RefStream aig1 len) (idx : Nat) (h
       (s.getRef idx hidx).cast hcast := by
   simp [cast, cast', getRef]
 
-@[inline]
-def setRef (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat) (hidx : idx < len)
-    : RefStream aig len :=
-  let ⟨refs, hlen, hrefs⟩ := s
-  let refs := refs.set ⟨idx, by simp [hidx, hlen]⟩ ref.gate
-  ⟨
-    refs,
-    by simp[refs, hlen],
-    by
-      intros
-      simp only [Array.getElem_set, refs]
-      split
-      . apply Ref.hgate
-      . apply hrefs
-        assumption
-  ⟩
-
 end RefStream
 
 -- TODO: ZipTarget can benefit from this I think?
