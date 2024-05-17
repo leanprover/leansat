@@ -117,6 +117,8 @@ theorem BitVec.le_ule (x y : BitVec w) : (x ≤ y) = (BitVec.ule x y = true) := 
 theorem BitVec.ge_ule (x y : BitVec w) : (x ≥ y) = (BitVec.ule y x = true) := by
   simp [GT.gt, BitVec.le_ule]
 
+attribute [bv_normalize] BitVec.natCast_eq_ofNat
+
 end Normalize
 
 /-
