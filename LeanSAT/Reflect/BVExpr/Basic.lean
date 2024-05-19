@@ -54,10 +54,6 @@ Bitwise xor.
 Addition.
 -/
 | add
-/--
-Subtractin.
--/
-| sub
 
 namespace BVBinOp
 
@@ -66,7 +62,6 @@ def toString : BVBinOp → String
   | or => "||"
   | xor => "^"
   | add => "+"
-  | sub => "-"
 
 instance : ToString BVBinOp := ⟨toString⟩
 
@@ -78,13 +73,11 @@ def eval : BVBinOp → (BitVec w → BitVec w → BitVec w)
   | or => (· ||| ·)
   | xor => (· ^^^ ·)
   | add => (· + ·)
-  | sub => (· - ·)
 
 @[simp] theorem eval_and : eval .and = ((· &&& ·) : BitVec w → BitVec w → BitVec w) := by rfl
 @[simp] theorem eval_or : eval .or = ((· ||| ·) : BitVec w → BitVec w → BitVec w) := by rfl
 @[simp] theorem eval_xor : eval .xor = ((· ^^^ ·) : BitVec w → BitVec w → BitVec w) := by rfl
 @[simp] theorem eval_add : eval .add = ((· + ·) : BitVec w → BitVec w → BitVec w) := by rfl
-@[simp] theorem eval_sub : eval .sub = ((· - ·) : BitVec w → BitVec w → BitVec w) := by rfl
 
 end BVBinOp
 
@@ -112,10 +105,6 @@ We can obviously not bitblast a `Nat` but still want to support the case where t
 constant `Nat` value.
 -/
 | shiftRightConst (n : Nat)
-/--
-Negation in the sense of 2s complement.
--/
-| neg
 
 namespace BVUnOp
 
@@ -123,7 +112,6 @@ def toString : BVUnOp → String
   | not => "~"
   | shiftLeftConst n => s!"<< {n}"
   | shiftRightConst n => s!">> {n}"
-  | neg => "-"
 
 instance : ToString BVUnOp := ⟨toString⟩
 
@@ -134,7 +122,6 @@ def eval : BVUnOp → (BitVec w → BitVec w)
   | not => (~~~ ·)
   | shiftLeftConst n => (· <<< n)
   | shiftRightConst n => (· >>> n)
-  | neg => (- ·)
 
 @[simp] theorem eval_not : eval .not = ((~~~ ·) : BitVec w → BitVec w) := by rfl
 
@@ -145,8 +132,6 @@ theorem eval_shiftLeftConst : eval (shiftLeftConst n) = ((· <<< n) : BitVec w �
 @[simp]
 theorem eval_shiftRightConst : eval (shiftRightConst n) = ((· >>> n) : BitVec w → BitVec w) := by
   rfl
-
-@[simp] theorem eval_neg : eval .neg = ((- ·) : BitVec w → BitVec w) := by rfl
 
 end BVUnOp
 
@@ -252,17 +237,12 @@ Equality.
 Unsigned Less Than
 -/
 | ult
-/--
-Unsigned Less Than Or Equal
--/
-| ule
 
 namespace BVBinPred
 
 def toString : BVBinPred → String
   | eq => "=="
   | ult => "<u"
-  | ule => "≤u"
 
 instance : ToString BVBinPred := ⟨toString⟩
 
@@ -272,11 +252,9 @@ The denotational semantics for `BVBinPred`.
 def eval : BVBinPred → (BitVec w → BitVec w → Bool)
   | .eq => (· == ·)
   | .ult => BitVec.ult
-  | .ule => BitVec.ule
 
 @[simp] theorem eval_eq : eval .eq = ((· == ·) : BitVec w → BitVec w → Bool) := by rfl
 @[simp] theorem eval_ult : eval .ult = (BitVec.ult : BitVec w → BitVec w → Bool) := by rfl
-@[simp] theorem eval_ule : eval .ule = (BitVec.ule : BitVec w → BitVec w → Bool) := by rfl
 
 end BVBinPred
 

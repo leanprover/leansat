@@ -1,6 +1,5 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Eq
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Ult
-import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Ule
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.GetLsb
 
 namespace BVPred
@@ -11,7 +10,6 @@ def bitblast (aig : AIG BVBit) (pred : BVPred) : AIG.Entrypoint BVBit :=
     match op with
     | .eq => mkEq aig ⟨lhs, rhs⟩
     | .ult => mkUlt aig ⟨lhs, rhs⟩
-    | .ule => mkUle aig ⟨lhs, rhs⟩
   | .getLsb expr idx => blastGetLsb aig ⟨expr, idx⟩
 
 theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred)
@@ -38,9 +36,6 @@ theorem bitblast_decl_eq (aig : AIG BVBit) (pred : BVPred) {h : idx < aig.decls.
     | ult =>
       simp only [bitblast]
       rw [AIG.LawfulOperator.decl_eq (f := mkUlt)]
-    | ule =>
-      simp only [bitblast]
-      rw [AIG.LawfulOperator.decl_eq (f := mkUle)]
   | getLsb expr idx =>
     simp only [bitblast]
     rw [AIG.LawfulOperator.decl_eq (f := blastGetLsb)]

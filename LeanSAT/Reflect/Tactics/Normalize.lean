@@ -102,25 +102,32 @@ theorem BitVec.lt_ult (x y : BitVec w) : (x < y) = (BitVec.ult x y = true) := by
   rw [BitVec.instLT]
   simp
 
-@[bv_normalize]
-theorem BitVec.gt_ult (x y : BitVec w) : (x > y) = (BitVec.ult y x = true) := by
-  simp [GT.gt, BitVec.lt_ult]
-
-@[bv_normalize]
-theorem BitVec.le_ule (x y : BitVec w) : (x ≤ y) = (BitVec.ule x y = true) := by
-  rw [BitVec.ule]
-  rw [LE.le]
-  rw [BitVec.instLE]
-  simp
-
-@[bv_normalize]
-theorem BitVec.ge_ule (x y : BitVec w) : (x ≥ y) = (BitVec.ule y x = true) := by
-  simp [GT.gt, BitVec.le_ule]
-
 attribute [bv_normalize] BitVec.natCast_eq_ofNat
 attribute [bv_normalize] BitVec.append_eq
 
 end Normalize
+
+
+/-
+This section contains theorems that Bitwzula uses to reduce the surface level QF_BV theory to more
+minimal one:
+https://github.com/bitwuzla/bitwuzla/blob/229c0fa35bfbdcae7189558f98911a24909a7f04/src/rewrite/rewriter.cpp#L979
+-/
+section Reduce
+
+attribute [bv_normalize] BitVec.neg_eq_not_add
+
+attribute [bv_normalize] BitVec.sub_toAdd
+
+@[bv_normalize]
+theorem BitVec.le_ult (x y : BitVec w) : (x ≤ y) = ¬(x > y) := by
+  simp only [(· ≤ ·), (· > ·), (· < ·)]
+  simp
+
+attribute [bv_normalize] gt_iff_lt
+attribute [bv_normalize] ge_iff_le
+
+end Reduce
 
 /-
 This section is tries to do constant folding in the `Prop` fragment that might be of interest for
