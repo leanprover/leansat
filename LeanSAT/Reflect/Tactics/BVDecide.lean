@@ -709,6 +709,8 @@ elab_rules : tactic
   | `(tactic| bv_unsat) => do
     let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
     liftMetaFinishingTactic fun g => g.bvUnsat cfg
+    -- the auto generated lratPath is a temp file that should be removed
+    IO.FS.removeFile cfg.lratPath
 
 /-
 Close a goal by:
