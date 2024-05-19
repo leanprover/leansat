@@ -26,7 +26,6 @@ instance : ToExpr BVBinPred where
     match x with
     | .eq => mkConst ``BVBinPred.eq
     | .ult => mkConst ``BVBinPred.ult
-    | .ule => mkConst ``BVBinPred.ule
   toTypeExpr := mkConst ``BVBinPred
 
 instance : ToExpr BVUnOp where
@@ -35,7 +34,6 @@ instance : ToExpr BVUnOp where
     | .not => mkConst ``BVUnOp.not
     | .shiftLeftConst n => mkApp (mkConst ``BVUnOp.shiftLeftConst) (toExpr n)
     | .shiftRightConst n => mkApp (mkConst ``BVUnOp.shiftRightConst) (toExpr n)
-    | .neg => mkConst ``BVUnOp.neg
   toTypeExpr := mkConst ``BVUnOp
 
 instance : ToExpr BVBinOp where
@@ -45,7 +43,6 @@ instance : ToExpr BVBinOp where
     | .or => mkConst ``BVBinOp.or
     | .xor => mkConst ``BVBinOp.xor
     | .add => mkConst ``BVBinOp.add
-    | .sub => mkConst ``BVBinOp.sub
   toTypeExpr := mkConst ``BVBinOp
 
 instance : ToExpr (BVExpr w) where
@@ -209,14 +206,6 @@ theorem zeroExtend_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
     BitVec.zeroExtend n x = BitVec.zeroExtend n x' := by
   simp[*]
 
-theorem neg_congr (w : Nat) (x x' : BitVec w) (h1 : x = x') :
-    -x' = -x := by
-  simp[*]
-
-theorem sub_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
-    lhs' - rhs' = lhs - rhs := by
-  simp[*]
-
 theorem append_congr (lw rw : Nat) (lhs lhs' : BitVec lw) (rhs rhs' : BitVec rw) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
     lhs' ++ rhs' = lhs ++ rhs := by
   simp[*]
@@ -278,10 +267,6 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
       let innerProof ← inner.evalsAtAtoms
       return mkApp5 (mkConst ``zeroExtend_congr) newWidthExpr (toExpr inner.width) innerExpr innerEval innerProof
     return some ⟨newWidth, bvExpr, proof, expr⟩
-  | Neg.neg _ _ innerExpr =>
-    unaryReflection innerExpr .neg ``neg_congr
-  | HSub.hSub _ _ _ _ lhsExpr rhsExpr =>
-    binaryReflection lhsExpr rhsExpr .sub ``sub_congr
   | HAppend.hAppend _ _ _ _ lhsExpr rhsExpr =>
     let some lhs ← of lhsExpr | return none
     let some rhs ← of rhsExpr | return none
@@ -396,10 +381,6 @@ theorem ult_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = 
     : (BitVec.ult lhs rhs) = (BitVec.ult lhs' rhs') := by
   simp[*]
 
-theorem ule_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
-    : (BitVec.ule lhs rhs) = (BitVec.ule lhs' rhs') := by
-  simp[*]
-
 theorem getLsb_congr (i : Nat) (w : Nat) (e e' : BitVec w) (h : e' = e)
     : (e.getLsb i) = (e'.getLsb i) := by
   simp[*]
@@ -417,8 +398,6 @@ def of (t : Expr) : M (Option ReifiedBVPred) := do
     binaryReflection lhsExpr rhsExpr .eq ``beq_congr
   | BitVec.ult _ lhsExpr rhsExpr =>
     binaryReflection lhsExpr rhsExpr .ult ``ult_congr
-  | BitVec.ule _ lhsExpr rhsExpr =>
-    binaryReflection lhsExpr rhsExpr .ule ``ule_congr
   | BitVec.getLsb _ subExpr idxExpr =>
     let some sub ← ReifiedBVExpr.of subExpr | return none
     let some idx ← getNatValue? idxExpr | return none

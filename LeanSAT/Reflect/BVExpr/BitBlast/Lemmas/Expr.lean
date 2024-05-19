@@ -6,8 +6,6 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ShiftRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ZeroExtend
-import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Neg
-import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Sub
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Append
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 
@@ -87,18 +85,6 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
         . simp [Ref.hgate]
       . intros
         rw [← rih]
-    | sub =>
-      simp only [go, eval_bin, BVBinOp.eval_sub]
-      apply blastSub_eq_eval_getLsb
-      . intros
-        dsimp
-        rw [go_denote_mem_prefix]
-        rw [← lih (aig := aig)]
-        . simp
-        . assumption
-        . simp [Ref.hgate]
-      . intros
-        rw [← rih]
   | un op expr ih =>
     cases op with
     | not => simp [go, ih, hidx]
@@ -110,11 +96,6 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       intro h
       apply BitVec.lt_of_getLsb
       assumption
-    | neg =>
-      simp only [go, eval_un, BVUnOp.eval_neg, BitVec.neg_eq_not_add]
-      rw [blastNeg_eq_eval_getLsb (sub := expr)]
-      . simp
-      . simp [ih]
   | append lhs rhs lih rih =>
     rename_i lw rw
     simp only [go, blastAppend_eq_eval_getLsb, RefStream.getRef_cast, Ref_cast', eval_append,
