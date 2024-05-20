@@ -107,6 +107,10 @@ theorem unit_25 (x y : BitVec 32) : ((x ++ y).getLsb 0 = y.getLsb 0) ∧ ((x ++ 
   bv_decide
 
 set_option trace.bv true in
+theorem unit_26 (x y : BitVec 32) : (x.zeroExtend 64).extractLsb 32 0 = (y.zeroExtend 64).extractLsb 32 0 → x = y := by
+  bv_decide
+
+set_option trace.bv true in
 theorem bv_axiomCheck (x y : BitVec 1) : x + y = y + x := by
   bv_decide
 
