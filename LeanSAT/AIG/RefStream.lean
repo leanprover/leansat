@@ -120,6 +120,25 @@ theorem getRef_append (lhs : RefStream aig lw) (rhs : RefStream aig rw) (idx : N
     . rw [lhs.hlen]
       omega
 
+@[inline]
+def getRefD (s : RefStream aig len) (idx : Nat) (alt : Ref aig) : Ref aig :=
+  if hidx:idx < len then
+    s.getRef idx hidx
+  else
+    alt
+
+theorem getRef_in_bound (s : RefStream aig len) (idx : Nat) (alt : Ref aig) (hidx : idx < len)
+    : s.getRefD idx alt = s.getRef idx hidx := by
+  unfold getRefD
+  simp [hidx]
+
+theorem getRef_out_bound (s : RefStream aig len) (idx : Nat) (alt : Ref aig) (hidx : len ≤ idx)
+    : s.getRefD idx alt = alt := by
+  unfold getRefD
+  split
+  . omega
+  . rfl
+
 end RefStream
 
 -- TODO: ZipTarget can benefit from this I think?
