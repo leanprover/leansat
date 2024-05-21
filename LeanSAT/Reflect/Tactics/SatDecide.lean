@@ -103,7 +103,10 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
     -- lazyPure to prevent compiler lifting
     IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => formula.formula.dimacs))
   withTraceNode `sat (fun _ => return "Running SAT solver") do
-    satQuery solver cnfPath lratPath
+    let res ← satQuery solver cnfPath lratPath
+    match res with
+    | .sat assign => throwError s!"The SAT solver found a counter example. {assign}"
+    | .unsat => pure ()
   let lratProof ←
     withTraceNode `sat (fun _ => return "Obtaining LRAT certificate") do
       LratCert.ofFile lratPath prevalidate
