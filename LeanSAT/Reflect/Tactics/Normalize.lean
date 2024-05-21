@@ -104,6 +104,28 @@ theorem BitVec.lt_ult (x y : BitVec w) : (x < y) = (BitVec.ult x y = true) := by
 
 attribute [bv_normalize] BitVec.natCast_eq_ofNat
 attribute [bv_normalize] BitVec.append_eq
+attribute [bv_normalize] BitVec.and_eq
+attribute [bv_normalize] BitVec.or_eq
+attribute [bv_normalize] BitVec.xor_eq
+attribute [bv_normalize] BitVec.not_eq
+attribute [bv_normalize] BitVec.shiftLeft_eq
+attribute [bv_normalize] BitVec.ushiftRight_eq
+attribute [bv_normalize] BitVec.add_eq
+attribute [bv_normalize] BitVec.sub_eq
+attribute [bv_normalize] BitVec.neg_eq
+
+@[bv_normalize]
+theorem Bool.and_eq_and (x y : Bool) : x.and y = (x && y) := by
+  rfl
+
+@[bv_normalize]
+theorem Bool.or_eq_or (x y : Bool) : x.or y = (x || y) := by
+  rfl
+
+@[bv_normalize]
+theorem Bool.no_eq_not (x : Bool) : x.not = !x := by
+  rfl
+
 
 end Normalize
 
@@ -123,9 +145,14 @@ attribute [bv_normalize] BitVec.sub_toAdd
 theorem BitVec.le_ult (x y : BitVec w) : (x ≤ y) = ¬(x > y) := by
   simp only [(· ≤ ·), (· > ·), (· < ·)]
   simp
+attribute [bv_normalize] BitVec.ule_eq_not_ult
 
 attribute [bv_normalize] gt_iff_lt
 attribute [bv_normalize] ge_iff_le
+
+@[bv_normalize]
+theorem BitVec.truncate_eq_zeroExtend (x : BitVec w) : x.truncate n = x.zeroExtend n := by
+  rfl
 
 end Reduce
 
