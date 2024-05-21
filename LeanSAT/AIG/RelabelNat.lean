@@ -227,28 +227,36 @@ theorem ofAIG_find_some {aig : AIG α} : ∀ a ∈ aig, ∃ n, (ofAIG aig).find?
 end State
 end RelabelNat
 
+def relabelNat' (aig : AIG α) : (AIG Nat × HashMap α Nat) :=
+  let map := RelabelNat.State.ofAIG aig
+  let aig := aig.relabel fun x =>
+    -- The none branch never gets hit, we prove this below
+    match map.find? x with
+    | some var => var
+    | none => 0
+  (aig, map)
+
 /--
 Map an `AIG` with arbitrary atom identifiers to one that uses `Nat` as atom identifiers. This is
 useful for preparing an `AIG` for CNF translation if it doesn't already use `Nat` identifiers.
 -/
 def relabelNat (aig : AIG α) : AIG Nat :=
-  let map := RelabelNat.State.ofAIG aig
-  aig.relabel fun x =>
-    -- The none branch never gets hit, we prove this below
-    match map.find? x with
-    | some var => var
-    | none => 0
+  relabelNat' aig |>.fst
+
+@[simp]
+theorem relabelNat'_fst_eq_relabelNat {aig : AIG α} : aig.relabelNat'.fst = aig.relabelNat := by
+  rfl
 
 @[simp]
 theorem relabelNat_size_eq_size {aig : AIG α} : aig.relabelNat.decls.size = aig.decls.size := by
-  simp [relabelNat]
+  simp [relabelNat, relabelNat']
 
 /--
 `relabelNat` preserves unsatisfiablility.
 -/
 theorem relabelNat_unsat_iff [Nonempty α] {aig : AIG α} {hidx1} {hidx2}
     : (aig.relabelNat).unsatAt idx hidx1 ↔ aig.unsatAt idx hidx2 := by
-  dsimp [relabelNat]
+  dsimp [relabelNat, relabelNat']
   rw [relabel_unsat_iff]
   intro x y hx hy heq
   split at heq
@@ -269,6 +277,14 @@ theorem relabelNat_unsat_iff [Nonempty α] {aig : AIG α} {hidx1} {hidx2}
     simp[hcase] at hn
 
 namespace Entrypoint
+
+def relabelNat' (entry : Entrypoint α) : (Entrypoint Nat × HashMap α Nat) :=
+  let res := entry.aig.relabelNat'
+  let entry := { entry with
+      aig := res.fst,
+      ref.hgate := by simp [entry.ref.hgate, res]
+  }
+  (entry, res.snd)
 
 /--
 Map an `Entrypoint` with arbitrary atom identifiers to one that uses `Nat` as atom identifiers.

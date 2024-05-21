@@ -17,8 +17,10 @@ namespace SatWitnessParser
 
 def parsePartialAssignment : Parsec (Bool × (Array (Bool × Nat))) := do
   skipString "v "
+  if (← peek!) == '0' then
+    return (true, #[])
   let idents ← many1 LRAT.Parser.parseClause.litWs
-  let idents := idents.map (fun i => if i > 0 then (true, i.toNat) else (false, i.toNat))
+  let idents := idents.map (fun i => if i > 0 then (true, i.natAbs) else (false, i.natAbs))
   if (← peek!) == '0' then
     return (true, idents)
   else
@@ -67,7 +69,8 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOut
       return .unsat
     else if stdout.startsWith "s SATISFIABLE" then
       match SatWitnessParser.parse.run stdout with
-      | .ok assignment => return .sat assignment
+      | .ok assignment =>
+        return .sat assignment
       | .error err =>
         throw <| IO.userError s!"Error {err} while parsing:\n{stdout}"
     else

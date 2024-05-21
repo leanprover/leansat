@@ -678,27 +678,59 @@ theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : SatDecide.LratCe
   rw [verifyBVExpr] at h
   assumption
 
+def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignment : Array (Bool × Nat))
+    (aigSize : Nat) : Batteries.HashMap Nat BVExpr.PackedBitVec := Id.run do
+  let mut sparseMap : Batteries.HashMap Nat (RBMap Nat Bool Ord.compare) := {}
+  for (bitVar, cnfVar) in var2Cnf.toArray do
+    /-
+    The setup of the variables in CNF is as follows:
+    1. One auxiliary variable for each node in the AIG
+    2. The actual BitVec bitwise variables
+    Hence we access the assignment array offset by the AIG size to obtain the value for a BitVec bit.
+    -/
+    -- We assume that a variable can be found at its index (off by one) as CaDiCal prints them in order.
+    let (varSet, cnfVar') := assignment[cnfVar + aigSize]!
+    -- But we are also paranoid. Off by one because internal count starts at 0 but CNF starts at 1.
+    assert! cnfVar' == (cnfVar + aigSize + 1)
+    let mut bitMap := sparseMap.find? bitVar.var |>.getD {}
+    bitMap := bitMap.insert bitVar.idx varSet
+    sparseMap := sparseMap.insert bitVar.var bitMap
+
+  let mut finalMap := {}
+  for (bitVecVar, bitMap) in sparseMap.toArray do
+    let mut value : Nat := 0
+    let mut currentBit := 0
+    for (bitIdx, bitValue) in bitMap.toList do
+      assert! bitIdx == currentBit
+      if bitValue then
+        value := value ||| (1 <<< currentBit)
+      currentBit := currentBit + 1
+    finalMap := finalMap.insert bitVecVar ⟨BitVec.ofNat currentBit value⟩
+  return finalMap
+
 def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr) : MetaM Expr := do
   let entry ←
     withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
       -- lazyPure to prevent compiler lifting
       IO.lazyPure (fun _ => bv.bitblast)
-  trace[bv] s!"AIG has {entry.aig.decls.size} nodes."
+  let aigSize := entry.aig.decls.size
+  trace[bv] s!"AIG has {aigSize} nodes."
 
-  -- TODO: extract relavel hashmap here
-  let cnf ←
+  let (cnf, map) ←
     withTraceNode `sat (fun _ => return "Converting AIG to CNF") do
       -- lazyPure to prevent compiler lifting
-      IO.lazyPure (fun _ => AIG.toCNF (entry.relabelNat))
+      IO.lazyPure (fun _ =>
+        let (entry, map) := entry.relabelNat'
+        let cnf := AIG.toCNF entry
+        (cnf, map)
+      )
 
-  -- TODO: careful! This is off by one now
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
       -- lazyPure to prevent compiler lifting
       IO.lazyPure (fun _ => SatDecide.LratFormula.ofCnf cnf)
   trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
 
-  -- TODO: obtain the counter example if present
   let res ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
       SatDecide.runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate
@@ -706,8 +738,12 @@ def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr) : MetaM 
   match res with
   | .ok cert =>
     cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
-  | .error .. =>
-    throwError "Counterexample!"
+  | .error assignment =>
+    let reconstructed := reconstructCounterExample map assignment aigSize
+    let mut error := "The prover found a potential counter example, consider the following assignment:\n"
+    for (var, value) in reconstructed.toArray do
+      error := error ++ s!"x{var} = {value.bv}\n"
+    throwError error
 
 def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
