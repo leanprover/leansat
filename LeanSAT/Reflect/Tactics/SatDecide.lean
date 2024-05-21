@@ -96,23 +96,25 @@ Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
 This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
 -/
 def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath)
-    (prevalidate : Bool)
-    : MetaM LratCert := do
+    (prevalidate : Bool) : MetaM (Except (Array (Bool × Nat)) LratCert) := do
   let cnfPath ← mkTemp
   withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
     -- lazyPure to prevent compiler lifting
     IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => formula.formula.dimacs))
-  withTraceNode `sat (fun _ => return "Running SAT solver") do
-    let res ← satQuery solver cnfPath lratPath
-    match res with
-    | .sat assign => throwError s!"The SAT solver found a counter example. {assign}"
-    | .unsat => pure ()
+  
+  let res ←
+    withTraceNode `sat (fun _ => return "Running SAT solver") do
+      satQuery solver cnfPath lratPath
+  if let .sat assignment := res then
+    return .error assignment
+
   let lratProof ←
     withTraceNode `sat (fun _ => return "Obtaining LRAT certificate") do
       LratCert.ofFile lratPath prevalidate
+
   -- cleanup files such that we don't pollute /tmp
   IO.FS.removeFile cnfPath
-  return lratProof
+  return .ok lratProof
 
 /--
 Verify that a proof certificate is valid for a given formula.
@@ -271,11 +273,16 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
 
   trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
 
-  let cert ←
+  let res ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
       runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate
 
-  cert.toReflectionProof cfg boolExpr ``verifyBoolExpr ``unsat_of_verifyBoolExpr_eq_true
+  match res with
+  | .ok cert =>
+    cert.toReflectionProof cfg boolExpr ``verifyBoolExpr ``unsat_of_verifyBoolExpr_eq_true
+  | .error _ =>
+    throwError "The external prover found a counter example"
+
 
 def _root_.Lean.MVarId.closeWithBoolReflection (g : MVarId) (unsatProver : BoolExprNat → MetaM Expr) : MetaM Unit := M.run do
   let g' ← g.falseOrByContra

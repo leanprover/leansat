@@ -685,22 +685,29 @@ def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr) : MetaM 
       IO.lazyPure (fun _ => bv.bitblast)
   trace[bv] s!"AIG has {entry.aig.decls.size} nodes."
 
+  -- TODO: extract relavel hashmap here
   let cnf ←
     withTraceNode `sat (fun _ => return "Converting AIG to CNF") do
       -- lazyPure to prevent compiler lifting
       IO.lazyPure (fun _ => AIG.toCNF (entry.relabelNat))
 
+  -- TODO: careful! This is off by one now
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
       -- lazyPure to prevent compiler lifting
       IO.lazyPure (fun _ => SatDecide.LratFormula.ofCnf cnf)
   trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
 
-  let cert ←
+  -- TODO: obtain the counter example if present
+  let res ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
       SatDecide.runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate
 
-  cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
+  match res with
+  | .ok cert =>
+    cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
+  | .error .. =>
+    throwError "Counterexample!"
 
 def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
