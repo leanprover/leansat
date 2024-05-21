@@ -101,7 +101,7 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
   withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
     -- lazyPure to prevent compiler lifting
     IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => formula.formula.dimacs))
-  
+
   let res ←
     withTraceNode `sat (fun _ => return "Running SAT solver") do
       satQuery solver cnfPath lratPath
