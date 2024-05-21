@@ -679,7 +679,7 @@ theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : SatDecide.LratCe
   assumption
 
 def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignment : Array (Bool × Nat))
-    (aigSize : Nat) : Batteries.HashMap Nat BVExpr.PackedBitVec := Id.run do
+    (aigSize : Nat) (atomsAssignment : Batteries.HashMap Nat Expr) : Array (Expr × BVExpr.PackedBitVec) := Id.run do
   let mut sparseMap : Batteries.HashMap Nat (RBMap Nat Bool Ord.compare) := {}
   for (bitVar, cnfVar) in var2Cnf.toArray do
     /-
@@ -696,7 +696,7 @@ def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignmen
     bitMap := bitMap.insert bitVar.idx varSet
     sparseMap := sparseMap.insert bitVar.var bitMap
 
-  let mut finalMap := {}
+  let mut finalMap := #[]
   for (bitVecVar, bitMap) in sparseMap.toArray do
     let mut value : Nat := 0
     let mut currentBit := 0
@@ -705,10 +705,12 @@ def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignmen
       if bitValue then
         value := value ||| (1 <<< currentBit)
       currentBit := currentBit + 1
-    finalMap := finalMap.insert bitVecVar ⟨BitVec.ofNat currentBit value⟩
+    let atomExpr := atomsAssignment.find! bitVecVar
+    finalMap := finalMap.push (atomExpr, ⟨BitVec.ofNat currentBit value⟩)
   return finalMap
 
-def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr) : MetaM Expr := do
+def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr)
+    (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM Expr := do
   let entry ←
     withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
       -- lazyPure to prevent compiler lifting
@@ -739,10 +741,11 @@ def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr) : MetaM 
   | .ok cert =>
     cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
   | .error assignment =>
-    let reconstructed := reconstructCounterExample map assignment aigSize
-    let mut error := "The prover found a potential counter example, consider the following assignment:\n"
-    for (var, value) in reconstructed.toArray do
-      error := error ++ s!"x{var} = {value.bv}\n"
+    let reconstructed := reconstructCounterExample map assignment aigSize atomsAssignment
+    let mut error := m!"The prover found a potential counter example, consider the following assignment:\n"
+    for (var, value) in reconstructed do
+      -- TODO: unclear if this is right?
+      error := error ++ m!"{var} = {value.bv}\n"
     throwError error
 
 def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withContext do
@@ -751,23 +754,27 @@ def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withCon
   let sat := sats.foldl (init := SatAtBVLogical.trivial) SatAtBVLogical.and
   return (sat.bvExpr, sat.proveFalse)
 
-def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId) (unsatProver : BVLogicalExpr → MetaM Expr) : MetaM Unit := M.run do
+def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId)
+    (unsatProver : BVLogicalExpr → Batteries.HashMap Nat Expr → MetaM Expr) : MetaM Unit := M.run do
   g.withContext do
     let (bvLogicalExpr, f) ←
       withTraceNode `bv (fun _ => return "Reflecting goal into BVLogicalExpr") do
         reflectBV g
     trace[bv] "Reflected bv logical expression: {bvLogicalExpr}"
 
-    let bvExprUnsat ← unsatProver bvLogicalExpr
+
+    let atomsPairs := (← getThe State).atoms.toList.map (fun (expr, _, ident) => (ident, expr))
+    let atomsAssignment := Batteries.HashMap.ofList atomsPairs
+    let bvExprUnsat ← unsatProver bvLogicalExpr atomsAssignment
     let proveFalse ← f bvExprUnsat
     g.assign proveFalse
 
 syntax (name := bvUnsatSyntax) "bv_unsat" : tactic
 
 def _root_.Lean.MVarId.bvUnsat (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := M.run do
-  let unsatProver (exp : BVLogicalExpr) : MetaM Expr := do
+  let unsatProver (exp : BVLogicalExpr) (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM Expr := do
     withTraceNode `bv (fun _ => return "Preparing LRAT reflection term") do
-      lratBitblaster cfg exp
+      lratBitblaster cfg exp atomsAssignment
   g.closeWithBVReflection unsatProver
 
 open Elab.Tactic
