@@ -50,7 +50,14 @@ end SatWitnessParser
     to `proofOutput` -/
 def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOutput : System.FilePath) : IO SolverResult := do
   let cmd := solverPath
-  let args := #[problemPath.toString, proofOutput.toString, "--lrat", "--no-binary", "--quiet"]
+  let args := #[
+    problemPath.toString,
+    proofOutput.toString,
+    "--lrat",
+    "--no-binary",
+    "--quiet",
+    "--unsat" -- This sets the magic parameters of cadical to optimize for UNSAT search.
+  ]
   let out ← output ⟨⟨Stdio.inherit, Stdio.inherit, Stdio.inherit⟩, cmd, args, none, #[], false⟩
   if out.exitCode == 255 then
     throw <| IO.userError s!"Failed to execute external prover:\n{out.stderr}"
