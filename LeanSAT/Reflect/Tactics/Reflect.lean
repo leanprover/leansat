@@ -58,10 +58,10 @@ def lookup (e : Expr) : M Nat := do
   match c.atoms.find? e with
   | some i => return i
   | none =>
-  trace[sat] "New atom: {e}"
-  let i ← modifyGetThe State
-    fun c => (c.atoms.size, { c with atoms := c.atoms.insert e c.atoms.size })
-  return i
+    trace[sat] "New atom: {e}"
+    let i ← modifyGetThe State
+      fun c => (c.atoms.size, { c with atoms := c.atoms.insert e c.atoms.size })
+    return i
 
 end M
 
