@@ -7,9 +7,9 @@ theorem bv_axiomCheck (x y : BitVec 1) : x + y = y + x := by
   bv_decide
 
 /--
-info: 'bv_axiomCheck' depends on axioms: [Classical.choice,
- propext,
+info: 'bv_axiomCheck' depends on axioms: [propext,
  Quot.sound,
+ Classical.choice,
  AIG.RelabelNat.State.Inv1.property,
  AIG.RelabelNat.State.Inv2.property,
  Lean.ofReduceBool]
