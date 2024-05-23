@@ -29,3 +29,7 @@ theorem bitwise_unit_4 {x : BitVec 64} : (x ^^^ ~~~x).getLsb 32 = true := by
 set_option trace.bv true in
 theorem bitwise_unit_5 {x : BitVec 64} : (x ^^^ ~~~x).getLsb 128 = false := by
   bv_decide
+
+set_option trace.bv true in
+theorem bitwise_unit_6 {x : BitVec 64} : (x ^^^ ~~~x).getLsb 63 = (x ^^^ ~~~x).msb := by
+  bv_decide
