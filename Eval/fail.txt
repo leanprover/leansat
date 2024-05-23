@@ -6,7 +6,6 @@ bitvec_239.lean
 bitvec_283.lean
 bitvec_290__292.lean
 bitvec_AndOrXor_2443.lean
-bitvec_AndOrXor_794.lean
 bitvec_InstCombineShift__239.lean
 bitvec_InstCombineShift__279.lean
 bitvec_InstCombineShift__351.lean
