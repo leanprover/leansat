@@ -12,6 +12,7 @@ theorem mkEq_denote_iff_eval_beq (aig : AIG BVBit) (pair : ExprPair) (assign : B
       (pair.lhs.eval assign == pair.rhs.eval assign) := by
   rw [beq_iff_eq]
   unfold mkEq
+  unfold mkEq.streamProc
   dsimp
   constructor
   . intro h
