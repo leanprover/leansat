@@ -29,3 +29,11 @@ theorem ineq_unit_4 (x y z : BitVec 32) (h1 : x > y) (h2 : y > z)  : x > z := by
 set_option trace.bv true in
 theorem ineq_unit_5 (x y z : BitVec 32) (h1 : x ≥ y) (h2 : y ≥ z)  : x ≥ z := by
   bv_decide
+
+set_option trace.bv true in
+theorem ineq_unit_6 (x y z : BitVec 32) (h1 : BitVec.slt x y) (h2 : BitVec.slt y z)  : BitVec.slt x z := by
+  bv_decide
+
+set_option trace.bv true in
+theorem ineq_unit_7 (x y z : BitVec 32) (h1 : BitVec.sle x y) (h2 : BitVec.sle y z)  : BitVec.sle x z := by
+  bv_decide
