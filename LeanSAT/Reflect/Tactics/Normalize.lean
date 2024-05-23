@@ -232,10 +232,10 @@ end BitVecConstant
 open Lean Elab Meta Tactic
 
 structure Result where
-  goal : MVarId
+  goal : Option MVarId
   stats : Simp.Stats
 
-def _root_.Lean.MVarId.bvNormalize (g : MVarId) : MetaM (Option Result) := do
+def _root_.Lean.MVarId.bvNormalize (g : MVarId) : MetaM Result := do
   withTraceNode `bv (fun _ => return "Normalizing goal") do
     -- Contradiction proof
     let g ← g.falseOrByContra
@@ -257,8 +257,8 @@ def _root_.Lean.MVarId.bvNormalize (g : MVarId) : MetaM (Option Result) := do
       (ctx := simpCtx)
       (simprocs := #[bvSimprocs, sevalSimprocs])
       (fvarIdsToSimp := hyps)
-    let some (_, g) := result? | return none
-    return some ⟨g, stats⟩
+    let some (_, g) := result? | return ⟨none, stats⟩
+    return ⟨some g, stats⟩
 
 end Normalize
 end BVDecide
