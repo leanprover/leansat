@@ -16,6 +16,12 @@ open Lean Meta
 
 namespace BVDecide
 
+structure UnsatProver.Result where
+  proof : Expr
+  lratCert : SatDecide.LratCert
+
+abbrev UnsatProver := BVLogicalExpr → Batteries.HashMap Nat Expr → MetaM UnsatProver.Result
+
 -- TODO: This should be upstream?
 instance : ToExpr (BitVec w) where
   toExpr bv := mkApp2 (mkConst ``BitVec.ofNat) (toExpr w) (toExpr bv.toNat)
@@ -758,7 +764,7 @@ def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignmen
   return finalMap
 
 def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr)
-    (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM Expr := do
+    (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM UnsatProver.Result := do
   let entry ←
     withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
       -- lazyPure to prevent compiler lifting
@@ -787,7 +793,8 @@ def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr)
 
   match res with
   | .ok cert =>
-    cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
+    let proof ← cert.toReflectionProof cfg bv ``verifyBVExpr ``unsat_of_verifyBVExpr_eq_true
+    return ⟨proof, cert⟩
   | .error assignment =>
     let reconstructed := reconstructCounterExample map assignment aigSize atomsAssignment
     let mut error := m!"The prover found a potential counter example, consider the following assignment:\n"
@@ -803,29 +810,35 @@ def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withCon
   return (sat.bvExpr, sat.proveFalse)
 
 def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId)
-    (unsatProver : BVLogicalExpr → Batteries.HashMap Nat Expr → MetaM Expr) : MetaM Unit := M.run do
+    (unsatProver : UnsatProver) : MetaM SatDecide.LratCert := M.run do
   g.withContext do
     let (bvLogicalExpr, f) ←
       withTraceNode `bv (fun _ => return "Reflecting goal into BVLogicalExpr") do
         reflectBV g
     trace[bv] "Reflected bv logical expression: {bvLogicalExpr}"
 
-
     let atomsPairs := (← getThe State).atoms.toList.map (fun (expr, _, ident) => (ident, expr))
     let atomsAssignment := Batteries.HashMap.ofList atomsPairs
-    let bvExprUnsat ← unsatProver bvLogicalExpr atomsAssignment
+    let ⟨bvExprUnsat, cert⟩ ← unsatProver bvLogicalExpr atomsAssignment
     let proveFalse ← f bvExprUnsat
     g.assign proveFalse
+    return cert
 
-def _root_.Lean.MVarId.bvUnsat (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := M.run do
-  let unsatProver (exp : BVLogicalExpr) (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM Expr := do
+def _root_.Lean.MVarId.bvUnsat (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM SatDecide.LratCert := M.run do
+  let unsatProver : UnsatProver := fun bvExpr atomsAssignment => do
     withTraceNode `bv (fun _ => return "Preparing LRAT reflection term") do
-      lratBitblaster cfg exp atomsAssignment
+      lratBitblaster cfg bvExpr atomsAssignment
   g.closeWithBVReflection unsatProver
 
-def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := do
-  let some ⟨g, _stats⟩ ← g.bvNormalize | return ()
-  g.bvUnsat cfg
+structure Result where
+  simpTrace : Simp.Stats
+  lratCert : Option SatDecide.LratCert
+
+def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Result := do
+  let ⟨g?, simpTrace⟩ ← g.bvNormalize
+  let some g := g? | return ⟨simpTrace, none⟩
+  let lratCert ← g.bvUnsat cfg
+  return ⟨simpTrace, some lratCert⟩
 
 /-
 Close a goal by:
@@ -842,7 +855,9 @@ open Elab.Tactic
 elab_rules : tactic
   | `(tactic| bv_decide) => do
     let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
-    liftMetaFinishingTactic fun g => g.bvDecide cfg
+    liftMetaFinishingTactic fun g => do
+      let _ ← g.bvDecide cfg
+      return ()
     -- the auto generated lratPath is a temp file that should be removed
     IO.FS.removeFile cfg.lratPath
 
