@@ -817,21 +817,15 @@ def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId)
     let proveFalse ← f bvExprUnsat
     g.assign proveFalse
 
-syntax (name := bvUnsatSyntax) "bv_unsat" : tactic
-
 def _root_.Lean.MVarId.bvUnsat (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := M.run do
   let unsatProver (exp : BVLogicalExpr) (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM Expr := do
     withTraceNode `bv (fun _ => return "Preparing LRAT reflection term") do
       lratBitblaster cfg exp atomsAssignment
   g.closeWithBVReflection unsatProver
 
-open Elab.Tactic
-elab_rules : tactic
-  | `(tactic| bv_unsat) => do
-    let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
-    liftMetaFinishingTactic fun g => g.bvUnsat cfg
-    -- the auto generated lratPath is a temp file that should be removed
-    IO.FS.removeFile cfg.lratPath
+def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := do
+  let some ⟨g, _stats⟩ ← g.bvNormalize | return ()
+  g.bvUnsat cfg
 
 /-
 Close a goal by:
@@ -844,6 +838,11 @@ syntax (name := bvDecideSyntax) "bv_decide" : tactic
 
 end BVDecide
 
-macro_rules
-| `(tactic| bv_decide) =>
-  `(tactic| bv_normalize <;> bv_unsat)
+open Elab.Tactic
+elab_rules : tactic
+  | `(tactic| bv_decide) => do
+    let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
+    liftMetaFinishingTactic fun g => g.bvDecide cfg
+    -- the auto generated lratPath is a temp file that should be removed
+    IO.FS.removeFile cfg.lratPath
+
