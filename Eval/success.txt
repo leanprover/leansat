@@ -64,5 +64,6 @@ bitvec_AndOrXor_2663.lean
 bitvec_AndOrXor_698.lean
 bitvec_AndOrXor_709.lean
 bitvec_AndOrXor_716.lean
+bitvec_AndOrXor_794.lean
 bitvec_AndOrXor_827.lean
 bitvec_AndOrXor_887_2.lean
