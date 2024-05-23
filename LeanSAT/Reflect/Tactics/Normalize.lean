@@ -1,5 +1,7 @@
 import LeanSAT.Reflect.Tactics.Attr
 import Lean.Meta.AppBuilder
+import Lean.Elab.Tactic.Simp
+import Lean.Elab.Tactic.FalseOrByContra
 
 /-!
 The goal of the simp set provided in this file is to take hypothesis that involve `Bool`
@@ -227,16 +229,37 @@ attribute [bv_normalize] BitVec.getLsb_concat_zero
 
 end BitVecConstant
 
-end Normalize
+open Lean Elab Meta Tactic
 
+structure Result where
+  goal : MVarId
+  stats : Simp.Stats
+
+def _root_.Lean.MVarId.bvNormalize (g : MVarId) : MetaM (Option Result) := do
+  withTraceNode `bv (fun _ => return "Normalizing goal") do
+    -- Contradiction proof
+    let g ← g.falseOrByContra
+
+    -- Normalization by simp
+    let bvThms ← bvNormalizeExt.getTheorems
+    let bvSimprocs ← bvNormalizeSimprocExt.getSimprocs
+    let sevalThms ← getSEvalTheorems
+    let sevalSimprocs ← Simp.getSEvalSimprocs
+
+    let simpCtx : Simp.Context := {
+      simpTheorems := #[bvThms, sevalThms]
+      congrTheorems := (← getSimpCongrTheorems)
+    }
+
+    let hyps ← g.getNondepPropHyps
+    -- TODO: Think about whether having a discharger might be interesting
+    let ⟨result?, stats⟩ ← simpGoal g
+      (ctx := simpCtx)
+      (simprocs := #[bvSimprocs, sevalSimprocs])
+      (fvarIdsToSimp := hyps)
+    let some (_, g) := result? | return none
+    return some ⟨g, stats⟩
+
+end Normalize
 end BVDecide
 
-syntax (name := bvNormalizeSyntax) "bv_normalize" : tactic
-
-macro_rules
-| `(tactic| bv_normalize) =>
-   `(tactic|
-      apply Classical.byContradiction;
-      intro;
-      simp only [bv_normalize, seval] at *
-   )

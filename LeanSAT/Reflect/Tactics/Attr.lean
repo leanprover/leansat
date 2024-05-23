@@ -21,4 +21,8 @@ register_option sat.prevalidate : Bool := {
   descr := "Usually the LRAT proof is only parsed in the kernel. If this is enabled its additionally parsed before as well for better error reporting."
 }
 
-register_simp_attr bv_normalize
+initialize bvNormalizeExt : Meta.SimpExtension ←
+  Meta.registerSimpAttr `bv_normalize "simp theorems used by bv_normalize"
+
+initialize bvNormalizeSimprocExt : Meta.Simp.SimprocExtension ←
+  Meta.Simp.registerSimprocAttr `bv_normalize_proc "simprocs used by bv_normalize" none
