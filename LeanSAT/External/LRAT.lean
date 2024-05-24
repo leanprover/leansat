@@ -45,8 +45,10 @@ def parseNeg : Parsec Int := do
   let nat ← parsePos
   return -nat
 
+@[inline]
 def parseId : Parsec Nat := parsePos
 
+@[inline]
 def parseZero : Parsec Unit := skipChar '0'
 
 def parseIdList : Parsec (Array Nat) := do
