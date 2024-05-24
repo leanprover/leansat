@@ -100,20 +100,29 @@ def parseLine : Parsec IntAction := do
   ws
   parseDelete ident <|> parseRat ident
 
+@[inline]
+def eof? : Parsec Bool := fun it =>
+  .success it (!it.hasNext)
+
 partial def parseLines : Parsec (Array IntAction) :=
   go #[]
 where
   go (actions : Array IntAction) : Parsec (Array IntAction) := do
-    let actions ←
-      if (← peek!) == 'c' then
-        let _ ← many (satisfy (· != '\n'))
-        skipChar '\n'
+    if (← peek!) == 'c' then
+      let _ ← many (satisfy (· != '\n'))
+      skipChar '\n'
+      if ← eof? then
         pure actions
       else
-        let action ← parseLine
-        skipChar '\n'
-        pure (actions.push action)
-    (eof *> pure actions) <|> go actions
+        go actions
+    else
+      let action ← parseLine
+      skipChar '\n'
+      let actions := actions.push action
+      if ← eof? then
+        pure actions
+      else
+        go actions
 
 end Parser
 
