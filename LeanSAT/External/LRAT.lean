@@ -27,14 +27,39 @@ open Parsec
 /--
 Assumes `c` is between `0` and `9`
 -/
+@[inline]
 def digitToNat (c : Char) : Nat := c.toNat - '0'.toNat
 
-def digitsToNat (digits : Array Nat) : Nat :=
-  digits.foldl (fun r d => r * 10 + d) 0
+deriving instance Inhabited for String.Iterator
+
+partial def parseDigitsCore (acc : Nat) : Parsec Nat := fun it =>
+  /-
+  This used to be:
+  Parsec.tryCatch digit (fun digit => parseDigitsCore (acc * 10 + digitToNat digit)) (fun _ => pure acc)
+  But this code keeps on allocating success/error values in the hot loop, we don't want that.
+  -/
+  let ⟨res, it⟩ := go it acc
+  .success it res
+where
+  go (it : String.Iterator) (acc : Nat) : (Nat × String.Iterator) :=
+    if it.hasNext then
+      let candidate := it.curr
+      if '0' ≤ candidate ∧ candidate ≤ '9' then
+        let digit := digitToNat candidate
+        let acc := acc * 10 + digit
+        go it.next acc
+      else
+        (acc, it)
+    else
+      (acc, it)
+
+@[inline]
+def parseDigits : Parsec Nat := do
+  let d ← digit
+  parseDigitsCore (digitToNat d)
 
 def parsePos : Parsec Nat := do
-  let digits ← many1 (digitToNat <$> digit)
-  let ident := digitsToNat digits
+  let ident ← parseDigits
   if ident == 0 then
     fail "id was 0"
   else
