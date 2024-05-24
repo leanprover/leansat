@@ -58,6 +58,7 @@ def parseDigits : Parsec Nat := do
   let d ← digit
   parseDigitsCore (digitToNat d)
 
+@[inline]
 def parsePos : Parsec Nat := do
   let ident ← parseDigits
   if ident == 0 then
@@ -65,6 +66,7 @@ def parsePos : Parsec Nat := do
   else
     return ident
 
+@[inline]
 def parseNeg : Parsec Int := do
   skipChar '-'
   let nat ← parsePos
