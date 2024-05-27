@@ -183,7 +183,7 @@ theorem mkGateCached_le_size (aig : AIG α) (input : GateInput aig)
   dsimp [mkGateCached]
   split
   . simp
-  . split <;> simp_arith [mkConstCached_le_size]
+  . simp_arith
 
 /--
 The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
@@ -198,36 +198,11 @@ theorem mkGateCached_decl_eq (aig : AIG α) (input : GateInput aig) :
     . rw [← hres]
       intros
       simp
-    . split at hres
-      . rw [← hres]
-        intros
-        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-      . rw [← hres]
-        intros
-        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-      . rw [← hres]
-        intros
-        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-      . rw [← hres]
-        intros
-        rw [LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-      . rw [← hres]
-        intros
-        simp
-      . rw [← hres]
-        intros
-        simp
-      . rw [← hres]
-        intros
-        simp
-      . rw [← hres]
-        intros
-        simp
-      . rw [← hres]
-        dsimp
-        intro idx h1 h2
-        rw [Array.get_push]
-        simp [h2]
+    . rw [← hres]
+      dsimp
+      intro idx h1 h2
+      rw [Array.get_push]
+      simp [h2]
 
 instance : LawfulOperator α GateInput mkGateCached where
   le_size := mkGateCached_le_size
@@ -243,25 +218,8 @@ theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG α} {input : GateInput aig} 
     ⟦aig.mkGateCached input, assign⟧ = ⟦aig.mkGate input, assign⟧ := by
   simp only [mkGateCached]
   split
-  . next heq1 =>
-    rw [denote_mkGate_cached heq1]
-  . split
-    . next heq _ =>
-      simp_all [denote_idx_const heq]
-    . next heq _ =>
-      simp_all [denote_idx_const heq]
-    . next heq _ _ _ =>
-      simp_all [denote_idx_const heq]
-    . next heq _ _ _ =>
-      simp_all [denote_idx_const heq]
-    . next heq _ _ _ =>
-      simp_all [denote_idx_const heq]
-    . next heq _ _ _ =>
-      simp_all [denote_idx_const heq]
-    . next heq _ _ _ _ =>
-      simp_all [denote_idx_const heq]
-    . next heq _ _ _ =>
-      simp_all [denote_idx_const heq]
-    . simp [mkGate, denote]
+  . rw [denote_mkGate_cached]
+    assumption
+  . simp [mkGate, denote]
 
 end AIG
