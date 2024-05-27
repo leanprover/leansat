@@ -74,11 +74,10 @@ def mkTemp : IO System.FilePath := do
 A quicker version of `IO.FS.readFile` for big files. Note that this assumes the file contains valid
 UTF-8. As we only use this to parse trusted input from a SAT solver this is fine.
 -/
-def readFileQuick (path : System.FilePath) : IO String := do
+def readFileQuick (path : System.FilePath) : IO ByteArray := do
   let mdata ← path.metadata
   let handle ← IO.FS.Handle.mk path .read
-  let bytes ← handle.read mdata.byteSize.toUSize
-  return String.fromUTF8! bytes
+  handle.read mdata.byteSize.toUSize
 
 def LratCert.ofFile (lratPath : System.FilePath) (prevalidate : Bool) : IO LratCert := do
   let proof ← readFileQuick lratPath
@@ -88,7 +87,7 @@ def LratCert.ofFile (lratPath : System.FilePath) (prevalidate : Bool) : IO LratC
   if prevalidate then
     if LRAT.parseLRATProof proof |>.isNone then
       throw <| IO.userError "SAT solver produced invalid LRAT"
-  return proof
+  return String.fromUTF8! proof
 
 /--
 Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
@@ -120,7 +119,7 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
 Verify that a proof certificate is valid for a given formula.
 -/
 def verifyCert (formula : LratFormula) (cert : LratCert) : Bool :=
-  match LRAT.parseLRATProof cert with
+  match LRAT.parseLRATProof cert.toUTF8 with
   | some lratProof =>
     -- XXX
     let lratProof := lratProof.toList

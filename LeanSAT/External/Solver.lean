@@ -6,7 +6,6 @@ Authors: Josh Clune
 import LeanSAT.External.LRAT
 import Lean.Data.Parsec
 
-open Lean Parsec
 open IO.Process
 
 inductive SolverResult where
@@ -15,21 +14,23 @@ inductive SolverResult where
 
 namespace SatWitnessParser
 
-def parsePartialAssignment : Parsec (Bool × (Array (Bool × Nat))) := do
+open LRAT Parsec Byte
+
+def parsePartialAssignment : Parsec ByteArray.Iterator (Bool × (Array (Bool × Nat))) := do
   skipString "v "
-  if (← peek!) == '0' then
+  if (← peek!) == '0'.toNat.toUInt8 then
     return (true, #[])
   let idents ← many1 LRAT.Parser.parseClause.litWs
   let idents := idents.map (fun i => if i > 0 then (true, i.natAbs) else (false, i.natAbs))
-  if (← peek!) == '0' then
+  if (← peek!) == '0'.toNat.toUInt8 then
     return (true, idents)
   else
     return (false, idents)
 
-partial def parseLines : Parsec (Array (Bool × Nat)) :=
+partial def parseLines : Parsec ByteArray.Iterator (Array (Bool × Nat)) :=
   go #[]
 where
-  go (acc : Array (Bool × Nat)) : Parsec (Array (Bool × Nat)) := do
+  go (acc : Array (Bool × Nat)) : Parsec ByteArray.Iterator (Array (Bool × Nat)) := do
     let (terminal?, additionalAssignment) ← parsePartialAssignment
     let acc := acc ++ additionalAssignment
     if terminal? then
@@ -37,10 +38,10 @@ where
     else
       go acc
 
-def parseHeader : Parsec Unit :=
+def parseHeader : Parsec ByteArray.Iterator Unit := do
   skipString "s SATISFIABLE\n"
 
-def parse : Parsec (Array (Bool × Nat)) := do
+def parse : Parsec ByteArray.Iterator (Array (Bool × Nat)) := do
   parseHeader
   parseLines
 
@@ -68,7 +69,7 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOut
     if stdout.startsWith "s UNSATISFIABLE" then
       return .unsat
     else if stdout.startsWith "s SATISFIABLE" then
-      match SatWitnessParser.parse.run stdout with
+      match SatWitnessParser.parse.run <| .fresh stdout.toUTF8 with
       | .ok assignment =>
         return .sat assignment
       | .error err =>

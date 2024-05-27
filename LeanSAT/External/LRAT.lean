@@ -3,10 +3,8 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import Lean.Elab.Command
 import LeanSAT.LRAT.Actions
-
-open Lean Elab Command
+import LeanSAT.External.Parsec
 
 namespace LRAT
 
@@ -22,99 +20,67 @@ This implements a (correct) version of the grammar presented in:
 https://www.cs.cmu.edu/~mheule/publications/lrat.pdf
 -/
 
-open Parsec
-
-/--
-Assumes `c` is between `0` and `9`
--/
-@[inline]
-def digitToNat (c : Char) : Nat := c.toNat - '0'.toNat
-
-deriving instance Inhabited for String.Iterator
-
-partial def parseDigitsCore (acc : Nat) : Parsec Nat := fun it =>
-  /-
-  This used to be:
-  Parsec.tryCatch digit (fun digit => parseDigitsCore (acc * 10 + digitToNat digit)) (fun _ => pure acc)
-  But this code keeps on allocating success/error values in the hot loop, we don't want that.
-  -/
-  let ⟨res, it⟩ := go it acc
-  .success it res
-where
-  go (it : String.Iterator) (acc : Nat) : (Nat × String.Iterator) :=
-    if it.hasNext then
-      let candidate := it.curr
-      if '0' ≤ candidate ∧ candidate ≤ '9' then
-        let digit := digitToNat candidate
-        let acc := acc * 10 + digit
-        go it.next acc
-      else
-        (acc, it)
-    else
-      (acc, it)
+open Parsec Byte
 
 @[inline]
-def parseDigits : Parsec Nat := do
-  let d ← digit
-  parseDigitsCore (digitToNat d)
-
-@[inline]
-def parsePos : Parsec Nat := do
-  let ident ← parseDigits
+def parsePos : Parsec ByteArray.Iterator Nat := do
+  let ident ← Byte.digits
   if ident == 0 then
     fail "id was 0"
   else
     return ident
 
 @[inline]
-def parseNeg : Parsec Int := do
+def parseNeg : Parsec ByteArray.Iterator  Int := do
   skipChar '-'
   let nat ← parsePos
   return -nat
 
 @[inline]
-def parseId : Parsec Nat := parsePos
+def parseId : Parsec ByteArray.Iterator Nat := parsePos
 
 @[inline]
-def parseZero : Parsec Unit := skipChar '0'
+def parseZero : Parsec ByteArray.Iterator Unit := skipChar '0'
 
-def parseIdList : Parsec (Array Nat) := do
+def parseIdList : Parsec ByteArray.Iterator (Array Nat) := do
   many idWs
 where
-  idWs : Parsec Nat := do
+  @[inline]
+  idWs : Parsec ByteArray.Iterator Nat := do
     let ident ← attempt parseId
-    ws
+    skipChar ' '
     return ident
 
-def parseDelete (_ident : Nat) : Parsec IntAction := do
+def parseDelete (_ident : Nat) : Parsec ByteArray.Iterator IntAction := do
   skipChar 'd'
-  ws
+  skipChar ' '
   let idList ← parseIdList
   parseZero
   return .del idList
 
-def parseLit : Parsec Int := do
+def parseLit : Parsec ByteArray.Iterator Int := do
   parseNeg <|> (Int.ofNat <$> parsePos)
 
-def parseClause : Parsec (Array Int) := do
+def parseClause : Parsec ByteArray.Iterator (Array Int) := do
   let lits ← many litWs
   parseZero
   return lits
 where
-  litWs : Parsec Int := do
+  @[inline]
+  litWs : Parsec ByteArray.Iterator Int := do
     let lit ← attempt parseLit
-    ws
+    skipChar ' '
     return lit
 
-def parseRes : Parsec (Nat × Array Nat) := do
+def parseRes : Parsec ByteArray.Iterator (Nat × Array Nat) := do
   let lhs ← parseNeg
-  ws
+  skipChar ' '
   let idents ← parseIdList
   return (lhs.natAbs, idents)
 
-def parseRat (ident : Nat) : Parsec IntAction := do
+def parseRat (ident : Nat) : Parsec ByteArray.Iterator IntAction := do
   let clause ← parseClause
-  ws
+  skipChar ' '
   let rupHints ← parseIdList
   let ratHints ← many (attempt parseRes)
   parseZero
@@ -124,21 +90,17 @@ def parseRat (ident : Nat) : Parsec IntAction := do
   | _, 0 => return .addRup ident clause rupHints
   | _, _ => return .addRat ident clause (getPivot clause) rupHints ratHints
 
-def parseLine : Parsec IntAction := do
+def parseLine : Parsec ByteArray.Iterator IntAction := do
   let ident ← parseId
-  ws
+  skipChar ' '
   parseDelete ident <|> parseRat ident
 
-@[inline]
-def eof? : Parsec Bool := fun it =>
-  .success it (!it.hasNext)
-
-partial def parseLines : Parsec (Array IntAction) :=
+partial def parseLines : Parsec ByteArray.Iterator (Array IntAction) :=
   go #[]
 where
-  go (actions : Array IntAction) : Parsec (Array IntAction) := do
-    if (← peek!) == 'c' then
-      let _ ← many (satisfy (· != '\n'))
+  go (actions : Array IntAction) : Parsec ByteArray.Iterator (Array IntAction) := do
+    if (← peek!) == 'c'.toNat.toUInt8 then
+      let _ ← many (satisfy (· != '\n'.toNat.toUInt8))
       skipChar '\n'
       if ← eof? then
         pure actions
@@ -155,31 +117,27 @@ where
 
 end Parser
 
+open Lean Elab Command in
 /-- `loadLRATProof` takes in the path of an LRAT proof and attempts to output an Array of IntActions
     that correspond to the parsed LRAT proof.
 
     `loadLRATProof` is written as a `CommandElabM` monad so that it can be used in commands such as `loadLRAT` at
     the end of this file. -/
 def loadLRATProof (path : System.FilePath) : CommandElabM (Array IntAction) := do
-  let proof ← IO.FS.readFile path
-  match Parser.parseLines |>.run proof with
+  let proof ← IO.FS.readBinFile path
+  match Parser.parseLines.run <| .fresh proof with
   | .ok actions => return actions
   | .error err => throwError err
 
-def lineToAction (line : String) : Option IntAction :=
-  match Parser.parseLine |>.run line.trim with
-  | .ok action => some action
-  | .error .. => none
-
-def parseLRATProof (proof : String) : Option (Array IntAction) := Id.run do
-  match Parser.parseLines |>.run proof with
+def parseLRATProof (proof : ByteArray) : Option (Array IntAction) := Id.run do
+  match Parser.parseLines.run <| .fresh proof with
   | .ok actions => return some actions
   | .error .. => return none
 
 /-- `readLRATProof` takes in the path of an LRAT proof and attempts to output an Array of IntActions
     that correspond to the parsed LRAT proof. -/
 def readLRATProof (path : System.FilePath) : IO (Option (Array IntAction)) := do
-  let proof ← IO.FS.readFile path
-  match Parser.parseLines |>.run proof with
+  let proof ← IO.FS.readBinFile path
+  match Parser.parseLines.run <| .fresh proof with
   | .ok actions => return some actions
   | .error .. => return none
