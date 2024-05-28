@@ -34,6 +34,7 @@ instance : ToExpr BVUnOp where
     | .not => mkConst ``BVUnOp.not
     | .shiftLeftConst n => mkApp (mkConst ``BVUnOp.shiftLeftConst) (toExpr n)
     | .shiftRightConst n => mkApp (mkConst ``BVUnOp.shiftRightConst) (toExpr n)
+    | .rotateLeft n => mkApp (mkConst ``BVUnOp.rotateLeft) (toExpr n)
   toTypeExpr := mkConst ``BVUnOp
 
 instance : ToExpr BVBinOp where
@@ -212,6 +213,10 @@ theorem extract_congr (hi lo : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
     BitVec.extractLsb hi lo x = BitVec.extractLsb hi lo x' := by
   simp[*]
 
+theorem rotateLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
+    : BitVec.rotateLeft x' n = BitVec.rotateLeft x n := by
+  simp[*]
+
 def getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
@@ -306,6 +311,13 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
         innerEval
         innerProof
     return some ⟨hi - lo + 1, bvExpr, proof, expr⟩
+  | BitVec.rotateLeft _ innerExpr distanceExpr =>
+    rotateReflection
+      distanceExpr
+      innerExpr
+      .rotateLeft
+      ``BVUnOp.rotateLeft
+      ``rotateLeft_congr
   | _ => ofAtom x
 where
   ofAtom (x : Expr) : M (Option ReifiedBVExpr) := do
@@ -314,6 +326,27 @@ where
     let some width ← getNatValue? widthExpr | return none
     let atom ← mkAtom x width
     return some atom
+
+  -- TODO: code sharing with shiftConstReflection
+  rotateReflection (distanceExpr : Expr) (innerExpr : Expr)
+        (rotateOp : Nat → BVUnOp) (rotateOpName : Name) (congrThm : Name)
+        : M (Option ReifiedBVExpr) := do
+    -- Either the shift values are constant or we abstract the entire term as atoms
+    let some distance ← getNatValue? distanceExpr | return ← ofAtom x
+    let some inner ← of innerExpr | return none
+    let bvExpr : BVExpr inner.width := .un (rotateOp distance) inner.bvExpr
+    let expr :=
+      mkApp3
+        (mkConst ``BVExpr.un)
+        (toExpr inner.width)
+        (mkApp (mkConst rotateOpName) (toExpr distance))
+        inner.expr
+    let congrProof :=
+      mkApp
+        (mkConst congrThm)
+        (toExpr distance)
+    let proof := unaryCongrProof inner innerExpr congrProof
+    return some ⟨inner.width, bvExpr, proof, expr⟩
 
   shiftConstReflection (β : Expr) (distanceExpr : Expr) (innerExpr : Expr)
         (shiftOp : Nat → BVUnOp) (shiftOpName : Name) (congrThm : Name)

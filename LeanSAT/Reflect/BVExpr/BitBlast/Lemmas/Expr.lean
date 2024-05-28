@@ -97,6 +97,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       intro h
       apply BitVec.lt_of_getLsb
       assumption
+    | rotateLeft => sorry
   | append lhs rhs lih rih =>
     rename_i lw rw
     simp only [go, blastAppend_eq_eval_getLsb, RefStream.getRef_cast, Ref_cast', eval_append,
