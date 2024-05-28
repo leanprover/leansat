@@ -17,15 +17,22 @@ namespace SatWitnessParser
 open LRAT Parsec Byte
 
 def parsePartialAssignment : Parsec ByteArray.Iterator (Bool × (Array (Bool × Nat))) := do
-  skipString "v "
-  if (← peek!) == '0'.toNat.toUInt8 then
-    return (true, #[])
-  let idents ← many1 LRAT.Parser.parseClause.litWs
+  skipChar 'v'
+  let idents ← many (attempt wsLit)
   let idents := idents.map (fun i => if i > 0 then (true, i.natAbs) else (false, i.natAbs))
-  if (← peek!) == '0'.toNat.toUInt8 then
-    return (true, idents)
-  else
-    return (false, idents)
+  Parsec.tryCatch
+    (skipString " 0")
+    (csuccess := fun _ => pure (true, idents))
+    (cerror := fun _ => do
+      skipChar '\n'
+      return (false, idents)
+    )
+where
+  @[inline]
+  wsLit : Parsec ByteArray.Iterator Int := do
+    skipChar ' '
+    let lit ← LRAT.Parser.parseLit
+    return lit
 
 partial def parseLines : Parsec ByteArray.Iterator (Array (Bool × Nat)) :=
   go #[]
@@ -41,6 +48,11 @@ where
 def parseHeader : Parsec ByteArray.Iterator Unit := do
   skipString "s SATISFIABLE\n"
 
+/--
+Parse the witness format of a SAT solver. The rough grammar for this is:
+line = "v" (" " lit)* (" " 0)?\n
+witness = "s SATISFIABLE\n" line+
+-/
 def parse : Parsec ByteArray.Iterator (Array (Bool × Nat)) := do
   parseHeader
   parseLines
