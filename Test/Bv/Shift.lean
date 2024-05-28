@@ -31,3 +31,19 @@ theorem shift_unit_5 {x y : BitVec 64} : (x <<< y) + y = y + (x <<< y) := by
 set_option trace.bv true in
 theorem shift_unit_6 {x y : BitVec 64} : (x >>> y) + y = y + (x >>> y) := by
   bv_decide
+
+set_option trace.bv true in
+theorem rotate_unit_1 {x : BitVec 64} : BitVec.rotateLeft x 0 = x := by
+  bv_decide
+
+set_option trace.bv true in
+theorem rotate_unit_2 {x : BitVec 64} : BitVec.rotateLeft x 64 = x := by
+  bv_decide
+
+set_option trace.bv true in
+theorem rotate_unit_3 {x : BitVec 64} : BitVec.rotateLeft x 16 = (BitVec.rotateLeft (BitVec.rotateLeft x 6) 10) := by
+  bv_decide
+
+set_option trace.bv true in
+theorem rotate_unit_4 {x : BitVec 64} : BitVec.rotateLeft x (64 + 16) = (BitVec.rotateLeft x 16) := by
+  bv_decide
