@@ -1,11 +1,10 @@
 import LeanSAT.Reflect.BVExpr.Basic
-import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ShiftLeft
 import LeanSAT.AIG
 
 namespace BVExpr
 namespace bitblast
 
-def blastShiftRightConst (aig : AIG BVBit) (target : ShiftTarget aig w)
+def blastShiftRightConst (aig : AIG BVBit) (target : AIG.ShiftTarget aig w)
     : AIG.RefStreamEntry BVBit w :=
   let ⟨input, distance⟩ := target
   go aig input distance 0 (by omega) .empty
@@ -67,7 +66,7 @@ theorem blastShiftRightConst.go_decl_eq (aig : AIG BVBit) (distance : Nat) (inpu
   . simp [← hgo]
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator BVBit ShiftTarget blastShiftRightConst where
+instance : AIG.LawfulStreamOperator BVBit AIG.ShiftTarget blastShiftRightConst where
   le_size := by
     intros
     unfold blastShiftRightConst

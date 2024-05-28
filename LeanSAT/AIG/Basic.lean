@@ -215,6 +215,10 @@ structure RefStreamEntry (α : Type) [BEq α] [Hashable α] [DecidableEq α] (le
   aig : AIG α
   stream : RefStream aig length
 
+structure ShiftTarget (aig : AIG α) (w : Nat) where
+  stream : AIG.RefStream aig w
+  distance : Nat
+
 /--
 Evaluate an `AIG.Entrypoint` using some assignment for atoms.
 -/
