@@ -109,6 +109,10 @@ constant `Nat` value.
 Rotating left by a constant value.
 -/
 | rotateLeft (n : Nat)
+/--
+Rotating right by a constant value.
+-/
+| rotateRight (n : Nat)
 
 namespace BVUnOp
 
@@ -117,6 +121,7 @@ def toString : BVUnOp → String
   | shiftLeftConst n => s!"<< {n}"
   | shiftRightConst n => s!">> {n}"
   | rotateLeft n => s! "rotL {n}"
+  | rotateRight n => s! "rotR {n}"
 
 instance : ToString BVUnOp := ⟨toString⟩
 
@@ -128,6 +133,7 @@ def eval : BVUnOp → (BitVec w → BitVec w)
   | shiftLeftConst n => (· <<< n)
   | shiftRightConst n => (· >>> n)
   | rotateLeft n => (BitVec.rotateLeft · n)
+  | rotateRight n => (BitVec.rotateRight · n)
 
 @[simp] theorem eval_not : eval .not = ((~~~ ·) : BitVec w → BitVec w) := by rfl
 
@@ -141,6 +147,10 @@ theorem eval_shiftRightConst : eval (shiftRightConst n) = ((· >>> n) : BitVec w
 
 @[simp]
 theorem eval_rotateLeft : eval (rotateLeft n) = ((BitVec.rotateLeft · n) : BitVec w → BitVec w) := by
+  rfl
+
+@[simp]
+theorem eval_rotateRight : eval (rotateRight n) = ((BitVec.rotateRight · n) : BitVec w → BitVec w) := by
   rfl
 
 end BVUnOp

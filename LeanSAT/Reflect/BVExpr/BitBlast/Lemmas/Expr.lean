@@ -9,6 +9,8 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ZeroExtend
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Append
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Extract
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.RotateLeft
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.RotateRight
 
 open AIG
 
@@ -98,6 +100,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       apply BitVec.lt_of_getLsb
       assumption
     | rotateLeft => sorry
+    | rotateRight => sorry
   | append lhs rhs lih rih =>
     rename_i lw rw
     simp only [go, blastAppend_eq_eval_getLsb, RefStream.getRef_cast, Ref_cast', eval_append,

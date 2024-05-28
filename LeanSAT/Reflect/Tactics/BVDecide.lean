@@ -35,6 +35,7 @@ instance : ToExpr BVUnOp where
     | .shiftLeftConst n => mkApp (mkConst ``BVUnOp.shiftLeftConst) (toExpr n)
     | .shiftRightConst n => mkApp (mkConst ``BVUnOp.shiftRightConst) (toExpr n)
     | .rotateLeft n => mkApp (mkConst ``BVUnOp.rotateLeft) (toExpr n)
+    | .rotateRight n => mkApp (mkConst ``BVUnOp.rotateRight) (toExpr n)
   toTypeExpr := mkConst ``BVUnOp
 
 instance : ToExpr BVBinOp where
@@ -217,6 +218,10 @@ theorem rotateLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
     : BitVec.rotateLeft x' n = BitVec.rotateLeft x n := by
   simp[*]
 
+theorem rotateRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
+    : BitVec.rotateRight x' n = BitVec.rotateRight x n := by
+  simp[*]
+
 def getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
@@ -318,6 +323,13 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
       .rotateLeft
       ``BVUnOp.rotateLeft
       ``rotateLeft_congr
+  | BitVec.rotateRight _ innerExpr distanceExpr =>
+    rotateReflection
+      distanceExpr
+      innerExpr
+      .rotateRight
+      ``BVUnOp.rotateRight
+      ``rotateRight_congr
   | _ => ofAtom x
 where
   ofAtom (x : Expr) : M (Option ReifiedBVExpr) := do
