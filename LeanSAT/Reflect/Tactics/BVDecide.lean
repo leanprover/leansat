@@ -339,32 +339,9 @@ where
     let atom ← mkAtom x width
     return some atom
 
-  -- TODO: code sharing with shiftConstReflection
-  rotateReflection (distanceExpr : Expr) (innerExpr : Expr)
-        (rotateOp : Nat → BVUnOp) (rotateOpName : Name) (congrThm : Name)
-        : M (Option ReifiedBVExpr) := do
-    -- Either the shift values are constant or we abstract the entire term as atoms
-    let some distance ← getNatValue? distanceExpr | return ← ofAtom x
-    let some inner ← of innerExpr | return none
-    let bvExpr : BVExpr inner.width := .un (rotateOp distance) inner.bvExpr
-    let expr :=
-      mkApp3
-        (mkConst ``BVExpr.un)
-        (toExpr inner.width)
-        (mkApp (mkConst rotateOpName) (toExpr distance))
-        inner.expr
-    let congrProof :=
-      mkApp
-        (mkConst congrThm)
-        (toExpr distance)
-    let proof := unaryCongrProof inner innerExpr congrProof
-    return some ⟨inner.width, bvExpr, proof, expr⟩
-
-  shiftConstReflection (β : Expr) (distanceExpr : Expr) (innerExpr : Expr)
-        (shiftOp : Nat → BVUnOp) (shiftOpName : Name) (congrThm : Name)
-        : M (Option ReifiedBVExpr) := do
-    -- Either the shift values are constant or we abstract the entire term as atoms
-    let some distance ← getNatOrBvValue? β distanceExpr | return ← ofAtom x
+  shiftLikeReflection (distance : Nat) (innerExpr : Expr) (shiftOp : Nat → BVUnOp)
+      (shiftOpName : Name) (congrThm : Name)
+      : M (Option ReifiedBVExpr) := do
     let some inner ← of innerExpr | return none
     let bvExpr : BVExpr inner.width := .un (shiftOp distance) inner.bvExpr
     let expr :=
@@ -379,6 +356,21 @@ where
         (toExpr distance)
     let proof := unaryCongrProof inner innerExpr congrProof
     return some ⟨inner.width, bvExpr, proof, expr⟩
+
+  -- TODO: code sharing with shiftConstReflection
+  rotateReflection (distanceExpr : Expr) (innerExpr : Expr)
+        (rotateOp : Nat → BVUnOp) (rotateOpName : Name) (congrThm : Name)
+        : M (Option ReifiedBVExpr) := do
+    -- Either the shift values are constant or we abstract the entire term as atoms
+    let some distance ← getNatValue? distanceExpr | return ← ofAtom x
+    shiftLikeReflection distance innerExpr rotateOp rotateOpName congrThm
+
+  shiftConstReflection (β : Expr) (distanceExpr : Expr) (innerExpr : Expr)
+        (shiftOp : Nat → BVUnOp) (shiftOpName : Name) (congrThm : Name)
+        : M (Option ReifiedBVExpr) := do
+    -- Either the shift values are constant or we abstract the entire term as atoms
+    let some distance ← getNatOrBvValue? β distanceExpr | return ← ofAtom x
+    shiftLikeReflection distance innerExpr shiftOp shiftOpName congrThm
 
   binaryReflection (lhsExpr rhsExpr : Expr) (op : BVBinOp) (congrThm : Name)
       : M (Option ReifiedBVExpr) := do
