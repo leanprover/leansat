@@ -148,5 +148,99 @@ theorem blastShiftRight_eq_eval_getLsb (aig : AIG BVBit) (target : ShiftTarget a
   apply blastShiftRightConst.go_eq_eval_getLsb
   omega
 
+namespace blastArithShiftRightConst
+
+theorem go_getRef (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+    : ∀ (idx : Nat) (hidx : idx < curr),
+        (go input distance curr hcurr s).getRef idx (by omega)
+          =
+        s.getRef idx hidx := by
+  intro idx hidx
+  unfold go
+  split
+  . split
+    all_goals
+      rw [go_getRef]
+      rw [AIG.RefStream.getRef_push_ref_lt]
+  . simp only [RefStream.getRef, Ref.mk.injEq]
+    congr
+    . omega
+    . simp
+
+theorem go_eq_eval_getLsb (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+    (assign : Assignment) (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+    : ∀ (idx : Nat) (hidx1 : idx < w),
+        curr ≤ idx
+          →
+        ⟦
+          aig,
+          (go input distance curr hcurr s).getRef idx hidx1,
+          assign.toAIGAssignment
+        ⟧
+          =
+        if hidx:(distance + idx) < w then
+          ⟦aig, input.getRef (distance + idx) (by omega), assign.toAIGAssignment⟧
+        else
+          ⟦aig, input.getRef (w - 1) (by omega), assign.toAIGAssignment ⟧
+        := by
+  intro idx hidx1 hidx2
+  generalize hgo : go input distance curr hcurr s = res
+  unfold go at hgo
+  split at hgo
+  . cases Nat.eq_or_lt_of_le hidx2 with
+    | inl heq =>
+      split at hgo
+      . next hlt =>
+        rw [heq] at hlt
+        simp only [hlt, ↓reduceDite]
+        dsimp at hgo
+        rw [← hgo]
+        rw [go_getRef]
+        rw [AIG.RefStream.getRef_push_ref_eq']
+        . simp [heq]
+        . omega
+      . next hlt =>
+        rw [heq] at hlt
+        simp only [hlt, ↓reduceDite]
+        dsimp at hgo
+        rw [← hgo]
+        rw [go_getRef]
+        rw [AIG.RefStream.getRef_push_ref_eq']
+        . simp [heq]
+    | inr =>
+      split at hgo
+      all_goals
+        split
+        all_goals
+          next hidx =>
+            rw [← hgo]
+            rw [go_eq_eval_getLsb]
+            . simp [hidx]
+            . omega
+  . omega
+
+end blastArithShiftRightConst
+
+@[simp]
+theorem blastArithShiftRightConst_eq_eval_getLsb (aig : AIG BVBit) (target : ShiftTarget aig w)
+    (assign : Assignment)
+    : ∀ (idx : Nat) (hidx : idx < w),
+        ⟦
+          (blastArithShiftRightConst aig target).aig,
+          (blastArithShiftRightConst aig target).stream.getRef idx hidx,
+          assign.toAIGAssignment
+        ⟧
+          =
+        if hidx:(target.distance + idx) < w then
+          ⟦aig, target.stream.getRef (target.distance + idx) (by omega), assign.toAIGAssignment ⟧
+        else
+          ⟦aig, target.stream.getRef (w - 1) (by omega), assign.toAIGAssignment ⟧
+        := by
+  intros
+  unfold blastArithShiftRightConst
+  rw [blastArithShiftRightConst.go_eq_eval_getLsb]
+  omega
+
 end bitblast
 end BVExpr

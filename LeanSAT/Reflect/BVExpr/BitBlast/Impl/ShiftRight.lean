@@ -29,7 +29,7 @@ where
   else
     have hcurr : curr = w := by omega
     ⟨aig, hcurr ▸ s⟩
-  termination_by w - curr
+termination_by w - curr
 
 theorem blastShiftRightConst.go_le_size (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
@@ -75,6 +75,36 @@ instance : AIG.LawfulStreamOperator BVBit AIG.ShiftTarget blastShiftRightConst w
     intros
     unfold blastShiftRightConst
     apply blastShiftRightConst.go_decl_eq
+
+def blastArithShiftRightConst (aig : AIG BVBit) (target : ShiftTarget aig w)
+    : AIG.RefStreamEntry BVBit w :=
+  let ⟨input, distance⟩ := target
+  ⟨aig, go input distance 0 (by omega) .empty⟩
+where
+  go {aig : AIG BVBit} (input : AIG.RefStream aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
+      (s : AIG.RefStream aig curr)
+      : AIG.RefStream aig w :=
+  if hidx:curr < w then
+    if hdist:(distance + curr) < w then
+      let s := s.pushRef (input.getRef (distance + curr) (by omega))
+      go input distance (curr + 1) (by omega) s
+    else
+      let s := s.pushRef (input.getRef (w - 1) (by omega))
+      go input distance (curr + 1) (by omega) s
+  else
+    have hcurr : curr = w := by omega
+    hcurr ▸ s
+termination_by w - curr
+
+instance : AIG.LawfulStreamOperator BVBit ShiftTarget blastArithShiftRightConst where
+  le_size := by
+    intros
+    unfold blastArithShiftRightConst
+    simp
+  decl_eq := by
+    intros
+    unfold blastArithShiftRightConst
+    simp
 
 end bitblast
 end BVExpr
