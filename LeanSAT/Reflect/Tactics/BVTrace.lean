@@ -22,9 +22,7 @@ def evalBvTrace : Tactic := fun stx =>
     let cfg ← SatCheck.mkContext lratFile
     let g ← getMainGoal
     let trace ← g.withContext do
-      let trace ← g.bvDecide cfg
-      replaceMainGoal []
-      return trace
+      g.bvDecide cfg
     -- TODO: figure out how to make a proper simp only syntax without having an initial simp
     let fake ← `(tactic| simp only [bv_decide, seval] at *)
     let simpStx ← mkSimpCallStx fake trace.simpTrace.usedTheorems
