@@ -123,6 +123,10 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       assumption
     | rotateLeft => simp [go, ih, hidx]
     | rotateRight => simp [go, ih, hidx]
+    | arithShiftRightConst n =>
+      rename_i w
+      have : ¬(w ≤ idx) := by omega
+      simp [go, ih, this, BitVec.getLsb_sshiftRight, BitVec.msb_eq_getLsb_last ]
 
 end bitblast
 @[simp]

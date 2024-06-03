@@ -76,7 +76,7 @@ instance : AIG.LawfulStreamOperator BVBit AIG.ShiftTarget blastShiftRightConst w
     unfold blastShiftRightConst
     apply blastShiftRightConst.go_decl_eq
 
-def blastArithShiftRightConst (aig : AIG BVBit) (target : ShiftTarget aig w)
+def blastArithShiftRightConst (aig : AIG BVBit) (target : AIG.ShiftTarget aig w)
     : AIG.RefStreamEntry BVBit w :=
   let ⟨input, distance⟩ := target
   ⟨aig, go input distance 0 (by omega) .empty⟩
@@ -96,7 +96,7 @@ where
     hcurr ▸ s
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator BVBit ShiftTarget blastArithShiftRightConst where
+instance : AIG.LawfulStreamOperator BVBit AIG.ShiftTarget blastArithShiftRightConst where
   le_size := by
     intros
     unfold blastArithShiftRightConst

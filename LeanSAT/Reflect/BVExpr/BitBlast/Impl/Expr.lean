@@ -133,6 +133,15 @@ where
             dsimp at heaig
             assumption
         ⟩
+      | .arithShiftRightConst distance =>
+        let res := bitblast.blastArithShiftRightConst eaig ⟨estream, distance⟩
+        ⟨
+          res,
+          by
+            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastArithShiftRightConst)
+            dsimp at heaig
+            assumption
+        ⟩
     | .append lhs rhs =>
       let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
       let ⟨⟨aig, rhs⟩, hraig⟩ := go aig rhs
@@ -234,6 +243,13 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     | .rotateRight _ =>
       dsimp [go]
       rw [AIG.LawfulStreamOperator.decl_eq (f := blastRotateRight)]
+      rw [ih]
+      apply Nat.lt_of_lt_of_le
+      . exact h1
+      . exact (go aig expr).property
+    | .arithShiftRightConst _ =>
+      dsimp [go]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastArithShiftRightConst)]
       rw [ih]
       apply Nat.lt_of_lt_of_le
       . exact h1
