@@ -4,11 +4,7 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
-structure ZeroExtendTarget (aig : AIG BVBit) (newWidth : Nat) where
-  w : Nat
-  stream : AIG.RefStream aig w
-
-def blastZeroExtend (aig : AIG BVBit) (target : ZeroExtendTarget aig newWidth)
+def blastZeroExtend (aig : AIG BVBit) (target : AIG.ExtendTarget aig newWidth)
     : AIG.RefStreamEntry BVBit newWidth :=
   let ⟨width, input⟩ := target
   go aig width input newWidth 0 (by omega) .empty
@@ -74,7 +70,7 @@ termination_by newWidth - curr
 
 end blastZeroExtend
 
-instance : AIG.LawfulStreamOperator BVBit ZeroExtendTarget blastZeroExtend where
+instance : AIG.LawfulStreamOperator BVBit AIG.ExtendTarget blastZeroExtend where
   le_size := by
     intros
     unfold blastZeroExtend

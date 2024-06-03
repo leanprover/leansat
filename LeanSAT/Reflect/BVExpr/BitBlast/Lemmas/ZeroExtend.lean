@@ -126,7 +126,7 @@ termination_by newWidth - curr
 end blastZeroExtend
 
 @[simp]
-theorem blastZeroExtend_eq_eval_getLsb (aig : AIG BVBit) (target : ZeroExtendTarget aig newWidth)
+theorem blastZeroExtend_eq_eval_getLsb (aig : AIG BVBit) (target : ExtendTarget aig newWidth)
   (assign : Assignment)
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦

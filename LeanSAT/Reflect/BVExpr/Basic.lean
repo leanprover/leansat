@@ -113,7 +113,7 @@ Rotating left by a constant value.
 Rotating right by a constant value.
 -/
 | rotateRight (n : Nat)
-/-/
+/--
 Arithmetic shift right by a constant value.
 
 This operation has a dedicated constant representation as shiftRight can take `Nat` as a shift amount.
@@ -197,7 +197,14 @@ A binary operation on two `BVExpr`.
 A unary operation on two `BVExpr`.
 -/
 | un (op : BVUnOp) (operand : BVExpr w) : BVExpr w
+/--
+Concatenate two bit vectors
+-/
 | append (lhs : BVExpr l) (rhs : BVExpr r) : BVExpr (l + r)
+/--
+sign extend a `BitVec` by some constant amount.
+-/
+| signExtend (v : Nat) (expr : BVExpr w) : BVExpr v
 
 namespace BVExpr
 
@@ -209,6 +216,8 @@ def toString : BVExpr w → String
   | .bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
   | .un op operand => s!"({op.toString} {toString operand})"
   | .append lhs rhs => s!"({toString lhs} ++ {toString rhs})"
+  | .signExtend v expr => s!"(sext {v} {expr.toString})"
+
 
 instance : ToString (BVExpr w) := ⟨toString⟩
 
@@ -243,6 +252,7 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
   | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
   | .un op operand => op.eval (eval assign operand)
   | .append lhs rhs => (eval assign lhs) ++ (eval assign rhs)
+  | .signExtend v expr => BitVec.signExtend v (eval assign expr)
 
 @[simp]
 theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.truncate _ := by
@@ -269,6 +279,10 @@ theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) :
 
 @[simp]
 theorem eval_append : eval assign (.append lhs rhs) = (lhs.eval assign) ++ (rhs.eval assign) := by
+  rfl
+
+@[simp]
+theorem eval_signExtend : eval assign (.signExtend v expr) = BitVec.signExtend v (eval assign expr) := by
   rfl
 
 end BVExpr

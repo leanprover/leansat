@@ -63,6 +63,8 @@ where
   | .const val => mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr val)
   | .zeroExtend (w := oldWidth) val inner =>
     mkApp3 (mkConst ``BVExpr.zeroExtend) (toExpr oldWidth) (toExpr val) (go inner)
+  | .signExtend (w := oldWidth) val inner =>
+    mkApp3 (mkConst ``BVExpr.signExtend) (toExpr oldWidth) (toExpr val) (go inner)
   | .bin lhs op rhs => mkApp4 (mkConst ``BVExpr.bin) (toExpr w) (go lhs) (toExpr op) (go rhs)
   | .un op operand => mkApp3 (mkConst ``BVExpr.un) (toExpr w) (toExpr op) (go operand)
   | .append (l := l) (r := r) lhs rhs =>
@@ -216,6 +218,10 @@ theorem zeroExtend_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
     BitVec.zeroExtend n x = BitVec.zeroExtend n x' := by
   simp[*]
 
+theorem signExtend_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
+    BitVec.signExtend n x = BitVec.signExtend n x' := by
+  simp[*]
+
 theorem append_congr (lw rw : Nat) (lhs lhs' : BitVec lw) (rhs rhs' : BitVec rw) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
     lhs' ++ rhs' = lhs ++ rhs := by
   simp[*]
@@ -285,7 +291,7 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
   | BitVec.zeroExtend _ newWidthExpr innerExpr =>
     let some newWidth ← getNatValue? newWidthExpr | return ← ofAtom x
     let some inner ← of innerExpr | return none
-    let bvExpr := .zeroExtend (w := inner.width) newWidth inner.bvExpr
+    let bvExpr := .zeroExtend newWidth inner.bvExpr
     let expr :=
       mkApp3
         (mkConst ``BVExpr.zeroExtend)
@@ -296,6 +302,21 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
       let innerEval ← mkEvalExpr inner.width inner.expr
       let innerProof ← inner.evalsAtAtoms
       return mkApp5 (mkConst ``zeroExtend_congr) newWidthExpr (toExpr inner.width) innerExpr innerEval innerProof
+    return some ⟨newWidth, bvExpr, proof, expr⟩
+  | BitVec.signExtend _ newWidthExpr innerExpr =>
+    let some newWidth ← getNatValue? newWidthExpr | return ← ofAtom x
+    let some inner ← of innerExpr | return none
+    let bvExpr := .signExtend newWidth inner.bvExpr
+    let expr :=
+      mkApp3
+        (mkConst ``BVExpr.signExtend)
+        (toExpr inner.width)
+        newWidthExpr
+        inner.expr
+    let proof := do
+      let innerEval ← mkEvalExpr inner.width inner.expr
+      let innerProof ← inner.evalsAtAtoms
+      return mkApp5 (mkConst ``signExtend_congr) newWidthExpr (toExpr inner.width) innerExpr innerEval innerProof
     return some ⟨newWidth, bvExpr, proof, expr⟩
   | HAppend.hAppend _ _ _ _ lhsExpr rhsExpr =>
     let some lhs ← of lhsExpr | return none

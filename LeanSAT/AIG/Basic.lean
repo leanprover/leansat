@@ -224,6 +224,10 @@ structure ShiftTarget (aig : AIG α) (w : Nat) where
   stream : AIG.RefStream aig w
   distance : Nat
 
+structure ExtendTarget (aig : AIG α) (newWidth : Nat) where
+  w : Nat
+  stream : AIG.RefStream aig w
+
 /--
 Evaluate an `AIG.Entrypoint` using some assignment for atoms.
 -/

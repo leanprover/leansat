@@ -8,9 +8,10 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.ZeroExtend
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Append
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Extract
-import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.RotateLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.RotateRight
+import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.SignExtend
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
 
 open AIG
 
@@ -64,6 +65,36 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     . next hsplit =>
       simp only [hsplit, decide_False, cond_false]
       rw [go_denote_mem_prefix, lih]
+  | signExtend v inner ih =>
+    rename_i originalWidth
+    generalize hgo : (go aig (signExtend v inner)).val = res
+    unfold go at hgo
+    dsimp at hgo
+    have : 0 ≤ originalWidth := by omega
+    cases Nat.eq_or_lt_of_le this with
+    | inl heq =>
+      rw [blastSignExtend_empty_eq_zeroExtend] at hgo
+      . rw [← hgo]
+        simp only [eval_signExtend]
+        rw [signExtend_eq_neg_zeroExtend_neg_of_msb_false]
+        . simp only [blastZeroExtend_eq_eval_getLsb, ih, dite_eq_ite, Bool.if_false_right,
+            BitVec.getLsb_zeroExtend, hidx, decide_True, Bool.true_and, Bool.and_iff_right_iff_imp,
+            decide_eq_true_eq]
+          apply BitVec.lt_of_getLsb
+        . subst heq
+          rw [BitVec.msb_zero_length]
+      . simp [heq]
+    | inr hlt =>
+      rw [← hgo]
+      rw [blastSignExtend_eq_eval_getLsb]
+      simp only [eval_signExtend]
+      rw [getLsb_signExtend]
+      . simp only [hidx, decide_True, Bool.true_and]
+        split
+        . rw [ih]
+        . rw [BitVec.msb_eq_getLsb_last]
+          rw [ih]
+          simp [hlt]
   | extract hi lo inner ih =>
     simp only [go, blastExtract_eq_eval_getLsb, Bool.if_false_right, eval_extract,
       BitVec.getLsb_extract]
