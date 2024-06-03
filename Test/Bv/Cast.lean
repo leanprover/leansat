@@ -29,3 +29,15 @@ theorem cast_unit_5 (x y : BitVec 64) : (x ++ y).extractLsb 63 0 = (y ++ x).extr
 set_option trace.bv true in
 theorem cast_unit_5' (x y : BitVec 64) : (BitVec.append x y).extractLsb 63 0 = (y ++ x).extractLsb 127 64 := by
   bv_decide
+
+set_option trace.bv true in
+theorem cast_unit_6 (x : BitVec 64) : x.signExtend 32 = (x.signExtend 64).signExtend 32 := by
+  bv_decide
+
+set_option trace.bv true in
+theorem cast_unit_7 (x : BitVec 64) : x.signExtend 128 = (x.signExtend 64).signExtend 128 := by
+  bv_decide
+
+set_option trace.bv true in
+theorem cast_unit_8 (x : BitVec 64) : (x.signExtend 128 = x.zeroExtend 128) ↔ (x.msb = false) := by
+  bv_decide
