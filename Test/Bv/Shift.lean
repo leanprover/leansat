@@ -63,3 +63,11 @@ theorem rotate_unit_7 {x : BitVec 64} : BitVec.rotateRight x 16 = (BitVec.rotate
 set_option trace.bv true in
 theorem rotate_unit_8 {x : BitVec 64} : BitVec.rotateRight x (64 + 16) = (BitVec.rotateRight x 16) := by
   bv_decide
+
+set_option trace.bv true in
+theorem shift_unit_7 {x : BitVec 64} : BitVec.sshiftRight x 65 = BitVec.sshiftRight x 66 := by
+  bv_decide
+
+set_option trace.bv true in
+theorem shift_unit_8 {x : BitVec 64} (h : BitVec.slt 0 x) : BitVec.sshiftRight x 32 = x >>> 32 := by
+  bv_decide

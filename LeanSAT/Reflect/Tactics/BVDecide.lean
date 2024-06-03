@@ -36,6 +36,7 @@ instance : ToExpr BVUnOp where
     | .shiftRightConst n => mkApp (mkConst ``BVUnOp.shiftRightConst) (toExpr n)
     | .rotateLeft n => mkApp (mkConst ``BVUnOp.rotateLeft) (toExpr n)
     | .rotateRight n => mkApp (mkConst ``BVUnOp.rotateRight) (toExpr n)
+    | .arithShiftRightConst n => mkApp (mkConst ``BVUnOp.arithShiftRightConst) (toExpr n)
   toTypeExpr := mkConst ``BVUnOp
 
 instance : ToExpr BVBinOp where
@@ -198,6 +199,9 @@ theorem shiftLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' 
 theorem shiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' >>> n = x >>> n := by
   simp[*]
 
+theorem arithShiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : BitVec.sshiftRight x' n = BitVec.sshiftRight x n := by
+  simp[*]
+
 theorem add_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
     lhs' + rhs' = lhs + rhs := by
   simp[*]
@@ -264,6 +268,14 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
       .shiftRightConst
       ``BVUnOp.shiftRightConst
       ``shiftRight_congr
+  | BitVec.sshiftRight _ innerExpr distanceExpr =>
+    let some distance ← getNatValue? distanceExpr | return ← ofAtom x
+    shiftLikeReflection
+      distance
+      innerExpr
+      .arithShiftRightConst
+      ``BVUnOp.arithShiftRightConst
+      ``arithShiftRight_congr
   | BitVec.zeroExtend _ newWidthExpr innerExpr =>
     let some newWidth ← getNatValue? newWidthExpr | return ← ofAtom x
     let some inner ← of innerExpr | return none
@@ -357,7 +369,6 @@ where
     let proof := unaryCongrProof inner innerExpr congrProof
     return some ⟨inner.width, bvExpr, proof, expr⟩
 
-  -- TODO: code sharing with shiftConstReflection
   rotateReflection (distanceExpr : Expr) (innerExpr : Expr)
         (rotateOp : Nat → BVUnOp) (rotateOpName : Name) (congrThm : Name)
         : M (Option ReifiedBVExpr) := do

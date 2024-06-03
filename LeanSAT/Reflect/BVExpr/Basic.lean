@@ -113,6 +113,14 @@ Rotating left by a constant value.
 Rotating right by a constant value.
 -/
 | rotateRight (n : Nat)
+/-/
+Arithmetic shift right by a constant value.
+
+This operation has a dedicated constant representation as shiftRight can take `Nat` as a shift amount.
+We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
+constant `Nat` value.
+-/
+| arithShiftRightConst (n : Nat)
 
 namespace BVUnOp
 
@@ -122,6 +130,7 @@ def toString : BVUnOp → String
   | shiftRightConst n => s!">> {n}"
   | rotateLeft n => s! "rotL {n}"
   | rotateRight n => s! "rotR {n}"
+  | arithShiftRightConst n => s!">>a {n}"
 
 instance : ToString BVUnOp := ⟨toString⟩
 
@@ -134,6 +143,7 @@ def eval : BVUnOp → (BitVec w → BitVec w)
   | shiftRightConst n => (· >>> n)
   | rotateLeft n => (BitVec.rotateLeft · n)
   | rotateRight n => (BitVec.rotateRight · n)
+  | arithShiftRightConst n => (BitVec.sshiftRight · n)
 
 @[simp] theorem eval_not : eval .not = ((~~~ ·) : BitVec w → BitVec w) := by rfl
 
@@ -151,6 +161,10 @@ theorem eval_rotateLeft : eval (rotateLeft n) = ((BitVec.rotateLeft · n) : BitV
 
 @[simp]
 theorem eval_rotateRight : eval (rotateRight n) = ((BitVec.rotateRight · n) : BitVec w → BitVec w) := by
+  rfl
+
+@[simp]
+theorem eval_arithShiftRightConst : eval (arithShiftRightConst n) = (BitVec.sshiftRight · n : BitVec w → BitVec w) := by
   rfl
 
 end BVUnOp
