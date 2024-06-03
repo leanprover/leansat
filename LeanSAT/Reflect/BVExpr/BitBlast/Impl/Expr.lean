@@ -9,6 +9,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Append
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Extract
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.RotateLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.RotateRight
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.SignExtend
 
 namespace BVExpr
 
@@ -38,6 +39,16 @@ where
         res,
         by
           apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastZeroExtend)
+          dsimp at heaig
+          assumption
+      ⟩
+    | .signExtend (w := w) v inner =>
+      let ⟨⟨eaig, estream⟩, heaig⟩ := go aig inner
+      let res := bitblast.blastSignExtend eaig ⟨w, estream⟩
+      ⟨
+        res,
+        by
+          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastSignExtend)
           dsimp at heaig
           assumption
       ⟩
@@ -257,6 +268,13 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
   | zeroExtend w inner ih =>
     dsimp [go]
     rw [AIG.LawfulStreamOperator.decl_eq (f := blastZeroExtend)]
+    rw [ih]
+    apply Nat.lt_of_lt_of_le
+    . exact h1
+    . exact (go aig inner).property
+  | signExtend w inner ih =>
+    dsimp [go]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := blastSignExtend)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
