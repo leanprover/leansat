@@ -53,6 +53,28 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       eval_zeroExtend, BitVec.getLsb_zeroExtend, hidx, decide_True, Bool.true_and,
       Bool.and_iff_right_iff_imp, decide_eq_true_eq]
     apply BitVec.lt_of_getLsb
+  | append lhs rhs lih rih =>
+    rename_i lw rw
+    simp only [go, blastAppend_eq_eval_getLsb, RefStream.getRef_cast, Ref_cast', eval_append,
+      BitVec.getLsb_append]
+    split
+    . next hsplit =>
+      simp only [hsplit, decide_True, cond_true]
+      rw [rih]
+    . next hsplit =>
+      simp only [hsplit, decide_False, cond_false]
+      rw [go_denote_mem_prefix, lih]
+  | extract hi lo inner ih =>
+    simp only [go, blastExtract_eq_eval_getLsb, Bool.if_false_right, eval_extract,
+      BitVec.getLsb_extract]
+    have : idx ≤ hi - lo := by omega
+    simp only [this, decide_True, Bool.true_and]
+    split
+    . next hsplit =>
+      rw [ih]
+    . apply Eq.symm
+      apply BitVec.getLsb_ge
+      omega
   | bin lhs op rhs lih rih =>
     cases op with
     | and =>
@@ -99,30 +121,8 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       intro h
       apply BitVec.lt_of_getLsb
       assumption
-    | rotateLeft => sorry
-    | rotateRight => sorry
-  | append lhs rhs lih rih =>
-    rename_i lw rw
-    simp only [go, blastAppend_eq_eval_getLsb, RefStream.getRef_cast, Ref_cast', eval_append,
-      BitVec.getLsb_append]
-    split
-    . next hsplit =>
-      simp only [hsplit, decide_True, cond_true]
-      rw [rih]
-    . next hsplit =>
-      simp only [hsplit, decide_False, cond_false]
-      rw [go_denote_mem_prefix, lih]
-  | extract hi lo inner ih =>
-    simp only [go, blastExtract_eq_eval_getLsb, Bool.if_false_right, eval_extract,
-      BitVec.getLsb_extract]
-    have : idx ≤ hi - lo := by omega
-    simp only [this, decide_True, Bool.true_and]
-    split
-    . next hsplit =>
-      rw [ih]
-    . apply Eq.symm
-      apply BitVec.getLsb_ge
-      omega
+    | rotateLeft => simp [go, ih, hidx]
+    | rotateRight => simp [go, ih, hidx]
 
 end bitblast
 @[simp]
