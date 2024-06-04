@@ -23,15 +23,12 @@ def evalBvTrace : Tactic := fun stx =>
     let g ← getMainGoal
     let trace ← g.withContext do
       g.bvDecide cfg
-    -- TODO: figure out how to make a proper simp only syntax without having an initial simp
-    let fake ← `(tactic| simp only [bv_decide, seval] at *)
-    let simpStx ← mkSimpCallStx fake trace.simpTrace.usedTheorems
     match trace.lratCert with
     | none =>
-      let normalizeStx ← `(tactic| by_contra; $simpStx)
+      let normalizeStx ← `(tactic| bv_normalize)
       TryThis.addSuggestion tk normalizeStx (origSpan? := ← getRef)
     | some .. =>
-      let bvCheckStx ← `(tactic| by_contra; $simpStx; bv_check $(quote lratFile.toString))
+      let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)
   | _ => throwUnsupportedSyntax
 
