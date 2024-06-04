@@ -44,6 +44,7 @@ instance : ToExpr BVBinOp where
     | .or => mkConst ``BVBinOp.or
     | .xor => mkConst ``BVBinOp.xor
     | .add => mkConst ``BVBinOp.add
+    | .mul => mkConst ``BVBinOp.mul
   toTypeExpr := mkConst ``BVBinOp
 
 instance : ToExpr (BVExpr w) where
@@ -243,6 +244,10 @@ theorem rotateRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
     : BitVec.rotateRight x' n = BitVec.rotateRight x n := by
   simp[*]
 
+theorem mul_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
+    lhs' * rhs' = lhs * rhs := by
+  simp[*]
+
 def getNatOrBvValue? (ty : Expr) (expr : Expr) : M (Option Nat) := do
   match_expr ty with
   | Nat =>
@@ -266,6 +271,8 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
     binaryReflection lhsExpr rhsExpr .xor ``xor_congr
   | HAdd.hAdd _ _ _ _ lhsExpr rhsExpr =>
     binaryReflection lhsExpr rhsExpr .add ``add_congr
+  | HMul.hMul _ _ _ _ lhsExpr rhsExpr =>
+    binaryReflection lhsExpr rhsExpr .mul ``mul_congr
   | Complement.complement _ _ innerExpr =>
     unaryReflection innerExpr .not ``not_congr
   | HShiftLeft.hShiftLeft _ β _ _ innerExpr distanceExpr =>

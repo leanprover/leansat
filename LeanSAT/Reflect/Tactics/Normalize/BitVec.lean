@@ -56,6 +56,8 @@ attribute [bv_normalize] BitVec.reduceShiftRightShiftRight
 attribute [bv_normalize] BitVec.getLsb_zero
 attribute [bv_normalize] BitVec.getLsb_zero_length
 attribute [bv_normalize] BitVec.getLsb_concat_zero
+attribute [bv_normalize] BitVec.mul_one
+attribute [bv_normalize] BitVec.one_mul
 
 end Constant
 
