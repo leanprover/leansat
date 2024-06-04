@@ -1,5 +1,9 @@
 Popcount.lean
 WillOverflow.lean
+bitvec_152.lean
+bitvec_229.lean
+bitvec_239.lean
+bitvec_283.lean
 bitvec_AddSub_1043.lean
 bitvec_AddSub_1152.lean
 bitvec_AddSub_1156.lean
