@@ -263,3 +263,13 @@ def _root_.Lean.MVarId.bvNormalize (g : MVarId) : MetaM Result := do
 end Normalize
 end BVDecide
 
+syntax (name := bvNormalizeSyntax) "bv_normalize" : tactic
+
+open Lean.Elab.Tactic
+
+elab_rules : tactic
+| `(tactic| bv_normalize) => do
+  liftMetaFinishingTactic fun g => do
+    let _ ← g.bvNormalize
+    return ()
+  
