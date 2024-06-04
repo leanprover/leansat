@@ -17,3 +17,4 @@ import LeanSAT.AIG.RelabelNat
 import LeanSAT.AIG.RefStream
 import LeanSAT.AIG.RefStreamOperator
 import LeanSAT.AIG.LawfulStreamOperator
+import LeanSAT.AIG.If
