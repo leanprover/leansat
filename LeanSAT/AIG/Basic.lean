@@ -97,8 +97,13 @@ Lookup a `decl` in a `cache`.
 
 If this returns `some i`, `Cache.find?_poperty` can be used to demonstrate: `decls[i] = decl`.
 -/
-@[irreducible]
-def Cache.find? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit decls decl) :=
+opaque Cache.find? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit decls decl) :=
+  /-
+  This function is marked as `opaque` to make sure it never, ever gets unfolded anywhere.
+  Unfolding it will often always cause `HashMap.find?` to be symbolically evaluated by reducing
+  it either in `whnf` or in the kernel. This causes *huge* performance issues in practice.
+  The function can still be fully verified as all the proofs we need are in `CacheHit`.
+  -/
   match cache.val.find? decl with
   | some hit =>
     /-
