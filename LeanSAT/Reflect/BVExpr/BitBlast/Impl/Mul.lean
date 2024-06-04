@@ -30,7 +30,6 @@ def blastMul (aig : AIG BVBit) (input : AIG.BinaryRefStream aig w) : AIG.RefStre
       apply AIG.LawfulStreamOperator.le_size (f := AIG.RefStream.ite)
     let lhs := lhs.cast this
     let rhs := rhs.cast this
-    -- TODO: Figure out if starting at 1 here is indeed correct
     go aig 1 (by omega) acc lhs rhs
 where
   go {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefStream aig w)
@@ -63,12 +62,73 @@ where
       let rhs := rhs.cast this
       go aig (curr + 1) (by omega) acc lhs rhs
     else
-      have : curr = w := by omega
-      ⟨aig, this ▸ acc⟩
+      ⟨aig, acc⟩
+
+namespace blastMul
+
+theorem go_le_size {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefStream aig w)
+      (lhs rhs : AIG.RefStream aig w)
+    : aig.decls.size ≤ (go aig curr hcurr acc lhs rhs).aig.decls.size := by
+  unfold go
+  split
+  . dsimp
+    refine Nat.le_trans ?_ (by apply go_le_size)
+    apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.ite)
+    apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := blastAdd)
+    apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+  . simp
+
+theorem go_decl_eq {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefStream aig w)
+      (lhs rhs : AIG.RefStream aig w)
+    : ∀ (idx : Nat) (h1) (h2),
+       (go aig curr hcurr acc lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+  generalize hgo : go aig curr hcurr acc lhs rhs = res
+  unfold go at hgo
+  split at hgo
+  . dsimp at hgo
+    rw [← hgo]
+    intro idx h1 h2
+    rw [go_decl_eq]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.ite)]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := blastAdd)]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeftConst)]
+    . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+      assumption
+    . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastAdd)
+      apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+      assumption
+    . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := AIG.RefStream.ite)
+      apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastAdd)
+      apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+      assumption
+  . simp [← hgo]
+
+end blastMul
 
 instance : AIG.LawfulStreamOperator BVBit AIG.BinaryRefStream blastMul where
-  le_size := sorry
-  decl_eq := sorry
+  le_size := by
+    intros
+    unfold blastMul
+    split
+    . simp
+    . dsimp
+      refine Nat.le_trans ?_ (by apply blastMul.go_le_size)
+      apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.ite)
+      apply AIG.LawfulStreamOperator.le_size (f := blastConst)
+  decl_eq := by
+    intros
+    unfold blastMul
+    split
+    . simp
+    . dsimp
+      rw [blastMul.go_decl_eq]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.ite)]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastConst)]
+      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastConst)
+        assumption
+      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := AIG.RefStream.ite)
+        apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastConst)
+        assumption
 
 end bitblast
 end BVExpr
