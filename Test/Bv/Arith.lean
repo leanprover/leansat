@@ -27,7 +27,7 @@ theorem arith_unit_4 (x y : BitVec 4) : x * y = y * x := by
   bv_decide
 
 set_option trace.bv true in
-theorem arith_unit_5 (x : BitVec 4) : x * 32 = 32 * x := by
+theorem arith_unit_5 (x : BitVec 8) : x * 32 = 32 * x := by
   bv_decide
 
 set_option trace.bv true in
