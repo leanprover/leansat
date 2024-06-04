@@ -15,6 +15,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Extract
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.RotateLeft
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.RotateRight
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.SignExtend
+import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Mul
 
 namespace BVExpr
 
@@ -98,6 +99,15 @@ where
           res,
           by
             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastAdd)
+            dsimp at hlaig hraig
+            omega
+        ⟩
+      | .mul =>
+        let res := bitblast.blastMul aig ⟨lhs, rhs⟩
+        ⟨
+          res,
+          by
+            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastMul)
             dsimp at hlaig hraig
             omega
         ⟩
@@ -202,21 +212,9 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     rw [AIG.LawfulStreamOperator.decl_eq (f := blastConst)]
   | bin lhs op rhs lih rih =>
     match op with
-    | .and | .or | .xor =>
+    | .and | .or | .xor | .add | .mul =>
       dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.zip)]
-      rw [rih, lih]
-      . apply Nat.lt_of_lt_of_le
-        . exact h1
-        . exact (bitblast.go aig lhs).property
-      . apply Nat.lt_of_lt_of_le
-        . exact h1
-        . apply Nat.le_trans
-          . exact (bitblast.go aig lhs).property
-          . exact (go (go aig lhs).1.aig rhs).property
-    | .add =>
-      dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := blastAdd)]
+      rw [AIG.LawfulStreamOperator.decl_eq]
       rw [rih, lih]
       . apply Nat.lt_of_lt_of_le
         . exact h1
@@ -228,44 +226,10 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
           . exact (go (go aig lhs).1.aig rhs).property
   | un op expr ih =>
     match op with
-    | .not =>
+    | .not | .shiftLeftConst .. | .shiftRightConst .. | .rotateLeft .. | .rotateRight ..
+    | .arithShiftRightConst .. =>
       dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := blastNot)]
-      rw [ih]
-      apply Nat.lt_of_lt_of_le
-      . exact h1
-      . exact (go aig expr).property
-    | .shiftLeftConst _ =>
-      dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeftConst)]
-      rw [ih]
-      apply Nat.lt_of_lt_of_le
-      . exact h1
-      . exact (go aig expr).property
-    | .shiftRightConst _ =>
-      dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftRightConst)]
-      rw [ih]
-      apply Nat.lt_of_lt_of_le
-      . exact h1
-      . exact (go aig expr).property
-    | .rotateLeft _ =>
-      dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := blastRotateLeft)]
-      rw [ih]
-      apply Nat.lt_of_lt_of_le
-      . exact h1
-      . exact (go aig expr).property
-    | .rotateRight _ =>
-      dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := blastRotateRight)]
-      rw [ih]
-      apply Nat.lt_of_lt_of_le
-      . exact h1
-      . exact (go aig expr).property
-    | .arithShiftRightConst _ =>
-      dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := blastArithShiftRightConst)]
+      rw [AIG.LawfulStreamOperator.decl_eq]
       rw [ih]
       apply Nat.lt_of_lt_of_le
       . exact h1

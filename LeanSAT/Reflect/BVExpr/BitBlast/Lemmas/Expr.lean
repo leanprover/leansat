@@ -146,6 +146,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
         . simp [Ref.hgate]
       . intros
         rw [← rih]
+    | mul => sorry
   | un op expr ih =>
     cases op with
     | not => simp [go, ih, hidx]
