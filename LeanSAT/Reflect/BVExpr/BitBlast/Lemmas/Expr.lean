@@ -76,7 +76,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       rw [blastSignExtend_empty_eq_zeroExtend] at hgo
       . rw [← hgo]
         simp only [eval_signExtend]
-        rw [signExtend_eq_neg_zeroExtend_neg_of_msb_false]
+        rw [BitVec.signExtend_eq_not_zeroExtend_not_of_msb_false]
         . simp only [blastZeroExtend_eq_eval_getLsb, ih, dite_eq_ite, Bool.if_false_right,
             BitVec.getLsb_zeroExtend, hidx, decide_True, Bool.true_and, Bool.and_iff_right_iff_imp,
             decide_eq_true_eq]
@@ -88,7 +88,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       rw [← hgo]
       rw [blastSignExtend_eq_eval_getLsb]
       simp only [eval_signExtend]
-      rw [getLsb_signExtend]
+      rw [BitVec.getLsb_signExtend]
       . simp only [hidx, decide_True, Bool.true_and]
         split
         . rw [ih]
