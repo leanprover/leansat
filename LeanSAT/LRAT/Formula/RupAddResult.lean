@@ -150,7 +150,6 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
       have k_ne_j : { val := k.val, isLt := k_size } ≠ j := by
         intro k_eq_j
         simp only [← Fin.val_eq_of_eq k_eq_j, not_true] at k_ne_j
-        exact k_ne_j rfl
       exact h4 ⟨k.1, k_size⟩ k_ne_j
     . next h5 =>
       by_cases i.1 = l.1.1
@@ -202,7 +201,6 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                     have k_ne_j : ⟨k.1, h⟩ ≠ j := by
                       intro k_eq_j
                       simp only [← k_eq_j, not_true] at k_ne_j
-                      exact k_ne_j rfl
                     exact h4 ⟨k.1, h⟩ k_ne_j
                   . exfalso
                     have k_property := k.2
@@ -240,7 +238,6 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                     have k_ne_j : ⟨k.1, h⟩ ≠ j := by
                       intro k_eq_j
                       simp only [← k_eq_j, not_true] at k_ne_j
-                      exact k_ne_j rfl
                     exact h4 ⟨k.1, h⟩ k_ne_j
                   . exfalso
                     have k_property := k.2
@@ -275,7 +272,6 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                 have k_ne_j : ⟨k.1, h⟩ ≠ j := by
                   intro k_eq_j
                   simp only [← Fin.val_eq_of_eq k_eq_j, not_true] at k_ne_j
-                  exact k_ne_j rfl
                 exact h4 ⟨k.1, h⟩ k_ne_j
               . simp only [h, dite_false]
                 exact Ne.symm i_ne_l
@@ -319,11 +315,9 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
               have k_ne_j1 : ⟨k.1, k_in_bounds⟩ ≠ j1 := by
                 intro k_eq_j1
                 simp only [← k_eq_j1, not_true] at k_ne_j1
-                exact k_ne_j1 rfl
               have k_ne_j2 : ⟨k.1, k_in_bounds⟩ ≠ j2 := by
                 intro k_eq_j2
                 simp only [← k_eq_j2, not_true] at k_ne_j2
-                exact k_ne_j2 rfl
               split
               . exact h5 ⟨k.1, k_in_bounds⟩ k_ne_j1 k_ne_j2
               . simp only [ne_eq]
@@ -796,7 +790,10 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
             have k_eq_succ : ∃ k' : Nat, ∃ k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length, k = ⟨k' + 1, k'_succ_in_bounds⟩ := by
               have k_val_ne_zero : k.1 ≠ 0 := by
                 intro k_eq_zero
-                simp only [List.length_cons, ← k_eq_zero, ne_eq, not_true] at k_ne_zero
+                simp only [List.length_cons, Nat.succ_eq_add_one, Fin.zero_eta, ne_eq] at k_ne_zero
+                apply k_ne_zero
+                apply Fin.eq_of_val_eq
+                simp [k_eq_zero]
               rcases Nat.exists_eq_succ_of_ne_zero k_val_ne_zero with ⟨k', k_eq_k'_succ⟩
               rw [Nat.succ_eq_add_one] at k_eq_k'_succ
               have k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length := by rw [← k_eq_k'_succ]; exact k.2
@@ -866,7 +863,6 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
                   have k_val_ne_zero : k.1 ≠ 0 := by
                     intro k_eq_zero
                     simp only [List.length_cons, ← k_eq_zero, ne_eq, not_true] at k_ne_zero
-                    exact k_ne_zero rfl
                   rcases Nat.exists_eq_succ_of_ne_zero k_val_ne_zero with ⟨k', k_eq_k'_succ⟩
                   rw [Nat.succ_eq_add_one k'] at k_eq_k'_succ
                   have k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length := by rw [← k_eq_k'_succ]; exact k.2
@@ -915,7 +911,6 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
                   have k_val_ne_zero : k.1 ≠ 0 := by
                     intro k_eq_zero
                     simp only [List.length_cons, ← k_eq_zero, ne_eq, not_true] at k_ne_zero
-                    exact k_ne_zero rfl
                   rcases Nat.exists_eq_succ_of_ne_zero k_val_ne_zero with ⟨k', k_eq_k'_succ⟩
                   rw [Nat.succ_eq_add_one k'] at k_eq_k'_succ
                   have k'_succ_in_bounds : k' + 1 < (l :: acc.2.1).length := by rw [← k_eq_k'_succ]; exact k.2

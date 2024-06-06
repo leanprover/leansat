@@ -4,14 +4,6 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.SignExtend
 
 open AIG
 
-theorem signExtend_eq_neg_zeroExtend_neg_of_msb_false {x : BitVec w} {v : Nat} (hmsb : x.msb = false) :
-    (x.signExtend v) = x.zeroExtend v := by
-  sorry
-
-theorem getLsb_signExtend (x  : BitVec w) {v i : Nat} :
-    (x.signExtend v).getLsb i = (decide (i < v) && if i < w then x.getLsb i else x.msb) := by
-  sorry
-
 namespace BVExpr
 namespace bitblast
 namespace blastSignExtend
