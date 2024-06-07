@@ -21,6 +21,11 @@ register_option sat.prevalidate : Bool := {
   descr := "Usually the LRAT proof is only parsed in the kernel. If this is enabled its additionally parsed before as well for better error reporting."
 }
 
+register_option sat.timeout : Nat := {
+  defValue := 10
+  descr := "the number of seconds that the sat solver is run before aborting"
+}
+
 initialize bvNormalizeExt : Meta.SimpExtension ←
   Meta.registerSimpAttr `bv_normalize "simp theorems used by bv_normalize"
 

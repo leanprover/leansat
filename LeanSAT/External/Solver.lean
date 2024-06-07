@@ -63,11 +63,14 @@ end SatWitnessParser
     can be run via the command `cadical` in terminal. If the path to the user's `cadical` is different, it can be provided
     in the `solverPath` argument. `satQuery` will call cadical on the CNF file at `problemPath` and output an LRAT result
     to `proofOutput` -/
-def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOutput : System.FilePath) : IO SolverResult := do
+def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOutput : System.FilePath)
+    (timeout : Nat) : IO SolverResult := do
   let cmd := solverPath
   let args := #[
     problemPath.toString,
     proofOutput.toString,
+    "-t",
+    s!"{timeout}",
     "--lrat",
     "--no-binary",
     "--quiet",
@@ -86,5 +89,9 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOut
         return .sat assignment
       | .error err =>
         throw <| IO.userError s!"Error {err} while parsing:\n{stdout}"
+    else if stdout.startsWith "c UNKNOWN" then
+      let mut err := "The SAT solver timed out while solving the problem."
+      err := err ++ "\nConsider increasing the timeout with `set_option sat.timeout <sec>`"
+      throw <| IO.userError err
     else
       throw <| IO.userError s!"The external prover produced unexpected output:\n{stdout}"
