@@ -29,6 +29,7 @@ structure TacticContext where
   solver : String
   lratPath : System.FilePath
   prevalidate : Bool
+  timeout : Nat
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
@@ -95,7 +96,7 @@ Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
 This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
 -/
 def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath)
-    (prevalidate : Bool) : MetaM (Except (Array (Bool × Nat)) LratCert) := do
+    (prevalidate : Bool) (timeout : Nat) : MetaM (Except (Array (Bool × Nat)) LratCert) := do
   let cnfPath ← mkTemp
   withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
     -- lazyPure to prevent compiler lifting
@@ -103,7 +104,7 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
 
   let res ←
     withTraceNode `sat (fun _ => return "Running SAT solver") do
-      satQuery solver cnfPath lratPath
+      satQuery solver cnfPath lratPath timeout
   if let .sat assignment := res then
     return .error assignment
 
@@ -274,7 +275,7 @@ def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
 
   let res ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate
+      runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate cfg.timeout
 
   match res with
   | .ok cert =>
@@ -316,8 +317,9 @@ def SatDecide.TacticContext.new (lratPath : System.FilePath) : TermElabM TacticC
   let certDef ← Term.mkAuxName `_cert_def
   let reflectionDef ← Term.mkAuxName `_reflection_def
   let solver := sat.solver.get (← getOptions)
+  let timeout := sat.timeout.get (← getOptions)
   let prevalidate := sat.prevalidate.get (← getOptions)
-  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate }
+  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate, timeout }
 
 open Elab.Tactic
 elab_rules : tactic
