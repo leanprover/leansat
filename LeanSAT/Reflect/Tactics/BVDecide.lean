@@ -254,6 +254,7 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
   match_expr x with
   | BitVec.ofNat _ _ => goBvLit x
   | OfNat.ofNat _ _ _ => goBvLit x
+  | BitVec.ofNatLt _ _ _ => goBvLit x
   | HAnd.hAnd _ _ _ _ lhsExpr rhsExpr =>
     binaryReflection lhsExpr rhsExpr .and ``and_congr
   | HOr.hOr _ _ _ _ lhsExpr rhsExpr =>
