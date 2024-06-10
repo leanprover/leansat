@@ -19,7 +19,7 @@ example (h : x = false) : false = x := by sat_check "sat_check.lrat"
 theorem sat_axiomCheck (_ : x = true) (_ : (x && false) = true) : False := by sat_decide
 
 /--
-info: 'sat_axiomCheck' depends on axioms: [propext, Classical.choice, Quot.sound, Lean.ofReduceBool]
+info: 'sat_axiomCheck' depends on axioms: [propext, Quot.sound, Classical.choice, Lean.ofReduceBool]
 -/
 #guard_msgs in
 #print axioms sat_axiomCheck
