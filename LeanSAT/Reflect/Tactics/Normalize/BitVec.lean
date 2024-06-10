@@ -1,4 +1,6 @@
 import LeanSAT.Reflect.Tactics.Attr
+import LeanSAT.Reflect.Tactics.Normalize.Bool
+import LeanSAT.Reflect.Tactics.Normalize.Canonicalize
 
 namespace BVDecide
 namespace Normalize
@@ -43,6 +45,132 @@ attribute [bv_normalize] BitVec.getLsb_zero_length
 attribute [bv_normalize] BitVec.getLsb_concat_zero
 
 end Constant
+
+@[bv_normalize]
+theorem BitVec.zero_and (a : BitVec w) : 0#w &&& a = 0#w := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.and_zero (a : BitVec w) : a &&& 0#w = 0#w := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.and_ones (a : BitVec w) : (-1#w) &&& a = a := by
+  ext
+  simp [BitVec.negOne_eq_allOnes]
+
+@[bv_normalize]
+theorem BitVec.ones_and (a : BitVec w) : a &&& (-1#w) = a := by
+  ext
+  simp [BitVec.negOne_eq_allOnes]
+
+@[bv_normalize]
+theorem BitVec.and_self (a : BitVec w) : a &&& a = a := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.and_contra (a : BitVec w) : a &&& ~~~a = 0#w := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.and_contra' (a : BitVec w) : ~~~a &&& a = 0#w := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.add_not (a : BitVec w) : a + ~~~a = (-1#w) := by
+  ext
+  simp [BitVec.negOne_eq_allOnes]
+
+@[bv_normalize]
+theorem BitVec.not_add (a : BitVec w) : ~~~a + a = (-1#w) := by
+  rw [BitVec.add_comm]
+  rw [BitVec.add_not]
+
+@[bv_normalize]
+theorem BitVec.add_neg (a : BitVec w) : a + (-a) = 0#w := by
+  rw [← BitVec.sub_toAdd]
+  rw [BitVec.sub_self]
+
+@[bv_normalize]
+theorem BitVec.neg_add (a : BitVec w) : (-a) + a = 0#w := by
+  rw [BitVec.add_comm]
+  rw [BitVec.add_neg]
+
+@[bv_normalize]
+theorem BitVec.zero_sshiftRight : BitVec.sshiftRight 0#w a = 0#w := by
+  ext
+  simp [BitVec.getLsb_sshiftRight]
+
+@[bv_normalize]
+theorem BitVec.sshiftRight_zero : BitVec.sshiftRight a 0 = a := by
+  ext
+  simp [BitVec.getLsb_sshiftRight]
+
+@[bv_normalize]
+theorem BitVec.mul_zero (a : BitVec w) : a * 0#w = 0#w := by
+  simp [bv_toNat]
+
+@[bv_normalize]
+theorem BitVec.zero_mul (a : BitVec w) : 0#w * a = 0#w := by
+  simp [bv_toNat]
+
+@[bv_normalize]
+theorem BitVec.not_not (a : BitVec w) : ~~~(~~~a) = a := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.shiftLeft_zero (n : BitVec w) : n <<< 0 = n := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.zero_shiftLeft (n : Nat) : 0#w <<< n = 0#w := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.zero_shiftRight (n : Nat) : 0#w >>> n = 0#w := by
+  ext
+  simp
+
+@[bv_normalize]
+theorem BitVec.shiftRight_zero (n : BitVec w) : n >>> 0 = n := by
+  ext
+  simp
+
+theorem BitVec.zero_lt_iff_zero_neq (a : BitVec w) : (0#w < a) ↔ (0#w ≠ a) := by
+  constructor <;>
+    simp_all only [BitVec.lt_def, BitVec.toNat_ofNat, Nat.zero_mod, ne_eq, BitVec.toNat_eq] <;>
+    omega
+
+@[bv_normalize]
+theorem BitVec.zero_ult' (a : BitVec w) : (BitVec.ult 0#w a) = (0#w != a) := by
+  have := BitVec.zero_lt_iff_zero_neq a
+  rw [BitVec.lt_ult] at this
+  match h:BitVec.ult 0#w a with
+  | true => simp_all
+  | false => simp_all
+
+theorem BitVec.max_ult (a : BitVec w) : ¬ ((-1#w) < a) := by
+rcases w with rfl | w
+· simp [bv_toNat]
+· simp only [BitVec.lt_def, BitVec.toNat_neg, BitVec.toNat_ofNat, Nat.not_lt]
+  rw[Nat.mod_eq_of_lt (a := 1) (by simp)];
+  rw [Nat.mod_eq_of_lt]
+  · omega
+  · apply Nat.sub_one_lt_of_le (Nat.pow_pos (by omega)) (Nat.le_refl ..)
+
+@[bv_normalize]
+theorem BitVec.max_ult' (a : BitVec w) : (BitVec.ult (-1#w) a) = false := by
+  have := BitVec.max_ult a
+  rw [BitVec.lt_ult] at this
+  simp [this]
 
 end Normalize
 end BVDecide
