@@ -7,6 +7,7 @@ import LeanSAT.Reflect.Tactics.Normalize.Canonicalize
 import LeanSAT.Reflect.Tactics.Normalize.Prop
 import LeanSAT.Reflect.Tactics.Normalize.Bool
 import LeanSAT.Reflect.Tactics.Normalize.BitVec
+import LeanSAT.Reflect.Tactics.Normalize.Equal
 
 namespace BVDecide
 namespace Normalize
