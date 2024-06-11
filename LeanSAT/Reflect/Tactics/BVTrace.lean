@@ -1,12 +1,22 @@
 import LeanSAT.Reflect.Tactics.BVDecide
 import LeanSAT.Reflect.Tactics.BVCheck
-import LeanSAT.Reflect.Tactics.SatTrace
 import Lean.Meta.Tactic.TryThis
 import Lean.Elab.Tactic.SimpTrace
 
 open Lean Elab Meta Tactic
 
 namespace BVTrace
+
+-- TODO: think of a more maintainable file pattern for this stuff.
+/--
+Produce a file with the pattern:
+LeanFileName-DeclName-Line-Col.lrat
+-/
+def getLratFileName : TermElabM System.FilePath := do
+  let some baseName := System.FilePath.mk (← getFileName) |>.fileName | throwError "could not find file name"
+  let some declName ← Term.getDeclName? | throwError "could not find declaration name"
+  let pos := (← getFileMap).toPosition (← getRefPos)
+  return s!"{baseName}-{declName}-{pos.line}-{pos.column}.lrat"
 
 /--
 Suggest a proof script for a `bv_decide` tactic call.
@@ -18,7 +28,7 @@ syntax (name := bvTraceSyntax) "bv_decide?" : tactic
 def evalBvTrace : Tactic := fun stx =>
   match stx with
   | `(tactic| bv_decide?%$tk) => do
-    let lratFile : System.FilePath ← SatTrace.getLratFileName
+    let lratFile : System.FilePath ← getLratFileName
     let cfg ← SatCheck.mkContext lratFile
     let g ← getMainGoal
     let trace ← g.withContext do
