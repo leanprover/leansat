@@ -1,4 +1,5 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Pred
+import LeanSAT.AIG.BoolExprCached
 
 namespace BVLogicalExpr
 

@@ -1,4 +1,5 @@
-import LeanSAT.AIG
+import LeanSAT.AIG.CachedGatesLemmas
+import LeanSAT.AIG.RefStream
 
 namespace BVPred
 

@@ -5,6 +5,7 @@ Authors: Henrik Böving
 -/
 import LeanSAT.AIG.CachedGates
 import LeanSAT.AIG.CachedGatesLemmas
+import LeanSAT.Reflect.BoolExpr.Basic
 
 /-!
 This module contains the logic to turn a `BoolExpr Nat` into an `AIG` with maximum subterm sharing,

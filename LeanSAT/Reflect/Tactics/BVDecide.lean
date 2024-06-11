@@ -11,6 +11,7 @@ import LeanSAT.Reflect.Tactics.Normalize
 import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.External.Solver
+import LeanSAT.AIG.RelabelNat
 
 open Lean Meta
 
