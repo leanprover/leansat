@@ -1,5 +1,6 @@
 import LeanSAT.Reflect.BVExpr.Basic
-import LeanSAT.AIG
+import LeanSAT.AIG.CachedGatesLemmas
+import LeanSAT.AIG.LawfulStreamOperator
 
 namespace BVExpr
 namespace bitblast

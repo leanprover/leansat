@@ -141,7 +141,6 @@ theorem getRef_out_bound (s : RefStream aig len) (idx : Nat) (alt : Ref aig) (hi
 
 end RefStream
 
--- TODO: ZipTarget can benefit from this I think?
 structure BinaryRefStream (aig : AIG α) (len : Nat) where
   lhs : RefStream aig len
   rhs : RefStream aig len

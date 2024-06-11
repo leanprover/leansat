@@ -1,5 +1,6 @@
 import LeanSAT.AIG.Basic
 import LeanSAT.Reflect.BVExpr.Basic
+import Batteries.Logic
 
 namespace BVExpr
 
