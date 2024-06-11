@@ -5,9 +5,12 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
+
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 namespace blastRotateLeft
 
-theorem go_getRef_aux (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_getRef_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
         (go input distance curr hcurr s).getRef idx (by omega)
@@ -29,7 +32,7 @@ theorem go_getRef_aux (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream 
     . simp
 termination_by w - curr
 
-theorem go_getRef (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_getRef (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
@@ -72,19 +75,19 @@ termination_by w - curr
 end blastRotateLeft
 
 @[simp]
-theorem blastRotateLeft_eq_eval_getLsb (aig : AIG BVBit) (target : ShiftTarget aig w)
-  (assign : Assignment)
+theorem blastRotateLeft_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w)
+  (assign : α → Bool)
   : ∀ (idx : Nat) (hidx : idx < w),
       ⟦
         (blastRotateLeft aig target).aig,
         (blastRotateLeft aig target).stream.getRef idx hidx,
-        assign.toAIGAssignment
+        assign
       ⟧
         =
       if hidx2:idx < target.distance % w then
-        ⟦aig, target.stream.getRef (w - (target.distance % w) + idx) (by omega), assign.toAIGAssignment⟧
+        ⟦aig, target.stream.getRef (w - (target.distance % w) + idx) (by omega), assign⟧
       else
-        ⟦aig, target.stream.getRef (idx - (target.distance % w)) (by omega), assign.toAIGAssignment⟧
+        ⟦aig, target.stream.getRef (idx - (target.distance % w)) (by omega), assign⟧
       := by
   intros
   unfold blastRotateLeft

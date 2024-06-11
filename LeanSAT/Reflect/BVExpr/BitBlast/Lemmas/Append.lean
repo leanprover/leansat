@@ -6,21 +6,23 @@ open AIG
 namespace BVExpr
 namespace bitblast
 
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 @[simp]
-theorem blastAppend_eq_eval_getLsb (aig : AIG BVBit) (target : AppendTarget aig newWidth)
-  (assign : Assignment)
+theorem blastAppend_eq_eval_getLsb (aig : AIG α) (target : AppendTarget aig newWidth)
+  (assign : α → Bool)
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastAppend aig target).aig,
         (blastAppend aig target).stream.getRef idx hidx,
-        assign.toAIGAssignment
+        assign
       ⟧
         =
       if hr:idx < target.rw then
-         ⟦aig, target.rhs.getRef idx hr, assign.toAIGAssignment⟧
+         ⟦aig, target.rhs.getRef idx hr, assign⟧
       else
          have := target.h
-         ⟦aig, target.lhs.getRef (idx - target.rw) (by omega), assign.toAIGAssignment⟧
+         ⟦aig, target.lhs.getRef (idx - target.rw) (by omega), assign⟧
     := by
   intros
   unfold blastAppend

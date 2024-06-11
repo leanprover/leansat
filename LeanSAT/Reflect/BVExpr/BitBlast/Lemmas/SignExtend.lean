@@ -6,9 +6,12 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
+
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 namespace blastSignExtend
 
-theorem go_getRef_aux (aig : AIG BVBit) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
+theorem go_getRef_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
     (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < curr),
         (go w hw input newWidth curr hcurr s).getRef idx (by omega)
@@ -28,7 +31,7 @@ theorem go_getRef_aux (aig : AIG BVBit) (w : Nat) (hw : 0 < w) (input : RefStrea
     . omega
     . simp
 
-theorem go_getRef (aig : AIG BVBit) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
+theorem go_getRef (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
     (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
@@ -60,25 +63,25 @@ theorem go_getRef (aig : AIG BVBit) (w : Nat) (hw : 0 < w) (input : RefStream ai
 
 end blastSignExtend
 
-theorem blastSignExtend_empty_eq_zeroExtend (aig : AIG BVBit) (target : ExtendTarget aig newWidth)
+theorem blastSignExtend_empty_eq_zeroExtend (aig : AIG α) (target : ExtendTarget aig newWidth)
       (htarget : target.w = 0)
   : blastSignExtend aig target = blastZeroExtend aig target := by
   unfold blastSignExtend
   simp [htarget]
 
-theorem blastSignExtend_eq_eval_getLsb (aig : AIG BVBit) (target : ExtendTarget aig newWidth)
-  (assign : Assignment) (htarget : 0 < target.w)
+theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig newWidth)
+  (assign : α → Bool) (htarget : 0 < target.w)
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastSignExtend aig target).aig,
         (blastSignExtend aig target).stream.getRef idx hidx,
-        assign.toAIGAssignment
+        assign
       ⟧
         =
       if hidx:idx < target.w then
-         ⟦aig, target.stream.getRef idx hidx, assign.toAIGAssignment⟧
+         ⟦aig, target.stream.getRef idx hidx, assign⟧
       else
-         ⟦aig, target.stream.getRef (target.w - 1) (by omega), assign.toAIGAssignment⟧
+         ⟦aig, target.stream.getRef (target.w - 1) (by omega), assign⟧
     := by
   intro idx hidx
   generalize hg : blastSignExtend aig target = res

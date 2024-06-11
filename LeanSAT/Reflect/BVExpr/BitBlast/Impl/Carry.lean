@@ -3,18 +3,20 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Add
 namespace BVExpr
 namespace bitblast
 
-structure OverflowInput (aig : AIG BVBit) where
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+structure OverflowInput (aig : AIG α) where
   (w : Nat)
   stream : AIG.BinaryRefStream aig w
   cin : AIG.Ref aig
 
-def mkOverflowBit (aig : AIG BVBit) (input : OverflowInput aig) : AIG.Entrypoint BVBit :=
+def mkOverflowBit (aig : AIG α) (input : OverflowInput aig) : AIG.Entrypoint α :=
   let ⟨_, ⟨lhs, rhs⟩, cin⟩ := input
   go aig 0 (by omega) cin lhs rhs
 where
-  go {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
+  go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
       (lhs rhs : AIG.RefStream aig w)
-      : AIG.Entrypoint BVBit :=
+      : AIG.Entrypoint α :=
     if hidx:curr < w then
       let lin := lhs.getRef curr hidx
       let rin := rhs.getRef curr hidx
@@ -33,7 +35,7 @@ where
 
 namespace mkOverflowBit
 
-theorem go_le_size : aig.decls.size ≤ (go aig curr hcurr cin lhs rhs).aig.decls.size := by
+theorem go_le_size {aig : AIG α} {cin lhs rhs} : aig.decls.size ≤ (go aig curr hcurr cin lhs rhs).aig.decls.size := by
   unfold go
   dsimp
   split
@@ -42,7 +44,7 @@ theorem go_le_size : aig.decls.size ≤ (go aig curr hcurr cin lhs rhs).aig.decl
   . dsimp
     omega
 
-theorem go_decl_eq
+theorem go_decl_eq {aig : AIG α} {cin lhs rhs}
     : ∀ (idx : Nat) (h1) (h2),
         (go aig curr hcurr cin lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig curr hcurr cin lhs rhs = res
@@ -57,7 +59,7 @@ theorem go_decl_eq
     assumption
   . simp [← hgo]
 
-instance : AIG.LawfulOperator BVBit OverflowInput mkOverflowBit where
+instance : AIG.LawfulOperator α OverflowInput mkOverflowBit where
   le_size := by
     intros
     unfold mkOverflowBit

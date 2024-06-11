@@ -4,21 +4,14 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
-/-
-@[simp]
-theorem getLsb_rotateRight {x : BitVec w} {r i : Nat} :
-    (x.rotateRight r).getLsb i =
-      cond (i < w - (r % w))
-      (x.getLsb ((r % w) + i))
-      (decide (i < w) && x.getLsb (i - (w - (r % w))))
--/
+variable [BEq α] [Hashable α] [DecidableEq α]
 
-def blastRotateRight (aig : AIG BVBit) (target : AIG.ShiftTarget aig w)
-    : AIG.RefStreamEntry BVBit w :=
+def blastRotateRight (aig : AIG α) (target : AIG.ShiftTarget aig w)
+    : AIG.RefStreamEntry α w :=
   let ⟨input, distance⟩ := target
   ⟨aig, go input distance 0 (by omega) .empty⟩
 where
-  go {aig : AIG BVBit} (input : AIG.RefStream aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
+  go {aig : AIG α} (input : AIG.RefStream aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
       (s : AIG.RefStream aig curr)
     : AIG.RefStream aig w :=
   if hcurr1:curr < w then
@@ -35,7 +28,7 @@ where
     hcurr ▸ s
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator BVBit AIG.ShiftTarget blastRotateRight where
+instance : AIG.LawfulStreamOperator α AIG.ShiftTarget blastRotateRight where
   le_size := by
     intros
     unfold blastRotateRight

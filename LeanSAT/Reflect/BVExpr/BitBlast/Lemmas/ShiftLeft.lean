@@ -5,9 +5,12 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
+
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 namespace blastShiftLeftConst
 
-theorem go_getRef_aux (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_getRef_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
         (go aig input distance curr hcurr s).stream.getRef idx (by omega)
@@ -40,7 +43,7 @@ theorem go_getRef_aux (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream 
     . simp
 termination_by w - curr
 
-theorem go_getRef (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_getRef (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
         (go aig input distance curr hcurr s).stream.getRef idx (by omega)
@@ -49,7 +52,7 @@ theorem go_getRef (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig 
   intros
   apply go_getRef_aux
 
-theorem go_denote_mem_prefix (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_denote_mem_prefix (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr) (start : Nat) (hstart)
   : ⟦
       (go aig input distance curr hcurr s).aig,
@@ -65,21 +68,21 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (distance : Nat) (input : AIG.Ref
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
-    (assign : Assignment) (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
+    (assign : α → Bool) (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
         ⟦
           (go aig input distance curr hcurr s).aig,
           (go aig input distance curr hcurr s).stream.getRef idx hidx1,
-          assign.toAIGAssignment
+          assign
         ⟧
           =
         if hidx:idx < distance then
           false
         else
-          ⟦aig, input.getRef (idx - distance) (by omega), assign.toAIGAssignment ⟧
+          ⟦aig, input.getRef (idx - distance) (by omega), assign⟧
         := by
   intro idx hidx1 hidx2
   generalize hgo : go aig input distance curr hcurr s = res
@@ -134,19 +137,19 @@ termination_by w - curr
 end blastShiftLeftConst
 
 @[simp]
-theorem blastShiftLeft_eq_eval_getLsb (aig : AIG BVBit) (target : ShiftTarget aig w)
-    (assign : Assignment)
+theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w)
+    (assign : α → Bool)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (blastShiftLeftConst aig target).aig,
           (blastShiftLeftConst aig target).stream.getRef idx hidx,
-          assign.toAIGAssignment
+          assign
         ⟧
           =
         if hidx:idx < target.distance then
           false
         else
-          ⟦aig, target.stream.getRef (idx - target.distance) (by omega), assign.toAIGAssignment ⟧
+          ⟦aig, target.stream.getRef (idx - target.distance) (by omega), assign⟧
         := by
   intros
   unfold blastShiftLeftConst

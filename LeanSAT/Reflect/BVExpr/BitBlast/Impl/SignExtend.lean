@@ -5,15 +5,17 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.ZeroExtend
 namespace BVExpr
 namespace bitblast
 
-def blastSignExtend (aig : AIG BVBit) (target : AIG.ExtendTarget aig newWidth)
-    : AIG.RefStreamEntry BVBit newWidth :=
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+def blastSignExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth)
+    : AIG.RefStreamEntry α newWidth :=
   let ⟨width, input⟩ := target
   if hw:width = 0 then
     blastZeroExtend aig ⟨width, input⟩
   else
     ⟨aig, go width (by omega) input newWidth 0 (by omega) .empty⟩
 where
-  go {aig : AIG BVBit} (w : Nat) (hw : 0 < w) (input : AIG.RefStream aig w) (newWidth : Nat)
+  go {aig : AIG α} (w : Nat) (hw : 0 < w) (input : AIG.RefStream aig w) (newWidth : Nat)
       (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) : AIG.RefStream aig newWidth :=
     if hcurr1:curr < newWidth then
       if hcurr2:curr < w then
@@ -27,7 +29,7 @@ where
       hcurr ▸ s
 termination_by newWidth - curr
 
-instance : AIG.LawfulStreamOperator BVBit AIG.ExtendTarget blastSignExtend where
+instance : AIG.LawfulStreamOperator α AIG.ExtendTarget blastSignExtend where
   le_size := by
     intros
     unfold blastSignExtend
