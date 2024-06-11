@@ -14,15 +14,15 @@ def getSrcDir : TermElabM System.FilePath := do
     | throwError "cannot compute parent directory of '{srcPath}'"
   return srcDir
 
-def mkContext (lratPath : System.FilePath) : TermElabM SatDecide.TacticContext := do
+def mkContext (lratPath : System.FilePath) : TermElabM BVDecide.TacticContext := do
   let lratPath := (← getSrcDir) / lratPath
-  SatDecide.TacticContext.new lratPath
+  BVDecide.TacticContext.new lratPath
 
 /--
 Prepare an `Expr` that proofs `bvExpr.unsat` using `ofReduceBool`.
 -/
-def lratChecker (cfg : SatDecide.TacticContext) (bvExpr : BVLogicalExpr) : MetaM Expr := do
-  let cert ← SatDecide.LratCert.ofFile cfg.lratPath cfg.prevalidate
+def lratChecker (cfg : BVDecide.TacticContext) (bvExpr : BVLogicalExpr) : MetaM Expr := do
+  let cert ← BVDecide.LratCert.ofFile cfg.lratPath cfg.prevalidate
   cert.toReflectionProof
     cfg
     bvExpr
@@ -41,7 +41,7 @@ It is called with the name of an LRAT file in the same directory as the current 
 bv_check "proof.lrat"
 ```
 -/
-def _root_.Lean.MVarId.bvCheck (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Unit := do
+def _root_.Lean.MVarId.bvCheck (g : MVarId) (cfg : BVDecide.TacticContext) : MetaM Unit := do
   let unsatProver : BVDecide.UnsatProver := fun bvExpr _ => do
     withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
       let proof ← lratChecker cfg bvExpr

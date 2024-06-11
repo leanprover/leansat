@@ -1,8 +1,3 @@
-/-
-Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Scott Morrison, Henrik Böving
--/
 import Lean.Elab.Tactic.FalseOrByContra
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.Glue
@@ -16,10 +11,10 @@ import LeanSAT.External.Solver
 
 open Lean Elab Meta ReflectSat
 
-namespace SatDecide
+namespace BVDecide
 
 /--
-The context for the `sat_decide` tactic.
+The context for the `bv_decide` tactic.
 -/
 structure TacticContext where
   exprDef : Name
@@ -29,6 +24,15 @@ structure TacticContext where
   lratPath : System.FilePath
   prevalidate : Bool
   timeout : Nat
+
+def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticContext := do
+  let exprDef ← Lean.Elab.Term.mkAuxName `_expr_def
+  let certDef ← Lean.Elab.Term.mkAuxName `_cert_def
+  let reflectionDef ← Lean.Elab.Term.mkAuxName `_reflection_def
+  let solver := sat.solver.get (← getOptions)
+  let timeout := sat.timeout.get (← getOptions)
+  let prevalidate := sat.prevalidate.get (← getOptions)
+  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate, timeout }
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
@@ -191,25 +195,6 @@ theorem verifyCert_correct : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) ce
   . contradiction
 
 /--
-Verify that a proof certificate is valid for a given `BoolExpr`.
-
-This is the verification function that we run in the reflection term.
-The advantage over running just `verifyCert` is that the Tseitin encoding happens
-in the reflection code as well instead of in the kernel reduction engine.
--/
-def verifyBoolExpr (b : BoolExprNat) (cert : LratCert) : Bool :=
-  verifyCert (LratFormula.ofCnf (AIG.toCNF (AIG.ofBoolExprCachedDirect b.toBoolExpr))) cert
-
-theorem unsat_of_verifyBoolExpr_eq_true (b : BoolExprNat) (c : LratCert)
-    (h : verifyBoolExpr b c = true) : BoolExprNat.unsat b := by
-  rw [BoolExprNat.unsat_iff]
-  rw [← AIG.ofBoolExprCachedDirect_unsat_iff]
-  rw [← AIG.toCNF_equisat]
-  apply verifyCert_correct
-  rw [verifyBoolExpr] at h
-  exact h
-
-/--
 Add an auxiliary declaration. Only used to create constants that appear in our reflection proof.
 -/
 def mkAuxDecl (name : Name) (value type : Expr) : MetaM Unit :=
@@ -256,74 +241,5 @@ def LratCert.toReflectionProof [ToExpr α] (cert : LratCert) (cfg : TacticContex
       (← mkEqRefl (toExpr true))
   return mkApp3 (mkConst unsat_of_verifier_eq_true) reflectedExpr certExpr nativeProof
 
-/--
-Prepare an `Expr` that proves `boolExpr.unsat` using `ofReduceBool`.
--/
-def lratSolver (cfg : TacticContext) (boolExpr : BoolExprNat) : MetaM Expr := do
-  let cnf ←
-    withTraceNode `sat (fun _ => return "Converting BoolExpr to CNF") do
-      -- lazyPure to prevent compiler lifting
-      IO.lazyPure (fun _ => AIG.toCNF (AIG.ofBoolExprCachedDirect boolExpr.toBoolExpr))
 
-  let encoded ←
-    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
-      -- lazyPure to prevent compiler lifting
-      IO.lazyPure (fun _ => LratFormula.ofCnf cnf)
-
-  trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
-
-  let res ←
-    withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate cfg.timeout
-
-  match res with
-  | .ok cert =>
-    cert.toReflectionProof cfg boolExpr ``verifyBoolExpr ``unsat_of_verifyBoolExpr_eq_true
-  | .error _ =>
-    throwError "The external prover found a counter example"
-
-
-def _root_.Lean.MVarId.closeWithBoolReflection (g : MVarId) (unsatProver : BoolExprNat → MetaM Expr) : MetaM Unit := M.run do
-  let g' ← g.falseOrByContra
-  g'.withContext do
-    let (boolExpr, f) ←
-      withTraceNode `sat (fun _ => return "Reflecting goal into BoolExpr") do
-        reflectSAT g'
-    trace[sat] "Reflected boolean expression: {boolExpr}"
-    let boolExprUnsat ← unsatProver boolExpr
-    let proveFalse ← f boolExprUnsat
-    g'.assign proveFalse
-
-/--
-Close a goal by:
-1. Turning it into a SAT problem.
-2. Running an external SAT solver on it and obtaining an LRAT proof from it.
-3. Verifying the LRAT proof using proof by reflection.
--/
-def _root_.Lean.MVarId.satDecide (g : MVarId) (cfg : TacticContext) : MetaM Unit := M.run do
-  let unsatProver (exp : BoolExprNat) : MetaM Expr := do
-    withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
-      lratSolver cfg exp
-  g.closeWithBoolReflection unsatProver
-
-@[inherit_doc Lean.MVarId.satDecide]
-syntax (name := satDecideSyntax) "sat_decide" : tactic
-
-end SatDecide
-
-def SatDecide.TacticContext.new (lratPath : System.FilePath) : TermElabM TacticContext := do
-  let exprDef ← Term.mkAuxName `_expr_def
-  let certDef ← Term.mkAuxName `_cert_def
-  let reflectionDef ← Term.mkAuxName `_reflection_def
-  let solver := sat.solver.get (← getOptions)
-  let timeout := sat.timeout.get (← getOptions)
-  let prevalidate := sat.prevalidate.get (← getOptions)
-  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate, timeout }
-
-open Elab.Tactic
-elab_rules : tactic
-  | `(tactic| sat_decide) => do
-    let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
-    liftMetaFinishingTactic fun g => g.satDecide cfg
-    -- the auto generated lratPath is a temp file that should be removed
-    IO.FS.removeFile cfg.lratPath
+end BVDecide
