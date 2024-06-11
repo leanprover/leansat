@@ -5,8 +5,9 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Reflect.BVExpr.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast
-import LeanSAT.Reflect.Tactics.SatDecide
 import LeanSAT.Reflect.Tactics.Normalize
+import LeanSAT.Reflect.Tactics.Reflect -- TODO: Remove
+import LeanSAT.Reflect.LRAT
 
 import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
@@ -19,7 +20,7 @@ namespace BVDecide
 
 structure UnsatProver.Result where
   proof : Expr
-  lratCert : SatDecide.LratCert
+  lratCert : LratCert
 
 abbrev UnsatProver := BVLogicalExpr → Batteries.HashMap Nat Expr → MetaM UnsatProver.Result
 
@@ -766,15 +767,15 @@ Given a goal `g`, which should be `False`, returns
 * a function which takes an expression representing a proof of `e.unsat`,
   and returns a proof of `False` valid in the context of `g`.
 -/
-def verifyBVExpr (bv : BVLogicalExpr) (cert : SatDecide.LratCert) : Bool :=
-  SatDecide.verifyCert (SatDecide.LratFormula.ofCnf (AIG.toCNF bv.bitblast.relabelNat)) cert
+def verifyBVExpr (bv : BVLogicalExpr) (cert : LratCert) : Bool :=
+  verifyCert (LratFormula.ofCnf (AIG.toCNF bv.bitblast.relabelNat)) cert
 
-theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : SatDecide.LratCert)
+theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : LratCert)
     (h : verifyBVExpr bv c = true) : bv.unsat := by
   apply BVLogicalExpr.unsat_of_bitblast
   rw [← AIG.Entrypoint.relabelNat_unsat_iff]
   rw [← AIG.toCNF_equisat]
-  apply SatDecide.verifyCert_correct
+  apply verifyCert_correct
   rw [verifyBVExpr] at h
   assumption
 
@@ -809,7 +810,7 @@ def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignmen
     finalMap := finalMap.push (atomExpr, ⟨BitVec.ofNat currentBit value⟩)
   return finalMap
 
-def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr)
+def lratBitblaster (cfg : TacticContext) (bv : BVLogicalExpr)
     (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM UnsatProver.Result := do
   let entry ←
     withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
@@ -830,12 +831,12 @@ def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr)
   let encoded ←
     withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
       -- lazyPure to prevent compiler lifting
-      IO.lazyPure (fun _ => SatDecide.LratFormula.ofCnf cnf)
+      IO.lazyPure (fun _ => LratFormula.ofCnf cnf)
   trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
 
   let res ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      SatDecide.runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate cfg.timeout
+      runExternal encoded cfg.solver cfg.lratPath cfg.prevalidate cfg.timeout
 
   match res with
   | .ok cert =>
@@ -862,7 +863,7 @@ def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withCon
   return (sat.bvExpr, sat.proveFalse)
 
 def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId)
-    (unsatProver : UnsatProver) : MetaM SatDecide.LratCert := M.run do
+    (unsatProver : UnsatProver) : MetaM LratCert := M.run do
   g.withContext do
     let (bvLogicalExpr, f) ←
       withTraceNode `bv (fun _ => return "Reflecting goal into BVLogicalExpr") do
@@ -876,7 +877,7 @@ def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId)
     g.assign proveFalse
     return cert
 
-def _root_.Lean.MVarId.bvUnsat (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM SatDecide.LratCert := M.run do
+def _root_.Lean.MVarId.bvUnsat (g : MVarId) (cfg : TacticContext) : MetaM LratCert := M.run do
   let unsatProver : UnsatProver := fun bvExpr atomsAssignment => do
     withTraceNode `bv (fun _ => return "Preparing LRAT reflection term") do
       lratBitblaster cfg bvExpr atomsAssignment
@@ -884,9 +885,9 @@ def _root_.Lean.MVarId.bvUnsat (g : MVarId) (cfg : SatDecide.TacticContext) : Me
 
 structure Result where
   simpTrace : Simp.Stats
-  lratCert : Option SatDecide.LratCert
+  lratCert : Option LratCert
 
-def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : SatDecide.TacticContext) : MetaM Result := do
+def _root_.Lean.MVarId.bvDecide (g : MVarId) (cfg : TacticContext) : MetaM Result := do
   let ⟨g?, simpTrace⟩ ← g.bvNormalize
   let some g := g? | return ⟨simpTrace, none⟩
   let lratCert ← g.bvUnsat cfg
@@ -906,7 +907,7 @@ end BVDecide
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| bv_decide) => do
-    let cfg ← SatDecide.TacticContext.new (← SatDecide.mkTemp)
+    let cfg ← BVDecide.TacticContext.new (← BVDecide.mkTemp)
     liftMetaFinishingTactic fun g => do
       let _ ← g.bvDecide cfg
       return ()
