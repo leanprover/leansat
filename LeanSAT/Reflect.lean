@@ -12,7 +12,6 @@ import LeanSAT.Reflect.CNF.Relabel
 import LeanSAT.Reflect.Tactics.Attr
 import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.Tactics.SatDecide
-import LeanSAT.Reflect.Tactics.SatCheck
 import LeanSAT.Reflect.Fin
 import LeanSAT.Reflect.Glue
 import LeanSAT.Reflect.BVExpr.Basic
