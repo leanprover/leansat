@@ -1,10 +1,5 @@
-import Lean.Elab.Tactic.FalseOrByContra
 import LeanSAT.Reflect.Glue
 import LeanSAT.Reflect.Tactics.Attr
-
-import LeanSAT.AIG.CNF
-import LeanSAT.AIG.BoolExprCached
-
 import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.External.Solver
