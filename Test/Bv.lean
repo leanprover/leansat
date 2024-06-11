@@ -9,3 +9,5 @@ import Test.Bv.Substructure
 import Test.Bv.Trace
 import Test.Bv.Errors
 import Test.Bv.Counterexample
+import Test.Bv.Sat
+import Test.Bv.SatStress
