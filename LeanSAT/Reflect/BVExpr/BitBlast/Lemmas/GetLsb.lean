@@ -1,24 +1,23 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Basic
-import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Expr
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.GetLsb
 
 open AIG
 
 namespace BVPred
 
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 @[simp]
-theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG BVBit) (target : GetLsbTarget) (assign : BVExpr.Assignment)
-    : ⟦blastGetLsb aig target, assign.toAIGAssignment⟧
+theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget aig) (assign : α → Bool)
+    : ⟦blastGetLsb aig target, assign⟧
         =
-      (target.expr.eval assign).getLsb target.idx := by
+      if h:target.idx < target.w then
+        ⟦aig, target.stream.getRef target.idx h, assign⟧
+      else
+        false := by
   rcases target with ⟨expr, idx⟩
   unfold blastGetLsb
   dsimp
-  split
-  . simp
-  . next h =>
-    simp only [mkConstCached_eval_eq_mkConst_eval, denote_mkConst, Bool.false_eq]
-    apply BitVec.getLsb_ge
-    omega
+  split <;> simp
 
 end BVPred
