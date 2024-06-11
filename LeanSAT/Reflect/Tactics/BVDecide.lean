@@ -694,13 +694,12 @@ partial def of (h : Expr) : M (Option SatAtBVLogical) := do
     -- this BVLogicalExpr must eval to true due to `h`
     let some bvLogical ← ReifiedBVLogical.of lhsExpr | return none
     let proof := do
-      -- call this eval term x
       let evalLogic ← ReifiedBVLogical.mkEvalExpr bvLogical.expr
-      -- this is x = lhsExpr
+      -- this is evalLogic = lhsExpr
       let evalProof ← bvLogical.evalsAtAtoms
       -- h is lhsExpr = true
-      -- we prove lhsExpr = true by lhsExpr = y = true
-      return ReifiedBVLogical.mkTrans lhsExpr evalLogic (mkConst ``Bool.true) evalProof h
+      -- we prove evalLogic = true by evalLogic = lhsExpr = true
+      return ReifiedBVLogical.mkTrans evalLogic lhsExpr (mkConst ``Bool.true) evalProof h
     return some ⟨bvLogical.bvExpr, proof, bvLogical.expr⟩
   | _ => return none
 
