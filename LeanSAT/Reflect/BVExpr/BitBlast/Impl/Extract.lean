@@ -4,15 +4,17 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
-structure ExtractTarget (aig : AIG BVBit) (newWidth : Nat) where
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+structure ExtractTarget (aig : AIG α) (newWidth : Nat) where
   {w : Nat}
   stream : AIG.RefStream aig w
   hi : Nat
   lo : Nat
   hnew : newWidth = hi - lo + 1
 
-def blastExtract (aig : AIG BVBit) (target : ExtractTarget aig newWidth)
-    : AIG.RefStreamEntry BVBit newWidth :=
+def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth)
+    : AIG.RefStreamEntry α newWidth :=
   let ⟨input, hi, lo, hnew⟩ := target
   let res := aig.mkConstCached false
   let aig := res.aig
@@ -27,7 +29,7 @@ def blastExtract (aig : AIG BVBit) (target : ExtractTarget aig newWidth)
     let base := base.pushRef (input.getRefD lo falseRef)
     ⟨aig, this ▸ base⟩
 where
-  go {aig : AIG BVBit} {w : Nat} (input : AIG.RefStream aig w) (lo : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
+  go {aig : AIG α} {w : Nat} (input : AIG.RefStream aig w) (lo : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
       (falseRef : AIG.Ref aig) (s : AIG.RefStream aig curr)
     : AIG.RefStream aig newWidth :=
   if h : curr < newWidth then
@@ -39,7 +41,7 @@ where
     this ▸ s
 termination_by newWidth - curr
 
-instance : AIG.LawfulStreamOperator BVBit ExtractTarget blastExtract where
+instance : AIG.LawfulStreamOperator α ExtractTarget blastExtract where
   le_size := by
     intros
     unfold blastExtract

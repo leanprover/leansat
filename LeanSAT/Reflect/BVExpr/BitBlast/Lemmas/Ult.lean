@@ -23,7 +23,7 @@ theorem mkUlt.streamProc_denote_eq_eval_ult (aig : AIG BVBit) (lhs rhs : BVExpr 
   unfold mkUlt.streamProc
   simp only [denote_projected_entry, denote_mkNotCached, denote_projected_entry']
   congr 1
-  rw [BVExpr.bitblast.mkOverflowBit_eq_carry (input := ⟨w, _, _⟩) (lhs := lhs) (rhs := .un .not rhs)]
+  rw [BVExpr.bitblast.mkOverflowBit_eq_carry (input := ⟨w, _, _⟩) (lhs := lhs.eval assign) (rhs := (BVExpr.un .not rhs).eval assign)]
   . simp
   . dsimp
     intro idx hidx

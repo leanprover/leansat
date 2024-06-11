@@ -6,20 +6,23 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
+
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 namespace mkOverflowBit
 
-theorem go_eq_carry (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig) (origCin : Ref aig)
-    (lhs rhs : RefStream aig w) (lhsExpr rhsExpr : BVExpr w) (assign : Assignment)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.getRef idx hidx, assign.toAIGAssignment⟧ = (lhsExpr.eval assign).getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.getRef idx hidx, assign.toAIGAssignment⟧ = (rhsExpr.eval assign).getLsb idx)
+theorem go_eq_carry (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig) (origCin : Ref aig)
+    (lhs rhs : RefStream aig w) (lhsExpr rhsExpr : BitVec w) (assign : α → Bool)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.getRef idx hidx, assign⟧ = lhsExpr.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.getRef idx hidx, assign⟧ = rhsExpr.getLsb idx)
     (hcin :
-      ⟦aig, cin, assign.toAIGAssignment⟧
+      ⟦aig, cin, assign⟧
         =
-      BitVec.carry curr (lhsExpr.eval assign) (rhsExpr.eval assign) ⟦aig, origCin, assign.toAIGAssignment⟧
+      BitVec.carry curr lhsExpr rhsExpr ⟦aig, origCin, assign⟧
     )
-  : ⟦go aig curr hcurr cin lhs rhs, assign.toAIGAssignment⟧
+  : ⟦go aig curr hcurr cin lhs rhs, assign⟧
       =
-    BitVec.carry w (lhsExpr.eval assign) (rhsExpr.eval assign) ⟦aig, origCin, assign.toAIGAssignment⟧ := by
+    BitVec.carry w lhsExpr rhsExpr ⟦aig, origCin, assign⟧ := by
   unfold go
   dsimp
   split
@@ -45,13 +48,13 @@ termination_by w - curr
 
 end mkOverflowBit
 
-theorem mkOverflowBit_eq_carry (aig : AIG BVBit) (input : OverflowInput aig) (lhs rhs : BVExpr input.w)
-    (assign : Assignment)
-    (hleft : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.stream.lhs.getRef idx hidx, assign.toAIGAssignment⟧ = (lhs.eval assign).getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.stream.rhs.getRef idx hidx, assign.toAIGAssignment⟧ = (rhs.eval assign).getLsb idx)
-  : ⟦mkOverflowBit aig input, assign.toAIGAssignment⟧
+theorem mkOverflowBit_eq_carry (aig : AIG α) (input : OverflowInput aig) (lhs rhs : BitVec input.w)
+    (assign : α → Bool)
+    (hleft : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.stream.lhs.getRef idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.stream.rhs.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+  : ⟦mkOverflowBit aig input, assign⟧
       =
-    BitVec.carry input.w (lhs.eval assign) (rhs.eval assign) ⟦aig, input.cin, assign.toAIGAssignment⟧ := by
+    BitVec.carry input.w lhs rhs ⟦aig, input.cin, assign⟧ := by
   unfold mkOverflowBit
   dsimp
   apply mkOverflowBit.go_eq_carry

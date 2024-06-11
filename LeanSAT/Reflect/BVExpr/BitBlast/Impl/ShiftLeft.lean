@@ -4,14 +4,16 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
-def blastShiftLeftConst (aig : AIG BVBit) (target : AIG.ShiftTarget aig w)
-    : AIG.RefStreamEntry BVBit w :=
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+def blastShiftLeftConst (aig : AIG α) (target : AIG.ShiftTarget aig w)
+    : AIG.RefStreamEntry α w :=
   let ⟨input, distance⟩ := target
   go aig input distance 0 (by omega) .empty
 where
-  go (aig : AIG BVBit) (input : AIG.RefStream aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
+  go (aig : AIG α) (input : AIG.RefStream aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
       (s : AIG.RefStream aig curr)
-    : AIG.RefStreamEntry BVBit w :=
+    : AIG.RefStreamEntry α w :=
   if hidx:curr < w then
     if hdist:curr < distance then
       let res := aig.mkConstCached false
@@ -31,7 +33,7 @@ where
     ⟨aig, hcurr ▸ s⟩
   termination_by w - curr
 
-theorem blastShiftLeftConst.go_le_size (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem blastShiftLeftConst.go_le_size (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : aig.decls.size ≤ (go aig input distance curr hcurr s).aig.decls.size := by
   unfold go
@@ -45,7 +47,7 @@ theorem blastShiftLeftConst.go_le_size (aig : AIG BVBit) (distance : Nat) (input
   . simp
 termination_by w - curr
 
-theorem blastShiftLeftConst.go_decl_eq (aig : AIG BVBit) (distance : Nat) (input : AIG.RefStream aig w)
+theorem blastShiftLeftConst.go_decl_eq (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (h1) (h2),
         (go aig input distance curr hcurr s).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
@@ -66,7 +68,7 @@ theorem blastShiftLeftConst.go_decl_eq (aig : AIG BVBit) (distance : Nat) (input
   . simp [← hgo]
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator BVBit AIG.ShiftTarget blastShiftLeftConst where
+instance : AIG.LawfulStreamOperator α AIG.ShiftTarget blastShiftLeftConst where
   le_size := by
     intros
     unfold blastShiftLeftConst

@@ -5,9 +5,12 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
+
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 namespace blastZeroExtend
 
-theorem go_getRef_aux (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+theorem go_getRef_aux (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
         (go aig w input newWidth curr hcurr s).stream.getRef idx (by omega)
@@ -40,7 +43,7 @@ theorem go_getRef_aux (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) 
     . simp
 termination_by newWidth - curr
 
-theorem go_getRef (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+theorem go_getRef (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
         (go aig w input newWidth curr hcurr s).stream.getRef idx (by omega)
@@ -49,7 +52,7 @@ theorem go_getRef (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (new
   intros
   apply go_getRef_aux
 
-theorem go_denote_mem_prefix (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) (start : Nat) (hstart)
   : ⟦
       (go aig w input newWidth curr hcurr s).aig,
@@ -65,19 +68,19 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream 
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) (assign : Assignment)
+theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+    (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) (assign : α → Bool)
     : ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
           →
         ⟦
           (go aig w input newWidth curr hcurr s).aig,
           (go aig w input newWidth curr hcurr s).stream.getRef idx hidx1,
-          assign.toAIGAssignment
+          assign
         ⟧
           =
         if hidx:idx < w then
-           ⟦aig, input.getRef idx hidx, assign.toAIGAssignment⟧
+           ⟦aig, input.getRef idx hidx, assign⟧
         else
            false
     := by
@@ -126,17 +129,17 @@ termination_by newWidth - curr
 end blastZeroExtend
 
 @[simp]
-theorem blastZeroExtend_eq_eval_getLsb (aig : AIG BVBit) (target : ExtendTarget aig newWidth)
-  (assign : Assignment)
+theorem blastZeroExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig newWidth)
+  (assign : α → Bool)
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastZeroExtend aig target).aig,
         (blastZeroExtend aig target).stream.getRef idx hidx,
-        assign.toAIGAssignment
+        assign
       ⟧
         =
       if hidx:idx < target.w then
-         ⟦aig, target.stream.getRef idx hidx, assign.toAIGAssignment⟧
+         ⟦aig, target.stream.getRef idx hidx, assign⟧
       else
          false
     := by

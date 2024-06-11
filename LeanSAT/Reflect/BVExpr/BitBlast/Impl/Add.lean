@@ -4,21 +4,23 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 -- TODO: unify this with ternary input
-structure FullAdderInput (aig : AIG BVBit) where
+structure FullAdderInput (aig : AIG α) where
   lhs : AIG.Ref aig
   rhs : AIG.Ref aig
   cin : AIG.Ref aig
 
 namespace FullAdderInput
 
-def cast {aig1 aig2 : AIG BVBit} (val : FullAdderInput aig1) (h : aig1.decls.size ≤ aig2.decls.size)
+def cast {aig1 aig2 : AIG α} (val : FullAdderInput aig1) (h : aig1.decls.size ≤ aig2.decls.size)
     : FullAdderInput aig2 :=
   let ⟨lhs, rhs, cin⟩ := val
   ⟨lhs.cast h, rhs.cast h, cin.cast h⟩
 
 @[simp]
-theorem lhs_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
+theorem lhs_cast {aig1 aig2 : AIG α} (s : FullAdderInput aig1)
       (hcast : aig1.decls.size ≤ aig2.decls.size)
     : (s.cast hcast).lhs
         =
@@ -26,7 +28,7 @@ theorem lhs_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
   simp [cast]
 
 @[simp]
-theorem rhs_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
+theorem rhs_cast {aig1 aig2 : AIG α} (s : FullAdderInput aig1)
       (hcast : aig1.decls.size ≤ aig2.decls.size)
     : (s.cast hcast).rhs
         =
@@ -34,7 +36,7 @@ theorem rhs_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
   simp [cast]
 
 @[simp]
-theorem cin_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
+theorem cin_cast {aig1 aig2 : AIG α} (s : FullAdderInput aig1)
       (hcast : aig1.decls.size ≤ aig2.decls.size)
     : (s.cast hcast).cin
         =
@@ -44,7 +46,7 @@ theorem cin_cast {aig1 aig2 : AIG BVBit} (s : FullAdderInput aig1)
 end FullAdderInput
 
 
-def mkFullAdderOut (aig : AIG BVBit) (input : FullAdderInput aig) : AIG.Entrypoint BVBit :=
+def mkFullAdderOut (aig : AIG α) (input : FullAdderInput aig) : AIG.Entrypoint α :=
   -- let subExpr = XOR lhs rhs
   -- out = XOR subExpr cin
   -- subExpr is shared in `mkFullAdderOut` and `mkFullAdderCarry`
@@ -57,7 +59,7 @@ def mkFullAdderOut (aig : AIG BVBit) (input : FullAdderInput aig) : AIG.Entrypoi
     apply AIG.LawfulOperator.le_size (f := AIG.mkXorCached)
   aig.mkXorCached ⟨subExprRef, cin⟩
 
-instance : AIG.LawfulOperator BVBit FullAdderInput mkFullAdderOut where
+instance : AIG.LawfulOperator α FullAdderInput mkFullAdderOut where
   le_size := by
     intros
     unfold mkFullAdderOut
@@ -73,7 +75,7 @@ instance : AIG.LawfulOperator BVBit FullAdderInput mkFullAdderOut where
     apply AIG.LawfulOperator.lt_size_of_lt_aig_size
     assumption
 
-def mkFullAdderCarry (aig : AIG BVBit) (input : FullAdderInput aig) : AIG.Entrypoint BVBit :=
+def mkFullAdderCarry (aig : AIG α) (input : FullAdderInput aig) : AIG.Entrypoint α :=
   -- let subExpr = XOR lhs rhs
   -- cout = OR (AND subExpr cin) (AND lhs rhs)
   -- subExpr is shared in `mkFullAdderOut` and `mkFullAdderCarry`
@@ -101,7 +103,7 @@ def mkFullAdderCarry (aig : AIG BVBit) (input : FullAdderInput aig) : AIG.Entryp
   let lorRef := lorRef.cast hror
   aig.mkOrCached ⟨lorRef, rorRef⟩
 
-instance : AIG.LawfulOperator BVBit FullAdderInput mkFullAdderCarry where
+instance : AIG.LawfulOperator α FullAdderInput mkFullAdderCarry where
   le_size := by
     intros
     unfold mkFullAdderCarry
@@ -130,13 +132,13 @@ instance : AIG.LawfulOperator BVBit FullAdderInput mkFullAdderCarry where
       assumption
 
 -- XXX: Maybe this thing can be generalized to some notion of "stateful binary operator"
-structure FullAdderOutput (old : AIG BVBit) where
-  aig : AIG BVBit
+structure FullAdderOutput (old : AIG α) where
+  aig : AIG α
   out : AIG.Ref aig
   cout : AIG.Ref aig
   hle : old.decls.size ≤ aig.decls.size
 
-def mkFullAdder (aig : AIG BVBit) (input : FullAdderInput aig) : FullAdderOutput aig :=
+def mkFullAdder (aig : AIG α) (input : FullAdderInput aig) : FullAdderOutput aig :=
   let res := mkFullAdderOut aig input
   let aig := res.aig
   let outRef := res.ref
@@ -155,7 +157,7 @@ def mkFullAdder (aig : AIG BVBit) (input : FullAdderInput aig) : FullAdderOutput
     apply AIG.LawfulOperator.le_size (f := mkFullAdderOut)
   ⟨aig, outRef, carryRef, hle⟩
 
-def blastAdd (aig : AIG BVBit) (input : AIG.BinaryRefStream aig w) : AIG.RefStreamEntry BVBit w :=
+def blastAdd (aig : AIG α) (input : AIG.BinaryRefStream aig w) : AIG.RefStreamEntry α w :=
   let res := aig.mkConstCached false
   let aig := res.aig
   let cin := res.ref
@@ -164,9 +166,9 @@ def blastAdd (aig : AIG BVBit) (input : AIG.BinaryRefStream aig w) : AIG.RefStre
   let ⟨lhs, rhs⟩ := input
   go aig 0 (by omega) cin .empty lhs rhs
 where
-  go {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
+  go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
       (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
-      : AIG.RefStreamEntry BVBit w :=
+      : AIG.RefStreamEntry α w :=
     if hidx:curr < w then
       let lin := lhs.getRef curr hidx
       let rin := rhs.getRef curr hidx
@@ -186,7 +188,7 @@ where
 
 namespace blastAdd
 
-theorem go_le_size (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
+theorem go_le_size (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
     (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
     : aig.decls.size ≤ (go aig curr hcurr cin s lhs rhs).aig.decls.size := by
   unfold go
@@ -198,7 +200,7 @@ theorem go_le_size (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AI
   . simp
 termination_by w - curr
 
-theorem go_decl_eq (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
+theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
     (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
     : ∀ (idx : Nat) (h1) (h2),
         (go aig curr hcurr cin s lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
@@ -220,7 +222,7 @@ theorem go_decl_eq (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (cin : AI
   . simp [← hgo]
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator BVBit AIG.BinaryRefStream blastAdd where
+instance : AIG.LawfulStreamOperator α AIG.BinaryRefStream blastAdd where
   le_size := by
     intros
     unfold blastAdd

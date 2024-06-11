@@ -4,10 +4,12 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
-def blastNot (aig : AIG BVBit) (s : AIG.RefStream aig w) : AIG.RefStreamEntry BVBit w :=
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+def blastNot (aig : AIG α) (s : AIG.RefStream aig w) : AIG.RefStreamEntry α w :=
   AIG.RefStream.map aig ⟨s, AIG.mkNotCached⟩
 
-instance : AIG.LawfulStreamOperator BVBit AIG.RefStream blastNot where
+instance : AIG.LawfulStreamOperator α AIG.RefStream blastNot where
   le_size := by
     intros
     unfold blastNot

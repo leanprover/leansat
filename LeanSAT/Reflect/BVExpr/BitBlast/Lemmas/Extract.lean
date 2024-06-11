@@ -5,9 +5,12 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
+
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 namespace blastExtract
 
-theorem go_getRef_aux (aig : AIG BVBit) (input : RefStream aig w) (lo : Nat) (curr : Nat)
+theorem go_getRef_aux (aig : AIG α) (input : RefStream aig w) (lo : Nat) (curr : Nat)
     (hcurr : curr ≤ newWidth) (falseRef : Ref aig) (s : RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < curr),
         (go input lo curr hcurr falseRef s).getRef idx (by omega)
@@ -29,7 +32,7 @@ theorem go_getRef_aux (aig : AIG BVBit) (input : RefStream aig w) (lo : Nat) (cu
     . simp
 termination_by newWidth - curr
 
-theorem go_getRef (aig : AIG BVBit) (input : RefStream aig w) (lo : Nat) (curr : Nat)
+theorem go_getRef (aig : AIG α) (input : RefStream aig w) (lo : Nat) (curr : Nat)
     (hcurr : curr ≤ newWidth) (falseRef : Ref aig) (s : RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
@@ -59,20 +62,20 @@ termination_by newWidth - curr
 end blastExtract
 
 @[simp]
-theorem blastExtract_eq_eval_getLsb (aig : AIG BVBit) (target : ExtractTarget aig newWidth)
-    (assign : Assignment)
+theorem blastExtract_eq_eval_getLsb (aig : AIG α) (target : ExtractTarget aig newWidth)
+    (assign : α → Bool)
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastExtract aig target).aig,
         (blastExtract aig target).stream.getRef idx hidx,
-        assign.toAIGAssignment
+        assign
       ⟧
         =
       if h:(target.lo + idx) < target.w then
         ⟦
           aig,
           target.stream.getRef (target.lo + idx) h,
-          assign.toAIGAssignment
+          assign
         ⟧
       else
         false

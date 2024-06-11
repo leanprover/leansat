@@ -5,9 +5,12 @@ open AIG
 
 namespace BVExpr
 namespace bitblast
+
+variable [BEq α] [Hashable α] [DecidableEq α]
+
 namespace blastConst
 
-theorem go_getRef_aux (aig : AIG BVBit) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ w)
+theorem go_getRef_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ w)
     (s : AIG.RefStream aig curr)
     -- The hfoo here is a trick to make the dependent type gods happy
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
@@ -36,7 +39,7 @@ theorem go_getRef_aux (aig : AIG BVBit) (c : BitVec w) (curr : Nat) (hcurr : cur
     . simp
 termination_by w - curr
 
-theorem go_getRef (aig : AIG BVBit) (c : BitVec w)
+theorem go_getRef (aig : AIG α) (c : BitVec w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
         (go aig curr s c hcurr).stream.getRef idx (by omega)
@@ -45,7 +48,7 @@ theorem go_getRef (aig : AIG BVBit) (c : BitVec w)
   intros
   apply go_getRef_aux
 
-theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx)
+theorem go_denote_mem_prefix (aig : AIG α) (idx : Nat) (hidx)
     (s : AIG.RefStream aig idx) (c : BitVec w) (start : Nat) (hstart)
   : ⟦
       (go aig idx s c hidx).aig,
@@ -61,7 +64,7 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx)
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG BVBit) (c : BitVec w) (assign : Assignment)
+theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
@@ -69,10 +72,10 @@ theorem go_eq_eval_getLsb (aig : AIG BVBit) (c : BitVec w) (assign : Assignment)
         ⟦
           (go aig curr s c hcurr).aig,
           (go aig curr s c hcurr).stream.getRef idx hidx1,
-          assign.toAIGAssignment
+          assign
         ⟧
           =
-        ((BVExpr.const c).eval assign).getLsb idx := by
+        c.getLsb idx := by
   intro idx hidx1 hidx2
   generalize hgo : go aig curr s c hcurr = res
   unfold go at hgo
@@ -90,21 +93,19 @@ theorem go_eq_eval_getLsb (aig : AIG BVBit) (c : BitVec w) (assign : Assignment)
       . rw [heq]
     | inr =>
       rw [← hgo]
-      dsimp
       rw [go_eq_eval_getLsb]
-      . simp
-      . omega
+      omega
   . omega
 termination_by w - curr
 
 end blastConst
 
 @[simp]
-theorem blastConst_eq_eval_getLsb (aig : AIG BVBit) (c : BitVec w) (assign : Assignment)
+theorem blastConst_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(blastConst aig c).aig, (blastConst aig c).stream.getRef idx hidx, assign.toAIGAssignment⟧
+        ⟦(blastConst aig c).aig, (blastConst aig c).stream.getRef idx hidx, assign⟧
           =
-        ((BVExpr.const c).eval assign).getLsb idx := by
+        c.getLsb idx := by
   intros
   apply blastConst.go_eq_eval_getLsb
   omega

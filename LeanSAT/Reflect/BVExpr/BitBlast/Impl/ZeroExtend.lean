@@ -4,13 +4,15 @@ import LeanSAT.AIG
 namespace BVExpr
 namespace bitblast
 
-def blastZeroExtend (aig : AIG BVBit) (target : AIG.ExtendTarget aig newWidth)
-    : AIG.RefStreamEntry BVBit newWidth :=
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+def blastZeroExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth)
+    : AIG.RefStreamEntry α newWidth :=
   let ⟨width, input⟩ := target
   go aig width input newWidth 0 (by omega) .empty
 where
-  go (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (newWidth : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
-      (s : AIG.RefStream aig curr) : AIG.RefStreamEntry BVBit newWidth :=
+  go (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
+      (s : AIG.RefStream aig curr) : AIG.RefStreamEntry α newWidth :=
     if hcurr1:curr < newWidth then
       if hcurr2:curr < w then
         let s := s.pushRef (input.getRef curr hcurr2)
@@ -33,7 +35,7 @@ termination_by newWidth - curr
 
 namespace blastZeroExtend
 
-theorem go_le_size (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+theorem go_le_size (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
     : aig.decls.size ≤ (go aig w input newWidth curr hcurr s).aig.decls.size := by
   unfold go
@@ -47,7 +49,7 @@ theorem go_le_size (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (ne
   . simp
 termination_by newWidth - curr
 
-theorem go_decl_eq (aig : AIG BVBit) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+theorem go_decl_eq (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (h1) (h2),
        (go aig w input newWidth curr hcurr s).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
@@ -70,7 +72,7 @@ termination_by newWidth - curr
 
 end blastZeroExtend
 
-instance : AIG.LawfulStreamOperator BVBit AIG.ExtendTarget blastZeroExtend where
+instance : AIG.LawfulStreamOperator α AIG.ExtendTarget blastZeroExtend where
   le_size := by
     intros
     unfold blastZeroExtend
