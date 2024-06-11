@@ -5,6 +5,7 @@ Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.CNF.Relabel
 import LeanSAT.Reflect.Fin
+import Batteries.Data.List.Lemmas
 
 set_option linter.missingDocs false
 
