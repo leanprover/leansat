@@ -821,13 +821,19 @@ def lratBitblaster (cfg : SatDecide.TacticContext) (bv : BVLogicalExpr)
     let reconstructed := reconstructCounterExample map assignment aigSize atomsAssignment
     let mut error := m!"The prover found a potential counter example, consider the following assignment:\n"
     for (var, value) in reconstructed do
-      -- TODO: unclear if this is right?
       error := error ++ m!"{var} = {value.bv}\n"
     throwError error
 
 def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withContext do
   let hyps ← getLocalHyps
   let sats ← hyps.filterMapM SatAtBVLogical.of
+  if sats.size = 0 then
+    let mut error := "None of the hypotheses are in the supported BitVec fragment.\n"
+    error := error ++ "There are two potential fixes for this:\n"
+    error := error ++ "1. If you are using custom BitVec constructs simplify them to built-in ones.\n"
+    error := error ++ "2. If your problem is using only built-in ones it might currently be out of reach.\n"
+    error := error ++ "   Consider expressing it in terms of different operations that are better supported."
+    throwError error
   let sat := sats.foldl (init := SatAtBVLogical.trivial) SatAtBVLogical.and
   return (sat.bvExpr, sat.proveFalse)
 
