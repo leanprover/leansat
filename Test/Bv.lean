@@ -7,4 +7,4 @@ import Test.Bv.Shift
 import Test.Bv.Stress
 import Test.Bv.Substructure
 import Test.Bv.Trace
-import Test.Bv.Timeout
+import Test.Bv.Errors
