@@ -108,15 +108,18 @@ theorem denote_mkGate {aig : AIG α} {input : GateInput aig} :
   . next heq =>
     rw [mkGate, Array.get_push_size] at heq
     injection heq with heq1 heq2 heq3 heq4
-    simp
-    apply ReflectSat.EvalAtAtoms.and_congr
-    all_goals
-      apply ReflectSat.EvalAtAtoms.xor_congr
-      . unfold denote
-        simp only [heq1, heq2]
-        apply denote.go_eq_of_aig_eq
-        apply LawfulOperator.IsPrefix_aig
-      . simp only [heq3, heq4]
+    dsimp
+    congr 2
+    . unfold denote
+      simp only [heq1]
+      apply denote.go_eq_of_aig_eq
+      apply LawfulOperator.IsPrefix_aig
+    . simp [heq3]
+    . unfold denote
+      simp only [heq2]
+      apply denote.go_eq_of_aig_eq
+      apply LawfulOperator.IsPrefix_aig
+    . simp [heq4]
 
 /--
 `AIG.mkAtom` never shrinks the underlying AIG.

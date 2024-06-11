@@ -3,7 +3,6 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.AIG.Basic
 
 /-!
@@ -56,12 +55,11 @@ theorem denote.go_eq_of_aig_eq (decls1 decls2 : Array (Decl α)) (start : Nat) {
     . simp_all
     . simp_all
     . simp_all
-      apply ReflectSat.EvalAtAtoms.and_congr
-      all_goals
-        apply ReflectSat.EvalAtAtoms.xor_congr
-        . apply denote.go_eq_of_aig_eq
-          assumption
-        . rfl
+      congr 2
+      . apply denote.go_eq_of_aig_eq
+        assumption
+      . apply denote.go_eq_of_aig_eq
+        assumption
 termination_by sizeOf start
 
 @[inherit_doc denote.go_eq_of_aig_eq ]

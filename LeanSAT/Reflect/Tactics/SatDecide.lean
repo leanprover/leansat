@@ -5,7 +5,6 @@ Authors: Scott Morrison, Henrik Böving
 -/
 import Lean.Elab.Tactic.FalseOrByContra
 import LeanSAT.Reflect.Tactics.Reflect
-import LeanSAT.Reflect.BoolExpr.Tseitin.Lemmas
 import LeanSAT.Reflect.Glue
 
 import LeanSAT.AIG.CNF

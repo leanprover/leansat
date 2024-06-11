@@ -8,8 +8,6 @@ import LeanSAT.AIG.Lemmas
 import LeanSAT.Reflect.CNF.Basic
 import LeanSAT.Reflect.CNF.Relabel
 import LeanSAT.Reflect.CNF.Relabel
-import LeanSAT.Reflect.BoolExpr.Tseitin.Defs
-import LeanSAT.Reflect.BoolExpr.Tseitin.Lemmas
 
 /-!
 This module contains an implementation of a verified Tseitin transformation on AIGs. The key results
@@ -29,7 +27,7 @@ def constToCNF (output : α) (const : Bool) : CNF α :=
 Produce a Tseitin style CNF for a `Decl.atom`, using `output` as the tree node variable.
 -/
 def atomToCNF (output : α) (atom : α) : CNF α :=
-  CNF.eq output atom
+  [[(output, true), (atom, false)], [(output, false), (atom, true)]]
 
 /--
 Produce a Tseitin style CNF for a `Decl.gate`, using `output` as the tree node variable.
@@ -57,7 +55,9 @@ theorem atomToCNF_eval :
     (atomToCNF output a).eval assign
       =
     (assign output == assign a) := by
-  simp [atomToCNF]
+  simp only [atomToCNF, CNF.eval_succ, CNF.Clause.eval_succ, Bool.beq_true, Bool.beq_false,
+    CNF.Clause.eval_nil, Bool.or_false, CNF.eval_nil, Bool.and_true]
+  cases assign output <;> cases assign a <;> decide
 
 @[simp]
 theorem gateToCNF_eval :
