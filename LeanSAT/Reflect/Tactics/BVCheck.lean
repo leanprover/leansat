@@ -1,9 +1,22 @@
 import LeanSAT.Reflect.Tactics.BVDecide
-import LeanSAT.Reflect.Tactics.SatCheck
 
 open Lean Elab Meta ReflectSat
 
 namespace BVCheck
+
+/--
+Get the directory that contains the Lean file which is currently being elaborated.
+-/
+def getSrcDir : TermElabM System.FilePath := do
+  let ctx ← readThe Lean.Core.Context
+  let srcPath := System.FilePath.mk ctx.fileName
+  let some srcDir := srcPath.parent
+    | throwError "cannot compute parent directory of '{srcPath}'"
+  return srcDir
+
+def mkContext (lratPath : System.FilePath) : TermElabM SatDecide.TacticContext := do
+  let lratPath := (← getSrcDir) / lratPath
+  SatDecide.TacticContext.new lratPath
 
 /--
 Prepare an `Expr` that proofs `bvExpr.unsat` using `ofReduceBool`.
@@ -45,7 +58,7 @@ end BVCheck
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| bv_check $path:str) => do
-    let cfg ← SatCheck.mkContext path.getString
+    let cfg ← BVCheck.mkContext path.getString
     liftMetaFinishingTactic fun g => do
       -- We still run the normalizer here. While we would usually not expect a call to `bv_check` if
       -- the normalizer can solve this stuff on its own (`bv_decide?` detects that and suggest `bv_normalize`)

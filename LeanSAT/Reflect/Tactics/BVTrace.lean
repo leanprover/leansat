@@ -1,7 +1,6 @@
 import LeanSAT.Reflect.Tactics.BVDecide
 import LeanSAT.Reflect.Tactics.BVCheck
 import Lean.Meta.Tactic.TryThis
-import Lean.Elab.Tactic.SimpTrace
 
 open Lean Elab Meta Tactic
 
@@ -29,7 +28,7 @@ def evalBvTrace : Tactic := fun stx =>
   match stx with
   | `(tactic| bv_decide?%$tk) => do
     let lratFile : System.FilePath ← getLratFileName
-    let cfg ← SatCheck.mkContext lratFile
+    let cfg ← BVCheck.mkContext lratFile
     let g ← getMainGoal
     let trace ← g.withContext do
       g.bvDecide cfg
