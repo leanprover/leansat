@@ -1,38 +1,32 @@
-import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Expr
+import LeanSAT.AIG
 
 namespace BVPred
 
-structure GetLsbTarget where
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+structure GetLsbTarget (aig : AIG α) where
   {w : Nat}
-  expr : BVExpr w
+  stream : AIG.RefStream aig w
   idx : Nat
 
-def blastGetLsb (aig : AIG BVBit) (target : GetLsbTarget) : AIG.Entrypoint BVBit :=
+def blastGetLsb (aig : AIG α) (target : GetLsbTarget aig) : AIG.Entrypoint α :=
   if h:target.idx < target.w then
-    -- Note: This blasts the entire rexpression up to `w` despite only needing it up to `idx`.
-    -- However the vast majority of operations are interested in all bits so the API is currently
-    -- not designed to support this use case.
-    let res := target.expr.bitblast aig
-    let aig := res.aig
-    let stream := res.stream
-    ⟨aig, stream.getRef target.idx h⟩
+    ⟨aig, target.stream.getRef target.idx h⟩
   else
     AIG.mkConstCached aig false
 
-instance : AIG.LawfulOperator BVBit (fun _ => GetLsbTarget) blastGetLsb where
+instance : AIG.LawfulOperator α GetLsbTarget blastGetLsb where
   le_size := by
     intros
     unfold blastGetLsb
-    dsimp
     split
-    . apply AIG.LawfulStreamOperator.le_size (f := BVExpr.bitblast)
+    . simp
     . apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
   decl_eq := by
     intros
     unfold blastGetLsb
-    dsimp
     split
-    . rw [AIG.LawfulStreamOperator.decl_eq (f := BVExpr.bitblast)]
+    . simp
     . rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
 
 end BVPred

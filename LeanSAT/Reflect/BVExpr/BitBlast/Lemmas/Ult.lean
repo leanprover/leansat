@@ -1,5 +1,4 @@
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Basic
-import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Expr
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Carry
 import LeanSAT.Reflect.BVExpr.BitBlast.Lemmas.Not
 import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Ult
@@ -8,22 +7,24 @@ open AIG
 
 namespace BVPred
 
-theorem mkUlt.streamProc_denote_eq_eval_ult (aig : AIG BVBit) (lhs rhs : BVExpr w) (input : BinaryRefStream aig w)
-    (assign : BVExpr.Assignment)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.getRef idx hidx, assign.toAIGAssignment⟧ = (lhs.eval assign).getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.getRef idx hidx, assign.toAIGAssignment⟧ = (rhs.eval assign).getLsb idx)
+variable [BEq α] [Hashable α] [DecidableEq α]
+
+theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : BinaryRefStream aig w)
+    (assign : α → Bool)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.getRef idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.getRef idx hidx, assign⟧ = rhs.getLsb idx)
   : ⟦
-      (mkUlt.streamProc aig input).aig,
-      (mkUlt.streamProc aig input).ref,
-      assign.toAIGAssignment
+      (mkUlt aig input).aig,
+      (mkUlt aig input).ref,
+      assign
     ⟧
       =
-    BitVec.ult (lhs.eval assign) (rhs.eval assign) := by
+    BitVec.ult lhs rhs := by
   rw [BitVec.ult_eq_not_carry]
-  unfold mkUlt.streamProc
+  unfold mkUlt
   simp only [denote_projected_entry, denote_mkNotCached, denote_projected_entry']
   congr 1
-  rw [BVExpr.bitblast.mkOverflowBit_eq_carry (input := ⟨w, _, _⟩) (lhs := lhs.eval assign) (rhs := (BVExpr.un .not rhs).eval assign)]
+  rw [BVExpr.bitblast.mkOverflowBit_eq_carry (input := ⟨w, _, _⟩) (lhs := lhs) (rhs := ~~~rhs)]
   . simp
   . dsimp
     intro idx hidx
@@ -41,21 +42,4 @@ theorem mkUlt.streamProc_denote_eq_eval_ult (aig : AIG BVBit) (lhs rhs : BVExpr 
       apply hright
     . simp [Ref.hgate]
 
-
-@[simp]
-theorem mkUlt_denote_eq_eval_ult (aig : AIG BVBit) (pair : ExprPair) (assign : BVExpr.Assignment)
-    : ⟦mkUlt aig pair, assign.toAIGAssignment⟧
-        =
-      BitVec.ult (pair.lhs.eval assign) (pair.rhs.eval assign) := by
-  unfold mkUlt
-  rcases pair with ⟨lhs, rhs⟩
-  rename_i w
-  simp
-  rw [mkUlt.streamProc_denote_eq_eval_ult (lhs := lhs) (rhs := rhs)]
-  . intros
-    rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := BVExpr.bitblast)]
-    . simp only [RefStream.getRef_cast, Ref_cast]
-      rw [BVExpr.bitblast_denote_eq_eval_getLsb]
-    . simp [Ref.hgate]
-  . intros
-    simp
+end BVPred
