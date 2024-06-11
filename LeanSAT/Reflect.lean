@@ -10,7 +10,6 @@ import LeanSAT.Reflect.CNF.Decidable
 import LeanSAT.Reflect.CNF.ForStd
 import LeanSAT.Reflect.CNF.Relabel
 import LeanSAT.Reflect.Tactics.Attr
-import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.Fin
 import LeanSAT.Reflect.Glue
 import LeanSAT.Reflect.BVExpr.Basic

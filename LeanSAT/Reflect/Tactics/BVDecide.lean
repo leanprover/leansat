@@ -6,7 +6,6 @@ Authors: Henrik Böving
 import LeanSAT.Reflect.BVExpr.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast
 import LeanSAT.Reflect.Tactics.Normalize
-import LeanSAT.Reflect.Tactics.Reflect -- TODO: Remove
 import LeanSAT.Reflect.LRAT
 
 import LeanSAT.LRAT.LRATChecker
@@ -83,6 +82,16 @@ where
     mkApp4 (mkConst ``BVPred.bin) (toExpr w) (toExpr lhs) (toExpr op) (toExpr rhs)
   | .getLsb (w := w) expr idx =>
     mkApp3 (mkConst ``BVPred.getLsb) (toExpr w) (toExpr expr) (toExpr idx)
+
+instance : ToExpr Gate where
+  toExpr x :=
+    match x with
+    | .and => mkConst ``Gate.and
+    | .or => mkConst ``Gate.or
+    | .xor => mkConst ``Gate.xor
+    | .imp => mkConst ``Gate.imp
+    | .beq => mkConst ``Gate.beq
+  toTypeExpr := mkConst ``Gate
 
 instance : ToExpr BVLogicalExpr where
   toExpr x := go x
@@ -748,12 +757,15 @@ def and (x y : SatAtBVLogical) : SatAtBVLogical where
       (← x.satAtAtoms)
       (← y.satAtAtoms)
 
+theorem false_of_eq_true_of_eq_false (h₁ : x = true) (h₂ : x = false) : False := by
+  cases h₁; cases h₂
+
 /-- Given a proof that `x.expr.unsat`, produce a proof of `False`. -/
 def proveFalse (x : SatAtBVLogical) (h : Expr) : M Expr := do
   let atomsList ← M.atomsAssignment
   let evalExpr := mkApp2 (mkConst ``BVLogicalExpr.eval) atomsList x.expr
   return mkApp3
-    (mkConst ``ReflectSat.SatAtAtoms.false_of_eq_true_of_eq_false)
+    (mkConst ``false_of_eq_true_of_eq_false)
     evalExpr
     (← x.satAtAtoms)
     (.app h atomsList)
