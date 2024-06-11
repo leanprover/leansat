@@ -34,32 +34,23 @@ is used by default is CaDiCal. CaDiCal can usually be installed from Linux packa
 built from source if necessary.
 
 ## Usage
-The package offers three different SAT tactics for proving goals involving `Bool`:
-1. `sat_decide`, this takes the goal, hands it over to a SAT solver and verifies the generated LRAT
+The package offers three different SAT tactics for proving goals involving `BitVec` and `Bool`:
+1. `bv_decide`, this takes the goal, hands it over to a SAT solver and verifies the generated LRAT
    UNSAT proof to prove the goal.
-2. `sat_check file.lrat`, it can prove the same things as `sat_decide`. However instead of
+2. `bv_check file.lrat`, it can prove the same things as `bv_decide`. However instead of
    dynamically handing the goal to a SAT solver to obtain an LRAT proof, the LRAT proof is read from
    `file.lrat`. This allows users that do not have a SAT solver installed to verify proofs.
-3. `sat_decide?` this offers a code action to turn a `sat_decide` invocation automatically into a
-   `sat_check` one.
-
-Beyond this there is a WIP tactic called `bv_decide` for solving goals involving `BitVec`. It is
-based on a verified bitblaster that lowers `BitVec` goals into `Bool` ones and then goes through
-the same process as `sat_decide`.
+3. `bv_decide?` this offers a code action to turn a `bv_decide` invocation automatically into a
+   `bv_decide` one.
 
 ## Roadmap
 There are a couple of ways in which this project can be improved.
 
-`sat_decide`:
-- Improve on the file name format used in `sat_decide?`
-- clearly define the precise shape of goals that we operate on
-
 `bv_decide`:
-- Finish the verified implementation
-- add `sat_check`/`sat_decide?` like features
+- Improve on the file name format used in `bv_decide?`
+- clearly define the precise shape of goals that we operate on
 - add support for additional `BitVec` constructs, we probably want to be approximately on a level
   with `QF_BV`.
-- clearly define the precise shape of goals that we operate on
 
 AIG:
 - Improve the CNF implementation, it is currently a purely naive one.
