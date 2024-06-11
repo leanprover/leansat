@@ -1,6 +1,6 @@
 import LeanSAT.Reflect.Tactics.BVDecide
 
-open Lean Elab Meta ReflectSat
+open Lean Elab Meta
 
 namespace BVCheck
 

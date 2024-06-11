@@ -1,6 +1,6 @@
 import Lean.Elab.Tactic.FalseOrByContra
-import LeanSAT.Reflect.Tactics.Reflect
 import LeanSAT.Reflect.Glue
+import LeanSAT.Reflect.Tactics.Attr
 
 import LeanSAT.AIG.CNF
 import LeanSAT.AIG.BoolExprCached
@@ -9,7 +9,7 @@ import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.External.Solver
 
-open Lean Elab Meta ReflectSat
+open Lean Elab Meta
 
 namespace BVDecide
 
