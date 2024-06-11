@@ -202,13 +202,16 @@ theorem xor_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2
 theorem not_congr (w : Nat) (x x' : BitVec w) (h : x = x') : ~~~x' = ~~~x := by
   simp[*]
 
-theorem shiftLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' <<< n = x <<< n := by
+theorem shiftLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
+    : x' <<< n = x <<< n := by
   simp[*]
 
-theorem shiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : x' >>> n = x >>> n := by
+theorem shiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
+    : x' >>> n = x >>> n := by
   simp[*]
 
-theorem arithShiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x') : BitVec.sshiftRight x' n = BitVec.sshiftRight x n := by
+theorem arithShiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
+    : BitVec.sshiftRight x' n = BitVec.sshiftRight x n := by
   simp[*]
 
 theorem add_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
@@ -216,11 +219,11 @@ theorem add_congr (w : Nat) (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2
   simp[*]
 
 theorem zeroExtend_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
-    BitVec.zeroExtend n x = BitVec.zeroExtend n x' := by
+    BitVec.zeroExtend n x' = BitVec.zeroExtend n x := by
   simp[*]
 
 theorem signExtend_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
-    BitVec.signExtend n x = BitVec.signExtend n x' := by
+    BitVec.signExtend n x' = BitVec.signExtend n x := by
   simp[*]
 
 theorem append_congr (lw rw : Nat) (lhs lhs' : BitVec lw) (rhs rhs' : BitVec rw) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
@@ -228,7 +231,7 @@ theorem append_congr (lw rw : Nat) (lhs lhs' : BitVec lw) (rhs rhs' : BitVec rw)
   simp[*]
 
 theorem extract_congr (hi lo : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
-    BitVec.extractLsb hi lo x = BitVec.extractLsb hi lo x' := by
+    BitVec.extractLsb hi lo x' = BitVec.extractLsb hi lo x := by
   simp[*]
 
 theorem rotateLeft_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
@@ -474,19 +477,19 @@ structure ReifiedBVPred where
 namespace ReifiedBVPred
 
 theorem beq_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
-    : (lhs == rhs) = (lhs' == rhs') := by
+    : (lhs' == rhs') = (lhs == rhs) := by
   simp[*]
 
 theorem ult_congr (lhs rhs lhs' rhs' : BitVec w) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
-    : (BitVec.ult lhs rhs) = (BitVec.ult lhs' rhs') := by
+    : (BitVec.ult lhs' rhs') = (BitVec.ult lhs rhs) := by
   simp[*]
 
 theorem getLsb_congr (i : Nat) (w : Nat) (e e' : BitVec w) (h : e' = e)
-    : (e.getLsb i) = (e'.getLsb i) := by
+    : (e'.getLsb i) = (e.getLsb i) := by
   simp[*]
 
-def mkEvalExpr (expr : Expr) : M Expr := do
-  return mkApp2 (mkConst ``BVPred.eval) (← M.atomsAssignment) expr
+theorem ofBool_congr (b : Bool) (e' : BitVec 1) (h : e' = BitVec.ofBool b) : e'.getLsb 0 = b := by
+  cases b <;> simp [h]
 
 /--
 Reify an `Expr` that is a proof of a predicate about `BitVec`.
@@ -576,7 +579,7 @@ def mkTrans (x y z : Expr) (hxy hyz : Expr) : Expr :=
 def mkEvalExpr (expr : Expr) : M Expr := do
   return mkApp2 (mkConst ``BVLogicalExpr.eval) (← M.atomsAssignment) expr
 
-theorem not_congr (x x' : Bool) (h : x = x') : (!x') = (!x) := by
+theorem not_congr (x x' : Bool) (h : x' = x) : (!x') = (!x) := by
   simp[*]
 
 theorem and_congr (lhs rhs lhs' rhs' : Bool) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
@@ -584,7 +587,7 @@ theorem and_congr (lhs rhs lhs' rhs' : Bool) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
   simp[*]
 
 theorem or_congr (lhs rhs lhs' rhs' : Bool) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
-    (lhs' || rhs') = (lhs || rhs') := by
+    (lhs' || rhs') = (lhs || rhs) := by
   simp[*]
 
 theorem xor_congr (lhs rhs lhs' rhs' : Bool) (h1 : lhs' = lhs) (h2 : rhs' = rhs) :
@@ -592,7 +595,7 @@ theorem xor_congr (lhs rhs lhs' rhs' : Bool) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
   simp[*]
 
 theorem beq_congr (lhs rhs lhs' rhs' : Bool) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
-    : (lhs == rhs) =  (lhs' == rhs') := by
+    : (lhs' == rhs') = (lhs == rhs) := by
   simp[*]
 
 partial def of (t : Expr) : M (Option ReifiedBVLogical) := do
