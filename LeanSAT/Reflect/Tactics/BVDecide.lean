@@ -517,7 +517,28 @@ def of (t : Expr) : M (Option ReifiedBVPred) := do
         subEval
         subProof
     return some ⟨bvExpr, proof, expr⟩
-  | _ => return none
+  | _ =>
+    /-
+    Idea: we have t : Bool here, let's construct:
+      BitVec.ofBool t : BitVec 1
+    as an atom. Then construct the BVPred corresponding to
+      BitVec.getLsb (BitVec.ofBool t) 0 : Bool
+    We can prove that this is equivalent to `t`. This allows us to have boolean variables in BVPred.
+    -/
+    let ty ← inferType t
+    let_expr Bool := ty | return none
+    let atom ← ReifiedBVExpr.mkAtom (mkApp (mkConst ``BitVec.ofBool) t) 1
+    let bvExpr : BVPred := .getLsb atom.bvExpr 0
+    let expr := mkApp3 (mkConst ``BVPred.getLsb) (toExpr 1) atom.expr (toExpr 0)
+    let proof := do
+      let atomEval ← ReifiedBVExpr.mkEvalExpr atom.width atom.expr
+      let atomProof ← atom.evalsAtAtoms
+      return mkApp3
+        (mkConst ``ofBool_congr)
+        t
+        atomEval
+        atomProof
+    return some ⟨bvExpr, proof, expr⟩
 where
   binaryReflection (lhsExpr rhsExpr : Expr) (pred : BVBinPred) (congrThm : Name)
       : M (Option ReifiedBVPred) := do
