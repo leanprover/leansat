@@ -3,3 +3,5 @@
 /build
 */run_success.txt
 */run_fail.txt
+*.png
+*.gv

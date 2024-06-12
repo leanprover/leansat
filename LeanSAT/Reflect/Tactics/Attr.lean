@@ -26,6 +26,11 @@ register_option sat.timeout : Nat := {
   descr := "the number of seconds that the sat solver is run before aborting"
 }
 
+register_option bv.graphviz : Bool := {
+  defValue := false
+  descr := "Output the AIG as graphviz file when using the bv_decide tactic"
+}
+
 initialize bvNormalizeExt : Meta.SimpExtension ←
   Meta.registerSimpAttr `bv_normalize "simp theorems used by bv_normalize"
 

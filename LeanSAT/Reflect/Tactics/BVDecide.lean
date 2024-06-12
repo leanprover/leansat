@@ -827,6 +827,9 @@ def lratBitblaster (cfg : TacticContext) (bv : BVLogicalExpr)
   let aigSize := entry.aig.decls.size
   trace[bv] s!"AIG has {aigSize} nodes."
 
+  if cfg.graphviz then
+    IO.FS.writeFile ("." / "aig.gv") <| AIG.toGraphviz entry
+
   let (cnf, map) ←
     withTraceNode `sat (fun _ => return "Converting AIG to CNF") do
       -- lazyPure to prevent compiler lifting
