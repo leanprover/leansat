@@ -18,6 +18,7 @@ structure TacticContext where
   solver : String
   lratPath : System.FilePath
   prevalidate : Bool
+  graphviz : Bool
   timeout : Nat
 
 def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticContext := do
@@ -26,8 +27,9 @@ def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticC
   let reflectionDef ← Lean.Elab.Term.mkAuxName `_reflection_def
   let solver := sat.solver.get (← getOptions)
   let timeout := sat.timeout.get (← getOptions)
+  let graphviz := bv.graphviz.get (← getOptions)
   let prevalidate := sat.prevalidate.get (← getOptions)
-  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate, timeout }
+  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate, graphviz, timeout }
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.

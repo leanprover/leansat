@@ -211,6 +211,40 @@ structure Entrypoint (α : Type) [BEq α] [Hashable α] where
   -/
   ref : Ref aig
 
+/--
+Transform an entrypoint into a graphviz compatible format.
+StateM collects the array indices for all occuring nodes and computes the edges on the way.
+Afterwards generate the node declarations once.
+-/
+def toGraphviz {α : Type} [BEq α] [ToString α] [Hashable α] (entry : Entrypoint α) : String :=
+  let ⟨⟨decls, _, hinv⟩, ⟨idx, h⟩⟩ := entry
+  let (dag, s) := go "" decls hinv idx h |>.run .empty
+  let nodes := s.fold (fun x y ↦ x ++ toGraphvizString decls y) ""
+  "Digraph AIG {" ++ nodes ++ dag ++ "}"
+where
+  go {α : Type} [BEq α] [ToString α] [Hashable α] (acc : String) (decls : Array (Decl α)) (hinv : IsDag α decls)
+      (idx : Nat) (hidx : idx < decls.size) : StateM (Lean.HashSet (Fin decls.size)) String := do
+    let fidx : Fin decls.size := Fin.mk idx hidx
+    if (← get).contains fidx then
+      return acc
+    modify (fun s ↦ s.insert fidx)
+    match elem : decls[idx] with
+    | Decl.const _ => return acc
+    | Decl.atom _ => return acc
+    | Decl.gate lidx ridx linv rinv =>
+      let curr := s!"{idx} -> {lidx}{invEdgeStyle linv}; {idx} -> {ridx}{invEdgeStyle rinv};"
+      let hlr := hinv idx lidx ridx linv rinv hidx elem
+      let laig ← go (acc ++ curr) decls hinv lidx (by omega)
+      go laig decls hinv ridx (by omega)
+  invEdgeStyle (isInv : Bool) : String :=
+    if isInv then " [color=red]" else " [color=blue]"
+  toGraphvizString {α : Type} [BEq α] [ToString α] [Hashable α] (decls : Array (Decl α))
+      (idx : Fin decls.size) : String :=
+    match decls[idx] with
+    | Decl.const b => s!"{idx} [label=\"{b}\", shape=box];"
+    | Decl.atom i => s!"{idx} [label=\"{i}\", shape=doublecircle];"
+    | Decl.gate _ _ _ _ => s!"{idx} [label=\"{idx} ∧\",shape=trapezium];"
+
 structure RefStream (aig : AIG α) (length : Nat) where
   refs : Array Nat
   hlen : refs.size = length
