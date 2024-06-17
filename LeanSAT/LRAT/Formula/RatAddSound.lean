@@ -422,41 +422,39 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
       ∃ i : Fin ratHints.size, f.clauses[ratHints[i].1]! = some c' := by
   simp only [toList, Array.toList_eq, f_readyForRatAdd.2.1, Array.data_toArray, List.map, List.append_nil, f_readyForRatAdd.1,
     List.mem_filterMap, id_eq, exists_eq_right] at c'_in_f
-  rw [List.mem_iff_get] at c'_in_f
-  rcases c'_in_f with ⟨i, c'_in_f⟩
-  rw [← Array.getElem_eq_data_get] at c'_in_f
+  rw [List.mem_iff_getElem] at c'_in_f
+  rcases c'_in_f with ⟨i, hi, c'_in_f⟩
   simp only [ratHintsExhaustive, getRatClauseIndices] at ratHintsExhaustive_eq_true
-  have i_in_bounds : i.val < Array.size (Array.range (Array.size f.clauses)) := by
+  have i_in_bounds : i < Array.size (Array.range (Array.size f.clauses)) := by
     rw [Array.range_size]
-    dsimp
-    omega
-  have i_lt_f_clauses_size : i.1 < f.clauses.size := by
+    simpa using hi
+  have i_lt_f_clauses_size : i < f.clauses.size := by
     rw [Array.range_size] at i_in_bounds
     exact i_in_bounds
-  have h : i.1 ∈ (ratHints.map (fun x => x.1)).data := by
+  have h : i ∈ (ratHints.map (fun x => x.1)).data := by
     rw [← of_decide_eq_true ratHintsExhaustive_eq_true]
-    have i_eq_range_i : i.1 = (Array.range f.clauses.size)[i.1]'i_in_bounds := by
+    have i_eq_range_i : i = (Array.range f.clauses.size)[i]'i_in_bounds := by
       have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
       rw [Array.range_idx]
       conv => rhs; rw [f_clauses_rw, Array.size]
-      exact i.2
+      exact hi
     rw [i_eq_range_i]
-    apply Misc.Array.mem_filter i.1 i_in_bounds
+    apply Misc.Array.mem_filter i i_in_bounds
+    rw [← Array.getElem_eq_data_getElem] at c'_in_f
     simp only [getElem!, Array.range_idx i_lt_f_clauses_size, i_lt_f_clauses_size, dite_true,
       c'_in_f, DefaultClause.contains_iff, Array.get_eq_getElem]
-    simp only [Clause.toList] at negPivot_in_c'
-    exact negPivot_in_c'
+    simpa [Clause.toList] using negPivot_in_c'
   rcases List.get_of_mem h with ⟨j, h'⟩
   have j_in_bounds : j < ratHints.size := by
     have j_property := j.2
     simp only [Array.map_data, List.length_map] at j_property
     dsimp at *
     omega
-  rw [← Array.getElem_eq_data_get] at h'
-  simp only [Array.getElem_map] at h'
-  apply Exists.intro ⟨j.1, j_in_bounds⟩
-  simp only [getElem!, Fin.getElem_fin, h', i_lt_f_clauses_size, dite_true]
-  exact c'_in_f
+  simp only [List.get_eq_getElem, Array.map_data, Array.data_length, List.getElem_map] at h'
+  rw [← Array.getElem_eq_data_getElem] at h'
+  rw [← Array.getElem_eq_data_getElem] at c'_in_f
+  exists ⟨j.1, j_in_bounds⟩
+  simp [getElem!, h', i_lt_f_clauses_size, dite_true, c'_in_f]
 
 theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : DefaultFormula n)
     (hf : f.ratUnits = #[] ∧ f.assignments.size = n) (p : Literal (PosFin n)) (ratHints : Array (Nat × Array Nat)) (i : Fin ratHints.size)

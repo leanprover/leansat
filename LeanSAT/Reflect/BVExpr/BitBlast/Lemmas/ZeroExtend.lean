@@ -94,7 +94,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w)
       split at hgo
       . next hsplit =>
         rw [heq] at hsplit
-        simp only [hsplit, ↓reduceDite]
+        simp only [hsplit, ↓reduceDIte]
         rw [← hgo]
         rw [go_getRef]
         rw [AIG.RefStream.getRef_push_ref_eq']
@@ -104,7 +104,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w)
         . omega
       . next hsplit =>
         rw [heq] at hsplit
-        simp only [hsplit, ↓reduceDite]
+        simp only [hsplit, ↓reduceDIte]
         rw [← hgo]
         rw [go_getRef]
         rw [AIG.RefStream.getRef_push_ref_eq']

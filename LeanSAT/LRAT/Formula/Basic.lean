@@ -466,30 +466,29 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
         . apply Or.inl
           simp only [Array.set!, Array.setD]
           split
-          . rcases List.get_of_mem hf with ⟨idx, hidx⟩
+          . rcases List.getElem_of_mem hf with ⟨idx, hbound, hidx⟩
             simp only [← hidx, Array.data_set]
             rw [List.mem_iff_get]
-            have idx_in_bounds : idx.1 < List.length (List.set f.clauses.data id none) := by
+            have idx_in_bounds : idx < List.length (List.set f.clauses.data id none) := by
               simp only [List.length_set]
-              exact idx.2
-            apply Exists.intro ⟨idx.1, idx_in_bounds⟩
+              exact hbound
+            apply Exists.intro ⟨idx, idx_in_bounds⟩
             by_cases id = idx
             . next id_eq_idx =>
               exfalso
-              have idx_in_bounds2 : idx.1 < f.clauses.size := by
+              have idx_in_bounds2 : idx < f.clauses.size := by
                 have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
-                exact idx.2
-              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDite,
-                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_get] at heq
+                exact hbound
+              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDIte,
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem] at heq
               rw [hidx, hl] at heq
               simp only [unit, Option.some.injEq, DefaultClause.mk.injEq, List.cons.injEq, and_true] at heq
               simp only [← heq, not] at l_ne_b
               split at l_ne_b
               . simp only at l_ne_b
               . simp only at l_ne_b
-            . next id_ne_idx =>
-              simp only [ne_eq, id_ne_idx, not_false_eq_true, List.get_set_ne]
+            . next id_ne_idx => simp [id_ne_idx]
           . exact hf
         . exact Or.inr hf
       . next l_ne_i =>
@@ -504,28 +503,27 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
         . apply Or.inl
           simp only [Array.set!, Array.setD]
           split
-          . rcases List.get_of_mem hf with ⟨idx, hidx⟩
+          . rcases List.getElem_of_mem hf with ⟨idx, hbound, hidx⟩
             simp only [← hidx, Array.data_set]
             rw [List.mem_iff_get]
-            have idx_in_bounds : idx.1 < List.length (List.set f.clauses.data id none) := by
+            have idx_in_bounds : idx < List.length (List.set f.clauses.data id none) := by
               simp only [List.length_set]
-              exact idx.2
-            apply Exists.intro ⟨idx.1, idx_in_bounds⟩
+              exact hbound
+            apply Exists.intro ⟨idx, idx_in_bounds⟩
             by_cases id = idx
             . next id_eq_idx =>
               exfalso
-              have idx_in_bounds2 : idx.1 < f.clauses.size := by
+              have idx_in_bounds2 : idx < f.clauses.size := by
                 have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
-                exact idx.2
-              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDite,
-                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_get] at heq
+                exact hbound
+              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDIte,
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem] at heq
               rw [hidx, hl] at heq
               simp only [unit, Option.some.injEq, DefaultClause.mk.injEq, List.cons.injEq, and_true] at heq
               have i_eq_l : i = l.1 := by rw [← heq]
               simp only [i_eq_l, not_true] at l_ne_i
-            . next id_ne_idx =>
-              simp only [ne_eq, id_ne_idx, not_false_eq_true, List.get_set_ne]
+            . next id_ne_idx => simp [id_ne_idx]
           . exact hf
         . exact Or.inr hf
     . simp only [Prod.exists, Bool.exists_bool, not_exists, not_or, unit] at hl
@@ -566,22 +564,22 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
         . apply Or.inl
           simp only [Array.set!, Array.setD]
           split
-          . rcases List.get_of_mem hf with ⟨idx, hidx⟩
+          . rcases List.getElem_of_mem hf with ⟨idx, hbound, hidx⟩
             simp only [← hidx, Array.data_set]
             rw [List.mem_iff_get]
-            have idx_in_bounds : idx.1 < List.length (List.set f.clauses.data id none) := by
+            have idx_in_bounds : idx < List.length (List.set f.clauses.data id none) := by
               simp only [List.length_set]
-              exact idx.2
-            apply Exists.intro ⟨idx.1, idx_in_bounds⟩
+              exact hbound
+            apply Exists.intro ⟨idx, idx_in_bounds⟩
             by_cases id = idx
             . next id_eq_idx =>
               exfalso
-              have idx_in_bounds2 : idx.1 < f.clauses.size := by
+              have idx_in_bounds2 : idx < f.clauses.size := by
                 have f_clauses_rw : f.clauses = { data := f.clauses.data } := rfl
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
-                exact idx.2
-              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDite,
-                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_get] at heq
+                exact hbound
+              simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDIte,
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem] at heq
               rw [hidx] at heq
               simp only [Option.some.injEq] at heq
               rw [← heq] at hl
@@ -591,8 +589,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
               by_cases b_val : b
               . simp only [b_val, and_false] at hl
               . simp only [b_val, false_and] at hl
-            . next id_ne_idx =>
-              simp only [ne_eq, id_ne_idx, not_false_eq_true, List.get_set_ne]
+            . next id_ne_idx => simp [id_ne_idx]
           . exact hf
         . exact Or.inr hf
 
@@ -640,12 +637,12 @@ theorem deleteOne_subset (f : DefaultFormula n) (id : Nat) (c : DefaultClause n)
       rw [Array.set!, Array.setD] at h1
       split at h1
       . simp only [Array.data_set] at h1
-        rcases List.get_of_mem h1 with ⟨i, h4⟩
-        rw [List.get_set] at h4
+        rcases List.getElem_of_mem h1 with ⟨i, h, h4⟩
+        rw [List.getElem_set] at h4
         split at h4
         . exact False.elim h4
         . rw [← h4]
-          apply List.get_mem
+          apply List.getElem_mem
       . exact h1
     . exact (Or.inr ∘ Or.inl) h1
     . exact (Or.inr ∘ Or.inr) h1

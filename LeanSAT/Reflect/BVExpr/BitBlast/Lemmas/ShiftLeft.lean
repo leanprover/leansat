@@ -121,7 +121,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
         . next hidx =>
           rw [← hgo]
           rw [go_eq_eval_getLsb]
-          . simp only [hidx, ↓reduceDite, RefStream.getRef_cast, Ref_cast']
+          . simp only [hidx, ↓reduceDIte, RefStream.getRef_cast, Ref_cast']
             rw [AIG.LawfulOperator.denote_mem_prefix (f := AIG.mkConstCached)]
           . omega
       . split

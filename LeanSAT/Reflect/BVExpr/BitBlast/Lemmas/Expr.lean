@@ -94,7 +94,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
         . rw [ih]
         . rw [BitVec.msb_eq_getLsb_last]
           rw [ih]
-          simp [hlt]
+      . dsimp; omega
   | extract hi lo inner ih =>
     simp only [go, blastExtract_eq_eval_getLsb, Bool.if_false_right, eval_extract,
       BitVec.getLsb_extract]
