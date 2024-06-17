@@ -202,7 +202,8 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
   . exfalso -- Derive contradiction from pc, pf, and fc_unsat
     simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists, not_or,
       not_and, Bool.not_eq_true] at pc
-    simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Misc.not_forall, exists_prop] at fc_unsat
+    simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
+      not_imp] at fc_unsat
     rcases fc_unsat with ⟨unsat_c, unsat_c_in_fc, p_unsat_c⟩
     have unsat_c_in_fc := mem_of_insertRatUnits f (negate c) unsat_c unsat_c_in_fc
     simp only [Array.toList_eq, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at unsat_c_in_fc
@@ -426,10 +427,10 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   rcases c'_in_f with ⟨i, hi, c'_in_f⟩
   simp only [ratHintsExhaustive, getRatClauseIndices] at ratHintsExhaustive_eq_true
   have i_in_bounds : i < Array.size (Array.range (Array.size f.clauses)) := by
-    rw [Array.range_size]
+    rw [Array.size_range]
     simpa using hi
   have i_lt_f_clauses_size : i < f.clauses.size := by
-    rw [Array.range_size] at i_in_bounds
+    rw [Array.size_range] at i_in_bounds
     exact i_in_bounds
   have h : i ∈ (ratHints.map (fun x => x.1)).data := by
     rw [← of_decide_eq_true ratHintsExhaustive_eq_true]
@@ -508,7 +509,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
   constructor
   . intro h p pfc
     specialize h p
-    simp only [(· ⊨ ·), List.all_eq_true, decide_eq_true_eq, not_forall,
+    simp only [(· ⊨ ·), List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
       exists_prop] at h pfc
     rcases h with ⟨c', c'_in_f, pc'⟩
     have c'_in_fc : c' ∈ toList (insert f c) := by rw [insert_iff]; exact Or.inr c'_in_f
@@ -517,7 +518,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
     by_cases pc : p ⊨ c
     . specialize fc_unsat p
       simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool,
-        Bool.decide_coe, List.all_eq_true, not_forall, not_exists, exists_prop] at fc_unsat
+        Bool.decide_coe, List.all_eq_true, Classical.not_forall, not_exists, exists_prop] at fc_unsat
       rcases fc_unsat with ⟨c', c'_in_fc, pc'⟩
       rw [insert_iff] at c'_in_fc
       rcases c'_in_fc with c'_eq_c | c'_in_f
@@ -528,13 +529,13 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
         exact pc' $ pf c' c'_in_f
     . rw [← Clause.limplies_iff_mem] at pivot_in_c
       let p' : (PosFin n) → Bool := fun a => if a = pivot.1 then pivot.2 else p a
-      have p'_rw : p' = (fun a => if a = pivot.1 then pivot.2 else p a) := rfl
       have p'_entails_c : p' ⊨ c := by
         specialize pivot_in_c p'
         simp only [(· ⊨ ·), ite_eq_left_iff, not_true, false_implies, forall_const, p'] at pivot_in_c
         exact pivot_in_c
       specialize fc_unsat p'
-      simp only [← p'_rw, formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Misc.not_forall, exists_prop] at fc_unsat
+      simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
+        not_imp] at fc_unsat
       rcases fc_unsat with ⟨c', c'_in_fc, p'_not_entails_c'⟩
       simp only [insert_iff, Array.toList_eq, Array.data_toArray, List.mem_singleton] at c'_in_fc
       rcases c'_in_fc with c'_eq_c | c'_in_f
