@@ -196,7 +196,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
       split at hgo
       . next hlt =>
         rw [heq] at hlt
-        simp only [hlt, ↓reduceDite]
+        simp only [hlt, ↓reduceDIte]
         dsimp at hgo
         rw [← hgo]
         rw [go_getRef]
@@ -205,7 +205,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
         . omega
       . next hlt =>
         rw [heq] at hlt
-        simp only [hlt, ↓reduceDite]
+        simp only [hlt, ↓reduceDIte]
         dsimp at hgo
         rw [← hgo]
         rw [go_getRef]

@@ -46,7 +46,7 @@ theorem go_getRef (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w
   intro idx hidx1 hcurr
   unfold go
   have : curr < newWidth := by omega
-  simp only [this, ↓reduceDite]
+  simp only [this, ↓reduceDIte]
   cases Nat.eq_or_lt_of_le hcurr with
   | inl heq =>
     simp only [heq]
@@ -88,7 +88,7 @@ theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
   unfold blastSignExtend at hg
   dsimp at hg
   have : ¬ (target.w = 0) := by omega
-  simp only [this, ↓reduceDite] at hg
+  simp only [this, ↓reduceDIte] at hg
   rw [← hg]
   dsimp
   rw [blastSignExtend.go_getRef]

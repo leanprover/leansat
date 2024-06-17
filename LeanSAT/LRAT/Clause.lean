@@ -264,14 +264,15 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
   next i l =>
   by_cases i_in_bounds : i < c.clause.length
   . specialize h ⟨i, i_in_bounds⟩
-    simp only at h
     have i_in_bounds' : i < arr.data.length := by
       dsimp; omega
-    rw [List.get?_eq_get i_in_bounds, List.get?_eq_get i_in_bounds']
-    simp only [h, Nat.zero_add, Array.getElem_eq_data_get, Option.mem_def, Option.some.injEq]
+    rw [List.getElem?_eq_getElem i_in_bounds, List.getElem?_eq_getElem i_in_bounds']
+    simp only [List.get_eq_getElem, Nat.zero_add] at h
+    rw [← Array.getElem_eq_data_getElem]
+    simp [h]
   . have arr_data_length_le_i : arr.data.length ≤ i := by
       dsimp; omega
-    simp only [Nat.not_lt, ← List.get?_eq_none] at i_in_bounds arr_data_length_le_i
+    simp only [Nat.not_lt, ← List.getElem?_eq_none] at i_in_bounds arr_data_length_le_i
     rw [i_in_bounds, arr_data_length_le_i]
 
 def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultClause n :=

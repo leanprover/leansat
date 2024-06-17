@@ -661,7 +661,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           have l_in_bounds : l.1 < acc.1.size := by rw [hsize]; exact l.2.2
           by_cases l.1 = i.1
           . next l_eq_i =>
-            simp only [getElem!, Array.modify_preserves_size, i_in_bounds, ↓ reduceDite,
+            simp only [getElem!, Array.modify_preserves_size, i_in_bounds, ↓ reduceDIte,
               Array.get_eq_getElem, l_eq_i, Array.get_modify_at_idx i_in_bounds (addAssignment b)]
             simp only [getElem!, i_in_bounds, dite_true, Array.get_eq_getElem] at pacc
             by_cases pi : p i
