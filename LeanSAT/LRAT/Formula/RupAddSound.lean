@@ -646,7 +646,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
         simp only [confirmRupHint_fold_entails_hsat_motive]
         split
         . simp only [h1, hsize, false_implies, and_self]
-        . simp only [Array.modify_preserves_size, hsize, false_implies, and_true, true_and]
+        . simp only [Array.size_modify, hsize, false_implies, and_true, true_and]
           intro p pf
           have pacc := h1 p pf
           have pc : p ⊨ c := by
@@ -661,7 +661,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           have l_in_bounds : l.1 < acc.1.size := by rw [hsize]; exact l.2.2
           by_cases l.1 = i.1
           . next l_eq_i =>
-            simp only [getElem!, Array.modify_preserves_size, i_in_bounds, ↓ reduceDIte,
+            simp only [getElem!, Array.size_modify, i_in_bounds, ↓ reduceDIte,
               Array.get_eq_getElem, l_eq_i, Array.get_modify_at_idx i_in_bounds (addAssignment b)]
             simp only [getElem!, i_in_bounds, dite_true, Array.get_eq_getElem] at pacc
             by_cases pi : p i
@@ -685,7 +685,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
                 simp only [hasAssignment, ite_true] at pacc
                 exact pacc
           . next l_ne_i =>
-            simp only [getElem!, Array.modify_preserves_size, i_in_bounds,
+            simp only [getElem!, Array.size_modify, i_in_bounds,
               Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i, dite_true,
               Array.get_eq_getElem]
             simp only [getElem!, i_in_bounds, dite_true] at pacc
@@ -722,7 +722,8 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
   . exfalso -- Derive contradiction from pc, pf, and fc_unsat
     simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists, not_or,
       not_and, Bool.not_eq_true] at pc
-    simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Misc.not_forall, exists_prop] at fc_unsat
+    simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
+      not_imp] at fc_unsat
     rcases fc_unsat with ⟨unsat_c, unsat_c_in_fc, p_unsat_c⟩
     have unsat_c_in_fc := mem_of_insertRupUnits f (negate c) unsat_c unsat_c_in_fc
     simp only [Array.toList_eq, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at unsat_c_in_fc

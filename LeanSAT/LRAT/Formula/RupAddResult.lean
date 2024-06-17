@@ -454,7 +454,8 @@ theorem insertRupUnits_nodup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd 
           simp only [not_true] at h5
 
 theorem clearUnit_preserves_size (assignments : Array Assignment) (l : Literal (PosFin n)) :
-  (clearUnit assignments l).size = assignments.size := Array.modify_preserves_size
+  (clearUnit assignments l).size = assignments.size := by
+    simp [clearUnit]
 
 theorem clearUnit_foldl_preserves_size {α : Type u} (assignments : Array Assignment) (f : Array Assignment → α → Array Assignment)
   (f_preserves_size : ∀ arr : Array Assignment, ∀ a : α, (f arr a).size = arr.size) (l : List α) :
@@ -726,7 +727,7 @@ theorem confirmRupHint_preserves_assignments_size {n : Nat} (clauses : Array (Op
   simp only [confirmRupHint]
   repeat first
     | rfl
-    | simp only [Array.modify_preserves_size]
+    | simp only [Array.size_modify]
     | split
 
 theorem performRupCheck_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat) :
@@ -764,7 +765,7 @@ def derivedLits_invariant {n : Nat} (f : DefaultFormula n) (fassignments_size : 
 theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
     (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) (hsize : acc.1.size = n) (l : Literal (PosFin n))
     (ih : derivedLits_invariant f f_assignments_size acc.1 hsize acc.2.1) (h : ¬hasAssignment l.snd acc.fst[l.fst.val]! = true) :
-  have hsize' : (Array.modify acc.1 l.1.1 (addAssignment l.snd)).size = n := by rw [Array.modify_preserves_size]; exact hsize
+  have hsize' : (Array.modify acc.1 l.1.1 (addAssignment l.snd)).size = n := by rw [Array.size_modify]; exact hsize
   derivedLits_invariant f f_assignments_size (Array.modify acc.fst l.1.1 (addAssignment l.snd)) hsize' (l :: acc.2.fst) := by
   intro _ i
   have i_in_bounds : i.1 < acc.1.size := by rw [hsize]; exact i.2

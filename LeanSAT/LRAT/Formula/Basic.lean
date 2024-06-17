@@ -82,7 +82,7 @@ theorem ofArray_fold_fn_preserves_assignments_size {n : Nat} (assignments : Arra
   rw [ofArray_fold_fn]
   split
   . rfl
-  . split <;> simp [Array.modify_preserves_size]
+  . split <;> simp [Array.size_modify]
 
 theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))) : readyForRupAdd (ofArray arr) := by
   constructor
@@ -237,7 +237,7 @@ theorem limplies_of_insert {n : Nat} (f : DefaultFormula n) (c : DefaultClause n
 theorem insert_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
   (insert f c).assignments.size = f.assignments.size := by
   simp only [insert]
-  split <;> simp only [Array.modify_preserves_size]
+  split <;> simp only [Array.size_modify]
 
 theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
   readyForRupAdd f → readyForRupAdd (insert f c) := by
@@ -256,7 +256,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
     . exact Or.inr hf
   . next l hc =>
     have hsize : (Array.modify f.assignments l.1 addPosAssignment).size = n := by
-      rw [Array.modify_preserves_size, f_readyForRupAdd.2.1]
+      rw [Array.size_modify, f_readyForRupAdd.2.1]
     refine ⟨f_readyForRupAdd.1, hsize, ?_⟩
     intro i b hb
     have hf := f_readyForRupAdd.2.2 i b
@@ -297,7 +297,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
       . exact Or.inr hf
   . next l hc =>
     have hsize : (Array.modify f.assignments l.1 addNegAssignment).size = n := by
-      rw [Array.modify_preserves_size, f_readyForRupAdd.2.1]
+      rw [Array.size_modify, f_readyForRupAdd.2.1]
     refine ⟨f_readyForRupAdd.1, hsize, ?_⟩
     intro i b hb
     have hf := f_readyForRupAdd.2.2 i b
@@ -422,7 +422,7 @@ theorem deleteOne_preserves_rupUnits {n : Nat} (f : DefaultFormula n) (id : Nat)
 theorem deleteOne_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (id : Nat) :
   (deleteOne f id).assignments.size = f.assignments.size := by
   simp only [deleteOne]
-  split <;> simp only [Array.modify_preserves_size]
+  split <;> simp only [Array.size_modify]
 
 theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultFormula n) (id : Nat) :
   strong_assignments_invariant f → strong_assignments_invariant (deleteOne f id) := by
