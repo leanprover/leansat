@@ -7,12 +7,28 @@ namespace LRAT
 
 namespace trim
 
+/--
+The context used for trimming LRAT proofs.
+-/
 structure Context where
+  /--
+  The proof as a map from proof step ids to their actions.
+  -/
   proof : HashMap Nat IntAction
+  /--
+  The id of the empty proof step.
+  -/
   addEmptyId : Nat
 
 structure State where
+  /--
+  The set of used proof step ids.
+  -/
   used : RBMap Nat Unit compare := {}
+  /--
+  A mapping from old proof step ids to new ones. Used such that the proof remains a sequence without
+  gaps.
+  -/
   mapped : HashMap Nat Nat := {}
 
 abbrev M : Type → Type := ReaderT Context <| StateRefT State IO
@@ -50,6 +66,8 @@ def isUsed (id : Nat) : M Bool := do
 
 @[inline]
 def markUsed (id : Nat) : M Unit := do
+  -- If we are referring to a proof step that is not part of the proof, it is part of the CNF.
+  -- We do not trim the CNF so just forget about the fact that this step was used.
   if (← getProofStep id).isSome then
     modify (fun s => { s with used := s.used.insert id () })
 
@@ -90,6 +108,10 @@ where
 
 end M
 
+/--
+Perform a use-def analysis of LRAT proof steps, starting at the empty clause and working its way
+up with DFS.
+-/
 partial def useAnalysis : M Unit := do
   let emptyId ← M.getEmptyId
   go [emptyId]
@@ -121,6 +143,10 @@ where
           | .del .. => go workList
         | none => go workList
 
+/--
+Map the set of used proof steps to a new LRAT proof that has no holes in the sequence of proof
+identifiers.
+-/
 def mapping : M (Array IntAction) := do
   let used ← M.getUsedSet
   let (min, _) := used.min!
@@ -140,6 +166,9 @@ def go : M (Array IntAction) := do
 
 end trim
 
+/--
+Trim an LRAT proof stored in one file and output it to the other.
+-/
 def trim (input : System.FilePath) (output : System.FilePath) : IO Unit := do
   let proof ← loadLRATProof input
   let trimmed ← trim.go.run proof
