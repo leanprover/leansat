@@ -31,6 +31,11 @@ register_option bv.graphviz : Bool := {
   descr := "Output the AIG as graphviz file when using the bv_decide tactic"
 }
 
+register_option bv.trimProofs : Bool := {
+  defValue := true
+  descr := "Whether to run the trimming algorithm on LRAT proofs"
+}
+
 initialize bvNormalizeExt : Meta.SimpExtension ←
   Meta.registerSimpAttr `bv_normalize "simp theorems used by bv_normalize"
 
