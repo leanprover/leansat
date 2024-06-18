@@ -1,5 +1,6 @@
 import LeanSAT.Reflect.Tactics.BVDecide
 import LeanSAT.Reflect.Tactics.BVCheck
+import LeanSAT.LRAT.Trim
 import Lean.Meta.Tactic.TryThis
 
 open Lean Elab Meta Tactic
@@ -37,6 +38,9 @@ def evalBvTrace : Tactic := fun stx =>
       let normalizeStx ← `(tactic| bv_normalize)
       TryThis.addSuggestion tk normalizeStx (origSpan? := ← getRef)
     | some .. =>
+      -- TODO: add an option?
+      let lratPath := (← BVCheck.getSrcDir) / lratFile
+      LRAT.trim lratPath lratPath
       let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)
   | _ => throwUnsupportedSyntax

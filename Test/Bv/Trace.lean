@@ -13,7 +13,7 @@ theorem trace_unit_2 (x : BitVec 64) : x = x := by
   bv_decide?
 
 theorem trace_unit_1' (x y : BitVec 64) : x + y = y + x := by
-  bv_check "trace.lrat"
+  bv_check "Trace.lean-trace_unit_1-8-2.lrat"
 
 theorem trace_unit_2' (x : BitVec 64) : x = x := by
   bv_normalize
