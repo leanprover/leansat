@@ -38,9 +38,9 @@ def evalBvTrace : Tactic := fun stx =>
       let normalizeStx ← `(tactic| bv_normalize)
       TryThis.addSuggestion tk normalizeStx (origSpan? := ← getRef)
     | some .. =>
-      -- TODO: add an option?
-      let lratPath := (← BVCheck.getSrcDir) / lratFile
-      LRAT.trim lratPath lratPath
+      if bv.trimProofs.get (← getOptions) then
+        let lratPath := (← BVCheck.getSrcDir) / lratFile
+        LRAT.trim lratPath lratPath
       let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)
   | _ => throwUnsupportedSyntax
