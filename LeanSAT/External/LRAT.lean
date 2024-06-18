@@ -117,27 +117,61 @@ where
 
 end Parser
 
-open Lean Elab Command in
-/-- `loadLRATProof` takes in the path of an LRAT proof and attempts to output an Array of IntActions
-    that correspond to the parsed LRAT proof.
+/--
+A quicker version of `IO.FS.readFile` for big files. Note that this assumes the file contains valid
+UTF-8. As we only use this to parse trusted input from a SAT solver this is fine.
+-/
+def readFileQuick (path : System.FilePath) : IO ByteArray := do
+  let mdata ← path.metadata
+  let handle ← IO.FS.Handle.mk path .read
+  handle.read mdata.byteSize.toUSize
 
-    `loadLRATProof` is written as a `CommandElabM` monad so that it can be used in commands such as `loadLRAT` at
-    the end of this file. -/
-def loadLRATProof (path : System.FilePath) : CommandElabM (Array IntAction) := do
-  let proof ← IO.FS.readBinFile path
+def loadLRATProof (path : System.FilePath) : IO (Array IntAction) := do
+  let proof ← readFileQuick path
   match Parser.parseLines.run <| .fresh proof with
   | .ok actions => return actions
-  | .error err => throwError err
+  | .error err => throw <| .userError err
 
-def parseLRATProof (proof : ByteArray) : Option (Array IntAction) := Id.run do
+def parseLRATProof (proof : ByteArray) : Option (Array IntAction) := 
   match Parser.parseLines.run <| .fresh proof with
-  | .ok actions => return some actions
-  | .error .. => return none
+  | .ok actions => some actions
+  | .error .. => none
 
-/-- `readLRATProof` takes in the path of an LRAT proof and attempts to output an Array of IntActions
-    that correspond to the parsed LRAT proof. -/
-def readLRATProof (path : System.FilePath) : IO (Option (Array IntAction)) := do
-  let proof ← IO.FS.readBinFile path
-  match Parser.parseLines.run <| .fresh proof with
-  | .ok actions => return some actions
-  | .error .. => return none
+def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) : IO Unit := do
+  let out := proof.foldl (init := "") (fun acc a => acc ++ serialize a ++ "\n")
+  IO.FS.writeFile path out
+where
+  serialize (a : IntAction) : String :=
+    match a with
+    | .addEmpty id hints =>
+      s!"{id} 0 " |> serializeIdList hints |> (· ++ "0")
+    | .addRup id c hints =>
+      s!"{id} " |> serializeClause c |> (· ++ "0 ") |> serializeIdList hints |> (· ++ "0")
+    | .addRat id c _ rupHints ratHints =>
+      s!"{id} "
+      |> serializeClause c
+      |> (· ++ "0 ")
+      |> serializeIdList rupHints
+      |> (· ++ "0 ")
+      |> serializeRatHints ratHints
+      |> (· ++ "0")
+    | .del ids =>
+      -- TODO: 1 is not an actual id
+      let start := "1 d "
+      let middle := serializeIdList ids start
+      middle ++ "0"
+
+  serializeIdList (ids : Array Nat) (init : String := "") : String :=
+    ids.foldl (init := init) (fun acc id => acc ++ s!"{id} ")
+
+  serializeClause (clause : Array Int) (init : String := "") : String :=
+    clause.foldl (init := init) (fun acc id => acc ++ s!"{id} ")
+
+  serializeRatHint (hint : Nat × Array Nat) (init : String := "") : String :=
+    init ++ s!"-{hint.fst} " |> serializeIdList hint.snd
+
+  serializeRatHints (hints : Array (Nat × Array Nat)) (init : String := "") : String :=
+    hints.foldl (init := init) (fun acc hint => serializeRatHint hint acc)
+    
+
+end LRAT

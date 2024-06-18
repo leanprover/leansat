@@ -71,17 +71,8 @@ def mkTemp : IO System.FilePath := do
   let out ← IO.Process.output { cmd := "mktemp" }
   return out.stdout.trim
 
-/--
-A quicker version of `IO.FS.readFile` for big files. Note that this assumes the file contains valid
-UTF-8. As we only use this to parse trusted input from a SAT solver this is fine.
--/
-def readFileQuick (path : System.FilePath) : IO ByteArray := do
-  let mdata ← path.metadata
-  let handle ← IO.FS.Handle.mk path .read
-  handle.read mdata.byteSize.toUSize
-
 def LratCert.ofFile (lratPath : System.FilePath) (prevalidate : Bool) : IO LratCert := do
-  let proof ← readFileQuick lratPath
+  let proof ← LRAT.readFileQuick lratPath
   -- This is just a sanity check to verify that the proof does indeed parse.
   -- The parsing relevant for the reflection proof happens in the reflection term.
   -- As parsing can be expensive this is configured through a default-disabled option.
