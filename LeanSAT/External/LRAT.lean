@@ -132,46 +132,37 @@ def loadLRATProof (path : System.FilePath) : IO (Array IntAction) := do
   | .ok actions => return actions
   | .error err => throw <| .userError err
 
-def parseLRATProof (proof : ByteArray) : Option (Array IntAction) := 
+def parseLRATProof (proof : ByteArray) : Option (Array IntAction) :=
   match Parser.parseLines.run <| .fresh proof with
   | .ok actions => some actions
   | .error .. => none
 
 def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) : IO Unit := do
-  let out := proof.foldl (init := "") (fun acc a => acc ++ serialize a ++ "\n")
+  let out := proof.foldl (init := "") (· ++ serialize · ++ "\n")
   IO.FS.writeFile path out
 where
   serialize (a : IntAction) : String :=
     match a with
     | .addEmpty id hints =>
-      s!"{id} 0 " |> serializeIdList hints |> (· ++ "0")
+      s!"{id} 0 {serializeIdList hints}0"
     | .addRup id c hints =>
-      s!"{id} " |> serializeClause c |> (· ++ "0 ") |> serializeIdList hints |> (· ++ "0")
+      s!"{id} {serializeClause c}0 {serializeIdList hints}0"
     | .addRat id c _ rupHints ratHints =>
-      s!"{id} "
-      |> serializeClause c
-      |> (· ++ "0 ")
-      |> serializeIdList rupHints
-      |> (· ++ "0 ")
-      |> serializeRatHints ratHints
-      |> (· ++ "0")
+      s!"{id} {serializeClause c}0 {serializeIdList rupHints}0 {serializeRatHints ratHints}0"
     | .del ids =>
       -- TODO: 1 is not an actual id
-      let start := "1 d "
-      let middle := serializeIdList ids start
-      middle ++ "0"
+      s!"1 d{serializeIdList ids}0"
 
-  serializeIdList (ids : Array Nat) (init : String := "") : String :=
-    ids.foldl (init := init) (fun acc id => acc ++ s!"{id} ")
+  serializeIdList (ids : Array Nat) : String :=
+    ids.foldl (init := "") (· ++ s!"{·} ")
 
-  serializeClause (clause : Array Int) (init : String := "") : String :=
-    clause.foldl (init := init) (fun acc id => acc ++ s!"{id} ")
+  serializeClause (clause : Array Int) : String :=
+    clause.foldl (init := "") (· ++ s!"{·} ")
 
-  serializeRatHint (hint : Nat × Array Nat) (init : String := "") : String :=
-    init ++ s!"-{hint.fst} " |> serializeIdList hint.snd
+  serializeRatHint (hint : Nat × Array Nat) : String :=
+    s!"-{hint.fst} {serializeIdList hint.snd}"
 
-  serializeRatHints (hints : Array (Nat × Array Nat)) (init : String := "") : String :=
-    hints.foldl (init := init) (fun acc hint => serializeRatHint hint acc)
-    
+  serializeRatHints (hints : Array (Nat × Array Nat)) : String :=
+    hints.foldl (init := "") (· ++ serializeRatHint ·)
 
 end LRAT
