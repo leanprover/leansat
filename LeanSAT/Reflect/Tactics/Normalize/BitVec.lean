@@ -27,6 +27,14 @@ attribute [bv_normalize] BitVec.msb_eq_getLsb_last
 attribute [bv_normalize] BitVec.slt_eq_ult
 attribute [bv_normalize] BitVec.sle_eq_not_slt
 
+@[bv_normalize]
+theorem BitVec.OfNat_reduce (n : Nat) : OfNat.ofNat n = BitVec.ofNat w n := by
+  rfl
+
+@[bv_normalize]
+theorem BitVec.ofNatLt_reduce (n : Nat) (h) : BitVec.ofNatLt n h = BitVec.ofNat w n := by
+  simp [BitVec.ofNatLt, BitVec.ofNat, Fin.ofNat', Nat.mod_eq_of_lt h]
+
 end Reduce
 
 section Constant
