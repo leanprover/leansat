@@ -98,7 +98,6 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
           . have h1 : (insertRatUnits f units).fst.ratUnits[j] = (i, true) := by
               rw [hb'] at h1
               simp only [h1, Prod.mk.injEq, and_true]
-              apply Subtype.ext
               rfl
             rw [← h1]
             apply Array.getElem_mem_data
@@ -110,7 +109,6 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
           . have h1 : (insertRatUnits f units).fst.ratUnits[j] = (i, false) := by
               rw [hb'] at h1
               simp only [h1, Prod.mk.injEq, and_true]
-              apply Subtype.ext
               rfl
             rw [← h1]
             apply Array.getElem_mem_data
@@ -143,7 +141,6 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       . have h1 : (insertRatUnits f units).fst.ratUnits[j1] = (i, true) := by
           rw [h1]
           simp only [Prod.mk.injEq, and_true]
-          apply Subtype.ext
           rfl
         rw [← h1]
         apply Array.getElem_mem_data
@@ -160,7 +157,6 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       . have h2 : (insertRatUnits f units).fst.ratUnits[j2] = (i, false) := by
           rw [h2]
           simp only [Prod.mk.injEq, and_true]
-          apply Subtype.ext
           rfl
         rw [← h2]
         apply Array.getElem_mem_data

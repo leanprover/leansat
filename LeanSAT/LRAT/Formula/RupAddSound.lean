@@ -37,7 +37,7 @@ theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assig
         simp only [l_eq_i, Array.get_modify_at_idx i_in_bounds, h]
         exact add_of_both_eq_both l.2
       . next l_ne_i =>
-        rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i]
+        rw [Array.get_modify_unchanged i_in_bounds _ l_ne_i]
         exact h
     . apply Exists.intro l.1
       simp only [insertUnit, hl, ite_false, Array.get_modify_at_idx l_in_bounds]
@@ -265,7 +265,6 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
               rw [hb'] at h1
               rw [h1]
               simp only [Prod.mk.injEq, and_true]
-              apply Subtype.ext
               rfl
             rw [← h1]
             apply Array.getElem_mem_data
@@ -278,7 +277,6 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
               rw [hb'] at h1
               rw [h1]
               simp only [Prod.mk.injEq, and_true]
-              apply Subtype.ext
               rfl
             rw [← h1]
             apply Array.getElem_mem_data
@@ -313,7 +311,6 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       . have h1 : (insertRupUnits f units).fst.rupUnits[j1] = (i, true) := by
           rw [h1]
           simp only [Prod.mk.injEq, and_true]
-          apply Subtype.ext
           rfl
         rw [← h1]
         apply Array.getElem_mem_data
@@ -330,7 +327,6 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       . have h2 : (insertRupUnits f units).fst.rupUnits[j2] = (i, false) := by
           rw [h2]
           simp only [Prod.mk.injEq, and_true]
-          apply Subtype.ext
           rfl
         rw [← h2]
         apply Array.getElem_mem_data
@@ -686,7 +682,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
                 exact pacc
           . next l_ne_i =>
             simp only [getElem!, Array.size_modify, i_in_bounds,
-              Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i, dite_true,
+              Array.get_modify_unchanged i_in_bounds _ l_ne_i, dite_true,
               Array.get_eq_getElem]
             simp only [getElem!, i_in_bounds, dite_true] at pacc
             exact pacc
