@@ -212,6 +212,10 @@ Concatenate two bit vectors
 sign extend a `BitVec` by some constant amount.
 -/
 | signExtend (v : Nat) (expr : BVExpr w) : BVExpr v
+/--
+shift left by another BitVec expression. For constant shifts there exists a `BVUnop`.
+-/
+| shiftLeft (lhs : BVExpr m) (rhs : BVExpr n) : BVExpr m
 
 namespace BVExpr
 
@@ -224,6 +228,7 @@ def toString : BVExpr w → String
   | .un op operand => s!"({op.toString} {toString operand})"
   | .append lhs rhs => s!"({toString lhs} ++ {toString rhs})"
   | .signExtend v expr => s!"(sext {v} {expr.toString})"
+  | .shiftLeft lhs rhs => s!"({lhs.toString} << {rhs.toString})"
 
 
 instance : ToString (BVExpr w) := ⟨toString⟩
@@ -260,6 +265,7 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
   | .un op operand => op.eval (eval assign operand)
   | .append lhs rhs => (eval assign lhs) ++ (eval assign rhs)
   | .signExtend v expr => BitVec.signExtend v (eval assign expr)
+  | .shiftLeft lhs rhs => (eval assign lhs) <<< (eval assign rhs)
 
 @[simp]
 theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.truncate _ := by
@@ -290,6 +296,10 @@ theorem eval_append : eval assign (.append lhs rhs) = (lhs.eval assign) ++ (rhs.
 
 @[simp]
 theorem eval_signExtend : eval assign (.signExtend v expr) = BitVec.signExtend v (eval assign expr) := by
+  rfl
+
+@[simp]
+theorem eval_shiftLeft : eval assign (.shiftLeft lhs rhs) = (eval assign lhs) <<< (eval assign rhs) := by
   rfl
 
 end BVExpr
