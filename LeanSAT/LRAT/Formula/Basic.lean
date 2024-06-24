@@ -344,7 +344,7 @@ theorem insert_readyForRatAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
 
 theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : List (Literal (PosFin n)))
   (c : DefaultClause n) : c ∈ toList (insertRupUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
-  simp only [toList, insertRupUnits, Prod.mk.eta, Array.toList_eq, List.append_assoc, List.mem_append,
+  simp only [toList, insertRupUnits, Array.toList_eq, List.append_assoc, List.mem_append,
     List.mem_filterMap, id_eq, exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]
   intro h
   have hb : ∀ l : Literal (PosFin n), l ∈ (f.rupUnits, f.assignments, false).1.data → (l ∈ f.rupUnits.data ∨ l ∈ units) := by
@@ -356,7 +356,7 @@ theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : List (Li
     ∀ l : Literal (PosFin n), l ∈ (insertUnit acc unit).1.data → (l ∈ f.rupUnits.data ∨ l ∈ units) := by
     intro l hl
     rw [insertUnit] at hl
-    simp only [Prod.mk.eta] at hl
+    dsimp at hl
     split at hl
     . exact ih l hl
     . simp only [Array.push_data, List.mem_append, List.mem_singleton] at hl
@@ -381,7 +381,7 @@ theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : List (Li
 
 theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : List (Literal (PosFin n)))
   (c : DefaultClause n) : c ∈ toList (insertRatUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
-  simp only [toList, insertRatUnits, Prod.mk.eta, Array.toList_eq, List.append_assoc, List.mem_append,
+  simp only [toList, insertRatUnits, Array.toList_eq, List.append_assoc, List.mem_append,
     List.mem_filterMap, id_eq, exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]
   intro h
   have hb : ∀ l : Literal (PosFin n), l ∈ (f.ratUnits, f.assignments, false).1.data → (l ∈ f.ratUnits.data ∨ l ∈ units) :=
@@ -392,7 +392,7 @@ theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : List (Li
     ∀ l : Literal (PosFin n), l ∈ (insertUnit acc unit).1.data → (l ∈ f.ratUnits.data ∨ l ∈ units) := by
     intro l hl
     rw [insertUnit] at hl
-    simp only [Prod.mk.eta] at hl
+    dsimp at hl
     split at hl
     . exact ih l hl
     . simp only [Array.push_data, List.mem_append, List.mem_singleton] at hl
@@ -536,9 +536,9 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
         specialize hl l.1
         simp only [DefaultClause.mk.injEq, List.cons.injEq, and_true] at hl
         by_cases hl2 : l.2
-        . simp only [← hl2, Prod.mk.eta, not_true, and_false] at hl
+        . simp only [← hl2, not_true, and_false] at hl
         . simp only [Bool.not_eq_true] at hl2
-          simp only [← hl2, Prod.mk.eta, not_true, false_and] at hl
+          simp only [← hl2, not_true, false_and] at hl
       . have deleteOne_f_rw : deleteOne f id = ⟨Array.set! f.clauses id none, f.rupUnits, f.ratUnits, f.assignments⟩ := by
           simp only [deleteOne]
           split
@@ -550,9 +550,9 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
             specialize hl l.1
             simp only [DefaultClause.mk.injEq, List.cons.injEq, and_true] at hl
             by_cases hl2 : l.2
-            . simp only [← hl2, Prod.mk.eta, not_true, and_false] at hl
+            . simp only [← hl2, not_true, and_false] at hl
             . simp only [Bool.not_eq_true] at hl2
-              simp only [← hl2, Prod.mk.eta, not_true, false_and] at hl
+              simp only [← hl2, not_true, false_and] at hl
           . rfl
         simp only [deleteOne_f_rw] at hb
         specialize hf i b hb

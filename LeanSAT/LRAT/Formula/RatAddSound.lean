@@ -341,7 +341,7 @@ theorem performRupCheck_of_insertRat_entails_safe_insert {n : Nat} (f : DefaultF
     (c : DefaultClause n) (rupHints : Array Nat) :
     (performRupCheck (insertRatUnits f (negate c)).1 rupHints).2.2.1 = true → limplies (PosFin n) f (f.insert c) := by
   intro performRupCheck_success p pf
-  simp only [performRupCheck, Prod.mk.eta] at performRupCheck_success
+  simp only [performRupCheck] at performRupCheck_success
   simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
   intro c' c'_in_fc
   rw [insert_iff] at c'_in_fc
@@ -353,7 +353,7 @@ theorem performRupCheck_of_insertRat_entails_safe_insert {n : Nat} (f : DefaultF
 
 theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFormula n)
     (f_assignments_invariant : assignments_invariant f) (rupHints : Array Nat) : assignments_invariant (performRupCheck f rupHints).1 := by
-  simp only [performRupCheck, Prod.mk.eta]
+  simp only [performRupCheck]
   let motive := confirmRupHint_fold_entails_hsat_motive f
   have h_base : motive 0 (f.assignments, [], false, false) := by
     simp only [confirmRupHint_fold_entails_hsat_motive, f_assignments_invariant.1, false_implies, and_true, true_and,
@@ -375,7 +375,8 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
     have in_bounds_inductive (idx : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool)
       (ih : in_bounds_motive idx.1 acc) : in_bounds_motive (idx.1 + 1) (confirmRupHint f.clauses acc rupHints[idx]) := by
       have h := confirmRupHint_preserves_assignments_size f.clauses acc.1 acc.2.1 acc.2.2.1 acc.2.2.2 rupHints[idx]
-      simp at *
+      have : (acc.fst, acc.snd.fst, acc.snd.snd.fst, acc.snd.snd.snd) = acc := rfl
+      simp [this] at *
       omega
     rw [Array.foldl_induction in_bounds_motive in_bounds_base in_bounds_inductive]
     exact i.2.2

@@ -19,16 +19,16 @@ theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assig
       ∃ j : PosFin n, insertUnit_res.2.1[j.1]'(by rw [insertUnit_preserves_size, assignments_size]; exact j.2.2) = both := by
   intro insertUnit_res h insertUnit_success
   simp only [insertUnit_res] at *
-  simp only [insertUnit, Prod.mk.eta] at insertUnit_success
+  simp only [insertUnit] at insertUnit_success
   have l_in_bounds : l.1.1 < assignments.size := by rw [assignments_size]; exact l.1.2.2
   split at insertUnit_success
   . next hl =>
-    simp only [insertUnit, hl, Prod.mk.eta, ite_true]
+    simp only [insertUnit, hl, ite_true]
     exact h insertUnit_success
   . next hl =>
     simp only [Bool.or_eq_true] at insertUnit_success
     rcases insertUnit_success with foundContradiction_eq_true | assignments_l_ne_unassigned
-    . simp only [insertUnit, hl, Prod.mk.eta, ite_false]
+    . simp only [insertUnit, hl, ite_false]
       rcases h foundContradiction_eq_true with ⟨i, h⟩
       have i_in_bounds : i.1 < assignments.size := by rw [assignments_size]; exact i.2.2
       apply Exists.intro i
@@ -40,7 +40,7 @@ theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assig
         rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i]
         exact h
     . apply Exists.intro l.1
-      simp only [insertUnit, hl, Prod.mk.eta, ite_false, Array.get_modify_at_idx l_in_bounds]
+      simp only [insertUnit, hl, ite_false, Array.get_modify_at_idx l_in_bounds]
       simp only [getElem!, l_in_bounds, dite_true] at assignments_l_ne_unassigned
       by_cases l.2
       . next l_eq_true =>
@@ -87,7 +87,7 @@ theorem mem_insertUnit_units {n : Nat} (units : Array (Literal (PosFin n))) (ass
       ∀ l' : Literal (PosFin n), l' ∈ insertUnit_res.1.data → l' = l ∨ l' ∈ units.data := by
   intro insertUnit_res l' l'_in_insertUnit_res
   simp only [insertUnit_res] at *
-  simp only [insertUnit, Prod.mk.eta] at l'_in_insertUnit_res
+  simp only [insertUnit] at l'_in_insertUnit_res
   split at l'_in_insertUnit_res
   . exact Or.inr l'_in_insertUnit_res
   . simp only [Array.push_data, List.mem_append, List.mem_singleton] at l'_in_insertUnit_res
@@ -610,7 +610,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
     (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) (ih : confirmRupHint_fold_entails_hsat_motive f idx.1 acc) :
     confirmRupHint_fold_entails_hsat_motive f (idx.1 + 1) ((confirmRupHint f.clauses) acc rupHints[idx]) := by
   rcases ih with ⟨hsize, h1, h2⟩
-  simp only [confirmRupHint, Bool.or_eq_true, Prod.mk.eta, Fin.getElem_fin]
+  simp only [confirmRupHint, Bool.or_eq_true, Fin.getElem_fin]
   split
   . exact ⟨hsize, h1, h2⟩
   . next acc2_eq_false =>
@@ -766,7 +766,7 @@ theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultF
     (c : DefaultClause n) (rupHints : Array Nat) :
       (performRupCheck (insertRupUnits f (negate c)).1 rupHints).2.2.1 = true → limplies (PosFin n) f (f.insert c) := by
   intro performRupCheck_success p pf
-  simp only [performRupCheck, Prod.mk.eta] at performRupCheck_success
+  simp only [performRupCheck] at performRupCheck_success
   simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
   intro c' c'_in_fc
   rw [insert_iff] at c'_in_fc

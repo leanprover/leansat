@@ -14,7 +14,7 @@ open Sat DefaultClause DefaultFormula Assignment Misc
 
 theorem insertRatUnits_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (units : List (Literal (PosFin n))) :
   (f.insertRatUnits units).1.assignments.size = f.assignments.size := by
-  simp only [insertRatUnits, Prod.mk.eta]
+  simp only [insertRatUnits]
   exact insertUnit_fold_preserves_size f.ratUnits f.assignments false
 
 theorem insertRatUnits_postcondition {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)

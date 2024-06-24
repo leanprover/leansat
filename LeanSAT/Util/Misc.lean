@@ -28,10 +28,6 @@ theorem Bool.eq_not_iff : ∀ {a b : Bool}, a = !b ↔ a ≠ b := by
   cases a <;> cases b <;> decide
 
 @[simp]
-theorem Prod.mk.eta : ∀ {p : α × β}, (p.1, p.2) = p
-  | (_, _) => rfl
-
-@[simp]
 theorem Prod.forall {p : α × β → Prop} : (∀ x, p x) ↔ ∀ a b, p (a, b) :=
   ⟨fun h a b => h (a, b), fun h ⟨a, b⟩ => h a b⟩
 
