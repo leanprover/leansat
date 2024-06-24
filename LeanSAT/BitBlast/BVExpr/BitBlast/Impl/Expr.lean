@@ -192,7 +192,20 @@ where
           dsimp at heaig
           exact heaig
       ⟩
-    | .shiftLeft lhs rhs => sorry
+    | .shiftLeft lhs rhs =>
+      let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
+      let ⟨⟨aig, rhs⟩, hraig⟩ := go aig rhs
+      let lhs := lhs.cast <| by
+        dsimp at hlaig hraig
+        omega
+      let res := bitblast.blastShiftLeft aig ⟨_, lhs, rhs⟩
+      ⟨
+        res,
+        by
+          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeft)
+          dsimp at hlaig hraig
+          omega
+      ⟩
 
 
 theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w)
@@ -269,7 +282,17 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     . exact h1
     . exact (go aig inner).property
   | shiftLeft lhs rhs lih rih =>
-    sorry
+    dsimp [go]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeft)]
+    rw [rih, lih]
+    . apply Nat.lt_of_lt_of_le
+      . exact h1
+      . exact (bitblast.go aig lhs).property
+    . apply Nat.lt_of_lt_of_le
+      . exact h1
+      . apply Nat.le_trans
+        . exact (bitblast.go aig lhs).property
+        . exact (go (go aig lhs).1.aig rhs).property
 
 
 theorem bitblast_decl_eq (aig : AIG BVBit) (expr : BVExpr w)

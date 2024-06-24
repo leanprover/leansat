@@ -317,6 +317,11 @@ structure ShiftTarget (aig : AIG α) (w : Nat) where
   stream : AIG.RefStream aig w
   distance : Nat
 
+structure ArbitraryShiftTarget (aig : AIG α) (m : Nat) where
+  n : Nat
+  target : AIG.RefStream aig m
+  distance : AIG.RefStream aig n
+
 structure ExtendTarget (aig : AIG α) (newWidth : Nat) where
   w : Nat
   stream : AIG.RefStream aig w
