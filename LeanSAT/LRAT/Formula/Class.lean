@@ -10,7 +10,7 @@ namespace LRAT
 
 /-- Typeclass for formulas. An instance [Formula α β σ] indicates that σ is
     the type of a formula with variables of type α, clauses of type β, and clause ids of type Nat -/
-class Formula (α : outParam (Type u)) (β : outParam (Type v)) [Clause α β] (σ : Type w) where
+class Formula (α : outParam (Type u)) (β : outParam (Type v)) [Clause α β] (σ : Type w) [HSat α σ] where
   toList : σ → List β -- A function used exclusively for defining Formula's satisfiability semantics
   readyForRupAdd : σ → Prop -- A predicate that indicates whether a formula can soundly be passed into performRupAdd
   readyForRatAdd : σ → Prop -- A predicate that indicates whether a formula can soundly be passed into performRatAdd
@@ -27,8 +27,7 @@ class Formula (α : outParam (Type u)) (β : outParam (Type v)) [Clause α β] (
     c ∈ toList (delete f arr) → c ∈ toList f
   delete_readyForRupAdd : ∀ f : σ, ∀ arr : Array Nat, readyForRupAdd f → readyForRupAdd (delete f arr)
   delete_readyForRatAdd : ∀ f : σ, ∀ arr : Array Nat, readyForRatAdd f → readyForRatAdd (delete f arr)
-  formulaHSat : HSat α σ
-  formulaHSat_def : ∀ p : α → Bool, ∀ f : σ, formulaHSat.eval p f = (toList f).all (fun c => p ⊨ c)
+  formulaHSat_def : ∀ p : α → Bool, ∀ f : σ, HSat.eval p f = (toList f).all (fun c => p ⊨ c)
   performRupAdd : σ → β → Array Nat → σ × Bool
   rupAdd_result : ∀ f : σ, ∀ c : β, ∀ rupHints : Array Nat, ∀ f' : σ,
     readyForRupAdd f → performRupAdd f c rupHints = (f', true) → f' = insert f c
@@ -43,9 +42,3 @@ class Formula (α : outParam (Type u)) (β : outParam (Type v)) [Clause α β] (
     readyForRatAdd f → p ∈ Clause.toList c → performRatAdd f c p rupHints ratHints = (f', true) → Sat.equisat α f f'
   dimacs : σ → String
   dbg_info : σ → String
-
-namespace Formula
-
-instance [Clause α β] [Formula α β σ] : HSat α σ := Formula.formulaHSat
-
-end Formula

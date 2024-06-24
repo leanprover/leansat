@@ -8,7 +8,7 @@ import LeanSAT.LRAT.CNF
 
 open LRAT Result Formula Clause Sat
 
-theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
+theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (rupHints: Array Nat) (rupAddSuccess : (Formula.performRupAdd f Clause.empty rupHints).snd = true) : unsatisfiable α f := by
   let f' := (performRupAdd f empty rupHints).1
   have f'_def := rupAdd_result f empty rupHints f' f_readyForRupAdd
@@ -28,7 +28,7 @@ theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f 
   simp only [HSat.eval, Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool,
     empty_eq, List.any_nil] at pf
 
-theorem addRupCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
+theorem addRupCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (c : β) (f' : σ) (rupHints : Array Nat) (heq : performRupAdd f c rupHints = (f', true))
     (restPrf : List (Action β α)) (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → wellFormedAction a)
     (ih : ∀ (f : σ),
@@ -48,7 +48,7 @@ theorem addRupCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : 
   rw [f_liff_f' p] at pf
   exact ih p pf
 
-theorem addRatCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
+theorem addRatCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (c : β) (pivot : Literal α) (f' : σ) (rupHints : Array Nat)
     (ratHints : Array (Nat × Array Nat)) (pivot_limplies_c : limplies α pivot c)
     (heq : performRatAdd f c pivot rupHints ratHints = (f', true))
@@ -72,7 +72,7 @@ theorem addRatCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : 
   rw [← f_equisat_f'] at ih
   exact ih p pf
 
-theorem delCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
+theorem delCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (ids : Array Nat) (restPrf : List (Action β α))
     (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → wellFormedAction a)
     (ih : ∀ (f : σ),
@@ -84,7 +84,7 @@ theorem delCaseSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ)
   have f_del_readyForRatAdd : readyForRatAdd (Formula.delete f ids) := delete_readyForRatAdd f ids f_readyForRatAdd
   exact ih (delete f ids) f_del_readyForRupAdd f_del_readyForRatAdd restPrfWellFormed h p (limplies_delete p pf)
 
-theorem lratCheckerSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
+theorem lratCheckerSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (prf : List (Action β α)) (prfWellFormed : ∀ a : Action β α, a ∈ prf → wellFormedAction a) :
       lratChecker f prf = success → unsatisfiable α f := by
   induction prf generalizing f
@@ -133,7 +133,7 @@ theorem lratCheckerSound [DecidableEq α] [Clause α β] [Formula α β σ] (f :
       rw [← hprf.2] at h
       exact delCaseSound f f_readyForRupAdd f_readyForRatAdd ids restPrf restPrfWellFormed ih h
 
-theorem incrementalLRATCheckerSound [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
+theorem incrementalLRATCheckerSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (a : Action β α) (aWellFormed : wellFormedAction a) :
       ((incrementalLRATChecker f a).2 = success → unsatisfiable α f) ∧
       ((incrementalLRATChecker f a).2 = out_of_proof → unsatisfiable α (incrementalLRATChecker f a).1 → unsatisfiable α f) := by
