@@ -34,9 +34,9 @@ theorem go_getRef_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr �
   . dsimp at hgo
     rw [← hgo]
     simp only [Nat.le_refl, RefStream.getRef, Ref_cast', Ref.mk.injEq, true_implies]
-    congr
-    . omega
-    . simp
+    have : curr = w := by omega
+    subst this
+    simp
 termination_by w - curr
 
 theorem go_getRef (aig : AIG α) (c : BitVec w)
