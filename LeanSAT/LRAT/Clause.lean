@@ -92,16 +92,11 @@ theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
   have h := c.nodupkey l.1
   by_cases hl : l.2
   . simp only [hl, Bool.not_true]
-    rw [← hl] at h
-    rcases h with h | h
-    . exact Or.inl h
-    . exact Or.inr h
-  . simp only [hl, Bool.not_false]
-    simp only [Bool.not_eq_true] at hl
-    rw [← hl] at h
-    rcases h with h | h
-    . exact Or.inr h
-    . exact Or.inl h
+    rwa [← hl] at h
+  . simp only [Bool.not_eq_true] at hl
+    simp only [hl, Bool.not_false]
+    apply Or.symm
+    rwa [← hl] at h
 
 def empty {n : Nat} : DefaultClause n :=
   let clause := []
@@ -139,8 +134,7 @@ theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
   . next l' heq => simp [heq]
   . next hne =>
     simp only [false_iff]
-    intro heq
-    exact hne l heq
+    apply hne
 
 def negate {n : Nat} (c : DefaultClause n) : List (Literal (PosFin n)) := c.clause.map negateLiteral
 
