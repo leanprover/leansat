@@ -133,8 +133,7 @@ theorem unsat_relabelFin : unsat g.relabelFin ↔ unsat g := by
       obtain ⟨n, h⟩ := h
       cases n with
       | zero => simp at h
-      | succ n =>
-        simp_all
+      | succ n => simp_all [List.replicate_succ]
 
 instance (x : CNF (Fin n)) : Decidable x.unsat :=
   inferInstanceAs <| Decidable (∀ f, eval f x = false)

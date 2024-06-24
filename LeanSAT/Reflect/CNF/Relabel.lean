@@ -9,10 +9,6 @@ set_option linter.missingDocs false
 
 namespace List
 
-@[simp] theorem map_replicate :
-    (List.replicate n a).map f = List.replicate n (f a) := by
-  induction n <;> simp_all
-
 -- taken from Mathlib, move to Lean
 theorem map_congr {f g : α → β} : ∀ {l : List α}, (∀ x ∈ l, f x = g x) → map f l = map g l
   | [], _ => rfl
@@ -117,6 +113,6 @@ theorem unsat_relabel_iff {x : CNF α} {f : α → β}
       · exact (Exists.choose_spec (⟨a, h, rfl⟩ : ∃ a', mem a' x ∧ f a' = f a)).1
     rw [relabel_relabel, relabel_congr, relabel_id]
     exact this
-  · cases n <;> simp [unsat, relabel, Clause.relabel]
+  · cases n <;> simp [unsat, relabel, Clause.relabel, List.replicate_succ]
 
 end CNF
