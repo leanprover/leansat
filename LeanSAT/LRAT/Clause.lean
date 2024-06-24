@@ -129,7 +129,7 @@ def isUnit {n : Nat} (c : DefaultClause n) : Option (Literal (PosFin n)) :=
 
 theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
   isUnit c = some l ↔ toList c = [l] := by
-  simp only [isUnit, Prod.forall, toList]
+  simp only [isUnit, toList]
   split
   . next l' heq => simp [heq]
   . next hne =>

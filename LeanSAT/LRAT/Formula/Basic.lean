@@ -142,7 +142,7 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
               rw [b_eq_false, Subtype.ext i_eq_l]
               exact ih h
           . next i_ne_l =>
-            simp only [Array.get_modify_unchanged l_in_bounds i_in_bounds _ (Ne.symm i_ne_l)] at h
+            simp only [Array.get_modify_unchanged i_in_bounds _ (Ne.symm i_ne_l)] at h
             exact ih i b h
         | some (l, false) =>
           simp only [heq] at h
@@ -169,7 +169,7 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
               rw [c_def] at cOpt_in_arr
               exact cOpt_in_arr
           . next i_ne_l =>
-            simp only [Array.get_modify_unchanged l_in_bounds i_in_bounds _ (Ne.symm i_ne_l)] at h
+            simp only [Array.get_modify_unchanged i_in_bounds _ (Ne.symm i_ne_l)] at h
             exact ih i b h
     rcases List.foldlRecOn arr.data ofArray_fold_fn (mkArray n unassigned) hb hl with ⟨_h_size, h'⟩
     intro i b h
@@ -285,7 +285,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
           simp only [hasAssignment, b_eq_false, l_eq_i, Array.get_modify_at_idx i_in_bounds, ite_false, hasNeg_of_addPos] at hb
           simp only [hasAssignment, b_eq_false, ite_false, hb]
         . next l_ne_i =>
-          simp only [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i] at hb
+          simp only [Array.get_modify_unchanged i_in_bounds _ l_ne_i] at hb
           exact hb
       specialize hf hb'
       simp only [toList, Array.toList_eq, List.append_assoc, List.mem_append, List.mem_filterMap, id_eq,
@@ -324,7 +324,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
           simp only [hasAssignment, b_eq_false, l_eq_i, Array.get_modify_at_idx i_in_bounds, ite_true, hasPos_of_addNeg] at hb
           simp only [hasAssignment, b_eq_false, ite_true, hb]
         . next l_ne_i =>
-          simp only [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i] at hb
+          simp only [Array.get_modify_unchanged i_in_bounds _ l_ne_i] at hb
           exact hb
       specialize hf hb'
       simp only [toList, Array.toList_eq, List.append_assoc, List.mem_append, List.mem_filterMap, id_eq,
@@ -454,7 +454,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
           rw [← l_eq_b] at hb
           have hb' := not_has_of_remove f.assignments[i.1] l.2
           simp [hb] at hb'
-        rw [← Bool.eq_not_iff] at l_ne_b
+        replace l_ne_b := Bool.eq_not_of_ne l_ne_b
         rw [l_ne_b] at hb
         have hb := has_of_remove_irrelevant f.assignments[i.1] b hb
         specialize hf i b hb
@@ -493,7 +493,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
         . exact Or.inr hf
       . next l_ne_i =>
         have l_in_bounds : l.1.1 < f.assignments.size := by rw [hsize]; exact l.1.2.2
-        simp only [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i] at hb
+        simp only [Array.get_modify_unchanged i_in_bounds _ l_ne_i] at hb
         specialize hf i b hb
         simp only [toList, Array.toList_eq, List.append_assoc, List.mem_append, List.mem_filterMap, id_eq,
           exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool] at hf

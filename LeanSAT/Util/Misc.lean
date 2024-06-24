@@ -13,19 +13,12 @@ open List
 theorem Subtype.ext {p : α → Prop} : ∀ {a1 a2 : { x // p x }}, (a1 : α) = (a2 : α) → a1 = a2
   | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
 
-theorem Subtype.ext_iff {p : α → Prop} {a1 a2 : { x // p x }} : a1 = a2 ↔ (a1 : α) = (a2 : α) :=
-  ⟨congrArg _, Subtype.ext⟩
-
 @[simp]
 theorem Bool.exists_bool {p : Bool → Prop} : (∃ b, p b) ↔ p false ∨ p true :=
   ⟨fun ⟨b, h⟩ => by cases b; exact Or.inl h; exact Or.inr h,
   fun h => match h with
   | .inl h => ⟨_, h⟩
   | .inr h => ⟨_, h⟩ ⟩
-
-theorem Bool.eq_not_iff : ∀ {a b : Bool}, a = !b ↔ a ≠ b := by
-  intro a b
-  cases a <;> cases b <;> decide
 
 @[simp]
 theorem Prod.forall {p : α × β → Prop} : (∀ x, p x) ↔ ∀ a b, p (a, b) :=
@@ -34,13 +27,6 @@ theorem Prod.forall {p : α × β → Prop} : (∀ x, p x) ↔ ∀ a b, p (a, b)
 @[simp]
 theorem Prod.exists {p : α × β → Prop} : (∃ x, p x) ↔ ∃ a b, p (a, b) :=
   ⟨fun ⟨⟨a, b⟩, h⟩ => ⟨a, b, h⟩, fun ⟨a, b, h⟩ => ⟨⟨a, b⟩, h⟩⟩
-
-theorem Prod.lex_def (r : α → α → Prop) (s : β → β → Prop) {p q : α × β} :
-    Prod.Lex r s p q ↔ r p.1 q.1 ∨ p.1 = q.1 ∧ s p.2 q.2 :=
-  ⟨fun h ↦ by cases h <;> simp [*], fun h ↦
-    match p, q, h with
-    | (a, b), (c, d), Or.inl h => Prod.Lex.left _ _ h
-    | (a, b), (c, d), Or.inr ⟨e, h⟩ => by subst e; exact Prod.Lex.right _ h⟩
 
 @[simp]
 theorem forall_mem_ne {a : α} {l : List α} : (∀ a' : α, a' ∈ l → ¬a = a') ↔ a ∉ l :=
@@ -118,32 +104,13 @@ theorem Array.range_idx {n : Nat} {x : Nat} (h : x < n) : (Array.range n)[x]'(by
 
 theorem Array.mem_filter {a : Array α} {p : α → Bool} :
   ∀ i : Nat, ∀ i_in_bounds : i < a.size, p (a[i]'i_in_bounds) → (a[i]'i_in_bounds) ∈ (a.filter p).data := by
-  intro i i_in_bounds pai
-  simp only [Array.filter]
-  let motive (idx : Nat) (acc : Array α) : Prop :=
-    ∀ i : Nat, ∀ i_in_bounds : i < a.size, i < idx → p (a[i]'i_in_bounds) → (a[i]'i_in_bounds) ∈ acc.data
-  have h_base : motive 0 #[] := by
-    intro i i_in_bounds i_lt_zero
-    exact False.elim $ Nat.not_lt_zero i i_lt_zero
-  let f := (fun acc x => if p x = true then Array.push acc x else acc)
-  have f_def : f = (fun acc x => if p x = true then Array.push acc x else acc) := rfl
-  have h_inductive (idx : Fin a.size) (acc : Array α) (ih : motive idx.1 acc) : motive (idx.1 + 1) (f acc a[idx]) := by
-    intro i i_in_bounds i_lt_idx_add_one
-    rw [f_def]
-    simp only [Fin.getElem_fin]
-    intro pai
-    rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
-    . have h := ih i i_in_bounds i_lt_idx pai
-      split
-      . simp only [Array.push_data, mem_append, mem_singleton]
-        exact Or.inl h
-      . exact h
-    . split
-      . simp only [i_eq_idx, Array.push_data, mem_append, mem_singleton, or_true]
-      . next pa_idx =>
-        simp only [← i_eq_idx] at pa_idx
-        exact False.elim $ pa_idx pai
-  exact Array.foldl_induction motive h_base h_inductive i i_in_bounds i_in_bounds pai
+  intro i hi hp
+  rw [Array.mem_data]
+  rw [_root_.Array.mem_filter]
+  constructor
+  . rw [← Array.mem_data]
+    apply Array.getElem_mem_data
+  . assumption
 
 theorem Array.set!_preserves_size {a : Array α} {i : Nat} {x : α} : (a.set! i x).size = a.size := by
   rw [Array.set!, Array.setD]
@@ -153,26 +120,14 @@ theorem Array.set!_preserves_size {a : Array α} {i : Nat} {x : α} : (a.set! i 
 
 theorem Array.get_modify_at_idx {a : Array α} {i : Nat} (i_in_bounds : i < a.size) (f : α → α) :
   (a.modify i f)[i]'(by rw [Array.size_modify]; exact i_in_bounds) = f (a[i]) := by
-  simp only [Array.modify, Array.modifyM, Id.bind_eq, Id.pure_eq, Id.run]
-  split
-  . simp only [getElem]
-    have lhs_rw := Array.get_set a ⟨i, i_in_bounds⟩ i i_in_bounds (f (Array.get a ⟨i, i_in_bounds⟩))
-    simp only [getElem] at lhs_rw
-    rw [lhs_rw]
-    simp only [Array.get_eq_getElem, ite_true]
-  . next i_out_of_bounds =>
-    exfalso
-    exact i_out_of_bounds i_in_bounds
+  simp only [GetElem.getElem]
+  rw [Array.get_modify]
+  simp only [↓reduceIte, Array.get_eq_getElem]
+  assumption
 
-theorem Array.get_modify_unchanged {a : Array α} {i : Nat} (i_size : i < a.size) {j : Nat} (j_size : j < a.size)
+theorem Array.get_modify_unchanged {a : Array α} {i : Nat} {j : Nat} (j_size : j < a.size)
   (f : α → α) (h : i ≠ j) : (a.modify i f)[j]'(by rw [Array.size_modify]; exact j_size) = a[j] := by
-  simp only [Array.modify, Array.modifyM, Id.bind_eq, Id.pure_eq, Id.run]
-  split
-  . simp only [getElem]
-    have lhs_rw := Array.get_set a ⟨i, i_size⟩ j j_size (f (Array.get a ⟨i, i_size⟩))
-    simp only [getElem] at lhs_rw
-    rw [lhs_rw]
-    simp only [h, Array.get_eq_getElem, ite_false]
-  . next i_out_of_bounds =>
-    exfalso
-    exact i_out_of_bounds i_size
+  simp only [GetElem.getElem]
+  rw [Array.get_modify]
+  simp only [h, ↓reduceIte, Array.get_eq_getElem]
+  assumption

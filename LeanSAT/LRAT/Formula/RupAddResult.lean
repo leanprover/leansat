@@ -122,7 +122,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
       . next i_ne_l =>
         apply Or.inl
         simp only [insertUnit, h3, ite_false]
-        rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ (Ne.symm i_ne_l)]
+        rw [Array.get_modify_unchanged i_in_bounds _ (Ne.symm i_ne_l)]
         constructor
         . exact h1
         . intro j
@@ -261,7 +261,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
         constructor
         . rw [Array.get_push_lt units l j.1 j.2, h1]
         . constructor
-          . rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ (Ne.symm i_ne_l), h2]
+          . rw [Array.get_modify_unchanged i_in_bounds _ (Ne.symm i_ne_l), h2]
           . constructor
             . exact h3
             . intro k k_ne_j
@@ -305,7 +305,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
               simp only [i_eq_l]
               rw [Array.get_modify_at_idx l_in_bounds]
               simp only [← i_eq_l, h3, add_of_both_eq_both]
-            . next i_ne_l => rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ (Ne.symm i_ne_l), h3]
+            . next i_ne_l => rw [Array.get_modify_unchanged i_in_bounds _ (Ne.symm i_ne_l), h3]
         . constructor
           . exact h4
           . intro k k_ne_j1 k_ne_j2
@@ -519,7 +519,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
       have i_in_bounds : i.1 < assignments.size := by
         rw [hsize]
         exact i.2
-      have h := Array.get_modify_unchanged idx_unit_in_bounds i_in_bounds (removeAssignment units[idx.val].2) ih2
+      have h := Array.get_modify_unchanged i_in_bounds (removeAssignment units[idx.val].2) ih2
       simp only [Fin.getElem_fin] at h
       rw [h]
       exact ih1
@@ -556,7 +556,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
               rw [hsize]
               exact units[idx.1].1.2.2
             have i_in_bounds : i.1 < assignments.size := by rw [hsize]; exact i.2
-            rw [Array.get_modify_unchanged idx_unit_in_bounds i_in_bounds _ ih4]
+            rw [Array.get_modify_unchanged i_in_bounds _ ih4]
             exact ih2
           . constructor
             . exact ih3
@@ -677,7 +677,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                   have idx_unit_in_bounds : units[idx.1].1.1 < assignments.size := by
                     rw [hsize]; exact units[idx.1].1.2.2
                   have i_in_bounds : i.1 < assignments.size := hsize ▸ i.2
-                  rw [Array.get_modify_unchanged idx_unit_in_bounds i_in_bounds _ idx_res_ne_i]
+                  rw [Array.get_modify_unchanged i_in_bounds _ idx_res_ne_i]
                   exact ih3
                 . constructor
                   . exact ih4
@@ -808,7 +808,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
     . next l_ne_i =>
       apply Or.inl
       constructor
-      . rw [Array.get_modify_unchanged l_in_bounds i_in_bounds (addAssignment l.2) l_ne_i]
+      . rw [Array.get_modify_unchanged i_in_bounds (addAssignment l.2) l_ne_i]
         exact h1
       . intro l' l'_in_list
         simp only [List.find?, List.mem_cons] at l'_in_list
@@ -932,7 +932,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
       constructor
       . exact j_eq_i
       . constructor
-        . rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i]
+        . rw [Array.get_modify_unchanged i_in_bounds _ l_ne_i]
           exact h1
         . apply And.intro h2
           intro k k_ne_j_succ
@@ -984,7 +984,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
       all_goals
         simp (config := {decide := true}) [getElem!, l_eq_i, i_in_bounds, h1] at h
     constructor
-    . rw [Array.get_modify_unchanged l_in_bounds i_in_bounds _ l_ne_i]
+    . rw [Array.get_modify_unchanged i_in_bounds _ l_ne_i]
       exact h1
     . constructor
       . exact h2
