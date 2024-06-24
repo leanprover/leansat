@@ -53,8 +53,8 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
     . simp only [(· ⊨ ·), p] at h2
       split at h2
       . next v_eq_l =>
-        rw [← @Prod.mk.eta α Bool l, ← v_eq_l, h2]
-        exact h1
+        cases l
+        simp_all
       . next v_ne_l =>
         simp only [decide_eq_false_iff_not] at h2
         exfalso
@@ -62,8 +62,8 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
     . simp only [(· ⊨ ·), p] at h2
       split at h2
       . next v_eq_l =>
-        rw [← @Prod.mk.eta α Bool l, ← v_eq_l, h2]
-        exact h1
+        cases l
+        simp_all
       . next v_ne_l =>
         simp only [decide_eq_true_eq] at h2
         exfalso
