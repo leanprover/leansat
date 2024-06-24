@@ -242,10 +242,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
         . simp only [Option.some.injEq] at heq
           have hsize' : c'.clause.length = arr.size - idx.1 := by
             simp only [← heq, List.length_cons, hsize]
-            rw [Nat.succ_eq_add_one, Nat.sub_add_eq, Nat.sub_add_cancel]
-            apply Nat.le_sub_of_add_le
-            rw [Nat.add_comm]
-            exact idx_add_one_le_arr_size
+            omega
           apply Exists.intro hsize'
           intro i
           simp only
@@ -272,7 +269,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
     simp [h]
   . have arr_data_length_le_i : arr.data.length ≤ i := by
       dsimp; omega
-    simp only [Nat.not_lt, ← List.getElem?_eq_none] at i_in_bounds arr_data_length_le_i
+    simp only [Nat.not_lt, ← List.getElem?_eq_none_iff] at i_in_bounds arr_data_length_le_i
     rw [i_in_bounds, arr_data_length_le_i]
 
 def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultClause n :=
