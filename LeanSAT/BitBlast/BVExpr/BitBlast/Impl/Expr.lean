@@ -192,6 +192,7 @@ where
           dsimp at heaig
           exact heaig
       ⟩
+    | .shiftLeft lhs rhs => sorry
 
 
 theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w)
@@ -267,6 +268,8 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
+  | shiftLeft lhs rhs lih rih =>
+    sorry
 
 
 theorem bitblast_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
