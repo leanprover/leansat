@@ -5,7 +5,6 @@ Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.CNF.Relabel
 import LeanSAT.Reflect.Fin
-import Batteries.Data.List.Lemmas
 
 set_option linter.missingDocs false
 
@@ -21,10 +20,15 @@ namespace CNF
 
 def Clause.maxLiteral (c : Clause Nat) : Option Nat := (c.map (·.1)) |>.maximum?
 
+-- TODO: upstream
+theorem _root_.List.maximum?_eq_some_iff_Nat {xs : List Nat} :
+    xs.maximum? = some a ↔ (a ∈ xs ∧ ∀ b ∈ xs, b ≤ a) := by
+  rw [List.maximum?_eq_some_iff] <;> omega
+
 theorem Clause.of_maxLiteral_eq_some (c : Clause Nat) (h : c.maxLiteral = some maxLit) :
     ∀ lit, mem lit c → lit ≤ maxLit := by
   intro lit hlit
-  simp only [maxLiteral, List.maximum?_eq_some_iff', List.mem_map, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂] at h
+  simp only [maxLiteral, List.maximum?_eq_some_iff_Nat, List.mem_map, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂] at h
   simp only [mem] at hlit
   rcases h with ⟨_, hbar⟩
   cases hlit
@@ -52,7 +56,7 @@ def maxLiteral (g : CNF Nat) : Option Nat :=
 theorem of_maxLiteral_eq_some' (c : CNF Nat) (h : c.maxLiteral = some maxLit) :
     ∀ clause, clause ∈ c → clause.maxLiteral = some localMax → localMax ≤ maxLit := by
   intro clause hclause1 hclause2
-  simp[maxLiteral, List.maximum?_eq_some_iff'] at h
+  simp[maxLiteral, List.maximum?_eq_some_iff_Nat] at h
   rcases h with ⟨_, hclause3⟩
   apply hclause3 localMax clause hclause1 hclause2
 
