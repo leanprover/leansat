@@ -488,7 +488,8 @@ where
     if h : rhs.width = lhs.width then
       let bvExpr : BVExpr lhs.width := .bin lhs.bvExpr op (h ▸ rhs.bvExpr)
       let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr lhs.width) lhs.expr (toExpr op) rhs.expr
-      let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr (mkConst congrThm)
+      let congrThm := mkApp (mkConst congrThm) (toExpr lhs.width)
+      let proof := binaryCongrProof lhs rhs lhsExpr rhsExpr congrThm
       return some ⟨lhs.width, bvExpr, proof, expr⟩
     else
       return none
@@ -498,14 +499,7 @@ where
     let lhsProof ← lhs.evalsAtAtoms
     let rhsProof ← rhs.evalsAtAtoms
     let rhsEval ← mkEvalExpr rhs.width rhs.expr
-    return mkApp7 congrThm
-      (toExpr lhs.width)
-      lhsExpr
-      rhsExpr
-      lhsEval
-      rhsEval
-      lhsProof
-      rhsProof
+    return mkApp6 congrThm lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
 
   unaryReflection (innerExpr : Expr) (op : BVUnOp) (congrThm : Name)
       : M (Option ReifiedBVExpr) := do

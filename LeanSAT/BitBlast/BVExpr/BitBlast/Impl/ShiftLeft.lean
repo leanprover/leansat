@@ -6,6 +6,7 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.Basic
 import LeanSAT.AIG.CachedGatesLemmas
 import LeanSAT.AIG.LawfulStreamOperator
+import LeanSAT.AIG.If
 
 namespace BVExpr
 namespace bitblast
@@ -83,6 +84,143 @@ instance : AIG.LawfulStreamOperator α AIG.ShiftTarget blastShiftLeftConst where
     intros
     unfold blastShiftLeftConst
     apply blastShiftLeftConst.go_decl_eq
+
+opaque shiftLeftRec (x : BitVec w0) (y : BitVec w1) (n : Nat) : BitVec w0
+
+@[simp]
+theorem shiftLeftRec_zero (x : BitVec w0) (y : BitVec w1) :
+    shiftLeftRec x y 0 = x <<< (y &&& (1#w1 <<< 0))  := by
+  sorry
+
+@[simp]
+theorem shiftLeftRec_succ (x : BitVec w0) (y : BitVec w1) :
+    shiftLeftRec x y (n + 1) =
+      (shiftLeftRec x y n) <<< (y &&& (1#w1 <<< (n + 1))) := by
+  sorry
+
+theorem shiftLeft_eq_shiftLeft_rec (x : BitVec w0) (y : BitVec w1) :
+    x <<< y = shiftLeftRec x y (w1 - 1) := by
+  sorry
+
+def blastShiftLeft (aig : AIG α) (target : AIG.ArbitraryShiftTarget aig w)
+    : AIG.RefStreamEntry α w :=
+  let ⟨n, input, distance⟩ := target
+  if h : n = 0 then
+    ⟨aig, input⟩
+  else
+    have : 0 < n := by omega
+    let res := blastShiftLeftConst aig ⟨input, 1⟩
+    let aig := res.aig
+    let shifted := res.stream
+
+    have := by
+      apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+    let input := input.cast this
+    let distance := distance.cast this
+    let res := AIG.RefStream.ite aig ⟨distance.getRef 0 (by assumption), shifted, input⟩
+    let aig := res.aig
+    let acc := res.stream
+
+    have := by
+      apply AIG.LawfulStreamOperator.le_size (f := AIG.RefStream.ite)
+    let distance := distance.cast this
+    if h:1 ≤ n - 1 then
+      go aig distance 1 h acc
+    else
+      ⟨aig, acc⟩
+where
+  go {n : Nat} (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat) (hcurr : curr ≤ n - 1)
+      (acc : AIG.RefStream aig w)
+      : AIG.RefStreamEntry α w :=
+    if h:curr < n - 1 then
+      let res := blastShiftLeftConst aig ⟨acc, 1 <<< curr⟩
+      let aig := res.aig
+      let shifted := res.stream
+      have := by
+        apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+      let distance := distance.cast this
+      let acc := acc.cast this
+
+      let res := AIG.RefStream.ite aig ⟨distance.getRef curr (by omega), shifted, acc⟩
+      let aig := res.aig
+      let acc := res.stream
+      have := by
+        apply AIG.LawfulStreamOperator.le_size (f := AIG.RefStream.ite)
+      let distance := distance.cast this
+
+      go aig distance (curr + 1) (by omega) acc
+    else
+      ⟨aig, acc⟩
+  termination_by n - 1 - curr
+
+
+theorem blastShiftLeft.go_le_size (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat)
+    (hcurr : curr ≤ n - 1) (acc : AIG.RefStream aig w)
+    : aig.decls.size ≤ (go aig distance curr hcurr acc).aig.decls.size := by
+  unfold go
+  dsimp
+  split
+  . refine Nat.le_trans ?_ (by apply go_le_size)
+    apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.ite)
+    apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+  . simp
+termination_by n - 1 - curr
+
+theorem blastShiftLeft.go_decl_eq (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat)
+    (hcurr : curr ≤ n - 1) (acc : AIG.RefStream aig w)
+    : ∀ (idx : Nat) (h1) (h2),
+        (go aig distance curr hcurr acc).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+  generalize hgo : go aig distance curr hcurr acc = res
+  unfold go at hgo
+  dsimp at hgo
+  split at hgo
+  . rw [← hgo]
+    intros
+    rw [blastShiftLeft.go_decl_eq]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.ite)]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeftConst)]
+    . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+      assumption
+    . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := AIG.RefStream.ite)
+      apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+      assumption
+  . simp [← hgo]
+termination_by n - 1 - curr
+
+
+instance : AIG.LawfulStreamOperator α AIG.ArbitraryShiftTarget blastShiftLeft where
+  le_size := by
+    intros
+    unfold blastShiftLeft
+    dsimp
+    split
+    . simp
+    . split
+      . refine Nat.le_trans ?_ (by apply blastShiftLeft.go_le_size)
+        apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.ite)
+        apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+      . apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.ite)
+        apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+  decl_eq := by
+    intros
+    unfold blastShiftLeft
+    dsimp
+    split
+    . simp
+    . split
+      . rw [blastShiftLeft.go_decl_eq]
+        rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.ite)]
+        rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeftConst)]
+        . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+          assumption
+        . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := AIG.RefStream.ite)
+          apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+          assumption
+      . dsimp
+        rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.ite)]
+        rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeftConst)]
+        . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+          assumption
 
 end bitblast
 end BVExpr
