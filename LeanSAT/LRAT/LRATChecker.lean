@@ -30,7 +30,7 @@ instance : LawfulBEq Result where
 
 open List Clause Formula Result Action Formula Literal
 
-def incrementalLRATChecker [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (action : Action β α) : σ × Result :=
+def incrementalLRATChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (action : Action β α) : σ × Result :=
   match action with
   | addEmpty _ rupHints =>
     let (f, checkSuccess) := performRupAdd f empty rupHints
@@ -46,7 +46,7 @@ def incrementalLRATChecker [DecidableEq α] [Clause α β] [Formula α β σ] (f
     else (f, rup_failure)
   | del ids => (delete f ids, out_of_proof)
 
-def lratChecker [DecidableEq α] [Clause α β] [Formula α β σ] (f : σ) (prf : List (Action β α)) : Result :=
+def lratChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (prf : List (Action β α)) : Result :=
   match prf with
   | nil => out_of_proof
   | addEmpty _ rupHints :: _ =>

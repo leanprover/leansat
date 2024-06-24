@@ -97,12 +97,12 @@ end Clause
 
 namespace Formula
 
-theorem sat_iff_forall [Clause α β] [Formula α β σ] (p : α → Bool) (f : σ) :
+theorem sat_iff_forall [Clause α β] [HSat α σ] [Formula α β σ] (p : α → Bool) (f : σ) :
     p ⊨ f ↔ ∀ c : β, c ∈ toList f → p ⊨ c := by
   simp only [(· ⊨ ·), formulaHSat_def p f]
   simp only [List.all_eq_true, decide_eq_true_eq]
 
-theorem limplies_of_insert [Clause α β] [Formula α β σ] {c : β} {f : σ} : limplies α (insert f c) f := by
+theorem limplies_of_insert [Clause α β] [HSat α σ] [Formula α β σ] {c : β} {f : σ} : limplies α (insert f c) f := by
   intro p
   simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
   intro h c' c'_in_f
@@ -111,7 +111,7 @@ theorem limplies_of_insert [Clause α β] [Formula α β σ] {c : β} {f : σ} :
     exact Or.inr c'_in_f
   exact h c' c'_in_fc
 
-theorem limplies_delete [Clause α β] [Formula α β σ] {f : σ} {arr : Array Nat} : limplies α f (delete f arr) := by
+theorem limplies_delete [Clause α β] [HSat α σ] [Formula α β σ] {f : σ} {arr : Array Nat} : limplies α f (delete f arr) := by
   intro p
   simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
   intro h c c_in_f_del
