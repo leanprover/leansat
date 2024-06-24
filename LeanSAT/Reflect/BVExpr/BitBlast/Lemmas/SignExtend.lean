@@ -27,9 +27,9 @@ theorem go_getRef_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream a
       rw [AIG.RefStream.getRef_push_ref_lt]
   . dsimp
     simp only [RefStream.getRef, Ref.mk.injEq]
-    congr
-    . omega
-    . simp
+    have : curr = newWidth := by omega
+    subst this
+    simp
 
 theorem go_getRef (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
     (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefStream aig curr)

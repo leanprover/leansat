@@ -169,9 +169,9 @@ theorem go_getRef_aux {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w)
   . dsimp at hgo
     rw [← hgo]
     simp only [Nat.le_refl, getRef, Ref_cast', Ref.mk.injEq, true_implies]
-    congr
-    . omega
-    . simp
+    have : curr = w := by omega
+    subst this
+    simp
 
 theorem go_getRef {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref aig)
       (lhs rhs : RefStream aig w) (s : RefStream aig curr)

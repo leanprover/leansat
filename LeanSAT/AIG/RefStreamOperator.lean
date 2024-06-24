@@ -1,6 +1,5 @@
 import LeanSAT.AIG.RefStream
 import LeanSAT.AIG.LawfulStreamOperator
-import Batteries.Logic -- TODO: This is only here because the built-in HEq theory is lacking
 
 namespace AIG
 namespace  RefStream
@@ -377,9 +376,9 @@ theorem go_getRef_aux {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : Re
   . dsimp at hgo
     rw [← hgo]
     simp only [Nat.le_refl, getRef, Ref_cast', Ref.mk.injEq, true_implies]
-    congr
-    . omega
-    . simp
+    have : curr = len := by omega
+    subst this
+    rfl
 termination_by len - curr
 
 theorem go_getRef {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
@@ -481,9 +480,9 @@ theorem go_getRef_aux {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : Re
   . dsimp at hgo
     rw [← hgo]
     simp only [Nat.le_refl, getRef, Ref_cast', Ref.mk.injEq, true_implies]
-    congr
-    . omega
-    . simp
+    have : curr = len := by omega
+    subst this
+    simp
 termination_by len - curr
 
 theorem go_getRef {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
