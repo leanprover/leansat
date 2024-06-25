@@ -492,7 +492,6 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
           . exact hf
         . exact Or.inr hf
       . next l_ne_i =>
-        have l_in_bounds : l.1.1 < f.assignments.size := by rw [hsize]; exact l.1.2.2
         simp only [Array.get_modify_unchanged i_in_bounds _ l_ne_i] at hb
         specialize hf i b hb
         simp only [toList, Array.toList_eq, List.append_assoc, List.mem_append, List.mem_filterMap, id_eq,

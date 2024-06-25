@@ -514,8 +514,6 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
     constructor
     . simp only [clearUnit, Fin.getElem_fin, Array.get_eq_getElem]
       specialize ih2 idx (Nat.le_refl idx.val)
-      have idx_unit_in_bounds : units[idx].1.1 < assignments.size := by
-        rw [hsize]; exact units[idx].1.2.2
       have i_in_bounds : i.1 < assignments.size := by
         rw [hsize]
         exact i.2
@@ -552,9 +550,6 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
         . constructor
           . simp only [clearUnit, Array.get_eq_getElem]
             specialize ih4 idx (Nat.le_refl idx.1) idx_ne_j
-            have idx_unit_in_bounds : units[idx.1].1.1 < assignments.size := by
-              rw [hsize]
-              exact units[idx.1].1.2.2
             have i_in_bounds : i.1 < assignments.size := by rw [hsize]; exact i.2
             rw [Array.get_modify_unchanged i_in_bounds _ ih4]
             exact ih2
