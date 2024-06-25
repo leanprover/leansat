@@ -106,16 +106,20 @@ where
       | _, .const true, false, false | _, .const false, false, true =>
         ⟨⟨decls, cache, inv⟩, lhs, (by assumption)⟩
       | _, _, _, _ =>
-        let g := decls.size
-        let cache := cache.insert decls decl
-        let decls := decls.push decl
-        have inv := by
-          intro i lhs rhs linv rinv h1 h2
-          simp only [decls] at *
-          simp only [Array.get_push] at h2
-          split at h2
-          . apply inv <;> assumption
-          . injections; omega
-        ⟨⟨decls, cache, inv⟩, ⟨g, by simp [g, decls]⟩⟩
+        -- Contradiction rule
+        if (lhs == rhs) && (linv == !rinv) then
+          mkConstCached ⟨decls, cache, inv⟩ false
+        else
+          let g := decls.size
+          let cache := cache.insert decls decl
+          let decls := decls.push decl
+          have inv := by
+            intro i lhs rhs linv rinv h1 h2
+            simp only [decls] at *
+            simp only [Array.get_push] at h2
+            split at h2
+            . apply inv <;> assumption
+            . injections; omega
+          ⟨⟨decls, cache, inv⟩, ⟨g, by simp [g, decls]⟩⟩
 
 end AIG
