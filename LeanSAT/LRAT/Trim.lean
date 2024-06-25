@@ -16,6 +16,10 @@ structure Context where
   -/
   proof : HashMap Nat IntAction
   /--
+  The id of the first proof step.
+  -/
+  initialId : Nat
+  /--
   The id of the empty proof step.
   -/
   addEmptyId : Nat
@@ -35,7 +39,14 @@ abbrev M : Type → Type := ReaderT Context <| StateRefT State IO
 
 namespace M
 
+private partial def findInitialId (proof : Array IntAction) (curr : Nat := 0) : Nat :=
+  match proof[curr]! with
+  | .addEmpty id .. | .addRup id .. | .addRat id .. => id
+  | .del .. => findInitialId proof (curr + 1)
+
 def run (proof : Array IntAction) (x : M α) : IO α := do
+  let initialId := findInitialId proof
+
   let addEmptyId ←
     match proof[proof.size - 1]! with
     | .addEmpty id .. => pure id
@@ -47,7 +58,12 @@ def run (proof : Array IntAction) (x : M α) : IO α := do
     | .del .. => acc
   let proof := proof.foldl (init := mkHashMap proof.size) folder
 
-  ReaderT.run x { proof, addEmptyId } |>.run' {}
+  ReaderT.run x { proof, initialId, addEmptyId } |>.run' {}
+
+@[inline]
+def getInitialId : M Nat := do
+  let ctx ← read
+  return ctx.initialId
 
 @[inline]
 def getEmptyId : M Nat := do
@@ -149,8 +165,7 @@ identifiers.
 -/
 def mapping : M (Array IntAction) := do
   let used ← M.getUsedSet
-  let (min, _) := used.min!
-  let mut nextMapped := min
+  let mut nextMapped ← M.getInitialId
   let mut newProof := Array.mkEmpty used.size
   for (id, _) in used do
     M.registerIdMap id nextMapped
