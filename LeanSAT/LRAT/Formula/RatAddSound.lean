@@ -437,11 +437,15 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
       conv => rhs; rw [f_clauses_rw, Array.size]
       exact hi
     rw [i_eq_range_i]
-    apply Misc.Array.mem_filter i i_in_bounds
-    rw [← Array.getElem_eq_data_getElem] at c'_in_f
-    simp only [getElem!, Array.range_idx i_lt_f_clauses_size, i_lt_f_clauses_size, dite_true,
-      c'_in_f, DefaultClause.contains_iff, Array.get_eq_getElem]
-    simpa [Clause.toList] using negPivot_in_c'
+    rw [Array.mem_data]
+    rw [Array.mem_filter]
+    constructor
+    . rw [← Array.mem_data]
+      apply Array.getElem_mem_data
+    . rw [← Array.getElem_eq_data_getElem] at c'_in_f
+      simp only [getElem!, Array.range_idx i_lt_f_clauses_size, i_lt_f_clauses_size, dite_true,
+        c'_in_f, DefaultClause.contains_iff, Array.get_eq_getElem]
+      simpa [Clause.toList] using negPivot_in_c'
   rcases List.get_of_mem h with ⟨j, h'⟩
   have j_in_bounds : j < ratHints.size := by
     have j_property := j.2

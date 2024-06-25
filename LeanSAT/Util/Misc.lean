@@ -5,8 +5,7 @@ Authors: Josh Clune
 -/
 import Batteries.Data.Array.Lemmas
 
--- Various helper theorems/definitions copied from mathlib
-namespace Misc -- Adding this namespace to avoid naming conflicts with the actual mathlib theorems
+namespace Misc
 
 open List
 
@@ -101,16 +100,6 @@ theorem Array.range_idx {n : Nat} {x : Nat} (h : x < n) : (Array.range n)[x]'(by
         simp only [Array.range, Array.mkEmpty_eq] at h_size_range
         simp only [x_eq_n, Array.mkEmpty_eq, h_size_range, Nat.lt_irrefl] at x_lt_n
       . rw [x_eq_n]
-
-theorem Array.mem_filter {a : Array α} {p : α → Bool} :
-  ∀ i : Nat, ∀ i_in_bounds : i < a.size, p (a[i]'i_in_bounds) → (a[i]'i_in_bounds) ∈ (a.filter p).data := by
-  intro i hi hp
-  rw [Array.mem_data]
-  rw [_root_.Array.mem_filter]
-  constructor
-  . rw [← Array.mem_data]
-    apply Array.getElem_mem_data
-  . assumption
 
 theorem Array.set!_preserves_size {a : Array α} {i : Nat} {x : α} : (a.set! i x).size = a.size := by
   rw [Array.set!, Array.setD]
