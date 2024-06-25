@@ -185,11 +185,13 @@ theorem mkGateCached.go_le_size (aig : AIG α) (input : GateInput aig)
     . simp_arith [mkConstCached_le_size]
     . simp_arith [mkConstCached_le_size]
     . simp_arith [mkConstCached_le_size]
-    . simp_arith [mkConstCached_le_size]
-    . simp_arith [mkConstCached_le_size]
-    . simp_arith [mkConstCached_le_size]
-    . simp_arith [mkConstCached_le_size]
-    . split <;> simp_arith [mkConstCached_le_size]
+    . simp_arith
+    . simp_arith
+    . simp_arith
+    . simp_arith
+    . split
+      . simp_arith
+      . split <;> simp_arith [mkConstCached_le_size]
 
 /--
 `AIG.mkGateCached` never shrinks the underlying AIG.
@@ -239,12 +241,16 @@ theorem mkGateCached.go_decl_eq (aig : AIG α) (input : GateInput aig) :
       . split at hres
         . rw [← hres]
           intros
-          rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
-        . rw [← hres]
-          dsimp
-          intro idx h1 h2
-          rw [Array.get_push]
-          simp [h2]
+          simp
+        . split at hres
+          . rw [← hres]
+            intros
+            rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
+          . rw [← hres]
+            dsimp
+            intro idx h1 h2
+            rw [Array.get_push]
+            simp [h2]
 
 /--
 The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
@@ -292,13 +298,21 @@ theorem mkGateCached.go_eval_eq_mkGate_eval {aig : AIG α} {input : GateInput ai
       simp_all [denote_idx_const heq]
     . split
       . next hif =>
-        simp only [Bool.and_eq_true, beq_iff_eq] at hif
-        rcases hif with ⟨hlif, hrif⟩
-        have : input.lhs.ref = input.rhs.ref := by
+        simp only [Bool.beq_false, Bool.and_eq_true, beq_iff_eq, Bool.not_eq_true'] at hif
+        rcases hif with ⟨⟨hifeq, hlinv⟩, hrinv⟩
+        replace hifeq : input.lhs.ref = input.rhs.ref := by
           rcases input with ⟨⟨⟨_, _⟩, _⟩, ⟨⟨_, _⟩, _⟩⟩
-          simpa using hlif
-        simp [this, hrif]
-      . simp [mkGate, denote]
+          simpa using hifeq
+        simp [hlinv, hrinv, hifeq]
+      . split
+        . next hif =>
+          simp only [Bool.and_eq_true, beq_iff_eq] at hif
+          rcases hif with ⟨hifeq, hinv⟩
+          replace hifeq : input.lhs.ref = input.rhs.ref := by
+            rcases input with ⟨⟨⟨_, _⟩, _⟩, ⟨⟨_, _⟩, _⟩⟩
+            simpa using hifeq
+          simp [hifeq, hinv]
+        . simp [mkGate, denote]
 
 /--
 The central equality theorem between `mkGateCached` and `mkGate`.

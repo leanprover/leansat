@@ -106,8 +106,11 @@ where
       | _, .const true, false, false | _, .const false, false, true =>
         ⟨⟨decls, cache, inv⟩, lhs, (by assumption)⟩
       | _, _, _, _ =>
-        -- Contradiction rule
-        if (lhs == rhs) && (linv == !rinv) then
+        if lhs == rhs && linv == false && rinv == false then
+          -- Idempotency rule
+         ⟨⟨decls, cache, inv⟩, lhs, (by assumption)⟩
+        else if lhs == rhs && linv == !rinv then
+          -- Contradiction rule
           mkConstCached ⟨decls, cache, inv⟩ false
         else
           let g := decls.size
