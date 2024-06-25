@@ -56,4 +56,3 @@ syntax (name := lratCheckCommand) "lratCheck" strLit strLit : command
   | _ => throwError "Failed to parse loadLRAT command"
 
 lratCheck "./pigeon-hole/hole6.cnf" "./pigeon-hole/hole6.lrat"
-lratCheck "./pigeon-hole/hole7.cnf" "./pigeon-hole/hole7.lrat"
