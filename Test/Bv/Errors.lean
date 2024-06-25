@@ -8,7 +8,7 @@ Consider increasing the timeout with `set_option sat.timeout <sec>`
 -/
 #guard_msgs in
 set_option sat.timeout 1 in
-theorem timeout (x y z : BitVec 2048) : x - (y + z) = x - y - z := by
+theorem timeout (x y z : BitVec 1024) : x - (y + z) = x - y - z := by
   bv_decide
 
 /--
