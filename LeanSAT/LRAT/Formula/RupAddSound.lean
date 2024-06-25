@@ -654,7 +654,6 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           specialize pacc i
           simp only [Bool.not_eq_true] at pacc
           have i_in_bounds : i.1 < acc.1.size := by rw [hsize]; exact i.2.2
-          have l_in_bounds : l.1 < acc.1.size := by rw [hsize]; exact l.2.2
           by_cases l.1 = i.1
           . next l_eq_i =>
             simp only [getElem!, Array.size_modify, i_in_bounds, ↓ reduceDIte,
