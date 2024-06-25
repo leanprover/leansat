@@ -175,6 +175,13 @@ theorem denote_mkGate_cached {aig : AIG α} {input} {hit}
     unfold denote denote.go
   split <;> simp_all[denote]
 
+theorem mkGateCached.go_le_size (aig : AIG α) (input : GateInput aig)
+    : aig.decls.size ≤ (go aig input).aig.decls.size := by
+  dsimp [go]
+  split
+  . simp
+  . split <;> simp_arith [mkConstCached_le_size]
+
 /--
 `AIG.mkGateCached` never shrinks the underlying AIG.
 -/
@@ -182,17 +189,14 @@ theorem mkGateCached_le_size (aig : AIG α) (input : GateInput aig)
     : aig.decls.size ≤ (aig.mkGateCached input).aig.decls.size := by
   dsimp [mkGateCached]
   split
-  . simp
-  . split <;> simp_arith [mkConstCached_le_size]
+  . apply mkGateCached.go_le_size
+  . apply mkGateCached.go_le_size
 
-/--
-The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
--/
-theorem mkGateCached_decl_eq (aig : AIG α) (input : GateInput aig) :
+theorem mkGateCached.go_decl_eq (aig : AIG α) (input : GateInput aig) :
     ∀ (idx : Nat) (h1) (h2),
-      (aig.mkGateCached input).aig.decls[idx]'h1 = aig.decls[idx]'h2 := by
-    generalize hres : mkGateCached aig input = res
-    unfold mkGateCached at hres
+      (go aig input).aig.decls[idx]'h1 = aig.decls[idx]'h2 := by
+    generalize hres : go aig input = res
+    unfold go at hres
     dsimp at hres
     split at hres
     . rw [← hres]
@@ -229,19 +233,30 @@ theorem mkGateCached_decl_eq (aig : AIG α) (input : GateInput aig) :
         rw [Array.get_push]
         simp [h2]
 
+/--
+The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
+-/
+theorem mkGateCached_decl_eq (aig : AIG α) (input : GateInput aig) :
+    ∀ (idx : Nat) (h1) (h2),
+      (aig.mkGateCached input).aig.decls[idx]'h1 = aig.decls[idx]'h2 := by
+    generalize hres : mkGateCached aig input = res
+    unfold mkGateCached at hres
+    dsimp at hres
+    split at hres
+    all_goals
+      rw [← hres]
+      intros
+      rw [mkGateCached.go_decl_eq]
+
 instance : LawfulOperator α GateInput mkGateCached where
   le_size := mkGateCached_le_size
   decl_eq := by
     intros
     apply mkGateCached_decl_eq
 
-/--
-The central equality theorem between `mkGateCached` and `mkGate`.
--/
-@[simp]
-theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG α} {input : GateInput aig} :
-    ⟦aig.mkGateCached input, assign⟧ = ⟦aig.mkGate input, assign⟧ := by
-  simp only [mkGateCached]
+theorem mkGateCached.go_eval_eq_mkGate_eval {aig : AIG α} {input : GateInput aig} :
+    ⟦go aig input, assign⟧ = ⟦aig.mkGate input, assign⟧ := by
+  simp only [go]
   split
   . next heq1 =>
     rw [denote_mkGate_cached heq1]
@@ -263,5 +278,18 @@ theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG α} {input : GateInput aig} 
     . next heq _ _ _ =>
       simp_all [denote_idx_const heq]
     . simp [mkGate, denote]
+
+/--
+The central equality theorem between `mkGateCached` and `mkGate`.
+-/
+@[simp]
+theorem mkGateCached_eval_eq_mkGate_eval {aig : AIG α} {input : GateInput aig} :
+    ⟦aig.mkGateCached input, assign⟧ = ⟦aig.mkGate input, assign⟧ := by
+  simp only [mkGateCached]
+  split
+  . rw [mkGateCached.go_eval_eq_mkGate_eval]
+  . rw [mkGateCached.go_eval_eq_mkGate_eval]
+    simp only [denote_mkGate]
+    rw [Bool.and_comm]
 
 end AIG

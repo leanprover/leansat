@@ -110,9 +110,9 @@ theorem go_le_size (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref
       (lhs rhs : RefStream aig w) (s : RefStream aig curr)
     : aig.decls.size ≤ (go aig curr hcurr discr lhs rhs s).aig.decls.size := by
   unfold go
+  dsimp
   split
-  . dsimp
-    refine Nat.le_trans ?_ (by apply go_le_size)
+  . refine Nat.le_trans ?_ (by apply go_le_size)
     apply LawfulOperator.le_size (f := mkIfCached)
   . simp
 
@@ -122,9 +122,9 @@ theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref
        (go aig curr hcurr discr lhs rhs s).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig curr hcurr discr lhs rhs s = res
   unfold go at hgo
+  dsimp at hgo
   split at hgo
-  . dsimp at hgo
-    rw [← hgo]
+  . rw [← hgo]
     intro idx h1 h2
     rw [go_decl_eq]
     rw [AIG.LawfulOperator.decl_eq (f := AIG.mkIfCached)]
@@ -155,9 +155,9 @@ theorem go_getRef_aux {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w)
   intro idx hidx
   generalize hgo : go aig curr hcurr discr lhs rhs s = res
   unfold go at hgo
+  dsimp at hgo
   split at hgo
-  . dsimp at hgo
-    rw [← hgo]
+  . rw [← hgo]
     intros
     rw [go_getRef_aux]
     rw [AIG.RefStream.getRef_push_ref_lt]
@@ -166,8 +166,7 @@ theorem go_getRef_aux {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w)
       . simp
       . assumption
     . apply go_le_size
-  . dsimp at hgo
-    rw [← hgo]
+  . rw [← hgo]
     simp only [Nat.le_refl, getRef, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = w := by omega
     subst this
@@ -216,9 +215,9 @@ theorem denote_go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (di
   intro idx hidx1 hidx2
   generalize hgo : go aig curr hcurr discr lhs rhs s = res
   unfold go at hgo
+  dsimp at hgo
   split at hgo
-  . dsimp at hgo
-    cases Nat.eq_or_lt_of_le hidx2 with
+  . cases Nat.eq_or_lt_of_le hidx2 with
     | inl heq =>
       subst heq
       rw [← hgo]
