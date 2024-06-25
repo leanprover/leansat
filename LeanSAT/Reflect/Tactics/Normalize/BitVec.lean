@@ -10,6 +10,8 @@ import LeanSAT.Reflect.Tactics.Normalize.Canonicalize
 namespace BVDecide
 namespace Normalize
 
+open Lean Meta
+
 section Reduce
 
 attribute [bv_normalize] BitVec.neg_eq_not_add
@@ -58,6 +60,18 @@ attribute [bv_normalize] BitVec.getLsb_zero_length
 attribute [bv_normalize] BitVec.getLsb_concat_zero
 attribute [bv_normalize] BitVec.mul_one
 attribute [bv_normalize] BitVec.one_mul
+
+/--
+The bitblaster for multiplication introduces symbolic branches over the right hand side.
+If we have an expression of the form `c * x` where `c` is constant we should change it to `x * c`
+such that these symbolic branches get constant folded by the AIG framework.
+-/
+simproc [bv_normalize] mulConst ((_ : BitVec _) * (_ : BitVec _)) := fun e => do
+  let_expr HMul.hMul _ _ _ _ lhs rhs := e | return .continue
+  let some ⟨width, _⟩ ← Lean.Meta.getBitVecValue? lhs | return .continue
+  let new ← mkAppM ``HMul.hMul #[rhs, lhs]
+  let proof := mkApp3 (mkConst ``BitVec.mul_comm) (toExpr width) lhs rhs
+  return .done { expr := new, proof? := some proof }
 
 end Constant
 
