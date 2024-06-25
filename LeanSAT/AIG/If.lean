@@ -63,6 +63,7 @@ theorem denote_mkIfCached {aig : AIG α} {input : TernaryInput aig} :
     if ⟦aig, input.discr, assign⟧ then ⟦aig, input.lhs, assign⟧ else ⟦aig, input.rhs, assign⟧ := by
   rw [if_as_bool]
   unfold mkIfCached
+  dsimp
   simp only [TernaryInput.cast, Ref_cast', id_eq, Int.reduceNeg, denote_mkOrCached,
     denote_projected_entry, denote_mkAndCached, denote_mkNotCached]
   congr 2
