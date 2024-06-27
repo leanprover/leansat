@@ -57,7 +57,7 @@ theorem assignments_invariant_entails_limplies {n : Nat} (f : DefaultFormula n)
   . next h =>
     specialize f_assignments_invariant h p pf
     by_cases hpi : p i <;> simp [hpi, HSat.eval] at f_assignments_invariant
-  . next h => simp_all [getElem!, i.2.2]
+  . next h => simp_all [getElem!, i.2.2, decidableGetElem?]
 
 /-- performRupAdd adds to f.rupUnits and then clears f.rupUnits. If f begins with some units in f.rupUnits,
     then performRupAdd will clear more than it intended to which will break the correctness of rupAdd_result -/
@@ -481,7 +481,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact hbound
               simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDIte,
-                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem] at heq
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem, decidableGetElem?] at heq
               rw [hidx, hl] at heq
               simp only [unit, Option.some.injEq, DefaultClause.mk.injEq, List.cons.injEq, and_true] at heq
               simp only [← heq, not] at l_ne_b
@@ -517,7 +517,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact hbound
               simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDIte,
-                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem] at heq
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem, decidableGetElem?] at heq
               rw [hidx, hl] at heq
               simp only [unit, Option.some.injEq, DefaultClause.mk.injEq, List.cons.injEq, and_true] at heq
               have i_eq_l : i = l.1 := by rw [← heq]
@@ -578,7 +578,7 @@ theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultF
                 conv => rhs; rw [f_clauses_rw, Array.size_mk]
                 exact hbound
               simp only [getElem!, id_eq_idx, Array.data_length, idx_in_bounds2, ↓reduceDIte,
-                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem] at heq
+                Fin.eta, Array.get_eq_getElem, Array.getElem_eq_data_getElem, decidableGetElem?] at heq
               rw [hidx] at heq
               simp only [Option.some.injEq] at heq
               rw [← heq] at hl

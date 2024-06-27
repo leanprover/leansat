@@ -41,18 +41,18 @@ theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assig
         exact h
     . apply Exists.intro l.1
       simp only [insertUnit, hl, ite_false, Array.get_modify_at_idx l_in_bounds]
-      simp only [getElem!, l_in_bounds, dite_true] at assignments_l_ne_unassigned
+      simp only [getElem!, l_in_bounds, dite_true, decidableGetElem?] at assignments_l_ne_unassigned
       by_cases l.2
       . next l_eq_true =>
         rw [l_eq_true]
         simp only [hasAssignment, l_eq_true, hasPosAssignment, getElem!, l_in_bounds, dite_true, ite_true,
-          Bool.not_eq_true] at hl
+          Bool.not_eq_true, decidableGetElem?] at hl
         split at hl <;> simp_all (config := { decide := true })
       . next l_eq_false =>
         simp only [Bool.not_eq_true] at l_eq_false
         rw [l_eq_false]
         simp only [hasAssignment, l_eq_false, hasNegAssignment, getElem!, l_in_bounds, dite_true, ite_false,
-          Bool.not_eq_true] at hl
+          Bool.not_eq_true, decidableGetElem?] at hl
         split at hl <;> simp_all (config := { decide := true })
 
 theorem contradiction_of_insertUnit_fold_success {n : Nat} (assignments : Array Assignment) (assignments_size : assignments.size = n)
@@ -617,7 +617,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
         simp only [toList, Array.toList_eq, List.append_assoc, List.mem_append, List.mem_filterMap, id_eq,
           exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]
         apply Or.inl
-        simp only [getElem?] at hc
+        simp only [getElem?, decidableGetElem?] at hc
         split at hc
         . simp only [Option.some.injEq] at hc
           rw [← hc]
@@ -657,8 +657,8 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           by_cases l.1 = i.1
           . next l_eq_i =>
             simp only [getElem!, Array.size_modify, i_in_bounds, ↓ reduceDIte,
-              Array.get_eq_getElem, l_eq_i, Array.get_modify_at_idx i_in_bounds (addAssignment b)]
-            simp only [getElem!, i_in_bounds, dite_true, Array.get_eq_getElem] at pacc
+              Array.get_eq_getElem, l_eq_i, Array.get_modify_at_idx i_in_bounds (addAssignment b), decidableGetElem?]
+            simp only [getElem!, i_in_bounds, dite_true, Array.get_eq_getElem, decidableGetElem?] at pacc
             by_cases pi : p i
             . simp only [pi, decide_False]
               simp only [hasAssignment, pi, decide_False, ite_false] at pacc
@@ -682,8 +682,8 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           . next l_ne_i =>
             simp only [getElem!, Array.size_modify, i_in_bounds,
               Array.get_modify_unchanged i_in_bounds _ l_ne_i, dite_true,
-              Array.get_eq_getElem]
-            simp only [getElem!, i_in_bounds, dite_true] at pacc
+              Array.get_eq_getElem, decidableGetElem?]
+            simp only [getElem!, i_in_bounds, dite_true, decidableGetElem?] at pacc
             exact pacc
       . apply And.intro hsize ∘ And.intro h1
         simp only [false_implies]
