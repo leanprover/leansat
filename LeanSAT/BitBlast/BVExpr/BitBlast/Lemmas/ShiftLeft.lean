@@ -142,7 +142,7 @@ termination_by w - curr
 end blastShiftLeftConst
 
 @[simp]
-theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w)
+theorem blastShiftLeftConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w)
     (assign : α → Bool)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
@@ -160,6 +160,40 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w
   unfold blastShiftLeftConst
   apply blastShiftLeftConst.go_eq_eval_getLsb
   omega
+
+opaque shiftLeftRec (x : BitVec w0) (y : BitVec w1) (n : Nat) : BitVec w0
+
+@[simp]
+theorem shiftLeftRec_zero (x : BitVec w0) (y : BitVec w1) :
+    shiftLeftRec x y 0 = x <<< (y &&& (1#w1 <<< 0))  := by
+  sorry
+
+@[simp]
+theorem shiftLeftRec_succ (x : BitVec w0) (y : BitVec w1) :
+    shiftLeftRec x y (n + 1) =
+      (shiftLeftRec x y n) <<< (y &&& (1#w1 <<< (n + 1))) := by
+  sorry
+
+theorem shiftLeft_eq_shiftLeft_rec (x : BitVec w0) (y : BitVec w1) :
+    x <<< y = shiftLeftRec x y (w1 - 1) := by
+  sorry
+
+namespace blastShiftLeft
+end blastShiftLeft
+
+theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTarget aig w0)
+    (lhs : BitVec w0) (rhs : BitVec target.n) (assign : α → Bool)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w0), ⟦aig, target.target.getRef idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < target.n), ⟦aig, target.distance.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+    : ∀ (idx : Nat) (hidx : idx < w0),
+        ⟦
+          (blastShiftLeft aig target).aig,
+          (blastShiftLeft aig target).stream.getRef idx hidx,
+          assign
+        ⟧
+          =
+        (lhs <<< rhs).getLsb idx := by
+  sorry
 
 end bitblast
 end BVExpr

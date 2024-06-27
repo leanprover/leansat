@@ -112,7 +112,18 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     . apply Eq.symm
       apply BitVec.getLsb_ge
       omega
-  | shiftLeft lhs rhs lih rih => sorry
+  | shiftLeft lhs rhs lih rih =>
+    simp [go]
+    apply blastShiftLeft_eq_eval_getLsb
+    . intros
+      dsimp
+      rw [go_denote_mem_prefix]
+      rw [← lih (aig := aig)]
+      . simp
+      . assumption
+      . simp [Ref.hgate]
+    . intros
+      rw [← rih]
   | bin lhs op rhs lih rih =>
     cases op with
     | and =>
