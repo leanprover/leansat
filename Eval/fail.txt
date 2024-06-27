@@ -14,7 +14,5 @@ bitvec_InstCombineShift__422_2.lean
 bitvec_InstCombineShift__440.lean
 bitvec_InstCombineShift__458.lean
 bitvec_InstCombineShift__476.lean
-bitvec_InstCombineShift__497'''.lean
 bitvec_InstCombineShift__497.lean
 bitvec_InstCombineShift__582.lean
-bitvec_InstCombineShift__724.lean
