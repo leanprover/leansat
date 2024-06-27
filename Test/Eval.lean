@@ -72,6 +72,7 @@ import Test.Eval.bitvec_AndOrXor_716
 import Test.Eval.bitvec_AndOrXor_794
 import Test.Eval.bitvec_AndOrXor_827
 import Test.Eval.bitvec_AndOrXor_887_2
+<<<<<<< HEAD
 import Test.Eval.g2004h02h23hShiftShiftOverflow_proof
 import Test.Eval.g2004h11h22hMissedhandhfold_proof
 import Test.Eval.g2008h07h08hSubAnd_proof
@@ -126,3 +127,5 @@ import Test.Eval.gsubhxor_proof
 import Test.Eval.gunfoldhmaskedhmergehwithhconsthmaskhscalar_proof
 import Test.Eval.gxor2_proof
 import Test.Eval.gxorhofhor_proof
+import Test.Eval.bitvec_InstCombineShift__724
+import «Test.Eval.bitvec_InstCombineShift__497'''»
