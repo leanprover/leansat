@@ -85,23 +85,6 @@ instance : AIG.LawfulStreamOperator α AIG.ShiftTarget blastShiftLeftConst where
     unfold blastShiftLeftConst
     apply blastShiftLeftConst.go_decl_eq
 
-opaque shiftLeftRec (x : BitVec w0) (y : BitVec w1) (n : Nat) : BitVec w0
-
-@[simp]
-theorem shiftLeftRec_zero (x : BitVec w0) (y : BitVec w1) :
-    shiftLeftRec x y 0 = x <<< (y &&& (1#w1 <<< 0))  := by
-  sorry
-
-@[simp]
-theorem shiftLeftRec_succ (x : BitVec w0) (y : BitVec w1) :
-    shiftLeftRec x y (n + 1) =
-      (shiftLeftRec x y n) <<< (y &&& (1#w1 <<< (n + 1))) := by
-  sorry
-
-theorem shiftLeft_eq_shiftLeft_rec (x : BitVec w0) (y : BitVec w1) :
-    x <<< y = shiftLeftRec x y (w1 - 1) := by
-  sorry
-
 def blastShiftLeft (aig : AIG α) (target : AIG.ArbitraryShiftTarget aig w)
     : AIG.RefStreamEntry α w :=
   let ⟨n, input, distance⟩ := target
