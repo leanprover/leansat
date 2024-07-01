@@ -154,8 +154,9 @@ theorem BitVec.not_not (a : BitVec w) : ~~~(~~~a) = a := by
   simp
 
 @[bv_normalize]
-theorem BitVec.shiftLeft_zero (n : BitVec w) : n <<< 0 = n := by
-  ext
+theorem BitVec.shiftLeft_zero (n : BitVec w) : n <<< 0#w' = n := by
+  ext i
+  simp only [(· <<< ·)]
   simp
 
 @[bv_normalize]
