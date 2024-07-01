@@ -94,27 +94,40 @@ structure TwoPowShiftTarget (aig : AIG α) (w : Nat) where
   rhs : AIG.RefStream aig n
   pow : Nat
 
-/-
-lhs <<< (rhs &&& twoPow _ pow)
-  =
-lhs <<< (if rhs.getLsb pow then (1 <<< pow) else 0)
--/
 def twoPowShift (aig : AIG α) (target : TwoPowShiftTarget aig w) : AIG.RefStreamEntry α w :=
   let ⟨n, lhs, rhs, pow⟩ := target
   if h:pow < n then
-    let res := blastShiftLeftConst aig ⟨lhs, 1 <<< pow⟩
+    let res := blastShiftLeftConst aig ⟨lhs, (2 ^ pow) % 2^n⟩
     let aig := res.aig
     let shifted := res.stream
 
-    let rhs := rhs.cast sorry
-    let lhs := lhs.cast sorry
+    have := by
+      apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+    let rhs := rhs.cast this
+    let lhs := lhs.cast this
     AIG.RefStream.ite aig ⟨rhs.getRef pow h, shifted, lhs⟩
   else
     ⟨aig, lhs⟩
 
 instance : AIG.LawfulStreamOperator α TwoPowShiftTarget twoPowShift where
-  le_size := sorry
-  decl_eq := sorry
+  le_size := by
+    intros
+    unfold twoPowShift
+    dsimp
+    split
+    . apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.ite)
+      apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
+    . simp
+  decl_eq := by
+    intros
+    unfold twoPowShift
+    dsimp
+    split
+    . rw [AIG.LawfulStreamOperator.decl_eq (f := AIG.RefStream.ite)]
+      rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeftConst)]
+      apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := blastShiftLeftConst)
+      assumption
+    . simp
 
 end blastShiftLeft
 
@@ -138,7 +151,7 @@ where
       (acc : AIG.RefStream aig w)
       : AIG.RefStreamEntry α w :=
     if h:curr < n - 1 then
-      let res := blastShiftLeft.twoPowShift aig ⟨_, acc, distance, curr⟩
+      let res := blastShiftLeft.twoPowShift aig ⟨_, acc, distance, curr + 1⟩
       let aig := res.aig
       let acc := res.stream
       have := by
