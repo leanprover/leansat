@@ -150,7 +150,7 @@ where
     | .addRat id c _ rupHints ratHints =>
       s!"{id} {serializeClause c}0 {serializeIdList rupHints}0 {serializeRatHints ratHints}0"
     | .del ids =>
-      -- TODO: 1 is not an actual id
+      -- Note: 1 is not an actual id but we never produce delete anyways
       s!"1 d{serializeIdList ids}0"
 
   serializeIdList (ids : Array Nat) : String :=

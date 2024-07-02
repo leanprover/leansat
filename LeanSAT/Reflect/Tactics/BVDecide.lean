@@ -19,11 +19,6 @@ structure UnsatProver.Result where
 
 abbrev UnsatProver := BVLogicalExpr → Batteries.HashMap Nat Expr → MetaM UnsatProver.Result
 
--- TODO: This should be upstream?
-instance : ToExpr (BitVec w) where
-  toExpr bv := mkApp2 (mkConst ``BitVec.ofNat) (toExpr w) (toExpr bv.toNat)
-  toTypeExpr := mkApp (mkConst ``BitVec) (toExpr w)
-
 instance : ToExpr BVBinPred where
   toExpr x :=
     match x with

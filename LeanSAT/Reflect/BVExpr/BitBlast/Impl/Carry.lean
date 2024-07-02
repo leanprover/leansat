@@ -21,8 +21,7 @@ where
       let lin := lhs.getRef curr hidx
       let rin := rhs.getRef curr hidx
       let res := mkFullAdderCarry aig ⟨lin, rin, cin⟩
-      -- XXX: This theorem has to be stated like this for the defeq gods to be happy
-      have : aig.decls.size ≤ (mkFullAdderCarry aig ⟨lhs.getRef curr hidx, rhs.getRef curr hidx, cin⟩).aig.decls.size := by
+      have := by
         apply AIG.LawfulOperator.le_size (f := mkFullAdderCarry)
       let aig := res.aig
       let carryRef := res.ref
