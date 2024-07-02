@@ -1,5 +1,5 @@
 import LeanSAT.Reflect.Tactics.BVDecide
 
 theorem bitvec_229 :
- ∀ (X C1 Op1 : BitVec 64), (X + C1) * Op1 = X * Op1 + C1 * Op1
+ ∀ (X C1 Op1 : BitVec 4), (X + C1) * Op1 = X * Op1 + C1 * Op1
 := by intros; bv_decide
