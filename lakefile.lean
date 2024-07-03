@@ -8,7 +8,9 @@ package LeanSAT {
   moreGlobalServerArgs := #["--tstack=32000"]
 }
 
+@[test_driver]
 lean_lib Test
+
 lean_lib Eval
 
 @[default_target]
