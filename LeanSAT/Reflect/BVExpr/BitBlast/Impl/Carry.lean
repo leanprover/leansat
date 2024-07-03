@@ -39,7 +39,8 @@ where
 
 namespace mkOverflowBit
 
-theorem go_le_size {aig : AIG α} {cin lhs rhs} : aig.decls.size ≤ (go aig curr hcurr cin lhs rhs).aig.decls.size := by
+theorem go_le_size {aig : AIG α} {cin} {lhs rhs : AIG.RefStream aig w}
+    : aig.decls.size ≤ (go aig curr hcurr cin lhs rhs).aig.decls.size := by
   unfold go
   dsimp
   split
@@ -47,8 +48,9 @@ theorem go_le_size {aig : AIG α} {cin lhs rhs} : aig.decls.size ≤ (go aig cur
     apply AIG.LawfulOperator.le_size (f := mkFullAdderCarry)
   . dsimp
     omega
+termination_by w - curr
 
-theorem go_decl_eq {aig : AIG α} {cin lhs rhs}
+theorem go_decl_eq {aig : AIG α} {cin} {lhs rhs : AIG.RefStream aig w}
     : ∀ (idx : Nat) (h1) (h2),
         (go aig curr hcurr cin lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig curr hcurr cin lhs rhs = res
@@ -62,6 +64,7 @@ theorem go_decl_eq {aig : AIG α} {cin lhs rhs}
     apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := mkFullAdderCarry)
     assumption
   . simp [← hgo]
+termination_by w - curr
 
 instance : AIG.LawfulOperator α OverflowInput mkOverflowBit where
   le_size := by
