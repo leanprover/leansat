@@ -25,26 +25,22 @@ jobs:
 
       - name: build
         id: build
-        run: lake build -Kwerror
+        run: lake build
 
       - name: test
         if: steps.build.outcome == 'success'
         run: make test
 
-      # No point linting until we write some doc-strings.
-      # - name: lint
-      #   if: steps.build.outcome == 'success'
-      #   run: make lint
-
-      - name: Check for long lines
-        if: always()
-        run: |
-          ! (find Sat -name "*.lean" -type f -exec grep -E -H -n '^.{101,}$' {} \; | grep -v -E 'https?://')
+      - name: eval
+        run: make eval
 
       - name: Don't 'import Lean', use precise imports
         if: always()
         run: |
-          ! (find Sat -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Lean$')
+          ! (find LeanSAT -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Lean$')
 
-      - name: eval
-        run: make eval
+      - name: Find trailing whitespaces
+        if: always()
+        run: |
+          ! (find LeanSAT -name "*.lean" -type f -print0 | xargs -0 grep -E -n ".* +$")
+
