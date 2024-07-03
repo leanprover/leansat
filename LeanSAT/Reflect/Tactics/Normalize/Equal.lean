@@ -8,9 +8,9 @@ import LeanSAT.Reflect.Tactics.Attr
 namespace BVDecide
 namespace Normalize
 
-attribute [bv_normalize] Bool.beq_true
+attribute [bv_normalize] beq_true
 attribute [bv_normalize] Bool.true_beq
-attribute [bv_normalize] Bool.beq_false
+attribute [bv_normalize] beq_false
 attribute [bv_normalize] Bool.false_beq
 attribute [bv_normalize] beq_self_eq_true
 attribute [bv_normalize] beq_self_eq_true'
