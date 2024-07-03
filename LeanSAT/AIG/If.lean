@@ -121,6 +121,7 @@ theorem go_le_size (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref
   . refine Nat.le_trans ?_ (by apply go_le_size)
     apply LawfulOperator.le_size (f := mkIfCached)
   . simp
+termination_by w - curr
 
 theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref aig)
       (lhs rhs : RefStream aig w) (s : RefStream aig curr)
@@ -137,6 +138,7 @@ theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref
     apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkIfCached)
     assumption
   . simp [← hgo]
+termination_by w - curr
 
 end ite
 
@@ -177,6 +179,7 @@ theorem go_getRef_aux {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w)
     have : curr = w := by omega
     subst this
     simp
+termination_by w - curr
 
 theorem go_getRef {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref aig)
       (lhs rhs : RefStream aig w) (s : RefStream aig curr)
@@ -245,6 +248,7 @@ theorem denote_go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (di
         . simp [Ref.hgate]
       . omega
   . omega
+termination_by w - curr
 
 end ite
 
