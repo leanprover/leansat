@@ -275,10 +275,7 @@ def Cache.addConst (cache : Cache aig cnf) (idx : Nat) (h : idx < aig.decls.size
         . intro lhs rhs linv rinv idx hbound hmarked heq
           rw [Array.getElem_set] at hmarked
           split at hmarked
-          . next heq2 =>
-            simp at heq2
-            simp [heq2] at htip
-            simp [htip] at heq
+          . simp_all
           . have := cache.inv.hmark lhs rhs linv rinv idx hbound hmarked heq
             simp [Array.getElem_set, this]
         . intro assign heval idx hbound hmarked
@@ -287,8 +284,7 @@ def Cache.addConst (cache : Cache aig cnf) (idx : Nat) (h : idx < aig.decls.size
           . next heq =>
             simp at heq
             simp [heq] at htip heval
-            rw [denote_idx_const htip]
-            simp [heval]
+            simp [heval, denote_idx_const htip]
           . next heq =>
             simp at heval
             have := cache.inv.heval assign heval.right idx hbound hmarked
@@ -316,10 +312,7 @@ def Cache.addAtom (cache : Cache aig cnf) (idx : Nat) (h : idx < aig.decls.size)
         . intro lhs rhs linv rinv idx hbound hmarked heq
           rw [Array.getElem_set] at hmarked
           split at hmarked
-          . next heq2 =>
-            simp at heq2
-            simp [heq2] at htip
-            simp [htip] at heq
+          . simp_all
           . have := cache.inv.hmark lhs rhs linv rinv idx hbound hmarked heq
             simp [Array.getElem_set, this]
         . intro assign heval idx hbound hmarked
@@ -328,8 +321,7 @@ def Cache.addAtom (cache : Cache aig cnf) (idx : Nat) (h : idx < aig.decls.size)
           . next heq =>
             simp at heq
             simp [heq] at htip heval
-            rw [denote_idx_atom htip]
-            simp [heval]
+            simp [heval, denote_idx_atom htip]
           . next heq =>
             simp at heval
             have := cache.inv.heval assign heval.right idx hbound hmarked
@@ -382,10 +374,9 @@ def Cache.addGate (cache : Cache aig cnf) {hlb} {hrb} (idx : Nat) (h : idx < aig
           . next heq =>
             simp at heq
             simp [heq] at htip heval
-            rw [denote_idx_gate htip]
             have hleval := cache.inv.heval assign heval.right lhs (by omega) hl
             have hreval := cache.inv.heval assign heval.right rhs (by omega) hr
-            simp [heval, hleval, hreval]
+            simp [heval, hleval, hreval, denote_idx_gate htip]
           . next heq =>
             simp at heval
             have := cache.inv.heval assign heval.right idx hbound hmarked
@@ -630,9 +621,8 @@ theorem toCNF.inj_is_injection {aig : AIG Nat} (a b : CNFVar aig) :
     cases b with
     | inl =>
       dsimp [inj] at h
-      apply congrArg
-      apply Nat.add_left_cancel
-      exact h
+      congr
+      omega
     | inr rhs =>
       exfalso
       dsimp [inj] at h
@@ -641,15 +631,12 @@ theorem toCNF.inj_is_injection {aig : AIG Nat} (a b : CNFVar aig) :
   | inr lhs =>
     cases b with
     | inl =>
-      exfalso
       dsimp [inj] at h
-      have := lhs.isLt
       omega
     | inr =>
       dsimp [inj] at h
-      apply congrArg
-      apply Fin.eq_of_val_eq
-      exact h
+      congr
+      omega
 
 /--
 The node that we started CNF conversion at will always be marked as visited in the CNF cache.

@@ -173,7 +173,6 @@ theorem relabel_size_eq {entry : Entrypoint α} {f : α → β} :
     (entry.relabel f).aig.decls.size = entry.aig.decls.size := by
   simp [relabel]
 
--- TODO: I believe it is possible to get rid of the Nonempty constraint
 theorem relabel_unsat_iff [Nonempty α] {entry : Entrypoint α} {f : α → β}
     (hinj : ∀ x y, x ∈ entry.aig → y ∈ entry.aig → f x = f y → x = y)
     : (entry.relabel f).unsat ↔ entry.unsat := by
