@@ -19,11 +19,7 @@ attribute [bv_normalize] Bool.true_and
 attribute [bv_normalize] Bool.and_false
 attribute [bv_normalize] Bool.false_and
 attribute [bv_normalize] beq_self_eq_true'
-attribute [bv_normalize] Bool.not_beq_false
-attribute [bv_normalize] Bool.not_beq_true
-attribute [bv_normalize] Bool.beq_true
 attribute [bv_normalize] Bool.true_beq
-attribute [bv_normalize] Bool.beq_false
 attribute [bv_normalize] Bool.false_beq
 attribute [bv_normalize] Bool.beq_not_self
 attribute [bv_normalize] Bool.not_beq_self

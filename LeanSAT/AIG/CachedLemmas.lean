@@ -298,7 +298,7 @@ theorem mkGateCached.go_eval_eq_mkGate_eval {aig : AIG α} {input : GateInput ai
       simp_all [denote_idx_const heq]
     . split
       . next hif =>
-        simp only [Bool.beq_false, Bool.and_eq_true, beq_iff_eq, Bool.not_eq_true'] at hif
+        simp only [beq_false, Bool.and_eq_true, beq_iff_eq, Bool.not_eq_true'] at hif
         rcases hif with ⟨⟨hifeq, hlinv⟩, hrinv⟩
         replace hifeq : input.lhs.ref = input.rhs.ref := by
           rcases input with ⟨⟨⟨_, _⟩, _⟩, ⟨⟨_, _⟩, _⟩⟩

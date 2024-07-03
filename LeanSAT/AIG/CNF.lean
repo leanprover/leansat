@@ -55,7 +55,7 @@ theorem atomToCNF_eval :
     (atomToCNF output a).eval assign
       =
     (assign output == assign a) := by
-  simp only [atomToCNF, CNF.eval_succ, CNF.Clause.eval_succ, Bool.beq_true, Bool.beq_false,
+  simp only [atomToCNF, CNF.eval_succ, CNF.Clause.eval_succ, beq_true, beq_false,
     CNF.Clause.eval_nil, Bool.or_false, CNF.eval_nil, Bool.and_true]
   cases assign output <;> cases assign a <;> decide
 
