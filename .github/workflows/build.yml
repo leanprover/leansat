@@ -21,7 +21,7 @@ jobs:
       - name: install cadical
         run: nix profile install nixpkgs#cadical
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: build
         id: build
