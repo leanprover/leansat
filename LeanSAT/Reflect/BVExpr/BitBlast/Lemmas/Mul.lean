@@ -8,20 +8,6 @@ open AIG
 
 namespace BVExpr
 
-opaque mulRec (l r : BitVec w) (n : Nat) : BitVec w
-
-theorem mulRec_zero_eq (l r : BitVec w) :
-    mulRec l r 0 = if r.getLsb 0 then l else 0 := by
-  sorry
-
-theorem mulRec_succ_eq (l r : BitVec w) (s : Nat) :
-    mulRec l r (s + 1) = mulRec l r s + if r.getLsb (s + 1) then (l <<< (s + 1)) else 0 :=
-  sorry
-
-theorem getLsb_mul (x y : BitVec w) (i : Nat) :
-    (x * y).getLsb i = (mulRec x y w).getLsb i :=
-  sorry
-
 namespace bitblast
 namespace blastMul
 
@@ -32,7 +18,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
     (hacc : ∀ (idx : Nat) (hidx : idx < w),
                 ⟦aig, acc.getRef idx hidx, assign.toAIGAssignment⟧
                   =
-                (mulRec lexpr rexpr curr).getLsb idx)
+                (BitVec.mulRec lexpr rexpr curr).getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (go aig (curr + 1) hcurr acc lhs rhs).aig,
@@ -40,7 +26,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
           assign.toAIGAssignment
         ⟧
           =
-        (mulRec lexpr rexpr w).getLsb idx := by
+        (BitVec.mulRec lexpr rexpr w).getLsb idx := by
   intro idx hidx
   generalize hgo: go aig (curr + 1) hcurr acc lhs rhs = res
   unfold go at hgo
@@ -61,7 +47,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hright]
     . intro idx hidx
-      rw [mulRec_succ_eq]
+      rw [BitVec.mulRec_succ_eq]
       simp only [RefStream.denote_ite, RefStream.getRef_cast, Ref_cast', BitVec.ofNat_eq_ofNat]
       split
       . next hdiscr =>
@@ -97,7 +83,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
     subst this
     rw [← hgo]
     rw [hacc]
-    rw [mulRec_succ_eq]
+    rw [BitVec.mulRec_succ_eq]
     have : rexpr.getLsb (curr + 1) = false := by
       apply BitVec.getLsb_ge
       omega
@@ -120,7 +106,7 @@ theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign :
           =
         (lhs * rhs).getLsb idx := by
   intro idx hidx
-  rw [getLsb_mul]
+  rw [BitVec.getLsb_mul]
   generalize hb : blastMul aig input = res
   unfold blastMul at hb
   dsimp at hb
@@ -143,7 +129,7 @@ theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign :
       . simp [hright]
       . simp [Ref.hgate]
     . intro idx hidx
-      rw [mulRec_zero_eq]
+      rw [BitVec.mulRec_zero_eq]
       simp only [Nat.succ_eq_add_one, RefStream.denote_ite, BinaryRefStream.rhs_getRef_cast,
         Ref_cast', BinaryRefStream.lhs_getRef_cast, blastConst_eq_eval_getLsb,
         BitVec.ofNat_eq_ofNat, eval_const, BitVec.getLsb_zero, Bool.if_false_right,
