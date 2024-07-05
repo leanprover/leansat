@@ -63,7 +63,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
           rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
           rw [hacc]
         . intros
-          simp only [blastShiftLeft_eq_eval_getLsb, BitVec.getLsb_shiftLeft]
+          simp only [blastShiftLeftConst_eq_eval_getLsb, BitVec.getLsb_shiftLeft]
           split
           . next hdiscr => simp [hdiscr]
           . next hidx hdiscr =>
