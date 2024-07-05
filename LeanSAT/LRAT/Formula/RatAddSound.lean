@@ -41,11 +41,18 @@ theorem entails_of_irrelevant_assignment {n : Nat} {p : (PosFin n) → Bool} {c 
     Clause.toList, delete_iff] at p_entails_cl
   simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool]
   rcases p_entails_cl with ⟨v, ⟨⟨negl_ne_v, v_in_c_del_l⟩, pv⟩ | ⟨⟨negl_ne_v, v_in_c_del_l⟩, pv⟩⟩
-    <;> [
-        (apply Exists.intro v; apply Or.inl);
-        (apply Exists.intro v; apply Or.inr)
-      ]
-  all_goals
+  . exists v
+    left
+    constructor
+    . simp [Clause.toList, delete_iff, negl_ne_v, v_in_c_del_l]
+    . split
+      . next heq =>
+        simp only [heq, negateLiteral, not, ne_eq, Prod.mk.injEq, true_and] at negl_ne_v
+        split at negl_ne_v <;> simp_all
+      . next hne =>
+        exact pv
+  . exists v
+    right
     constructor
     . simp [Clause.toList, delete_iff, negl_ne_v, v_in_c_del_l]
     . split

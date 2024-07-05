@@ -356,23 +356,27 @@ theorem encounteredBoth_entails_unsat {n : Nat} (c : DefaultClause n) (assignmen
     (reduce_fold_fn assignment res l) = encounteredBoth → unsatisfiable (PosFin n) assignment := by
     intro h
     rw [reduce_fold_fn] at h
-    split at h <;>
-      [
-        exact ih rfl;
-        skip;
-        skip;
-        simp only at h
-      ]
-    all_goals
-      split at h
-      . split at h <;> simp only at h
-      . split at h <;> simp only at h
+    split at h
+    . exact ih rfl
+    . split at h
+      . split at h <;> simp at h
+      . split at h <;> simp at h
       . next heq =>
         intro p hp
         simp only [(· ⊨ ·), Bool.not_eq_true] at hp
         specialize hp l.1
         simp only [heq, has_of_both] at hp
-      . simp only at h
+      . simp at h
+    . split at h
+      . split at h <;> simp at h
+      . split at h <;> simp at h
+      . next heq =>
+        intro p hp
+        simp only [(· ⊨ ·), Bool.not_eq_true] at hp
+        specialize hp l.1
+        simp only [heq, has_of_both] at hp
+      . simp at h
+    . simp at h
   exact List.foldlRecOn c.clause (reduce_fold_fn assignment) reducedToEmpty hb hl
 
 def reduce_postcondition_induction_motive (c_arr : Array (Literal (PosFin n))) (assignment : Array Assignment)

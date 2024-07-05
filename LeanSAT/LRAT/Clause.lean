@@ -165,10 +165,18 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
             simp only [← heq] at hl
           . simpa [hl, ← l'_eq_l] using heq1
       . next l'_ne_l =>
-        rcases c.nodupkey l' with h | h <;> [apply Or.inl; apply Or.inr] <;>
-        · apply And.intro _ h
-          intro heq
-          simp only [← heq, not_true] at l'_ne_l
+        have := c.nodupkey l'
+        rcases c.nodupkey l' with h | h
+        . left
+          constructor
+          . intro heq
+            simp [← heq] at l'_ne_l
+          . simp [h]
+        . right
+          constructor
+          . intro heq
+            simp [← heq] at l'_ne_l
+          . simp [h]
     have nodup : List.Nodup clause := by
       simp only [List.elem_eq_mem, decide_eq_true_eq] at heq2
       simp [c.nodup, heq2, clause]
