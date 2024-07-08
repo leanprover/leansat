@@ -1,12 +1,14 @@
 import LeanSAT.Reflect.Tactics.BVDecide
+import Std.Data.HashMap
+import Std.Data.HashSet
 
 open Lean
 
 syntax (name := constStat) "#const_stat" ident : command
 
 structure State where
-  counters : HashMap Name Nat := {}
-  visited : HashSet USize := {}
+  counters : Std.HashMap Name Nat := {}
+  visited : Std.HashSet USize := {}
 
 abbrev M := StateRefT State IO
 
@@ -25,7 +27,7 @@ unsafe def countConstUnsafe (e : Expr) : M Unit := do
   | Expr.mdata _ b         => countConstUnsafe b
   | Expr.proj _ _ b        => countConstUnsafe b
   | Expr.const name ..     =>
-    match (← get).counters.find? name with
+    match (← get).counters[name]? with
     | some count =>
       modify (fun stat => { stat with counters := stat.counters.insert name (count + 1) })
     | none =>

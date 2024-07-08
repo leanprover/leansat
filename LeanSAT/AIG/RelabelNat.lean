@@ -5,7 +5,7 @@ Authors: Henrik Böving
 -/
 import LeanSAT.AIG.Relabel
 
-open Batteries
+open Std
 
 variable {α : Type} [BEq α] [Hashable α]
 
@@ -26,7 +26,7 @@ index.
 -/
 inductive Inv1 : Nat → HashMap α Nat → Prop where
 | empty : Inv1 0 {}
-| insert (hinv : Inv1 n map) (hfind : map.find? x = none) : Inv1 (n + 1) (map.insert x n)
+| insert (hinv : Inv1 n map) (hfind : map[x]? = none) : Inv1 (n + 1) (map.insert x n)
 
 /--
 Proof sketch for this axiom once we have more `HashMap` theory:
@@ -44,7 +44,7 @@ Proof sketch for this axiom once we have more `HashMap` theory:
 ```
 -/
 axiom Inv1.property {n m : Nat} (x y : α) (map : HashMap α Nat) (hinv : Inv1 n map)
-    (hfound1 : map.find? x = some m) (hfound2 : map.find? y = some m) : x = y
+    (hfound1 : map[x]? = some m) (hfound2 : map[y]? = some m) : x = y
 
 /--
 This invariant says that we have already visited and inserted all nodes up to a certain index.
@@ -52,10 +52,10 @@ This invariant says that we have already visited and inserted all nodes up to a 
 inductive Inv2 (decls : Array (Decl α)) : Nat → HashMap α Nat → Prop where
 | empty : Inv2 decls 0 {}
 | newAtom (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .atom a)
-  (hmap : map.find? a = none)
+  (hmap : map[a]? = none)
   : Inv2 decls (idx + 1) (map.insert a val)
 | oldAtom (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .atom a)
-  (hmap : map.find? a = some n)
+  (hmap : map[a]? = some n)
   : Inv2 decls (idx + 1) map
 | const (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .const b)
   : Inv2 decls (idx + 1) map
@@ -76,7 +76,7 @@ axiom Inv2.property (decls : Array (Decl α)) (idx upper : Nat) (map : HashMap �
     (hinv : Inv2 decls upper map)
     : ∀ (hidx : idx < upper), ∀ (a : α),
         decls[idx]'(by have := upper_lt_size hinv; omega) = .atom a
-          → ∃ n, map.find? a = some n
+          → ∃ n, map[a]? = some n
 
 end State
 
@@ -116,7 +116,7 @@ Insert a `Decl.atom` into the `State` structure.
 def addAtom {decls : Array (Decl α)} {hidx} (state : State α decls idx) (a : α)
     (h : decls[idx]'hidx = .atom a)
     : State α decls (idx + 1) :=
-  match hmap:state.map.find? a with
+  match hmap:state.map[a]? with
   | some _ =>
     { state with
         inv2 := by
@@ -210,8 +210,8 @@ theorem ofAIG.Inv2 (aig : AIG α) : Inv2 aig.decls aig.decls.size (ofAIG aig) :=
 /--
 Assuming that we find a `Nat` for an atom in the `ofAIG` map, that `Nat` is unique in the map.
 -/
-theorem ofAIG_find_unique {aig : AIG α} (a : α) (ha : (ofAIG aig).find? a = some n)
-    : ∀ a', (ofAIG aig).find? a' = some n → a = a' := by
+theorem ofAIG_find_unique {aig : AIG α} (a : α) (ha : (ofAIG aig)[a]? = some n)
+    : ∀ a', (ofAIG aig)[a']? = some n → a = a' := by
   intro a' ha'
   rcases ofAIG.Inv1 aig with ⟨n, hn⟩
   apply Inv1.property <;> assumption
@@ -219,7 +219,7 @@ theorem ofAIG_find_unique {aig : AIG α} (a : α) (ha : (ofAIG aig).find? a = so
 /--
 We will find a `Nat` for every atom in the `AIG` that the `ofAIG` map was built from.
 -/
-theorem ofAIG_find_some {aig : AIG α} : ∀ a ∈ aig, ∃ n, (ofAIG aig).find? a = some n := by
+theorem ofAIG_find_some {aig : AIG α} : ∀ a ∈ aig, ∃ n, (ofAIG aig)[a]? = some n := by
   intro a ha
   simp only [mem_def] at ha
   rcases Array.get_of_mem ha with ⟨⟨i, isLt⟩, hi⟩
@@ -236,7 +236,7 @@ def relabelNat' (aig : AIG α) : (AIG Nat × HashMap α Nat) :=
   let map := RelabelNat.State.ofAIG aig
   let aig := aig.relabel fun x =>
     -- The none branch never gets hit, we prove this below
-    match map.find? x with
+    match map[x]? with
     | some var => var
     | none => 0
   (aig, map)
