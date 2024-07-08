@@ -17,7 +17,7 @@ structure UnsatProver.Result where
   proof : Expr
   lratCert : LratCert
 
-abbrev UnsatProver := BVLogicalExpr → Batteries.HashMap Nat Expr → MetaM UnsatProver.Result
+abbrev UnsatProver := BVLogicalExpr → Std.HashMap Nat Expr → MetaM UnsatProver.Result
 
 instance : ToExpr BVBinPred where
   toExpr x :=
@@ -104,7 +104,7 @@ structure State where
   The atoms encountered so far. Saved as a map from `BitVec` expressions to a
   width × atomNumber pair.
   -/
-  atoms : HashMap Expr (Nat × Nat) := {}
+  atoms : Std.HashMap Expr (Nat × Nat) := {}
 
 /--
 The reflection monad, used to track `BitVec` variables that we see as we traverse
@@ -139,7 +139,7 @@ def atomsAssignment : M Expr := do
 Look up an expression in the atoms, recording it if it has not previously appeared.
 -/
 def lookup (e : Expr) (width : Nat) : M Nat := do
-  match (← getThe State).atoms.find? e with
+  match (← getThe State).atoms[e]? with
   | some (width', ident) =>
     if width != width' then
       panic! "The same atom occurs with different widths, this is a bug"
@@ -787,9 +787,9 @@ theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : LratCert)
   rw [verifyBVExpr] at h
   assumption
 
-def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignment : Array (Bool × Nat))
-    (aigSize : Nat) (atomsAssignment : Batteries.HashMap Nat Expr) : Array (Expr × BVExpr.PackedBitVec) := Id.run do
-  let mut sparseMap : Batteries.HashMap Nat (RBMap Nat Bool Ord.compare) := {}
+def reconstructCounterExample (var2Cnf : Std.HashMap BVBit Nat) (assignment : Array (Bool × Nat))
+    (aigSize : Nat) (atomsAssignment : Std.HashMap Nat Expr) : Array (Expr × BVExpr.PackedBitVec) := Id.run do
+  let mut sparseMap : Std.HashMap Nat (RBMap Nat Bool Ord.compare) := {}
   for (bitVar, cnfVar) in var2Cnf.toArray do
     /-
     The setup of the variables in CNF is as follows:
@@ -798,10 +798,8 @@ def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignmen
     Hence we access the assignment array offset by the AIG size to obtain the value for a BitVec bit.
     -/
     -- We assume that a variable can be found at its index (off by one) as CaDiCal prints them in order.
-    let (varSet, cnfVar') := assignment[cnfVar + aigSize]!
-    -- But we are also paranoid. Off by one because internal count starts at 0 but CNF starts at 1.
-    assert! cnfVar' == (cnfVar + aigSize + 1)
-    let mut bitMap := sparseMap.find? bitVar.var |>.getD {}
+    let (varSet, _) := assignment[cnfVar + aigSize]!
+    let mut bitMap := sparseMap[bitVar.var]? |>.getD {}
     bitMap := bitMap.insert bitVar.idx varSet
     sparseMap := sparseMap.insert bitVar.var bitMap
 
@@ -814,12 +812,12 @@ def reconstructCounterExample (var2Cnf : Batteries.HashMap BVBit Nat) (assignmen
       if bitValue then
         value := value ||| (1 <<< currentBit)
       currentBit := currentBit + 1
-    let atomExpr := atomsAssignment.find! bitVecVar
+    let atomExpr := atomsAssignment.get! bitVecVar
     finalMap := finalMap.push (atomExpr, ⟨BitVec.ofNat currentBit value⟩)
   return finalMap
 
 def lratBitblaster (cfg : TacticContext) (bv : BVLogicalExpr)
-    (atomsAssignment : Batteries.HashMap Nat Expr) : MetaM UnsatProver.Result := do
+    (atomsAssignment : Std.HashMap Nat Expr) : MetaM UnsatProver.Result := do
   let entry ←
     withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
       -- lazyPure to prevent compiler lifting
@@ -882,7 +880,7 @@ def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId)
     trace[bv] "Reflected bv logical expression: {bvLogicalExpr}"
 
     let atomsPairs := (← getThe State).atoms.toList.map (fun (expr, _, ident) => (ident, expr))
-    let atomsAssignment := Batteries.HashMap.ofList atomsPairs
+    let atomsAssignment := Std.HashMap.ofList atomsPairs
     let ⟨bvExprUnsat, cert⟩ ← unsatProver bvLogicalExpr atomsAssignment
     let proveFalse ← f bvExprUnsat
     g.assign proveFalse

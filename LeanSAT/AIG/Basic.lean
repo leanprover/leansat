@@ -3,7 +3,8 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import Batteries.Data.HashMap
+import Std.Data.HashMap
+import Std.Data.HashSet
 
 /-!
 This module contains the basic definitions for an AIG (And-Inverter Graph) in the style of AIGNET,
@@ -11,7 +12,7 @@ as described in https://arxiv.org/pdf/1304.7861.pdf section 3. It contains an AI
 a description of its semantics and basic operations to construct nodes in the AIG.
 -/
 
-open Batteries
+open Std
 
 theorem Array.get_push_old (as : Array α) (a : α) (h : i < as.size) : (as.push a)[i]'(by simp; omega) = as[i] := by
   simp [Array.get_push, h]
@@ -50,7 +51,7 @@ inductive Cache.WF : Array (Decl α) → HashMap (Decl α) Nat → Prop where
   /--
   An empty `Cache` is valid for any `Array Decl` as it never has a hit.
   -/
-  | empty : Cache.WF decls HashMap.empty
+  | empty : Cache.WF decls {}
   /--
   Given a `cache`, valid with respect to some `decls`, we can extend the `decls` without
   extending the cache and remain valid.
@@ -72,7 +73,7 @@ def Cache (α : Type) [BEq α] [Hashable α] (decls : Array (Decl α)) :=
 Create an empty `Cache`, valid with respect to any `Array Decl`.
 -/
 @[irreducible]
-def Cache.empty (decls : Array (Decl α)) : Cache α decls := ⟨HashMap.empty, WF.empty⟩
+def Cache.empty (decls : Array (Decl α)) : Cache α decls := ⟨{}, WF.empty⟩
 
 @[inherit_doc Cache.WF.push_id, irreducible]
 def Cache.noUpdate (cache : Cache α decls) : Cache α (decls.push decl) :=
@@ -104,7 +105,7 @@ opaque Cache.find? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit 
   it either in `whnf` or in the kernel. This causes *huge* performance issues in practice.
   The function can still be fully verified as all the proofs we need are in `CacheHit`.
   -/
-  match cache.val.find? decl with
+  match cache.val[decl]? with
   | some hit =>
     /-
     TODO: There are two ways around these checks:
@@ -223,7 +224,7 @@ def toGraphviz {α : Type} [BEq α] [ToString α] [Hashable α] (entry : Entrypo
   "Digraph AIG {" ++ nodes ++ dag ++ "}"
 where
   go {α : Type} [BEq α] [ToString α] [Hashable α] (acc : String) (decls : Array (Decl α)) (hinv : IsDag α decls)
-      (idx : Nat) (hidx : idx < decls.size) : StateM (Lean.HashSet (Fin decls.size)) String := do
+      (idx : Nat) (hidx : idx < decls.size) : StateM (HashSet (Fin decls.size)) String := do
     let fidx : Fin decls.size := Fin.mk idx hidx
     if (← get).contains fidx then
       return acc

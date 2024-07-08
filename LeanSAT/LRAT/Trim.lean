@@ -5,6 +5,7 @@ Authors: Henrik Böving
 -/
 import LeanSAT.External.LRAT
 import Lean.Data.RBMap
+import Std.Data.HashMap
 
 open Lean
 
@@ -19,7 +20,7 @@ structure Context where
   /--
   The proof as a map from proof step ids to their actions.
   -/
-  proof : HashMap Nat IntAction
+  proof : Std.HashMap Nat IntAction
   /--
   The id of the first proof step.
   -/
@@ -38,7 +39,7 @@ structure State where
   A mapping from old proof step ids to new ones. Used such that the proof remains a sequence without
   gaps.
   -/
-  mapped : HashMap Nat Nat := {}
+  mapped : Std.HashMap Nat Nat := {}
 
 abbrev M : Type → Type := ReaderT Context <| StateRefT State IO
 
@@ -61,7 +62,7 @@ def run (proof : Array IntAction) (x : M α) : IO α := do
     match a with
     | .addEmpty id .. | .addRup id .. | .addRat id .. => acc.insert id a
     | .del .. => acc
-  let proof := proof.foldl (init := mkHashMap proof.size) folder
+  let proof := proof.foldl (init := {}) folder
 
   ReaderT.run x { proof, initialId, addEmptyId } |>.run' {}
 
@@ -78,7 +79,7 @@ def getEmptyId : M Nat := do
 @[inline]
 def getProofStep (id : Nat) : M (Option IntAction) := do
   let ctx ← read
-  return ctx.proof.find? id
+  return ctx.proof[id]?
 
 @[inline]
 def isUsed (id : Nat) : M Bool := do
@@ -125,7 +126,7 @@ where
   @[inline]
   mapIdent (ident : Nat) : M Nat := do
     let s ← get
-    return s.mapped.find? ident |>.getD ident
+    return s.mapped[ident]? |>.getD ident
 
 end M
 
