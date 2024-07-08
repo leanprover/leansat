@@ -13,7 +13,7 @@ fundamental work for the cached versions later on.
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 @[simp]
 theorem Ref_cast {aig1 aig2 : AIG α} (ref : Ref aig1)

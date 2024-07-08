@@ -10,7 +10,7 @@ open AIG
 
 namespace BVPred
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 theorem mkEq_denote_eq_eval_beq (aig : AIG α) (pair : AIG.BinaryRefStream aig w) (assign : α → Bool)
     (lhs rhs : BitVec w)

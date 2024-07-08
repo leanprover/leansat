@@ -10,7 +10,7 @@ import LeanSAT.AIG.LawfulStreamOperator
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 -- TODO: unify this with ternary input
 structure FullAdderInput (aig : AIG α) where

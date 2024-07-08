@@ -14,7 +14,7 @@ through the use of a cache that re-uses sub-circuits if possible.
 
 namespace AIG
 
-variable {β : Type} [BEq β] [Hashable β] [DecidableEq β]
+variable {β : Type} [Hashable β] [DecidableEq β]
 
 
 /--
@@ -130,7 +130,7 @@ theorem ofBoolExprCached.go_denote_entry (entry : Entrypoint β) {h}:
   apply denote.eq_of_aig_eq
   apply ofBoolExprCached.go_IsPrefix_aig
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 def ofBoolExprCachedDirect (expr : BoolExpr α) : Entrypoint α :=
   ofBoolExprCached expr mkAtomCached
 

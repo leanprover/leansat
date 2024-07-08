@@ -8,7 +8,7 @@ import LeanSAT.AIG.RefStreamOperator
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 open AIG
 

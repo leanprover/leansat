@@ -8,7 +8,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Add
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 structure OverflowInput (aig : AIG α) where
   (w : Nat)

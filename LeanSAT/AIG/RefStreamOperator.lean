@@ -9,9 +9,9 @@ import LeanSAT.AIG.LawfulStreamOperator
 namespace AIG
 namespace  RefStream
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α] {aig : AIG α}
+variable {α : Type} [Hashable α] [DecidableEq α] {aig : AIG α}
 
-class LawfulMapOperator (α : Type) [BEq α] [Hashable α] [DecidableEq α]
+class LawfulMapOperator (α : Type) [Hashable α] [DecidableEq α]
     (f : (aig : AIG α) → Ref aig → Entrypoint α) [LawfulOperator α Ref f] : Prop
   where
   chainable : ∀ (aig : AIG α) (input1 input2 : Ref aig) (h) (assign),
@@ -39,7 +39,7 @@ instance : LawfulMapOperator α mkNotCached where
 
 end LawfulMapOperator
 
-class LawfulZipOperator (α : Type) [BEq α] [Hashable α] [DecidableEq α]
+class LawfulZipOperator (α : Type) [Hashable α] [DecidableEq α]
     (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f] : Prop
   where
   chainable : ∀ (aig : AIG α) (input1 input2 : BinaryInput aig) (h) (assign),

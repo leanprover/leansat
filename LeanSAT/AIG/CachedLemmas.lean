@@ -13,7 +13,7 @@ in different scenarios. In particular reductions to the semantics of the non cac
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 /--
 If we find a cached atom declaration in the AIG, denoting it is equivalent to denoting `AIG.mkAtom`.

@@ -7,7 +7,7 @@ import LeanSAT.AIG.Relabel
 
 open Std
 
-variable {α : Type} [BEq α] [Hashable α]
+variable {α : Type} [DecidableEq α] [Hashable α]
 
 -- TODO: auxiliary theorem, possibly upstream
 theorem _root_.Array.get_of_mem {a : α} {as : Array α}
@@ -84,7 +84,7 @@ end State
 The invariant carrying state structure for building the `HashMap` that translates from arbitrary
 atom identifiers to `Nat`.
 -/
-structure State (α : Type) [BEq α] [Hashable α] (decls : Array (Decl α)) (idx : Nat) where
+structure State (α : Type) [DecidableEq α] [Hashable α] (decls : Array (Decl α)) (idx : Nat) where
   /--
   The next number to use for identifying an atom.
   -/

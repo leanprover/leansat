@@ -10,7 +10,7 @@ open AIG
 
 namespace BVPred
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 @[simp]
 theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget aig) (assign : α → Bool)

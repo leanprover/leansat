@@ -8,7 +8,7 @@ import LeanSAT.AIG.CachedGatesLemmas
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α] {aig : AIG α}
+variable {α : Type} [Hashable α] [DecidableEq α] {aig : AIG α}
 
 namespace RefStream
 

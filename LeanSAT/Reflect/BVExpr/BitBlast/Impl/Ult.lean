@@ -8,7 +8,7 @@ import LeanSAT.Reflect.BVExpr.BitBlast.Impl.Not
 
 namespace BVPred
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 def mkUlt (aig : AIG α) (pair : AIG.BinaryRefStream aig w) : AIG.Entrypoint α :=
   let ⟨lhsRefs, rhsRefs⟩ := pair

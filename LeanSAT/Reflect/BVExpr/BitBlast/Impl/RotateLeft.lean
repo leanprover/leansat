@@ -10,7 +10,7 @@ import LeanSAT.AIG.LawfulStreamOperator
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 def blastRotateLeft (aig : AIG α) (target : AIG.ShiftTarget aig w)
     : AIG.RefStreamEntry α w :=

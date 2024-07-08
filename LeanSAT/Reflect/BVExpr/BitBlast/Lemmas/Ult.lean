@@ -12,7 +12,7 @@ open AIG
 
 namespace BVPred
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : BinaryRefStream aig w)
     (assign : α → Bool)

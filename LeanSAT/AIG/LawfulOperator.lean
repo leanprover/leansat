@@ -12,7 +12,7 @@ Its definition is based on section 3.3 of the AIGNET paper.
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 /--
 `decls` is a prefix of `decls2`
@@ -78,7 +78,7 @@ abbrev ExtendingEntrypoint (aig : AIG α) : Type :=
 abbrev ExtendingRefStreamEntry (aig : AIG α) (len : Nat) : Type :=
   { ref : RefStreamEntry α len // aig.decls.size ≤ ref.aig.decls.size }
 
-class LawfulOperator (α : Type) [BEq α] [Hashable α] [DecidableEq α]
+class LawfulOperator (α : Type) [Hashable α] [DecidableEq α]
     (β : AIG α → Type) (f : (aig : AIG α) → β aig → Entrypoint α)  where
   le_size : ∀ (aig : AIG α) (input : β aig), aig.decls.size ≤ (f aig input).aig.decls.size
   decl_eq : ∀ (aig : AIG α) (input : β aig) (idx : Nat) (h1 : idx < aig.decls.size) (h2),
