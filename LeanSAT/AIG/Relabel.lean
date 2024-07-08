@@ -6,8 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
-variable {β : Type} [BEq β] [Hashable β] [DecidableEq β]
+variable {α : Type} [Hashable α] [DecidableEq α]
+variable {β : Type} [Hashable β] [DecidableEq β]
 
 namespace Decl
 
@@ -139,8 +139,8 @@ theorem relabel_unsat_iff [Nonempty α] {aig : AIG α} {f : α → β} {hidx1} {
     : (aig.relabel f).unsatAt idx hidx1 ↔ aig.unsatAt idx hidx2 := by
   constructor
   . intro h assign
-    have em := Classical.propDecidable
     let g : β → α := fun b =>
+      have em := Classical.propDecidable
       if h:∃ a, a ∈ aig ∧ f a = b then h.choose else Classical.choice inferInstance
     have h' := unsat_relabel g h
     specialize h' assign

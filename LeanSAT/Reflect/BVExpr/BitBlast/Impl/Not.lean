@@ -11,7 +11,7 @@ import LeanSAT.AIG.RefStreamOperator
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 def blastNot (aig : AIG α) (s : AIG.RefStream aig w) : AIG.RefStreamEntry α w :=
   AIG.RefStream.map aig ⟨s, AIG.mkNotCached⟩

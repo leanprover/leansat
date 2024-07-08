@@ -39,7 +39,7 @@ theorem imp_as_aig (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cas
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 @[simp]
 theorem BinaryInput_asGateInput_lhs {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool)

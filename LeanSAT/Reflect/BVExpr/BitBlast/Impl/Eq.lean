@@ -9,7 +9,7 @@ import LeanSAT.AIG.RefStreamOperator
 
 namespace BVPred
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 def mkEq (aig : AIG α) (pair : AIG.BinaryRefStream aig w) : AIG.Entrypoint α :=
   let res := AIG.RefStream.zip aig ⟨pair, AIG.mkBEqCached⟩

@@ -20,6 +20,9 @@ theorem Array.get_push_old (as : Array α) (a : α) (h : i < as.size) : (as.push
 theorem Array.get_push_size (as : Array α) (a : α) : (as.push a)[as.size] = a := by
   simp [Array.get_push]
 
+theorem Array.lt_of_get {x : α} (as : Array α) {idx : Nat} {hidx : idx < as.size} (_h : as[idx]'hidx = x) : idx < as.size := by
+  exact hidx
+
 /--
 A circuit node declaration. These are not recursive but instead contain indices into an `AIG`.
 -/
@@ -38,9 +41,9 @@ inductive Decl (α : Type) where
   the left or right input.
   -/
   | gate (l r : Nat) (linv rinv : Bool)
-  deriving BEq, Hashable, Repr, DecidableEq, Inhabited
+  deriving Hashable, Repr, DecidableEq, Inhabited
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 /--
 A `Cache` is valid with respect to a list of declarations iff:
@@ -66,7 +69,7 @@ inductive Cache.WF : Array (Decl α) → HashMap (Decl α) Nat → Prop where
 /--
 A cache that is valid with respect to some `Array Decl`.
 -/
-def Cache (α : Type) [BEq α] [Hashable α] (decls : Array (Decl α)) :=
+def Cache (α : Type) [DecidableEq α] [Hashable α] (decls : Array (Decl α)) :=
   { map : HashMap (Decl α) Nat // Cache.WF decls map }
 
 /--
@@ -94,9 +97,79 @@ structure CacheHit (decls : Array (Decl α)) (decl : Decl α) where
   hvalid : decls[idx]'hbound = decl
 
 /--
-Lookup a `decl` in a `cache`.
+All indices, found in a `Cache` that is valid with respect to some `decls`, are within bounds of `decls`.
+-/
+theorem Cache.get?_bounds {decls : Array (Decl α)} {idx : Nat} (c : Cache α decls) (decl : Decl α)
+    (hfound : c.val[decl]? = some idx) : idx < decls.size := by
+  rcases c with ⟨cache, hcache⟩
+  induction hcache with
+  | empty => simp at hfound
+  | push_id wf ih =>
+    specialize ih hfound
+    simp
+    omega
+  | push_cache wf ih =>
+    rename_i decl'
+    simp only [HashMap.getElem?_insert] at hfound
+    match heq:decl == decl' with
+    | true =>
+      simp only [heq, cond_true, Option.some.injEq] at hfound
+      simp
+      omega
+    | false =>
+      simp only [heq, cond_false] at hfound
+      specialize ih hfound
+      simp
+      omega
 
-If this returns `some i`, `Cache.find?_poperty` can be used to demonstrate: `decls[i] = decl`.
+/--
+If `Cache.find? decl` returns `some i` then `decls[i] = decl` holds.
+-/
+theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α decls) (decl : Decl α)
+    (hfound : c.val[decl]? = some idx) : decls[idx]'(Cache.get?_bounds c decl hfound) = decl := by
+  rcases c with ⟨cache, hcache⟩
+  induction hcache generalizing decl with
+  | empty => simp at hfound
+  | push_id wf ih =>
+    rw [Array.get_push]
+    split
+    . apply ih
+      simp [hfound]
+    . next hbounds =>
+      exfalso
+      apply hbounds
+      specialize ih _ hfound
+      apply Array.lt_of_get
+      assumption
+  | push_cache wf ih =>
+    rename_i decl'
+    rw [Array.get_push]
+    split
+    . simp only [HashMap.getElem?_insert] at hfound
+      match heq:decl == decl' with
+      | true =>
+        simp [heq] at hfound
+        omega
+      | false =>
+        simp [heq] at hfound
+        apply ih
+        assumption
+    . next hbounds =>
+      simp only [HashMap.getElem?_insert] at hfound
+      match heq:decl == decl' with
+      | true =>
+        apply Eq.symm
+        simpa using heq
+      | false =>
+        exfalso
+        apply hbounds
+        simp [heq] at hfound
+        specialize ih _ hfound
+        apply Array.lt_of_get
+        assumption
+
+/--
+Lookup a `Decl` in a `Cache`.
 -/
 opaque Cache.get? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit decls decl) :=
   /-
@@ -105,24 +178,9 @@ opaque Cache.get? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit d
   it either in `whnf` or in the kernel. This causes *huge* performance issues in practice.
   The function can still be fully verified as all the proofs we need are in `CacheHit`.
   -/
-  match cache.val[decl]? with
+  match hfound:cache.val[decl]? with
   | some hit =>
-    /-
-    TODO: There are two ways around these checks:
-    1. If we are desperate for performance we can axiomatize `Cache.find?_bounds` and
-       `Cache.find?_property`. These theorems are valid even without these checks
-    2. Once we have a proper `HashMap` theory we can use `Cache.WF` to show that the theorems hold
-       without checks.
-
-    Note that both of these checks are only O(1) so this constitutes at most a constant overhead.
-    -/
-    if h1:hit < decls.size then
-      if h2:decls[hit]'h1 = decl then
-        some ⟨hit, h1, h2⟩
-      else
-        none
-    else
-      none
+    some ⟨hit, Cache.get?_bounds _ _ hfound, Cache.get?_property _ _ hfound⟩
   | none => none
 
 /--
@@ -141,7 +199,7 @@ theorem IsDag.empty : IsDag α #[] := by
 /--
 An And Inverter Graph (AIG α) together with a cache for subterm sharing.
 -/
-structure AIG (α : Type) [BEq α] [Hashable α] where
+structure AIG (α : Type) [DecidableEq α] [Hashable α] where
   /--
   The circuit itself as an `Array Decl` whose members have indices into said array.
   -/
@@ -202,7 +260,7 @@ def TernaryInput.cast {aig1 aig2 : AIG α} (input : TernaryInput aig1)
 An entrypoint into an `AIG`. This can be used to evaluate a circuit, starting at a certain node,
 with `AIG.denote` or to construct bigger circuits
 -/
-structure Entrypoint (α : Type) [BEq α] [Hashable α] where
+structure Entrypoint (α : Type) [DecidableEq α] [Hashable α] where
   /--
   The AIG that we are in.
   -/
@@ -217,13 +275,13 @@ Transform an entrypoint into a graphviz compatible format.
 StateM collects the array indices for all occuring nodes and computes the edges on the way.
 Afterwards generate the node declarations once.
 -/
-def toGraphviz {α : Type} [BEq α] [ToString α] [Hashable α] (entry : Entrypoint α) : String :=
+def toGraphviz {α : Type} [DecidableEq α] [ToString α] [Hashable α] (entry : Entrypoint α) : String :=
   let ⟨⟨decls, _, hinv⟩, ⟨idx, h⟩⟩ := entry
   let (dag, s) := go "" decls hinv idx h |>.run .empty
   let nodes := s.fold (fun x y ↦ x ++ toGraphvizString decls y) ""
   "Digraph AIG {" ++ nodes ++ dag ++ "}"
 where
-  go {α : Type} [BEq α] [ToString α] [Hashable α] (acc : String) (decls : Array (Decl α)) (hinv : IsDag α decls)
+  go {α : Type} [DecidableEq α] [ToString α] [Hashable α] (acc : String) (decls : Array (Decl α)) (hinv : IsDag α decls)
       (idx : Nat) (hidx : idx < decls.size) : StateM (HashSet (Fin decls.size)) String := do
     let fidx : Fin decls.size := Fin.mk idx hidx
     if (← get).contains fidx then
@@ -239,7 +297,7 @@ where
       go laig decls hinv ridx (by omega)
   invEdgeStyle (isInv : Bool) : String :=
     if isInv then " [color=red]" else " [color=blue]"
-  toGraphvizString {α : Type} [BEq α] [ToString α] [Hashable α] (decls : Array (Decl α))
+  toGraphvizString {α : Type} [DecidableEq α] [ToString α] [Hashable α] (decls : Array (Decl α))
       (idx : Fin decls.size) : String :=
     match decls[idx] with
     | Decl.const b => s!"{idx} [label=\"{b}\", shape=box];"
@@ -251,7 +309,7 @@ structure RefStream (aig : AIG α) (length : Nat) where
   hlen : refs.size = length
   hrefs : ∀ (h : i < length), refs[i] < aig.decls.size
 
-structure RefStreamEntry (α : Type) [BEq α] [Hashable α] [DecidableEq α] (length : Nat) where
+structure RefStreamEntry (α : Type) [DecidableEq α] [Hashable α] [DecidableEq α] (length : Nat) where
   aig : AIG α
   stream : RefStream aig length
 

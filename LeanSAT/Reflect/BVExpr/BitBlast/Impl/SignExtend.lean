@@ -11,7 +11,7 @@ import LeanSAT.AIG.LawfulStreamOperator
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 def blastSignExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth)
     : AIG.RefStreamEntry α newWidth :=

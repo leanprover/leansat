@@ -14,7 +14,7 @@ AIG node creation ones.
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 /--
 A version of `AIG.mkAtom` that uses the subterm cache in `AIG`. This version is meant for

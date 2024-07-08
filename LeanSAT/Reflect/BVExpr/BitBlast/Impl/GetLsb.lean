@@ -8,7 +8,7 @@ import LeanSAT.AIG.RefStream
 
 namespace BVPred
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 structure GetLsbTarget (aig : AIG α) where
   {w : Nat}

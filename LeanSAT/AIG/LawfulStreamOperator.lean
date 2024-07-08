@@ -8,13 +8,13 @@ import LeanSAT.AIG.RefStream
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 -- TODO: Find a way to merge this with LawfulOperator that preserves nice automation
 -- This consists mostly of figuring out how to merge `RefStreamEntry` with `Entrypoint` without
 -- loosing automation.
 
-class LawfulStreamOperator (α : Type) [BEq α] [Hashable α] [DecidableEq α]
+class LawfulStreamOperator (α : Type) [Hashable α] [DecidableEq α]
     (β : AIG α → Nat → Type) (f : {len : Nat} → (aig : AIG α) → β aig len → RefStreamEntry α len) where
   le_size : ∀ (aig : AIG α) (input : β aig len), aig.decls.size ≤ (f aig input).aig.decls.size
   decl_eq : ∀ (aig : AIG α) (input : β aig len) (idx : Nat) (h1 : idx < aig.decls.size) (h2),

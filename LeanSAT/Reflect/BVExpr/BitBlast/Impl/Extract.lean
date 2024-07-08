@@ -9,7 +9,7 @@ import LeanSAT.AIG.LawfulStreamOperator
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 structure ExtractTarget (aig : AIG α) (newWidth : Nat) where
   {w : Nat}

@@ -13,7 +13,7 @@ cache if possible.
 
 namespace AIG
 
-variable {α : Type} [BEq α] [Hashable α] [DecidableEq α]
+variable {α : Type} [Hashable α] [DecidableEq α]
 
 /--
 Create a not gate in the input AIG. This uses the builtin cache to enable automated subterm sharing

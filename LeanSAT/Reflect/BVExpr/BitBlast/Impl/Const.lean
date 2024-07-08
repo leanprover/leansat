@@ -10,7 +10,7 @@ import LeanSAT.AIG.LawfulStreamOperator
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 def blastConst (aig : AIG α) (val : BitVec w) : AIG.RefStreamEntry α w :=
   go aig 0 .empty val (by omega)

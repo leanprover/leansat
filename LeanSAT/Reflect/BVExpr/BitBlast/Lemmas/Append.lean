@@ -11,7 +11,7 @@ open AIG
 namespace BVExpr
 namespace bitblast
 
-variable [BEq α] [Hashable α] [DecidableEq α]
+variable [Hashable α] [DecidableEq α]
 
 @[simp]
 theorem blastAppend_eq_eval_getLsb (aig : AIG α) (target : AppendTarget aig newWidth)
