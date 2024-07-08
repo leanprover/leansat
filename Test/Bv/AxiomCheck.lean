@@ -11,7 +11,6 @@ info: 'bv_axiomCheck' depends on axioms: [propext,
  Classical.choice,
  Lean.ofReduceBool,
  Quot.sound,
- AIG.RelabelNat.State.Inv1.property,
  AIG.RelabelNat.State.Inv2.property]
 -/
 #guard_msgs in

@@ -28,23 +28,56 @@ inductive Inv1 : Nat → HashMap α Nat → Prop where
 | empty : Inv1 0 {}
 | insert (hinv : Inv1 n map) (hfind : map[x]? = none) : Inv1 (n + 1) (map.insert x n)
 
+theorem Inv1.lt_of_get?_eq_some [EquivBEq α] {n m : Nat} (map : HashMap α Nat) (x : α) (hinv : Inv1 n map) :
+    map[x]? = some m → m < n := by
+  induction hinv with
+  | empty => simp
+  | insert ih1 ih2 ih3 =>
+    rename_i y
+    rw [Std.HashMap.getElem?_insert]
+    match hx : x == y with
+    | true =>
+      simp [hx]
+      omega
+    | false =>
+      simp [hx]
+      intro h
+      specialize ih3 h
+      omega
+
 /--
-Proof sketch for this axiom once we have more `HashMap` theory:
-```
-  induction hinv generalizing m with
-  | empty =>
-    -- contradiction, can't find anything in empty hashmaps
-    sorry
-  | insert hinv hnone ih =>
-    -- here we have a find? (insert) = some . We do a case split on wehther we found the element
-    -- in the original hashmap or in the new one.
-    -- 1. original: ih closes the goal
-    -- 2. new one: the new element is the same in both cases
-    sorry
-```
+If a HashMap fulfills `Inv1` it is in an injection.
 -/
-axiom Inv1.property {n m : Nat} (x y : α) (map : HashMap α Nat) (hinv : Inv1 n map)
-    (hfound1 : map[x]? = some m) (hfound2 : map[y]? = some m) : x = y
+theorem Inv1.property [EquivBEq α] {n m : Nat} (x y : α) (map : HashMap α Nat) (hinv : Inv1 n map)
+    (hfound1 : map[x]? = some m) (hfound2 : map[y]? = some m) : x = y := by
+  induction hinv with
+  | empty => simp at hfound1
+  | insert ih1 _ih2 ih3 =>
+    rename_i z
+    rw [HashMap.getElem?_insert] at hfound1
+    rw [HashMap.getElem?_insert] at hfound2
+    match hx : x == z with
+    | false =>
+      rw [hx, cond_false] at hfound1
+      match hy : y == z with
+      | false =>
+        rw [hy, cond_false] at hfound2
+        exact ih3 hfound1 hfound2
+      | true =>
+        simp only [hy, cond_true, Option.some.injEq] at hfound2
+        have := Inv1.lt_of_get?_eq_some _ _ ih1 hfound1
+        omega
+    | true =>
+      rw [hx, cond_true] at hfound1
+      rcases hfound1 with ⟨rfl⟩
+      match hy : y == z with
+      | false =>
+        rw [hy, cond_false] at hfound2
+        have := Inv1.lt_of_get?_eq_some _ _ ih1 hfound2
+        omega
+      | true =>
+        simp at hx hy
+        simp [hx, hy]
 
 /--
 This invariant says that we have already visited and inserted all nodes up to a certain index.
@@ -61,8 +94,6 @@ inductive Inv2 (decls : Array (Decl α)) : Nat → HashMap α Nat → Prop where
   : Inv2 decls (idx + 1) map
 | gate (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .gate l r li ri)
   : Inv2 decls (idx + 1) map
-
--- TODO: Think about merging Inv1 and Inv2, they are *very* close.
 
 theorem Inv2.upper_lt_size {decls : Array (Decl α)} (hinv : Inv2 decls upper map)
     : upper ≤ decls.size := by
