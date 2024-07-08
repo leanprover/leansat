@@ -76,7 +76,7 @@ theorem Inv1.property [EquivBEq α] {n m : Nat} (x y : α) (map : HashMap α Nat
         have := Inv1.lt_of_get?_eq_some _ _ ih1 hfound2
         omega
       | true =>
-        simp at hx hy
+        simp only [beq_iff_eq] at hx hy
         simp [hx, hy]
 
 /--
@@ -103,11 +103,51 @@ theorem Inv2.upper_lt_size {decls : Array (Decl α)} (hinv : Inv2 decls upper ma
 The key property provided by `Inv2`, if we have `Inv2` at a certain index, then all atoms below
 that index have been inserted into the `HashMap`.
 -/
-axiom Inv2.property (decls : Array (Decl α)) (idx upper : Nat) (map : HashMap α Nat)
-    (hinv : Inv2 decls upper map)
-    : ∀ (hidx : idx < upper), ∀ (a : α),
-        decls[idx]'(by have := upper_lt_size hinv; omega) = .atom a
-          → ∃ n, map[a]? = some n
+theorem Inv2.property (decls : Array (Decl α)) (idx upper : Nat) (map : HashMap α Nat)
+    (hidx : idx < upper) (a : α) (hinv : Inv2 decls upper map)
+    (heq : decls[idx]'(by have := upper_lt_size hinv; omega) = .atom a)
+    : ∃ n, map[a]? = some n := by
+  induction hinv with
+  | empty => omega
+  | newAtom ih1 ih2 ih3 ih4 ih5 =>
+    next idx' _ a' _ =>
+    rw [HashMap.getElem?_insert]
+    match heq2 : a == a' with
+    | false =>
+      simp only [cond_false]
+      replace hidx : idx ≤ idx' := by omega
+      cases Nat.eq_or_lt_of_le hidx with
+      | inl hidxeq =>
+        subst hidxeq
+        exfalso
+        simp only [beq_eq_false_iff_ne, ne_eq] at heq2
+        apply heq2
+        apply Eq.symm
+        simpa [ih3] using heq
+      | inr hlt => apply ih5 <;> assumption
+    | true => simp [heq2]
+  | oldAtom ih1 ih2 ih3 ih4 ih5 =>
+    next idx' _ _ _ =>
+    replace hidx : idx ≤ idx' := by omega
+    cases Nat.eq_or_lt_of_le hidx with
+    | inl hidxeq =>
+      simp only [hidxeq, ih3, Decl.atom.injEq] at heq
+      rw [← heq]
+      apply Exists.intro
+      assumption
+    | inr hlt => apply ih5 <;> assumption
+  | const ih1 ih2 ih3 ih4 =>
+    next idx' _ _ =>
+    replace hidx : idx ≤ idx' := by omega
+    cases Nat.eq_or_lt_of_le hidx with
+    | inl hidxeq => simp [hidxeq, ih3] at heq
+    | inr hlt => apply ih4 <;> assumption
+  | gate ih1 ih2 ih3 ih4 =>
+    next idx' _ _ _ _ _ =>
+    replace hidx : idx ≤ idx' := by omega
+    cases Nat.eq_or_lt_of_le hidx with
+    | inl hidxeq => simp [hidxeq, ih3] at heq
+    | inr hlt => apply ih4 <;> assumption
 
 end State
 
@@ -257,8 +297,8 @@ theorem ofAIG_find_some {aig : AIG α} : ∀ a ∈ aig, ∃ n, (ofAIG aig)[a]? =
   apply Inv2.property
   . assumption
   . exact aig.decls.size
-  . apply ofAIG.Inv2
   . omega
+  · apply ofAIG.Inv2
 
 end State
 end RelabelNat
