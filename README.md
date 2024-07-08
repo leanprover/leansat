@@ -41,52 +41,28 @@ The package offers three different SAT tactics for proving goals involving `BitV
    dynamically handing the goal to a SAT solver to obtain an LRAT proof, the LRAT proof is read from
    `file.lrat`. This allows users that do not have a SAT solver installed to verify proofs.
 3. `bv_decide?` this offers a code action to turn a `bv_decide` invocation automatically into a
-   `bv_decide` one.
+   `bv_check` one.
 
-## Roadmap
-There are a couple of ways in which this project can be improved.
-
-`bv_decide`:
-- Improve on the file name format used in `bv_decide?`
-- clearly define the precise shape of goals that we operate on
-- add support for additional `BitVec` constructs, we probably want to be approximately on a level
-  with `QF_BV`.
-
-AIG:
-- Improve the CNF implementation, it is currently a purely naive one.
-- Improve optimizations made on the AIG at construction time.
-- Automization for writing functions involving `LawfulOperator`s, this is currently a bit tedious.
-- Don't clear the cache when relabeling between variable types.
-
-LRAT Checker:
-- Currently, there are no specific optimizations for RAT additions. In particular, the function
-  `ratHintsExhaustive` in `LRAT.Formula.Implementation.lean` is used to check that the negative RAT
-  hints provided by a RAT addition are exhaustive. However, the current implementation of
-  `ratHintsExhaustive` simply filters the totality of the default formula's `clauses` field and
-  verifies that the ordered list of indices containing clauses is identical to the list of negative
-  RAT hints provided by the RAT addition. This is inefficient because it involves a linear check
-  over all indices in `clauses` including those that have been set to `none` due to a clause
-  deletion. One way to improve on this would be to adopt an optimization used by cake_lpr and
-  maintain a list of indices containing non-deleted clauses. Then, it would only be necessary to
-  iterate over this list, rather than over all the indices in the `clauses` field. If such a change
-  would be made, the resulting changes to the soundness proof should largely be localized to
-  `existsRatHint_of_ratHintsExhaustive` in `LRAT.Formula.RatAddSound.lean`, though it would
-  probably also be necessary to add additional requirements to `readyForRupAdd` and
-  `readyForRatAdd`.
-
-- Currently, the LRAT parser only supports the human readable format. Given the extent to which the
-  parser poses a bottleneck, it is extremely desirable to find a way to either improve or bypass
-  the parser. There are two avenues that might be explored to this end:
-  1. In addition to having a human readable format, LRAT has a compressed binary format that is
-     designed to be significantly shorter than the human readable format. Supporting this
-    compressed binary format would likely make efficiently reading significantly long LRAT proofs
-    more feasible. This improvement could benefit the LRAT checker both when it is used within Lean
-    and when it is used as a standalone executable.
-  2. To bypass LRAT parsing entirely, it may be possible to modify Cadical (or whichever SAT solver
-     one desires to use) to use Lean's
-     [Foreign Function Interface](https://leanprover.github.io/lean4/doc/dev/ffi.html) to have the
-     SAT solver transform its LRAT proof into a datastructure that Lean can interact with directly.
-     Then, rather than have the SAT solver write to a file and have the LRAT checker subsequently
-     parse that file (slowly), the FFI could be used to send the LRAT proof to Lean directly.
-     This would only be of benefit when the checker is being used within Lean, but I would expect
-     it to yield greater performance benefits than the compressed binary format.
+## Architecture
+`bv_decide` roughly runs through the following steps:
+1. Apply `by_contra` to start a proof by contradiction.
+2. Apply the `bv_normalize` and `seval` simp set to all hypothesis. This has two effects:
+    1. It applies a subset of the rewrite rules from [Bitwuzla](https://github.com/bitwuzla/bitwuzla)
+       for simplification of the expressions.
+    2. It turns all hypothesis that might be of interest for the remainder of the tactic into the form
+       `x = true` where `x` is a mixture of `Bool` and fixed width `BitVec` expressions.
+3. Use proof by reflection to reduce the proof to showing that an SMTLIB-syntax-like value that
+   represents the conjunction of all relevant assumptions is UNSAT.
+4. Use a verified bitblasting algorithm to turn that expression into an
+   [And Inverter Graph](https://en.wikipedia.org/wiki/And-inverter_graph). This AIG is designed and
+   verified similarly to AIGNET from [Verified AIG Algorithms in ACL2](https://arxiv.org/pdf/1304.7861)
+   and uses optimizations from [Local Two-Level And-Inverter Graph Minimization without Blowup](https://fmv.jku.at/papers/BrummayerBiere-MEMICS06.pdf).
+   The bitblasting algorithms are collected from various other bitblasters, including Bitwuzla and Z3
+   and verified using Lean's `BitVec` theory.
+5. Turn the AIG into CNF, using the approach from the ACL2 paper to both implement and verify the
+   translation.
+6. Run CaDiCal on the CNF to obtain an [LRAT](https://www.cs.cmu.edu/~mheule/publications/lrat.pdf)
+   proof that the CNF is UNSAT. If CaDiCal returns SAT instead the tactic aborts here and presents
+   a counter example.
+7. Use an LRAT checker with a soundness proof in Lean to show that the LRAT proof is correct.
+8. Chain all the proofs so far to demonstrate that the original goal holds.
