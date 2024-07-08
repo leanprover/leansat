@@ -98,7 +98,7 @@ Lookup a `decl` in a `cache`.
 
 If this returns `some i`, `Cache.find?_poperty` can be used to demonstrate: `decls[i] = decl`.
 -/
-opaque Cache.find? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit decls decl) :=
+opaque Cache.get? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit decls decl) :=
   /-
   This function is marked as `opaque` to make sure it never, ever gets unfolded anywhere.
   Unfolding it will often always cause `HashMap.find?` to be symbolically evaluated by reducing

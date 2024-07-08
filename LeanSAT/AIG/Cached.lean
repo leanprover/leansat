@@ -23,7 +23,7 @@ programmming, for proving purposes use `AIG.mkAtom` and equality theorems to thi
 def mkAtomCached (aig : AIG α) (n : α) : Entrypoint α :=
   let ⟨decls, cache, inv⟩ := aig
   let decl := .atom n
-  match cache.find? decl with
+  match cache.get? decl with
   | some hit =>
     ⟨⟨decls, cache, inv⟩ , hit.idx, hit.hbound⟩
   | none =>
@@ -46,7 +46,7 @@ programmming, for proving purposes use `AIG.mkGate` and equality theorems to thi
 def mkConstCached (aig : AIG α) (val : Bool) : Entrypoint α :=
   let ⟨decls, cache, inv⟩ := aig
   let decl := .const val
-  match cache.find? decl with
+  match cache.get? decl with
   | some hit =>
     ⟨⟨decls, cache, inv⟩, hit.idx, hit.hbound⟩
   | none =>
@@ -85,7 +85,7 @@ where
     have := input.lhs.ref.hgate
     have := input.rhs.ref.hgate
     let decl := .gate lhs rhs linv rinv
-    match cache.find? decl with
+    match cache.get? decl with
     | some hit =>
       ⟨⟨decls, cache, inv⟩, ⟨hit.idx, hit.hbound⟩⟩
     | none =>
