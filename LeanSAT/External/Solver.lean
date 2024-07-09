@@ -5,8 +5,7 @@ Authors: Josh Clune
 -/
 import LeanSAT.External.LRAT
 import Lean.Data.Parsec
-
-open IO.Process
+import Lean.CoreM
 
 inductive SolverResult where
 | sat (assignment : Array (Bool × Nat))
@@ -59,12 +58,41 @@ def parse : Parsec ByteArray.Iterator (Array (Bool × Nat)) := do
 
 end SatWitnessParser
 
+open Lean
+
+partial def runInterruptible (args : IO.Process.SpawnArgs) : CoreM IO.Process.Output := do
+  let child ← IO.Process.spawn { args with stdout := .piped, stderr := .piped, stdin := .null }
+  let stdout ← IO.asTask child.stdout.readToEnd Task.Priority.dedicated
+  let stderr ← IO.asTask child.stderr.readToEnd Task.Priority.dedicated
+  if let some tk := (← read).cancelTk? then
+    go child stdout stderr tk
+  else
+    let stdout ← IO.ofExcept stdout.get
+    let stderr ← IO.ofExcept stderr.get
+    let exitCode ← child.wait
+    return { exitCode := exitCode, stdout := stdout, stderr := stderr }
+where
+  go {cfg} (child : IO.Process.Child cfg) (stdout stderr : Task (Except IO.Error String))
+      (tk : IO.CancelToken) : CoreM IO.Process.Output := do
+    if ← tk.isSet then
+      child.kill
+      throw <| .internal Core.interruptExceptionId
+    else
+      match ← child.tryWait with
+      | some exitCode =>
+        let stdout ← IO.ofExcept stdout.get
+        let stderr ← IO.ofExcept stderr.get
+        return { exitCode := exitCode, stdout := stdout, stderr := stderr }
+      | none =>
+        IO.sleep 50
+        go child stdout stderr tk
+
 /-- By default, satQuery assumes that the user has cadical (≥ version 1.7.0) installed and their path set up so that it
     can be run via the command `cadical` in terminal. If the path to the user's `cadical` is different, it can be provided
     in the `solverPath` argument. `satQuery` will call cadical on the CNF file at `problemPath` and output an LRAT result
     to `proofOutput` -/
 def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOutput : System.FilePath)
-    (timeout : Nat) : IO SolverResult := do
+    (timeout : Nat) : CoreM SolverResult := do
   let cmd := solverPath
   let args := #[
     problemPath.toString,
@@ -76,9 +104,9 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOut
     "--quiet",
     "--unsat" -- This sets the magic parameters of cadical to optimize for UNSAT search.
   ]
-  let out ← output ⟨⟨Stdio.inherit, Stdio.inherit, Stdio.inherit⟩, cmd, args, none, #[], false⟩
+  let out ← runInterruptible { cmd, args, stdin := .piped, stdout := .piped, stderr := .null }
   if out.exitCode == 255 then
-    throw <| IO.userError s!"Failed to execute external prover:\n{out.stderr}"
+    throwError s!"Failed to execute external prover:\n{out.stderr}"
   else
     let stdout := out.stdout
     if stdout.startsWith "s UNSATISFIABLE" then
@@ -88,10 +116,10 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOut
       | .ok assignment =>
         return .sat assignment
       | .error err =>
-        throw <| IO.userError s!"Error {err} while parsing:\n{stdout}"
+        throwError s!"Error {err} while parsing:\n{stdout}"
     else if stdout.startsWith "c UNKNOWN" then
       let mut err := "The SAT solver timed out while solving the problem."
       err := err ++ "\nConsider increasing the timeout with `set_option sat.timeout <sec>`"
-      throw <| IO.userError err
+      throwError err
     else
-      throw <| IO.userError s!"The external prover produced unexpected output:\n{stdout}"
+      throwError s!"The external prover produced unexpected output:\n{stdout}"
