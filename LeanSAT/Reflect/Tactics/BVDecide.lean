@@ -916,10 +916,9 @@ end BVDecide
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| bv_decide) => do
-    let cfg ← BVDecide.TacticContext.new (← BVDecide.mkTemp)
-    liftMetaFinishingTactic fun g => do
-      let _ ← g.bvDecide cfg
-      return ()
-    -- the auto generated lratPath is a temp file that should be removed
-    IO.FS.removeFile cfg.lratPath
+    BVDecide.withTempFile fun lratFile => do
+      let cfg ← BVDecide.TacticContext.new lratFile
+      liftMetaFinishingTactic fun g => do
+        let _ ← g.bvDecide cfg
+        return ()
 

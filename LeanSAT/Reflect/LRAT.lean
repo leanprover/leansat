@@ -76,6 +76,13 @@ def mkTemp : IO System.FilePath := do
   let out ← IO.Process.output { cmd := "mktemp" }
   return out.stdout.trim
 
+def withTempFile [Monad m] [MonadFinally m] [MonadLiftT IO m] (f : System.FilePath → m α) : m α := do
+  let file ← mkTemp
+  try
+    f file
+  finally
+    IO.FS.removeFile file
+
 def LratCert.ofFile (lratPath : System.FilePath) (prevalidate : Bool) : IO LratCert := do
   let proof ← LRAT.readFileQuick lratPath
   -- This is just a sanity check to verify that the proof does indeed parse.
@@ -93,24 +100,22 @@ This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwis
 -/
 def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath)
     (prevalidate : Bool) (timeout : Nat) : MetaM (Except (Array (Bool × Nat)) LratCert) := do
-  let cnfPath ← mkTemp
-  withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
-    -- lazyPure to prevent compiler lifting
-    IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => formula.formula.dimacs))
+  withTempFile fun cnfPath => do
+    withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
+      -- lazyPure to prevent compiler lifting
+      IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => formula.formula.dimacs))
 
-  let res ←
-    withTraceNode `sat (fun _ => return "Running SAT solver") do
-      satQuery solver cnfPath lratPath timeout
-  if let .sat assignment := res then
-    return .error assignment
+    let res ←
+      withTraceNode `sat (fun _ => return "Running SAT solver") do
+        satQuery solver cnfPath lratPath timeout
+    if let .sat assignment := res then
+      return .error assignment
 
-  let lratProof ←
-    withTraceNode `sat (fun _ => return "Obtaining LRAT certificate") do
-      LratCert.ofFile lratPath prevalidate
+    let lratProof ←
+      withTraceNode `sat (fun _ => return "Obtaining LRAT certificate") do
+        LratCert.ofFile lratPath prevalidate
 
-  -- cleanup files such that we don't pollute /tmp
-  IO.FS.removeFile cnfPath
-  return .ok lratProof
+    return .ok lratProof
 
 /--
 Verify that a proof certificate is valid for a given formula.
