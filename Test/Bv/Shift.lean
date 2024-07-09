@@ -26,9 +26,8 @@ set_option trace.bv true in
 theorem shift_unit_5 {x y z : BitVec 16} : (x <<< y) <<< z = (x <<< z) <<< y := by
   bv_decide
 
--- This demonstrates we correctly abstract shifts of arbitrary width as atoms instead of giving up.
 set_option trace.bv true in
-theorem shift_unit_6 {x y : BitVec 64} : (x >>> y) + y = y + (x >>> y) := by
+theorem shift_unit_6 {x y z : BitVec 16} : (x >>> y) >>> z = (x >>> z) >>> y := by
   bv_decide
 
 set_option trace.bv true in
