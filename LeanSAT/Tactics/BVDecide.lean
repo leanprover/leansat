@@ -66,6 +66,8 @@ where
     mkApp4 (mkConst ``BVExpr.extract) (toExpr oldWidth) (toExpr hi) (toExpr lo) (go expr)
   | .shiftLeft (m := m) (n := n) lhs rhs =>
     mkApp4 (mkConst ``BVExpr.shiftLeft) (toExpr m) (toExpr n) (go lhs) (go rhs)
+  | .shiftRight (m := m) (n := n) lhs rhs =>
+    mkApp4 (mkConst ``BVExpr.shiftRight) (toExpr m) (toExpr n) (go lhs) (go rhs)
 
 instance : ToExpr BVPred where
   toExpr x := go x
@@ -217,8 +219,13 @@ theorem shiftLeft_congr (m n : Nat) (lhs : BitVec m) (rhs : BitVec n) (lhs' : Bi
     : lhs <<< rhs = lhs' <<< rhs' := by
   simp[*]
 
-theorem shiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
+theorem shiftRightNat_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
     : x' >>> n = x >>> n := by
+  simp[*]
+
+theorem shiftRight_congr (m n : Nat) (lhs : BitVec m) (rhs : BitVec n) (lhs' : BitVec m)
+    (rhs' : BitVec n) (h1 : lhs' = lhs) (h2 : rhs' = rhs)
+    : lhs >>> rhs = lhs' >>> rhs' := by
   simp[*]
 
 theorem arithShiftRight_congr (n : Nat) (w : Nat) (x x' : BitVec w) (h : x = x')
@@ -285,7 +292,7 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
   | Complement.complement _ _ innerExpr =>
     unaryReflection innerExpr .not ``not_congr
   | HShiftLeft.hShiftLeft _ β _ _ innerExpr distanceExpr =>
-    let distance? ← getNatOrBvValue? β distanceExpr --| return ← ofAtom x
+    let distance? ← getNatOrBvValue? β distanceExpr
     if distance?.isSome then
       shiftConstReflection
         β
@@ -303,13 +310,23 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
         ``BVExpr.shiftLeft
         ``shiftLeft_congr
   | HShiftRight.hShiftRight _ β _ _ innerExpr distanceExpr =>
-    shiftConstReflection
-      β
-      distanceExpr
-      innerExpr
-      .shiftRightConst
-      ``BVUnOp.shiftRightConst
-      ``shiftRight_congr
+    let distance? ← getNatOrBvValue? β distanceExpr
+    if distance?.isSome then
+      shiftConstReflection
+        β
+        distanceExpr
+        innerExpr
+        .shiftRightConst
+        ``BVUnOp.shiftRightConst
+        ``shiftRightNat_congr
+    else
+      shiftReflection
+        β
+        distanceExpr
+        innerExpr
+        .shiftRight
+        ``BVExpr.shiftRight
+        ``shiftRight_congr
   | BitVec.sshiftRight _ innerExpr distanceExpr =>
     let some distance ← getNatValue? distanceExpr | return ← ofAtom x
     shiftConstLikeReflection
