@@ -216,6 +216,10 @@ sign extend a `BitVec` by some constant amount.
 shift left by another BitVec expression. For constant shifts there exists a `BVUnop`.
 -/
 | shiftLeft (lhs : BVExpr m) (rhs : BVExpr n) : BVExpr m
+/--
+shift right by another BitVec expression. For constant shifts there exists a `BVUnop`.
+-/
+| shiftRight (lhs : BVExpr m) (rhs : BVExpr n) : BVExpr m
 
 namespace BVExpr
 
@@ -229,6 +233,7 @@ def toString : BVExpr w → String
   | .append lhs rhs => s!"({toString lhs} ++ {toString rhs})"
   | .signExtend v expr => s!"(sext {v} {expr.toString})"
   | .shiftLeft lhs rhs => s!"({lhs.toString} << {rhs.toString})"
+  | .shiftRight lhs rhs => s!"({lhs.toString} >> {rhs.toString})"
 
 
 instance : ToString (BVExpr w) := ⟨toString⟩
@@ -266,6 +271,7 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
   | .append lhs rhs => (eval assign lhs) ++ (eval assign rhs)
   | .signExtend v expr => BitVec.signExtend v (eval assign expr)
   | .shiftLeft lhs rhs => (eval assign lhs) <<< (eval assign rhs)
+  | .shiftRight lhs rhs => (eval assign lhs) >>> (eval assign rhs)
 
 @[simp]
 theorem eval_var : eval assign ((.var idx) : BVExpr w) = (assign.getD idx).bv.truncate _ := by
@@ -300,6 +306,10 @@ theorem eval_signExtend : eval assign (.signExtend v expr) = BitVec.signExtend v
 
 @[simp]
 theorem eval_shiftLeft : eval assign (.shiftLeft lhs rhs) = (eval assign lhs) <<< (eval assign rhs) := by
+  rfl
+
+@[simp]
+theorem eval_shiftRight : eval assign (.shiftRight lhs rhs) = (eval assign lhs) >>> (eval assign rhs) := by
   rfl
 
 end BVExpr
