@@ -3,8 +3,6 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import Batteries.Data.List.Basic
-import Batteries.Data.List.Lemmas
 
 namespace Misc
 
@@ -46,7 +44,7 @@ theorem List.Nodup.erase_eq_filter [BEq α] [LawfulBEq α] {l} (d : Nodup l) (a 
   . next b l m _ IH =>
     by_cases h : b = a
     · subst h
-      rw [erase_cons_head, filter_cons_of_neg _ (by simp)]
+      rw [erase_cons_head, filter_cons_of_neg (by simp)]
       apply Eq.symm
       rw [filter_eq_self]
       simpa [@eq_comm α] using m
