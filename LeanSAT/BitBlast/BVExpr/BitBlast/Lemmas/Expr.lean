@@ -124,7 +124,18 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       . simp [Ref.hgate]
     . intros
       rw [← rih]
-  | shiftRight lhs rhs lih rih => sorry
+  | shiftRight lhs rhs lih rih =>
+    simp [go]
+    apply blastShiftRight_eq_eval_getLsb
+    . intros
+      dsimp
+      rw [go_denote_mem_prefix]
+      rw [← lih (aig := aig)]
+      . simp
+      . assumption
+      . simp [Ref.hgate]
+    . intros
+      rw [← rih]
   | bin lhs op rhs lih rih =>
     cases op with
     | and =>
@@ -177,7 +188,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     | not => simp [go, ih, hidx]
     | shiftLeftConst => simp [go, ih, hidx]
     | shiftRightConst =>
-      simp only [go, blastShiftRight_eq_eval_getLsb, ih, dite_eq_ite, Bool.if_false_right, eval_un,
+      simp only [go, blastShiftRightConst_eq_eval_getLsb, ih, dite_eq_ite, Bool.if_false_right, eval_un,
         BVUnOp.eval_shiftRightConst, BitVec.getLsb_ushiftRight, Bool.and_iff_right_iff_imp,
         decide_eq_true_eq]
       intro h
