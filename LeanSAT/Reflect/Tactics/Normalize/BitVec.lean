@@ -159,6 +159,11 @@ theorem BitVec.shiftLeft_zero (n : BitVec w) : n <<< 0 = n := by
   simp
 
 @[bv_normalize]
+theorem BitVec.shiftLeft_zero' (n : BitVec w) : n <<< 0 = n := by
+  ext i
+  simp
+
+@[bv_normalize]
 theorem BitVec.zero_shiftLeft (n : Nat) : 0#w <<< n = 0#w := by
   ext
   simp
@@ -169,8 +174,14 @@ theorem BitVec.zero_shiftRight (n : Nat) : 0#w >>> n = 0#w := by
   simp
 
 @[bv_normalize]
-theorem BitVec.shiftRight_zero (n : BitVec w) : n >>> 0 = n := by
-  ext
+theorem BitVec.shiftRight_zero (n : BitVec w) : n >>> 0#w' = n := by
+  ext i
+  simp only [(· >>> ·)]
+  simp
+
+@[bv_normalize]
+theorem BitVec.shiftRight_zero' (n : BitVec w) : n >>> 0 = n := by
+  ext i
   simp
 
 theorem BitVec.zero_lt_iff_zero_neq (a : BitVec w) : (0#w < a) ↔ (0#w ≠ a) := by
