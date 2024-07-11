@@ -14,9 +14,6 @@ a description of its semantics and basic operations to construct nodes in the AI
 
 open Std
 
-theorem Array.get_push_size (as : Array α) (a : α) : (as.push a)[as.size] = a := by
-  simp [Array.get_push]
-
 theorem Array.lt_of_get {x : α} (as : Array α) {idx : Nat} {hidx : idx < as.size} (_h : as[idx]'hidx = x) : idx < as.size := by
   exact hidx
 

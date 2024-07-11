@@ -100,13 +100,13 @@ theorem denote_mkGate {aig : AIG α} {input : GateInput aig} :
     unfold denote denote.go
   split
   . next heq =>
-    rw [mkGate, Array.get_push_size] at heq
+    rw [mkGate, Array.get_push_eq] at heq
     contradiction
   . next heq =>
-    rw [mkGate, Array.get_push_size] at heq
+    rw [mkGate, Array.get_push_eq] at heq
     contradiction
   . next heq =>
-    rw [mkGate, Array.get_push_size] at heq
+    rw [mkGate, Array.get_push_eq] at heq
     injection heq with heq1 heq2 heq3 heq4
     dsimp
     congr 2
@@ -149,14 +149,14 @@ theorem denote_mkAtom {aig : AIG α} :
   unfold denote denote.go
   split
   . next heq =>
-    rw [mkAtom, Array.get_push_size] at heq
+    rw [mkAtom, Array.get_push_eq] at heq
     contradiction
   . next heq =>
-    rw [mkAtom, Array.get_push_size] at heq
+    rw [mkAtom, Array.get_push_eq] at heq
     injection heq with heq
     rw [heq]
   . next heq =>
-    rw [mkAtom, Array.get_push_size] at heq
+    rw [mkAtom, Array.get_push_eq] at heq
     contradiction
 
 /--
@@ -188,14 +188,14 @@ theorem denote_mkConst {aig : AIG α} : ⟦(aig.mkConst val), assign⟧ = val :=
   unfold denote denote.go
   split
   . next heq =>
-    rw [mkConst, Array.get_push_size] at heq
+    rw [mkConst, Array.get_push_eq] at heq
     injection heq with heq
     rw [heq]
   . next heq =>
-    rw [mkConst, Array.get_push_size] at heq
+    rw [mkConst, Array.get_push_eq] at heq
     contradiction
   . next heq =>
-    rw [mkConst, Array.get_push_size] at heq
+    rw [mkConst, Array.get_push_eq] at heq
     contradiction
 
 /--
