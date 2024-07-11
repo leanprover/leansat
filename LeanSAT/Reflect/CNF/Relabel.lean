@@ -7,17 +7,6 @@ import LeanSAT.Reflect.CNF.Basic
 
 set_option linter.missingDocs false
 
-namespace List
-
--- taken from Mathlib, move to Lean
-theorem map_congr {f g : α → β} : ∀ {l : List α}, (∀ x ∈ l, f x = g x) → map f l = map g l
-  | [], _ => rfl
-  | a :: l, h => by
-    let ⟨h₁, h₂⟩ := forall_mem_cons.1 h
-    rw [map, map, h₁, map_congr h₂]
-
-end List
-
 namespace CNF
 
 namespace Clause
@@ -33,7 +22,7 @@ def relabel (f : α → β) (c : Clause α) : Clause β := c.map (fun (i, n) => 
 theorem relabel_congr {x : Clause α} {f g : α → β} (w : ∀ a, mem a x → f a = g a) :
     relabel f x = relabel g x := by
   simp only [relabel]
-  rw [List.map_congr]
+  rw [List.map_congr_left]
   intro ⟨i, b⟩ h
   congr
   apply w _ (mem_of h)
@@ -69,7 +58,7 @@ def relabel (f : α → β) (g : CNF α) : CNF β := g.map (Clause.relabel f)
 theorem relabel_congr {x : CNF α} {f g : α → β} (w : ∀ a, mem a x → f a = g a) :
     relabel f x = relabel g x := by
   dsimp only [relabel]
-  rw [List.map_congr]
+  rw [List.map_congr_left]
   intro c h
   apply Clause.relabel_congr
   intro a m

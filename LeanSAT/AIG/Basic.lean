@@ -14,9 +14,6 @@ a description of its semantics and basic operations to construct nodes in the AI
 
 open Std
 
-theorem Array.get_push_old (as : Array α) (a : α) (h : i < as.size) : (as.push a)[i]'(by simp; omega) = as[i] := by
-  simp [Array.get_push, h]
-
 theorem Array.get_push_size (as : Array α) (a : α) : (as.push a)[as.size] = a := by
   simp [Array.get_push]
 
