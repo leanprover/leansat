@@ -18,7 +18,8 @@ def CNF.lift (cnf : CNF Nat) : CNF (PosFin (cnf.numLiterals + 1)) :=
   let cnf := cnf.relabelFin
   cnf.relabel (fun lit => ⟨lit.val + 1, by omega⟩)
 
-theorem CNF.unsat_of_lift_unsat (cnf : CNF Nat) : CNF.unsat cnf.lift → CNF.unsat cnf := by
+theorem CNF.unsat_of_lift_unsat (cnf : CNF Nat)
+    : unsatisfiable (PosFin (cnf.numLiterals + 1)) cnf.lift → unsatisfiable Nat cnf := by
   intro h2
   have h3 :=
     CNF.unsat_relabel_iff

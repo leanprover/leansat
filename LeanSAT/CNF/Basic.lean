@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
 import LeanSAT.CNF.ForStd
+import LeanSAT.Sat
 
 -- Lemmas from Mathlib, to move to Lean:
 @[simp] theorem exists_or_eq_left (y : α) (p : α → Prop) : ∃ x : α, x = y ∨ p x := ⟨y, .inl rfl⟩
@@ -22,7 +23,7 @@ A clause in a CNF.
 
 The literal `(i, b)` is satisfied is the assignment to `i` agrees with `b`.
 -/
-abbrev CNF.Clause (α : Type) : Type := List (α × Bool)
+abbrev CNF.Clause (α : Type) : Type := List (Literal α)
 
 abbrev CNF (α : Type) : Type := List (CNF.Clause α)
 
@@ -42,17 +43,20 @@ def eval (f : α → Bool) (g : CNF α) : Bool := g.all fun c => c.eval f
 @[simp] theorem eval_append (f : α → Bool) (g h : CNF α) :
     eval f (g ++ h) = (eval f g && eval f h) := List.all_append
 
-def sat (g : CNF α) (f : α → Bool) : Prop := eval f g = true
-def unsat (g : CNF α) : Prop := ∀ f, eval f g = false
+instance : HSat α (Clause α) where
+  eval assign clause := Clause.eval assign clause
 
-@[simp] theorem unsat_nil_iff_false : unsat ([] : CNF α) ↔ False :=
-  ⟨fun h => by simp [unsat] at h, by simp⟩
+instance : HSat α (CNF α) where
+  eval assign cnf := eval assign cnf
 
-@[simp] theorem sat_nil : sat ([] : CNF α) assign ↔ True := by
-  simp [sat]
+@[simp] theorem unsat_nil_iff_false : unsatisfiable α ([] : CNF α) ↔ False :=
+  ⟨fun h => by simp [unsatisfiable, (· ⊨ ·)] at h, by simp⟩
 
-@[simp] theorem unsat_nil_cons : unsat ([] :: g) ↔ True := by
-  simp [unsat]
+@[simp] theorem sat_nil {assign : α → Bool} : assign ⊨ ([] : CNF α) ↔ True := by
+  simp [(· ⊨ ·)]
+
+@[simp] theorem unsat_nil_cons {g : CNF α} : unsatisfiable α ([] :: g) ↔ True := by
+  simp [unsatisfiable, (· ⊨ ·)]
 
 namespace Clause
 

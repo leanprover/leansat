@@ -387,7 +387,7 @@ The key invariant about the `State` itself (without cache): The CNF we produce i
 at `cnfSatAssignment`.
 -/
 def State.Inv (cnf : CNF (CNFVar aig)) : Prop :=
-  ∀ (assign1 : Nat → Bool), cnf.sat (cnfSatAssignment aig assign1)
+  ∀ (assign1 : Nat → Bool), (cnfSatAssignment aig assign1) ⊨ cnf
 
 /--
 The `State` invariant always holds when we have an empty CNF.
@@ -403,7 +403,7 @@ theorem State.Inv_append (h1 : State.Inv cnf1) (h2 : State.Inv cnf2) :
   intro assign1
   specialize h1 assign1
   specialize h2 assign1
-  simp [CNF.sat] at h1 h2 ⊢
+  simp [(· ⊨ ·)] at h1 h2 ⊢
   constructor <;> assumption
 
 /--
@@ -412,7 +412,7 @@ theorem State.Inv_append (h1 : State.Inv cnf1) (h2 : State.Inv cnf2) :
 theorem State.Inv_constToCNF (heq : aig.decls[upper] = .const b)
     : State.Inv (aig := aig) (Decl.constToCNF (.inr ⟨upper, h⟩) b) := by
   intro assign1
-  simp [CNF.sat, denote_idx_const heq]
+  simp [(· ⊨ ·), denote_idx_const heq]
 
 /--
 `State.Inv` holds for the CNF that we produce for a `Decl.atom`
@@ -420,7 +420,7 @@ theorem State.Inv_constToCNF (heq : aig.decls[upper] = .const b)
 theorem State.Inv_atomToCNF (heq : aig.decls[upper] = .atom a)
     : State.Inv (aig := aig) (Decl.atomToCNF (.inr ⟨upper, h⟩) (.inl a)) := by
   intro assign1
-  simp [CNF.sat, denote_idx_atom heq]
+  simp [(· ⊨ ·), denote_idx_atom heq]
 
 /--
 `State.Inv` holds for the CNF that we produce for a `Decl.gate`
@@ -436,7 +436,7 @@ theorem State.Inv_gateToCNF {aig : AIG Nat} {h} (heq : aig.decls[upper]'h = .gat
           rinv)
     := by
   intro assign1
-  simp [CNF.sat, denote_idx_gate heq]
+  simp [(· ⊨ ·), denote_idx_gate heq]
 
 /--
 The state to accumulate CNF clauses as we run our Tseitin transformation on the AIG.
@@ -545,23 +545,23 @@ def State.eval (state : State aig) (assign : CNFVar aig → Bool) : Bool :=
 /--
 The CNF within the state is sat.
 -/
-def State.sat (state : State aig) (assign : CNFVar aig → Bool) : Prop :=
-  state.cnf.sat assign
+def State.sat (assign : CNFVar aig → Bool) (state : State aig) : Prop :=
+  assign ⊨ state.cnf
 
-/--
-The CNF within the state is unsat.
--/
-def State.unsat (state : State aig) : Prop :=
-  state.cnf.unsat
+instance : HSat (CNFVar aig) (State aig) where
+  eval := State.sat
 
 @[simp]
 theorem State.eval_eq : State.eval state assign = state.cnf.eval assign := by simp [State.eval]
 
-@[simp]
-theorem State.sat_eq : State.sat state assign = state.cnf.sat assign := by simp [State.sat]
+theorem State.liff (state : State aig)
+    : Sat.liff (CNFVar aig) state state.cnf := by
+  simp [Sat.liff, (· ⊨ ·), sat]
 
-@[simp]
-theorem State.unsat_eq : State.unsat state = state.cnf.unsat := by simp [State.unsat]
+theorem State.equisat (state : State aig)
+    : Sat.equisat (CNFVar aig) state state.cnf := by
+  apply Sat.liff_unsat
+  apply State.liff
 
 end toCNF
 
@@ -647,9 +647,10 @@ theorem toCNF.go_marked :
 The CNF returned by `go` will always be SAT at `cnfSatAssignment`.
 -/
 theorem toCNF.go_sat (aig : AIG Nat) (start : Nat) (h1 : start < aig.decls.size) (assign1 : Nat → Bool)
-    (state : toCNF.State aig) :
-    (go aig start h1 state).val.sat (cnfSatAssignment aig assign1) := by
+    (state : toCNF.State aig)
+    : (cnfSatAssignment aig assign1) ⊨ (go aig start h1 state).val := by
   have := (go aig start h1 state).val.inv assign1
+  rw [State.liff]
   simp [this]
 
 /--
@@ -661,17 +662,18 @@ theorem toCNF.go_as_denote (aig : AIG Nat) (start) (h1) (assign1) :
     (⟦aig, ⟨start, h1⟩, assign1⟧ = sat?) := by
   intro h
   have := go_sat aig start h1 assign1 (.empty aig)
-  simp [CNF.sat] at this
+  simp [(· ⊨ ·), State.sat] at this
   simpa [this] using h
 
 /--
 Connect SAT results about the AIG to SAT results about the CNF.
 -/
-theorem toCNF.denote_as_go :
+theorem toCNF.denote_as_go {assign : AIG.CNFVar aig → Bool}:
     (⟦aig, ⟨start, h1⟩, projectLeftAssign assign⟧ = false)
       →
-    (CNF.eval assign ([(.inr ⟨start, h1⟩, true)] :: (go aig start h1 (.empty aig)).val.cnf) = false) := by
+    (assign ⊭ ([(.inr ⟨start, h1⟩, true)] :: (go aig start h1 (.empty aig)).val.cnf)) := by
   intro h
+  simp only [(· ⊨ ·)]
   match heval1:(go aig start h1 (State.empty aig)).val.cnf.eval assign with
   | true =>
     have heval2 := (go aig start h1 (.empty aig)).val.cache.inv.heval
@@ -684,14 +686,14 @@ theorem toCNF.denote_as_go :
 /--
 An AIG is unsat iff its CNF is unsat.
 -/
-theorem toCNF_equisat (entry : Entrypoint Nat) : (toCNF entry).unsat ↔ entry.unsat := by
+theorem toCNF_equisat (entry : Entrypoint Nat) : unsatisfiable Nat (toCNF entry) ↔ entry.unsat := by
   dsimp [toCNF]
   rw [CNF.unsat_relabel_iff]
   . constructor
     . intro h assign1
       apply toCNF.go_as_denote
       specialize h (toCNF.cnfSatAssignment entry.aig assign1)
-      simpa using h
+      simpa [(· ⊨ ·)] using h
     . intro h assign
       apply toCNF.denote_as_go
       specialize h (toCNF.projectLeftAssign assign)
