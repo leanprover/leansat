@@ -5,9 +5,7 @@ Authors: Henrik Böving
 -/
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
-import LeanSAT.Reflect.CNF.Basic
-import LeanSAT.Reflect.CNF.Relabel
-import LeanSAT.Reflect.CNF.Relabel
+import LeanSAT.CNF
 
 /-!
 This module contains an implementation of a verified Tseitin transformation on AIGs. The key results
