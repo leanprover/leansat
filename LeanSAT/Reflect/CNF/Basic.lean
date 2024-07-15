@@ -15,10 +15,6 @@ import LeanSAT.Reflect.CNF.ForStd
     (List.isEmpty xs = false) ↔ ∃ x, x ∈ xs := by
   cases xs <;> simp
 
-@[simp] theorem List.isEmpty_true_iff (xs : List α) :
-    (List.isEmpty xs = true) ↔ xs = [] := by
-  cases xs <;> simp
-
 set_option linter.missingDocs false
 
 /--
@@ -126,10 +122,10 @@ theorem any_nonEmpty_iff_exists_mem {g : CNF α} :
   simp only [List.any_eq_true, Bool.not_eq_true', not_exists, not_and, Bool.not_eq_false]
   induction g with
   | nil =>
-    simp only [List.not_mem_nil, List.isEmpty_true_iff, false_implies, forall_const, true_iff]
+    simp only [List.not_mem_nil, List.isEmpty_iff, false_implies, forall_const, true_iff]
     exact ⟨0, rfl⟩
   | cons c g ih =>
-    simp_all [ih]
+    simp_all [ih, List.isEmpty_iff]
     constructor
     · rintro ⟨rfl, n, rfl⟩
       exact ⟨n+1, rfl⟩
