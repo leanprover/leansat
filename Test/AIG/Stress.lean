@@ -1,4 +1,4 @@
-import LeanSAT.Reflect.Tactics.BVDecide
+import LeanSAT.Tactics.BVDecide
 
 -- Our benchmark terms are huge, no need to waste time on linting
 set_option linter.all false

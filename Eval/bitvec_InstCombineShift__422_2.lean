@@ -1,5 +1,5 @@
 -- set_option maxRecDepth 9999 in
-import LeanSAT.Reflect.Tactics.BVDecide
+import LeanSAT.Tactics.BVDecide
 
 open BitVec
 

@@ -1,4 +1,4 @@
-import LeanSAT.Reflect.Tactics.BVDecide
+import LeanSAT.Tactics.BVDecide
 
 open BitVec
 set_option profiler true

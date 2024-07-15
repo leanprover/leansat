@@ -1,4 +1,4 @@
-import LeanSAT.Reflect.Tactics.BVDecide
+import LeanSAT.Tactics.BVDecide
 
 theorem bitvec_160 :
  ∀ (x C1 C2 : BitVec 7), x <<< C2 * C1 = x * C1 <<< C2

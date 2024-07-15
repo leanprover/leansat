@@ -3,8 +3,8 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.Reflect.Glue
-import LeanSAT.Reflect.Tactics.Attr
+import LeanSAT.Tactics.Glue
+import LeanSAT.Tactics.Attr
 import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.External.Solver

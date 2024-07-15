@@ -1,4 +1,4 @@
-import LeanSAT.Reflect.LRAT
+import LeanSAT.Tactics.LRAT
 
 open LRAT
 
