@@ -145,9 +145,8 @@ theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α 
         simp [heq] at hfound
         omega
       | false =>
-        simp [heq] at hfound
         apply ih
-        assumption
+        simpa [heq] using hfound
     . next hbounds =>
       simp only [HashMap.getElem?_insert] at hfound
       match heq:decl == decl' with
@@ -157,7 +156,7 @@ theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α 
       | false =>
         exfalso
         apply hbounds
-        simp [heq] at hfound
+        simp only [heq, cond_false] at hfound
         specialize ih _ hfound
         apply Array.lt_of_get
         assumption
@@ -168,7 +167,7 @@ Lookup a `Decl` in a `Cache`.
 opaque Cache.get? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit decls decl) :=
   /-
   This function is marked as `opaque` to make sure it never, ever gets unfolded anywhere.
-  Unfolding it will often always cause `HashMap.find?` to be symbolically evaluated by reducing
+  Unfolding it will often cause `HashMap.find?` to be symbolically evaluated by reducing
   it either in `whnf` or in the kernel. This causes *huge* performance issues in practice.
   The function can still be fully verified as all the proofs we need are in `CacheHit`.
   -/
@@ -180,7 +179,9 @@ opaque Cache.get? (cache : Cache α decls) (decl : Decl α) : Option (CacheHit d
 /--
 An `Array Decl` is a Direct Acyclic Graph (DAG) if this holds.
 -/
-def IsDag (α : Type) (decls : Array (Decl α)) : Prop := ∀ i lhs rhs linv rinv (h : i < decls.size), decls[i] = .gate lhs rhs linv rinv → lhs < i ∧ rhs < i
+def IsDag (α : Type) (decls : Array (Decl α)) : Prop :=
+  ∀ i lhs rhs linv rinv (h : i < decls.size),
+      decls[i] = .gate lhs rhs linv rinv → lhs < i ∧ rhs < i
 
 /--
 The empty array is a DAG.
@@ -269,14 +270,16 @@ Transform an entrypoint into a graphviz compatible format.
 StateM collects the array indices for all occuring nodes and computes the edges on the way.
 Afterwards generate the node declarations once.
 -/
-def toGraphviz {α : Type} [DecidableEq α] [ToString α] [Hashable α] (entry : Entrypoint α) : String :=
+def toGraphviz {α : Type} [DecidableEq α] [ToString α] [Hashable α] (entry : Entrypoint α)
+    : String :=
   let ⟨⟨decls, _, hinv⟩, ⟨idx, h⟩⟩ := entry
   let (dag, s) := go "" decls hinv idx h |>.run .empty
   let nodes := s.fold (fun x y ↦ x ++ toGraphvizString decls y) ""
   "Digraph AIG {" ++ nodes ++ dag ++ "}"
 where
-  go {α : Type} [DecidableEq α] [ToString α] [Hashable α] (acc : String) (decls : Array (Decl α)) (hinv : IsDag α decls)
-      (idx : Nat) (hidx : idx < decls.size) : StateM (HashSet (Fin decls.size)) String := do
+  go {α : Type} [DecidableEq α] [ToString α] [Hashable α] (acc : String) (decls : Array (Decl α))
+      (hinv : IsDag α decls) (idx : Nat) (hidx : idx < decls.size)
+        : StateM (HashSet (Fin decls.size)) String := do
     let fidx : Fin decls.size := Fin.mk idx hidx
     if (← get).contains fidx then
       return acc
@@ -321,7 +324,8 @@ Evaluate an `AIG.Entrypoint` using some assignment for atoms.
 def denote (entry : Entrypoint α) (assign : α → Bool) : Bool :=
   go entry.ref.gate entry.aig.decls assign entry.ref.hgate entry.aig.inv
 where
-  go (x : Nat) (decls : Array (Decl α)) (assign : α → Bool) (h1 : x < decls.size) (h2 : IsDag α decls) :=
+  go (x : Nat) (decls : Array (Decl α)) (assign : α → Bool) (h1 : x < decls.size)
+      (h2 : IsDag α decls) : Bool :=
     match h3 : decls[x] with
     | .const b => b
     | .atom v => assign v
@@ -340,12 +344,16 @@ macro_rules
 
 @[app_unexpander AIG.denote]
 def unexpandDenote : Lean.PrettyPrinter.Unexpander
-  | `($(_) {aig := $aig, start := $start, inv := $hbound} $assign) => `(⟦$aig, ⟨$start, $hbound⟩, $assign⟧)
+  | `($(_) {aig := $aig, start := $start, inv := $hbound} $assign) =>
+    `(⟦$aig, ⟨$start, $hbound⟩, $assign⟧)
   | `($(_) $entry $assign) => `(⟦$entry, $assign⟧)
   | _ => throw ()
 
-def unsatAt (aig : AIG α) (start : Nat) (h : start < aig.decls.size) : Prop := ∀ assign, ⟦aig, ⟨start, h⟩, assign⟧ = false
-def Entrypoint.unsat (entry : Entrypoint α) : Prop := entry.aig.unsatAt entry.ref.gate entry.ref.hgate
+def unsatAt (aig : AIG α) (start : Nat) (h : start < aig.decls.size) : Prop :=
+  ∀ assign, ⟦aig, ⟨start, h⟩, assign⟧ = false
+
+def Entrypoint.unsat (entry : Entrypoint α) : Prop :=
+  entry.aig.unsatAt entry.ref.gate entry.ref.hgate
 
 /--
 An input to an AIG gate.
