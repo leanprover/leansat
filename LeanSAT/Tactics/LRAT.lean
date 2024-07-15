@@ -152,9 +152,10 @@ def verifyCert (formula : LratFormula) (cert : LratCert) : Bool :=
     checkerResult = .success
   | none => false
 
-theorem verifyCert_correct : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) cert = true → cnf.unsat := by
+theorem verifyCert_correct
+    : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) cert = true → unsatisfiable Nat cnf := by
   intro c b h1
-  dsimp[verifyCert] at h1
+  dsimp [verifyCert] at h1
   split at h1
   . simp only [decide_eq_true_eq] at h1
     have h2 :=
@@ -173,8 +174,7 @@ theorem verifyCert_correct : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) ce
     apply CNF.unsat_of_lift_unsat c
     intro assignment
     unfold CNF.convertLRAT at h2
-    have h2 := (LRAT.unsat_of_cons_none_unsat _ h2) assignment
-    apply eq_false_of_ne_true
+    replace h2 := (LRAT.unsat_of_cons_none_unsat _ h2) assignment
     intro h3
     apply h2
     simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
@@ -183,7 +183,7 @@ theorem verifyCert_correct : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) ce
       CNF.convertLRAT', Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
       List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
     rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
-    simp only [CNF.eval, List.all_eq_true] at h3
+    simp only [(· ⊨ ·), CNF.eval, List.all_eq_true] at h3
     split at hrclause2
     . next heq =>
       rw [← heq] at hrclause2
