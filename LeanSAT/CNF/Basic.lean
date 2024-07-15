@@ -6,6 +6,8 @@ Authors: Scott Morrison
 import LeanSAT.CNF.ForStd
 import LeanSAT.Sat
 
+open Sat
+
 -- Lemmas from Mathlib, to move to Lean:
 @[simp] theorem exists_or_eq_left (y : α) (p : α → Prop) : ∃ x : α, x = y ∨ p x := ⟨y, .inl rfl⟩
 @[simp] theorem exists_or_eq_right (y : α) (p : α → Prop) : ∃ x : α, p x ∨ x = y := ⟨y, .inr rfl⟩

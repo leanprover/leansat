@@ -9,6 +9,8 @@ import LeanSAT.Util.PosFin
 import LeanSAT.Util.Misc
 import LeanSAT.LRAT.Assignment
 
+open Sat
+
 namespace LRAT
 
 /-- ReduceResult is an inductive datatype used specifically for the output of the `reduce` function. The intended

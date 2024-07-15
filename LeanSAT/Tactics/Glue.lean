@@ -7,7 +7,7 @@ import LeanSAT.CNF.RelabelFin
 
 import LeanSAT.LRAT.LRATChecker
 
-open Lean Elab Meta
+open Lean Elab Meta Sat
 
 /--
 Turn a `CNF Nat`, that might contain `0` as a variable, to a `CNF PosFin`.

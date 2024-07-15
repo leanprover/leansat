@@ -9,7 +9,7 @@ import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.External.Solver
 
-open Lean Elab Meta
+open Lean Elab Meta Sat
 
 namespace BVDecide
 

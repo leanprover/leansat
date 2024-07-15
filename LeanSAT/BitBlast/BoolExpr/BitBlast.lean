@@ -14,6 +14,8 @@ through the use of a cache that re-uses sub-circuits if possible.
 
 namespace AIG
 
+open Sat
+
 variable {β : Type} [Hashable β] [DecidableEq β]
 
 
