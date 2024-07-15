@@ -5,6 +5,8 @@ Authors: Scott Morrison
 -/
 import LeanSAT.CNF.Basic
 
+open Sat
+
 set_option linter.missingDocs false
 
 namespace CNF

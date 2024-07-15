@@ -7,7 +7,7 @@ import LeanSAT.Sat.Basic
 
 set_option linter.missingDocs false
 
-open Lean Meta
+open Lean Meta Sat
 
 inductive Gate
 | and

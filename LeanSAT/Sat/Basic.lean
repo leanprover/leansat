@@ -10,12 +10,12 @@ Authors: Josh Clune
 class HSat (α : Type u) (β : Type v) :=
   (eval : (α → Bool) → β → Prop)
 
-infix:25 " ⊨ " => HSat.eval
-notation:25 p:25 " ⊭ " f:30 => ¬(HSat.eval p f)
-
-def unsatisfiable (α : Type u) {σ : Type v} [HSat α σ] (f : σ) : Prop := ∀ (p : α → Bool), p ⊭ f
-
 namespace Sat
+
+scoped infix:25 " ⊨ " => HSat.eval
+scoped notation:25 p:25 " ⊭ " f:30 => ¬(HSat.eval p f)
+
+def _root_.unsatisfiable (α : Type u) {σ : Type v} [HSat α σ] (f : σ) : Prop := ∀ (p : α → Bool), p ⊭ f
 
 /-- f1 and f2 are logically equivalent -/
 def liff (α : Type u) {σ1 : Type v} {σ2 : Type w} [HSat α σ1] [HSat α σ2] (f1 : σ1) (f2 : σ2) : Prop :=

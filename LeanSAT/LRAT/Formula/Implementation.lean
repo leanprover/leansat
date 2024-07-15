@@ -8,7 +8,7 @@ import LeanSAT.LRAT.Assignment
 
 namespace LRAT
 
-open Assignment DefaultClause Literal Std ReduceResult
+open Assignment DefaultClause Literal Std ReduceResult Sat
 
 /-- The structure `DefaultFormula n` takes in a parameter `n` which is intended to be one greater than the total number of variables that
     can appear in the formula (hence why the parameter `n` is called `numVarsSucc` below). The structure has 4 fields:

@@ -7,6 +7,8 @@ import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
 import LeanSAT.CNF
 
+open Sat
+
 /-!
 This module contains an implementation of a verified Tseitin transformation on AIGs. The key results
 are the `toCNF` function and the `toCNF_equisat` correctness statement. The implementation is

@@ -9,6 +9,8 @@ abbrev Literal (α : Type u) := α × Bool
 
 namespace Literal
 
+open Sat
+
 instance [Hashable α] : Hashable (Literal α) where
   hash := fun x => if x.2 then hash x.1 else hash x.1 + 1
 
