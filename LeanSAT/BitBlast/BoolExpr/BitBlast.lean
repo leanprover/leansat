@@ -148,7 +148,9 @@ theorem ofBoolExprCachedDirect_eval_eq_eval (expr : BoolExpr α) (assign) :
     ⟦ofBoolExprCachedDirect expr, assign⟧ = expr.eval assign := by
   apply ofBoolExprCached.go_eval_eq_eval
 
-theorem ofBoolExprCachedDirect_unsat_iff {expr : BoolExpr α} : (ofBoolExprCachedDirect expr).unsat ↔ expr.unsat := by
+theorem ofBoolExprCachedDirect_unsat_iff {expr : BoolExpr α}
+    : (ofBoolExprCachedDirect expr).unsat ↔ unsatisfiable α expr := by
+  simp [unsatisfiable, (· ⊨ ·), BoolExpr.sat]
   constructor
   all_goals
     intro h assign
