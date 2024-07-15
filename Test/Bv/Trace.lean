@@ -1,4 +1,4 @@
-import LeanSAT.Reflect.Tactics.BVTrace
+import LeanSAT.Tactics.BVTrace
 
 open BitVec
 

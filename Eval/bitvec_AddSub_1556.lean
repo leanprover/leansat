@@ -1,4 +1,4 @@
-import LeanSAT.Reflect.Tactics.BVDecide
+import LeanSAT.Tactics.BVDecide
 
 theorem bitvec_AddSub_1556 :
  ∀ (y x : BitVec 1), x - y = x ^^^ y

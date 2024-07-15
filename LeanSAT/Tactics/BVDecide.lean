@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr
-import LeanSAT.Reflect.Tactics.Normalize
-import LeanSAT.Reflect.LRAT
+import LeanSAT.Tactics.Normalize
+import LeanSAT.Tactics.LRAT
 import LeanSAT.AIG.CNF
 import LeanSAT.AIG.RelabelNat
 

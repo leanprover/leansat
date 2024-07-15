@@ -3,8 +3,8 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.Reflect.Tactics.BVDecide
-import LeanSAT.Reflect.Tactics.BVCheck
+import LeanSAT.Tactics.BVDecide
+import LeanSAT.Tactics.BVCheck
 import LeanSAT.LRAT.Trim
 import Lean.Meta.Tactic.TryThis
 

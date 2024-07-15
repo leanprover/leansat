@@ -1,4 +1,4 @@
-import LeanSAT.Reflect.Tactics.BVDecide
+import LeanSAT.Tactics.BVDecide
 
 theorem bitvec_283 :
  ∀ (Y X : BitVec 1), X * Y = X &&& Y
