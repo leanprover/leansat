@@ -5,11 +5,10 @@ Authors: Scott Morrison
 -/
 import LeanSAT.Reflect.BoolExpr.Basic
 import LeanSAT.Reflect.CNF.Basic
-import LeanSAT.Reflect.CNF.Decidable
 import LeanSAT.Reflect.CNF.ForStd
 import LeanSAT.Reflect.CNF.Relabel
+import LeanSAT.Reflect.CNF.RelabelFin
 import LeanSAT.Reflect.Tactics.Attr
-import LeanSAT.Reflect.Fin
 import LeanSAT.Reflect.Glue
 import LeanSAT.Reflect.BVExpr.Basic
 import LeanSAT.Reflect.BVExpr.BitBlast
