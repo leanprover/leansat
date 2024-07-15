@@ -6,8 +6,6 @@ Authors: Josh Clune
 
 namespace Misc
 
-open List
-
 theorem Subtype.ext {p : α → Prop} : ∀ {a1 a2 : { x // p x }}, (a1 : α) = (a2 : α) → a1 = a2
   | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
 
@@ -25,43 +23,6 @@ theorem Prod.forall {p : α × β → Prop} : (∀ x, p x) ↔ ∀ a b, p (a, b)
 @[simp]
 theorem Prod.exists {p : α × β → Prop} : (∃ x, p x) ↔ ∃ a b, p (a, b) :=
   ⟨fun ⟨⟨a, b⟩, h⟩ => ⟨a, b, h⟩, fun ⟨a, b, h⟩ => ⟨⟨a, b⟩, h⟩⟩
-
-@[simp]
-theorem forall_mem_ne {a : α} {l : List α} : (∀ a' : α, a' ∈ l → ¬a = a') ↔ a ∉ l :=
-  ⟨fun h m => h _ m rfl, fun h _ m e => h (e.symm ▸ m)⟩
-
-@[simp]
-theorem List.nodup_nil : @Nodup α [] :=
-  Pairwise.nil
-
-@[simp]
-theorem List.nodup_cons {a : α} {l : List α} : Nodup (a :: l) ↔ a ∉ l ∧ Nodup l := by
-  simp only [Nodup, pairwise_cons, forall_mem_ne]
-
-theorem List.Nodup.erase_eq_filter [BEq α] [LawfulBEq α] {l} (d : Nodup l) (a : α) : l.erase a = l.filter (· != a) := by
-  induction d -- with b l m _ IH; · rfl
-  . rfl
-  . next b l m _ IH =>
-    by_cases h : b = a
-    · subst h
-      rw [erase_cons_head, filter_cons_of_neg (by simp)]
-      apply Eq.symm
-      rw [filter_eq_self]
-      simpa [@eq_comm α] using m
-    · simp [beq_false_of_ne h, IH, h]
-
-theorem List.Nodup.mem_erase_iff [BEq α] [LawfulBEq α] {a : α} (d : Nodup l) : a ∈ l.erase b ↔ a != b ∧ a ∈ l := by
-  rw [List.Nodup.erase_eq_filter d, mem_filter, and_comm]
-
-theorem List.Nodup.not_mem_erase [BEq α] [LawfulBEq α] {a : α} (h : Nodup l) : a ∉ l.erase a := fun H => by
-  have h := ((List.Nodup.mem_erase_iff h).mp H).left
-  simp only [bne_self_eq_false] at h
-
-theorem List.Nodup.sublist : l₁ <+ l₂ → Nodup l₂ → Nodup l₁ :=
-  Pairwise.sublist
-
-theorem List.Nodup.erase [BEq α] [LawfulBEq α] (a : α) : Nodup l → Nodup (l.erase a) :=
-  List.Nodup.sublist <| erase_sublist _ _
 
 def List.foldlRecOn {C : β → Sort _} (l : List α) (op : β → α → β) (b : β) (hb : C b)
   (hl : ∀ (b : β) (_ : C b) (a : α) (_ : a ∈ l), C (op b a)) : C (List.foldl op b l) := by
