@@ -1,4 +1,4 @@
-import LeanSAT.AIG.BoolExprCached
+import LeanSAT.BitBlast.BoolExpr
 
 def mkFalseCollapsible (n : Nat) : BoolExpr Nat :=
   match n with
