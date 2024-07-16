@@ -24,7 +24,9 @@ instance (p : α → Bool) (l : Literal α) : Decidable (p ⊨ l) := by
 def negateLiteral (l : Literal α) := (l.1, not l.2)
 
 def dimacs [ToString α] (l : Literal α) : String :=
-  if l.2 then s!"{l.1}"
-  else s!"-{l.1}"
+  if l.2 then
+    s!"{l.1}"
+  else
+    s!"-{l.1}"
 
 end Literal

@@ -7,6 +7,8 @@ import LeanSAT.CNF.Relabel
 
 set_option linter.missingDocs false
 
+open Sat
+
 namespace CNF
 
 def Clause.maxLiteral (c : Clause Nat) : Option Nat := (c.map (·.1)) |>.maximum?
