@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import LeanSAT.External.LRAT
-import Lean.Data.Parsec
 import Lean.CoreM
 
 inductive SolverResult where
@@ -74,10 +73,7 @@ partial def runInterruptible (args : IO.Process.SpawnArgs) : CoreM IO.Process.Ou
 where
   go {cfg} (child : IO.Process.Child cfg) (stdout stderr : Task (Except IO.Error String))
       (tk : IO.CancelToken) : CoreM IO.Process.Output := do
-    if ← tk.isSet then
-      child.kill
-      throw <| .internal Core.interruptExceptionId
-    else
+    withInterruptCheck tk child.kill do
       match ← child.tryWait with
       | some exitCode =>
         let stdout ← IO.ofExcept stdout.get
@@ -87,12 +83,22 @@ where
         IO.sleep 50
         go child stdout stderr tk
 
-/-- By default, satQuery assumes that the user has cadical (≥ version 1.7.0) installed and their path set up so that it
-    can be run via the command `cadical` in terminal. If the path to the user's `cadical` is different, it can be provided
-    in the `solverPath` argument. `satQuery` will call cadical on the CNF file at `problemPath` and output an LRAT result
-    to `proofOutput` -/
-def satQuery (solverPath := "cadical") (problemPath : System.FilePath) (proofOutput : System.FilePath)
-    (timeout : Nat) : CoreM SolverResult := do
+  withInterruptCheck {α : Type} (tk : IO.CancelToken) (interrupted : CoreM Unit) (x : CoreM α)
+      : CoreM α := do
+    if ← tk.isSet then
+      interrupted
+      throw <| .internal Core.interruptExceptionId
+    else
+      x
+
+/--
+By default, satQuery assumes that the user has cadical (≥ version 1.7.0) installed and their
+path set up so that it can be run via the command `cadical` in terminal. If the path to the user's
+`cadical` is different, it can be provided in the `solverPath` argument. `satQuery` will call
+cadical on the CNF file at `problemPath` and output an LRAT result to `proofOutput`.
+-/
+def satQuery (solverPath := "cadical") (problemPath : System.FilePath)
+    (proofOutput : System.FilePath) (timeout : Nat) : CoreM SolverResult := do
   let cmd := solverPath
   let args := #[
     problemPath.toString,
