@@ -81,7 +81,8 @@ def relabel (f : α → β) (aig : AIG α) : AIG β :=
   }
 
 @[simp]
-theorem relabel_size_eq_size {aig : AIG α} {f : α → β} : (aig.relabel f).decls.size = aig.decls.size := by
+theorem relabel_size_eq_size {aig : AIG α} {f : α → β}
+    : (aig.relabel f).decls.size = aig.decls.size := by
   simp [relabel]
 
 theorem relabel_const {aig : AIG α} {f : α → β} {hidx : idx < (relabel f aig).decls.size}

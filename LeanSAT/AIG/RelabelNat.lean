@@ -28,8 +28,9 @@ inductive Inv1 : Nat → HashMap α Nat → Prop where
 | empty : Inv1 0 {}
 | insert (hinv : Inv1 n map) (hfind : map[x]? = none) : Inv1 (n + 1) (map.insert x n)
 
-theorem Inv1.lt_of_get?_eq_some [EquivBEq α] {n m : Nat} (map : HashMap α Nat) (x : α) (hinv : Inv1 n map) :
-    map[x]? = some m → m < n := by
+theorem Inv1.lt_of_get?_eq_some [EquivBEq α] {n m : Nat} (map : HashMap α Nat) (x : α)
+    (hinv : Inv1 n map)
+    : map[x]? = some m → m < n := by
   induction hinv with
   | empty => simp
   | insert ih1 ih2 ih3 =>

@@ -70,12 +70,14 @@ theorem getRef_push_ref_eq (s : RefStream aig len) (ref : AIG.Ref aig)
   simp [getRef, pushRef, ← this]
 
 -- This variant exists because it is sometimes hard to rewrite properly with DTT
-theorem getRef_push_ref_eq' (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat) (hidx : idx = len)
+theorem getRef_push_ref_eq' (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat)
+    (hidx : idx = len)
     : (s.pushRef ref).getRef idx (by omega) = ref := by
   have := s.hlen
   simp [getRef, pushRef, ← this, hidx]
 
-theorem getRef_push_ref_lt (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat) (hidx : idx < len)
+theorem getRef_push_ref_lt (s : RefStream aig len) (ref : AIG.Ref aig) (idx : Nat)
+    (hidx : idx < len)
     : (s.pushRef ref).getRef idx (by omega) = s.getRef idx hidx := by
   simp [getRef, pushRef]
   cases ref
@@ -108,7 +110,8 @@ def append (lhs : RefStream aig lw) (rhs : RefStream aig rw) : RefStream aig (lw
         . omega
   ⟩
 
-theorem getRef_append (lhs : RefStream aig lw) (rhs : RefStream aig rw) (idx : Nat) (hidx : idx < lw + rw)
+theorem getRef_append (lhs : RefStream aig lw) (rhs : RefStream aig rw) (idx : Nat)
+      (hidx : idx < lw + rw)
     : (lhs.append rhs).getRef idx hidx
         =
       if h:idx < lw then
@@ -160,16 +163,16 @@ def cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len)
   ⟨lhs.cast h, rhs.cast h⟩
 
 @[simp]
-theorem lhs_getRef_cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len) (idx : Nat) (hidx : idx < len)
-      (hcast : aig1.decls.size ≤ aig2.decls.size)
+theorem lhs_getRef_cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len) (idx : Nat)
+      (hidx : idx < len) (hcast : aig1.decls.size ≤ aig2.decls.size)
     : (s.cast hcast).lhs.getRef idx hidx
         =
       (s.lhs.getRef idx hidx).cast hcast := by
   simp [cast]
 
 @[simp]
-theorem rhs_getRef_cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len) (idx : Nat) (hidx : idx < len)
-      (hcast : aig1.decls.size ≤ aig2.decls.size)
+theorem rhs_getRef_cast {aig1 aig2 : AIG α} (s : BinaryRefStream aig1 len) (idx : Nat)
+      (hidx : idx < len) (hcast : aig1.decls.size ≤ aig2.decls.size)
     : (s.cast hcast).rhs.getRef idx hidx
         =
       (s.rhs.getRef idx hidx).cast hcast := by

@@ -39,7 +39,8 @@ def mkNotCached (aig : AIG α) (gate : Ref aig) : Entrypoint α :=
     }
 
 @[inline]
-def BinaryInput.asGateInput {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool) : GateInput aig :=
+def BinaryInput.asGateInput {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool)
+    : GateInput aig :=
   {
     lhs := {
       ref := input.lhs
@@ -117,7 +118,8 @@ def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
     }
 
 /--
-Create an equality gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
+Create an equality gate in the input AIG. This uses the builtin cache to enable automated subterm
+sharing
 -/
 def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- a == b = (invert (a && (invert b))) && (invert ((invert a) && b))
@@ -149,7 +151,8 @@ def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
     }
 
 /--
-Create an implication gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
+Create an implication gate in the input AIG. This uses the builtin cache to enable automated subterm
+sharing.
 -/
 def mkImpCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- a -> b = true && (invert (a and (invert b)))

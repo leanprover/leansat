@@ -44,10 +44,12 @@ theorem mkAtomCached_miss_aig (aig : AIG α) (hcache : aig.cache.get? (.atom var
   split <;> simp_all
 
 /--
-The AIG produced by `AIG.mkAtomCached` agrees with the input AIG on all indices that are valid for both.
+The AIG produced by `AIG.mkAtomCached` agrees with the input AIG on all indices that are valid for
+both.
 -/
-theorem mkAtomCached_decl_eq (aig : AIG α) (var : α) (idx : Nat) {h : idx < aig.decls.size} {hbound} :
-    (aig.mkAtomCached var).aig.decls[idx]'hbound = aig.decls[idx] := by
+theorem mkAtomCached_decl_eq (aig : AIG α) (var : α) (idx : Nat) {h : idx < aig.decls.size}
+    {hbound}
+    : (aig.mkAtomCached var).aig.decls[idx]'hbound = aig.decls[idx] := by
   match hcache:aig.cache.get? (.atom var) with
   | some gate =>
     have := mkAtomCached_hit_aig aig hcache
@@ -86,7 +88,8 @@ theorem mkAtomCached_eval_eq_mkAtom_eval {aig : AIG α}
   . simp [mkAtom, denote]
 
 /--
-If we find a cached const declaration in the AIG, denoting it is equivalent to denoting `AIG.mkConst`.
+If we find a cached const declaration in the AIG, denoting it is equivalent to denoting
+`AIG.mkConst`.
 -/
 theorem denote_mkConst_cached {aig : AIG α} {hit} :
     aig.cache.get? (.const b) = some hit
@@ -100,8 +103,8 @@ theorem denote_mkConst_cached {aig : AIG α} {hit} :
 /--
 `mkConstCached` does not modify the input AIG upon a cache hit.
 -/
-theorem mkConstCached_hit_aig (aig : AIG α) {hit} (hcache : aig.cache.get? (.const val) = some hit) :
-    (aig.mkConstCached val).aig = aig := by
+theorem mkConstCached_hit_aig (aig : AIG α) {hit} (hcache : aig.cache.get? (.const val) = some hit)
+    : (aig.mkConstCached val).aig = aig := by
   simp only [mkConstCached]
   split <;> simp_all
 
@@ -116,8 +119,9 @@ theorem mkConstCached_miss_aig (aig : AIG α) (hcache : aig.cache.get? (.const v
 /--
 The AIG produced by `AIG.mkConstCached` agrees with the input AIG on all indices that are valid for both.
 -/
-theorem mkConstCached_decl_eq (aig : AIG α) (val : Bool) (idx : Nat) {h : idx < aig.decls.size} {hbound} :
-    (aig.mkConstCached val).aig.decls[idx]'hbound = aig.decls[idx] := by
+theorem mkConstCached_decl_eq (aig : AIG α) (val : Bool) (idx : Nat) {h : idx < aig.decls.size}
+    {hbound}
+    : (aig.mkConstCached val).aig.decls[idx]'hbound = aig.decls[idx] := by
   match hcache:aig.cache.get? (.const val) with
   | some gate =>
     have := mkConstCached_hit_aig aig hcache
@@ -253,7 +257,8 @@ theorem mkGateCached.go_decl_eq (aig : AIG α) (input : GateInput aig) :
             simp [h2]
 
 /--
-The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for both.
+The AIG produced by `AIG.mkGateCached` agrees with the input AIG on all indices that are valid for
+both.
 -/
 theorem mkGateCached_decl_eq (aig : AIG α) (input : GateInput aig) :
     ∀ (idx : Nat) (h1) (h2),
