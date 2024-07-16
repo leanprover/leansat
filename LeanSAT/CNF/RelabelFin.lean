@@ -16,7 +16,8 @@ def Clause.maxLiteral (c : Clause Nat) : Option Nat := (c.map (·.1)) |>.maximum
 theorem Clause.of_maxLiteral_eq_some (c : Clause Nat) (h : c.maxLiteral = some maxLit) :
     ∀ lit, mem lit c → lit ≤ maxLit := by
   intro lit hlit
-  simp only [maxLiteral, List.maximum?_eq_some_iff', List.mem_map, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂] at h
+  simp only [maxLiteral, List.maximum?_eq_some_iff', List.mem_map, forall_exists_index, and_imp,
+    forall_apply_eq_imp_iff₂] at h
   simp only [mem] at hlit
   rcases h with ⟨_, hbar⟩
   cases hlit
@@ -24,7 +25,8 @@ theorem Clause.of_maxLiteral_eq_some (c : Clause Nat) (h : c.maxLiteral = some m
     have := hbar (lit, _) (by assumption)
     omega
 
-theorem Clause.maxLiteral_eq_some_of_mem (c : Clause Nat) (h : mem l c) : ∃ maxLit, c.maxLiteral = some maxLit := by
+theorem Clause.maxLiteral_eq_some_of_mem (c : Clause Nat) (h : mem l c)
+    : ∃ maxLit, c.maxLiteral = some maxLit := by
   dsimp[mem] at h
   cases h <;> rename_i h
   all_goals
