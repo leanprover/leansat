@@ -65,10 +65,7 @@ elab_rules : tactic
   | `(tactic| bv_check $path:str) => do
     let cfg ← BVCheck.mkContext path.getString
     liftMetaFinishingTactic fun g => do
-      -- We still run the normalizer here. While we would usually not expect a call to `bv_check` if
-      -- the normalizer can solve this stuff on its own (`bv_decide?` detects that and suggest `bv_normalize`)
-      -- we still want the software to be resilient so simply ignore this.
-      -- It might be that this turns out to be a subtoptimal choice, in that case we can still change.
+      -- We still leave the option open for the normalizer to solve the goal on its own.
       let res ← g.bvNormalize
       match res.goal with
       | some g => g.bvCheck cfg

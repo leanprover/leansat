@@ -69,7 +69,8 @@ theorem Bool.and_to_and (a b : Bool) : ((a = true) ∧ (b = true)) = ((a && b) =
   simp
 
 @[bv_normalize]
-theorem Bool.iff_to_or (a b : Bool) : ((a = true) ↔ (b = true)) = (((!a || b) && (!b || a)) = true) := by
+theorem Bool.iff_to_or (a b : Bool)
+    : ((a = true) ↔ (b = true)) = (((!a || b) && (!b || a)) = true) := by
   revert a b
   decide
 

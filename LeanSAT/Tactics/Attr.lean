@@ -18,7 +18,7 @@ register_option sat.solver : String := {
 
 register_option sat.prevalidate : Bool := {
   defValue := false
-  descr := "Usually the LRAT proof is only parsed in the kernel. If this is enabled its additionally parsed before as well for better error reporting."
+  descr := "Parse the LRAT proof before passing it into the kernel. Useful debugging."
 }
 
 register_option sat.timeout : Nat := {
