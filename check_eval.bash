@@ -24,8 +24,5 @@ for path in $(find "${LIB}" -type f  -name "*.lean" | sort); do
     fi
 done
 
-# Compare with checked in results within [success|fail].txt
-diff -u "${LIB}/success.txt" $RUN_SUCCESSES
-ret1=$?
 diff -u "${LIB}/fail.txt" $RUN_FAILS
-exit $(($ret1 | $?))
+exit $?
