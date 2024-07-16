@@ -124,7 +124,8 @@ theorem denote_mkGate {aig : AIG α} {input : GateInput aig} :
 /--
 `AIG.mkAtom` never shrinks the underlying AIG.
 -/
-theorem mkAtom_le_size (aig : AIG α) (var : α) : aig.decls.size ≤ (aig.mkAtom var).aig.decls.size := by
+theorem mkAtom_le_size (aig : AIG α) (var : α)
+    : aig.decls.size ≤ (aig.mkAtom var).aig.decls.size := by
   simp_arith [mkAtom]
 
 /--

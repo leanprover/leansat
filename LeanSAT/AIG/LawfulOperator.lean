@@ -63,7 +63,8 @@ theorem denote.go_eq_of_aig_eq (decls1 decls2 : Array (Decl α)) (start : Nat) {
 termination_by sizeOf start
 
 @[inherit_doc denote.go_eq_of_aig_eq ]
-theorem denote.eq_of_aig_eq (entry : Entrypoint α) (newAIG : AIG α) (hprefix : IsPrefix entry.aig.decls newAIG.decls) :
+theorem denote.eq_of_aig_eq (entry : Entrypoint α) (newAIG : AIG α)
+      (hprefix : IsPrefix entry.aig.decls newAIG.decls) :
     ⟦newAIG, ⟨entry.ref.gate, (by have := entry.ref.hgate; have := hprefix.size_le; omega)⟩, assign⟧
       =
     ⟦entry, assign⟧

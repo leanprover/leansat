@@ -15,27 +15,32 @@ semantics of the gate functions in different scenarios.
 /--
 Encoding not as boolen expression in AIG form.
 -/
-theorem not_as_aig (b : Bool) : (true && !b) = !b := by cases b <;> decide
+theorem not_as_aig (b : Bool) : (true && !b) = !b := by
+  cases b <;> decide
 
 /--
 Encoding or as boolen expression in AIG form.
 -/
-theorem or_as_aig (a b : Bool) : (!(!a && !b)) = (a || b) := by cases a <;> cases b <;> decide
+theorem or_as_aig (a b : Bool) : (!(!a && !b)) = (a || b) := by
+  cases a <;> cases b <;> decide
 
 /--
 Encoding XOR as boolen expression in AIG form.
 -/
-theorem xor_as_aig (a b : Bool) : (!(a && b) && !(!a && !b)) = (xor a b) := by cases a <;> cases b <;> decide
+theorem xor_as_aig (a b : Bool) : (!(a && b) && !(!a && !b)) = (xor a b) := by
+  cases a <;> cases b <;> decide
 
 /--
 Encoding BEq as boolen expression in AIG form.
 -/
-theorem beq_as_aig (a b : Bool) : (!(a && !b) && !(!a && b)) = (a == b) := by cases a <;> cases b <;> decide
+theorem beq_as_aig (a b : Bool) : (!(a && !b) && !(!a && b)) = (a == b) := by
+  cases a <;> cases b <;> decide
 
 /--
 Encoding implication as boolen expression in AIG form.
 -/
-theorem imp_as_aig (a b : Bool) : (!(a && !b)) = (!a || b) := by cases a <;> cases b <;> decide
+theorem imp_as_aig (a b : Bool) : (!(a && !b)) = (!a || b) := by
+  cases a <;> cases b <;> decide
 
 namespace AIG
 

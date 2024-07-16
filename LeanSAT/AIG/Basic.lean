@@ -91,7 +91,8 @@ structure CacheHit (decls : Array (Decl α)) (decl : Decl α) where
   hvalid : decls[idx]'hbound = decl
 
 /--
-All indices, found in a `Cache` that is valid with respect to some `decls`, are within bounds of `decls`.
+All indices, found in a `Cache` that is valid with respect to some `decls`, are within bounds of
+`decls`.
 -/
 theorem Cache.get?_bounds {decls : Array (Decl α)} {idx : Nat} (c : Cache α decls) (decl : Decl α)
     (hfound : c.val[decl]? = some idx) : idx < decls.size := by

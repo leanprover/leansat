@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.AIG.CachedGatesLemmas
-import LeanSAT.AIG.RefStreamOperator
+import LeanSAT.AIG.LawfulStreamOperator
 
 namespace AIG
 
@@ -48,14 +48,14 @@ instance : LawfulOperator α TernaryInput mkIfCached where
     rw [LawfulOperator.decl_eq (f := mkNotCached)]
     rw [LawfulOperator.decl_eq (f := mkAndCached)]
     . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkAndCached)
-      assumption
+      omega
     . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkNotCached)
       apply LawfulOperator.lt_size_of_lt_aig_size (f := mkAndCached)
-      assumption
+      omega
     . apply LawfulOperator.lt_size_of_lt_aig_size (f := mkAndCached)
       apply LawfulOperator.lt_size_of_lt_aig_size (f := mkNotCached)
       apply LawfulOperator.lt_size_of_lt_aig_size (f := mkAndCached)
-      assumption
+      omega
 
 theorem if_as_bool (d l r : Bool) : (if d then l else r) = ((d && l) || (!d && r))  := by
   revert d l r
@@ -91,8 +91,8 @@ def ite (aig : AIG α) (input : IfInput aig w) : RefStreamEntry α w :=
   let ⟨discr, lhs, rhs⟩ := input
   go aig 0 (by omega) discr lhs rhs .empty
 where
-  go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref aig) (lhs rhs : RefStream aig w)
-      (s : RefStream aig curr) : RefStreamEntry α w :=
+  go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref aig)
+      (lhs rhs : RefStream aig w) (s : RefStream aig curr) : RefStreamEntry α w :=
     if hcurr:curr < w then
       let input := ⟨discr, lhs.getRef curr hcurr, rhs.getRef curr hcurr⟩
       let res := mkIfCached aig input
@@ -109,6 +109,7 @@ where
     else
       have : curr = w := by omega
       ⟨aig, this ▸ s⟩
+termination_by w - curr
 
 namespace ite
 
@@ -190,8 +191,8 @@ theorem go_getRef {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (di
   intro idx hidx
   apply go_getRef_aux
 
-theorem go_denote_mem_prefix {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (discr : Ref aig)
-      (lhs rhs : RefStream aig w) (s : RefStream aig curr) (start : Nat) (hstart)
+theorem go_denote_mem_prefix {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w)
+      (discr : Ref aig) (lhs rhs : RefStream aig w) (s : RefStream aig curr) (start : Nat) (hstart)
   : ⟦
       (go aig curr hcurr discr lhs rhs s).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
