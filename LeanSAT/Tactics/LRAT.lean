@@ -56,9 +56,21 @@ instance : ToExpr LRAT.IntAction where
     | .addEmpty id hints =>
       mkApp4 (mkConst ``LRAT.Action.addEmpty [.zero, .zero]) beta alpha (toExpr id) (toExpr hints)
     | .addRup id c hints =>
-      mkApp5 (mkConst ``LRAT.Action.addRup [.zero, .zero]) beta alpha (toExpr id) (toExpr c) (toExpr hints)
+      mkApp5 (mkConst ``LRAT.Action.addRup [.zero, .zero])
+        beta
+        alpha
+        (toExpr id)
+        (toExpr c)
+        (toExpr hints)
     | .addRat id c pivot rupHints ratHints =>
-      mkApp7 (mkConst ``LRAT.Action.addRat [.zero, .zero]) beta alpha (toExpr id) (toExpr c) (toExpr pivot) (toExpr rupHints) (toExpr ratHints)
+      mkApp7 (mkConst ``LRAT.Action.addRat [.zero, .zero])
+        beta
+        alpha
+        (toExpr id)
+        (toExpr c)
+        (toExpr pivot)
+        (toExpr rupHints)
+        (toExpr ratHints)
     | .del ids =>
       mkApp3 (mkConst ``LRAT.Action.del [.zero, .zero]) beta alpha (toExpr ids)
   toTypeExpr := mkConst ``LRAT.IntAction
@@ -76,7 +88,8 @@ def mkTemp : IO System.FilePath := do
   let out ← IO.Process.output { cmd := "mktemp" }
   return out.stdout.trim
 
-def withTempFile [Monad m] [MonadFinally m] [MonadLiftT IO m] (f : System.FilePath → m α) : m α := do
+def withTempFile [Monad m] [MonadFinally m] [MonadLiftT IO m] (f : System.FilePath → m α)
+    : m α := do
   let file ← mkTemp
   try
     f file

@@ -123,15 +123,17 @@ def run (m : M α) : MetaM α :=
 /--
 Retrieve the atoms as pairs of their width and expression.
 -/
-def atoms : M (List (Nat × Expr)) :=
-  return (← getThe State).atoms.toArray.qsort (·.2.2 < ·.2.2) |>.map (fun (expr, width, _) => (width, expr)) |>.toList
+def atoms : M (List (Nat × Expr)) := do
+  let sortedAtoms := (← getThe State).atoms.toArray.qsort (·.2.2 < ·.2.2)
+  return sortedAtoms.map (fun (expr, width, _) => (width, expr)) |>.toList
 
 /--
 Retrieve a `BitVec.Assignment` representing the atoms we found so far.
 -/
 def atomsAssignment : M Expr := do
   let as ← atoms
-  let packed : List Expr := as.map (fun (width, expr) => mkApp2 (mkConst ``BVExpr.PackedBitVec.mk) (toExpr width) expr)
+  let packed :=
+    as.map (fun (width, expr) => mkApp2 (mkConst ``BVExpr.PackedBitVec.mk) (toExpr width) expr)
   let packedType := mkConst ``BVExpr.PackedBitVec
   mkListLit packedType packed
 
@@ -312,7 +314,12 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
     let proof := do
       let innerEval ← mkEvalExpr inner.width inner.expr
       let innerProof ← inner.evalsAtAtoms
-      return mkApp5 (mkConst ``zeroExtend_congr) newWidthExpr (toExpr inner.width) innerExpr innerEval innerProof
+      return mkApp5 (mkConst ``zeroExtend_congr)
+        newWidthExpr
+        (toExpr inner.width)
+        innerExpr
+        innerEval
+        innerProof
     return some ⟨newWidth, bvExpr, proof, expr⟩
   | BitVec.signExtend _ newWidthExpr innerExpr =>
     let some newWidth ← getNatValue? newWidthExpr | return ← ofAtom x
@@ -327,13 +334,21 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
     let proof := do
       let innerEval ← mkEvalExpr inner.width inner.expr
       let innerProof ← inner.evalsAtAtoms
-      return mkApp5 (mkConst ``signExtend_congr) newWidthExpr (toExpr inner.width) innerExpr innerEval innerProof
+      return mkApp5 (mkConst ``signExtend_congr)
+        newWidthExpr
+        (toExpr inner.width)
+        innerExpr
+        innerEval
+        innerProof
     return some ⟨newWidth, bvExpr, proof, expr⟩
   | HAppend.hAppend _ _ _ _ lhsExpr rhsExpr =>
     let some lhs ← of lhsExpr | return none
     let some rhs ← of rhsExpr | return none
     let bvExpr := .append lhs.bvExpr rhs.bvExpr
-    let expr := mkApp4 (mkConst ``BVExpr.append) (toExpr lhs.width) (toExpr rhs.width) lhs.expr rhs.expr
+    let expr := mkApp4 (mkConst ``BVExpr.append)
+      (toExpr lhs.width)
+      (toExpr rhs.width)
+      lhs.expr rhs.expr
     let proof := do
       let lhsEval ← mkEvalExpr lhs.width lhs.expr
       let lhsProof ← lhs.evalsAtAtoms
@@ -438,9 +453,17 @@ where
     let lhsProof ← lhs.evalsAtAtoms
     let rhsProof ← rhs.evalsAtAtoms
     let rhsEval ← mkEvalExpr rhs.width rhs.expr
-    return mkApp7 (mkConst congrThm) (toExpr lhs.width) lhsExpr rhsExpr lhsEval rhsEval lhsProof rhsProof
+    return mkApp7 (mkConst congrThm)
+      (toExpr lhs.width)
+      lhsExpr
+      rhsExpr
+      lhsEval
+      rhsEval
+      lhsProof
+      rhsProof
 
-  unaryReflection (innerExpr : Expr) (op : BVUnOp) (congrThm : Name) : M (Option ReifiedBVExpr) := do
+  unaryReflection (innerExpr : Expr) (op : BVUnOp) (congrThm : Name)
+      : M (Option ReifiedBVExpr) := do
     let some inner ← of innerExpr | return none
     let bvExpr := .un op inner.bvExpr
     let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr inner.width) (toExpr op) inner.expr
@@ -656,7 +679,8 @@ partial def of (t : Expr) : M (Option ReifiedBVLogical) := do
     | _ => return none
   | _ => goPred t
 where
-  gateReflection (lhsExpr rhsExpr : Expr) (gate : Gate) (congrThm : Name) : M (Option ReifiedBVLogical) := do
+  gateReflection (lhsExpr rhsExpr : Expr) (gate : Gate) (congrThm : Name)
+      : M (Option ReifiedBVLogical) := do
     let some lhs ← of lhsExpr | return none
     let some rhs ← of rhsExpr | return none
     let boolExpr := .gate  gate lhs.bvExpr rhs.bvExpr
@@ -788,7 +812,8 @@ theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : LratCert)
   assumption
 
 def reconstructCounterExample (var2Cnf : Std.HashMap BVBit Nat) (assignment : Array (Bool × Nat))
-    (aigSize : Nat) (atomsAssignment : Std.HashMap Nat Expr) : Array (Expr × BVExpr.PackedBitVec) := Id.run do
+    (aigSize : Nat) (atomsAssignment : Std.HashMap Nat Expr)
+    : Array (Expr × BVExpr.PackedBitVec) := Id.run do
   let mut sparseMap : Std.HashMap Nat (RBMap Nat Bool Ord.compare) := {}
   for (bitVar, cnfVar) in var2Cnf.toArray do
     /-
