@@ -303,7 +303,7 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
       ``arithShiftRight_congr
   | BitVec.zeroExtend _ newWidthExpr innerExpr =>
     let some newWidth ← getNatValue? newWidthExpr | return ← ofAtom x
-    let some inner ← of innerExpr | return none
+    let some inner ← ofOrAtom innerExpr | return none
     let bvExpr := .zeroExtend newWidth inner.bvExpr
     let expr :=
       mkApp3
@@ -323,7 +323,7 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
     return some ⟨newWidth, bvExpr, proof, expr⟩
   | BitVec.signExtend _ newWidthExpr innerExpr =>
     let some newWidth ← getNatValue? newWidthExpr | return ← ofAtom x
-    let some inner ← of innerExpr | return none
+    let some inner ← ofOrAtom innerExpr | return none
     let bvExpr := .signExtend newWidth inner.bvExpr
     let expr :=
       mkApp3
@@ -342,8 +342,8 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
         innerProof
     return some ⟨newWidth, bvExpr, proof, expr⟩
   | HAppend.hAppend _ _ _ _ lhsExpr rhsExpr =>
-    let some lhs ← of lhsExpr | return none
-    let some rhs ← of rhsExpr | return none
+    let some lhs ← ofOrAtom lhsExpr | return none
+    let some rhs ← ofOrAtom rhsExpr | return none
     let bvExpr := .append lhs.bvExpr rhs.bvExpr
     let expr := mkApp4 (mkConst ``BVExpr.append)
       (toExpr lhs.width)
@@ -361,9 +361,9 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
         lhsProof rhsProof
     return some ⟨lhs.width + rhs.width, bvExpr, proof, expr⟩
   | BitVec.extractLsb _ hiExpr loExpr innerExpr =>
-    let some hi ← getNatValue? hiExpr | return none
-    let some lo ← getNatValue? loExpr | return none
-    let some inner ← of innerExpr | return none
+    let some hi ← getNatValue? hiExpr | return ← ofAtom x
+    let some lo ← getNatValue? loExpr | return ← ofAtom x
+    let some inner ← ofOrAtom innerExpr | return none
     let bvExpr := .extract hi lo inner.bvExpr
     let expr := mkApp4 (mkConst ``BVExpr.extract)
       (toExpr inner.width)
@@ -404,10 +404,16 @@ where
     let atom ← mkAtom x width
     return some atom
 
+  ofOrAtom (x : Expr) : M (Option ReifiedBVExpr) := do
+    let res ← of x
+    match res with
+    | some exp => return some exp
+    | none => ofAtom x
+
   shiftLikeReflection (distance : Nat) (innerExpr : Expr) (shiftOp : Nat → BVUnOp)
       (shiftOpName : Name) (congrThm : Name)
       : M (Option ReifiedBVExpr) := do
-    let some inner ← of innerExpr | return none
+    let some inner ← ofOrAtom innerExpr | return none
     let bvExpr : BVExpr inner.width := .un (shiftOp distance) inner.bvExpr
     let expr :=
       mkApp3
@@ -438,8 +444,8 @@ where
 
   binaryReflection (lhsExpr rhsExpr : Expr) (op : BVBinOp) (congrThm : Name)
       : M (Option ReifiedBVExpr) := do
-    let some lhs ← of lhsExpr | return none
-    let some rhs ← of rhsExpr | return none
+    let some lhs ← ofOrAtom lhsExpr | return none
+    let some rhs ← ofOrAtom rhsExpr | return none
     if h : rhs.width = lhs.width then
       let bvExpr : BVExpr lhs.width := .bin lhs.bvExpr op (h ▸ rhs.bvExpr)
       let expr := mkApp4 (mkConst ``BVExpr.bin) (toExpr lhs.width) lhs.expr (toExpr op) rhs.expr
@@ -464,7 +470,7 @@ where
 
   unaryReflection (innerExpr : Expr) (op : BVUnOp) (congrThm : Name)
       : M (Option ReifiedBVExpr) := do
-    let some inner ← of innerExpr | return none
+    let some inner ← ofOrAtom innerExpr | return none
     let bvExpr := .un op inner.bvExpr
     let expr := mkApp3 (mkConst ``BVExpr.un) (toExpr inner.width) (toExpr op) inner.expr
     let proof := unaryCongrProof inner innerExpr (mkConst congrThm)
