@@ -3,20 +3,9 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
-import LeanSAT.CNF.ForStd
 import LeanSAT.Sat
 
 open Sat
-
--- Lemmas from Mathlib, to move to Lean:
-@[simp] theorem exists_or_eq_left (y : α) (p : α → Prop) : ∃ x : α, x = y ∨ p x := ⟨y, .inl rfl⟩
-@[simp] theorem exists_or_eq_right (y : α) (p : α → Prop) : ∃ x : α, p x ∨ x = y := ⟨y, .inr rfl⟩
-@[simp] theorem exists_or_eq_left' (y : α) (p : α → Prop) : ∃ x : α, y = x ∨ p x := ⟨y, .inl rfl⟩
-@[simp] theorem exists_or_eq_right' (y : α) (p : α → Prop) : ∃ x : α, p x ∨ y = x := ⟨y, .inr rfl⟩
-
-@[simp] theorem List.isEmpty_false_iff_exists_mem (xs : List α) :
-    (List.isEmpty xs = false) ↔ ∃ x, x ∈ xs := by
-  cases xs <;> simp
 
 set_option linter.missingDocs false
 

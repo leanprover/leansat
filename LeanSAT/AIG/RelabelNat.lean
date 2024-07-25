@@ -38,10 +38,11 @@ theorem Inv1.lt_of_get?_eq_some [EquivBEq α] {n m : Nat} (map : HashMap α Nat)
     rw [Std.HashMap.getElem?_insert]
     match hx : x == y with
     | true =>
-      simp [hx]
+      simp only [beq_iff_eq] at hx
+      simp only [hx, beq_self_eq_true, ↓reduceIte, Option.some.injEq]
       omega
     | false =>
-      simp [hx]
+      simp [BEq.symm_false hx]
       intro h
       specialize ih3 h
       omega
@@ -57,28 +58,31 @@ theorem Inv1.property [EquivBEq α] {n m : Nat} (x y : α) (map : HashMap α Nat
     rename_i z
     rw [HashMap.getElem?_insert] at hfound1
     rw [HashMap.getElem?_insert] at hfound2
-    match hx : x == z with
+    match hx : z == x with
     | false =>
-      rw [hx, cond_false] at hfound1
-      match hy : y == z with
+      simp only [beq_eq_false_iff_ne, ne_eq] at hx
+      simp only [beq_iff_eq, hx, ↓reduceIte] at hfound1
+      match hy : z == y with
       | false =>
-        rw [hy, cond_false] at hfound2
+        simp only [beq_eq_false_iff_ne, ne_eq] at hy
+        simp only [beq_iff_eq, hy, ↓reduceIte] at hfound2
         exact ih3 hfound1 hfound2
       | true =>
-        simp only [hy, cond_true, Option.some.injEq] at hfound2
+        simp only [hy, ↓reduceIte, Option.some.injEq] at hfound2
         have := Inv1.lt_of_get?_eq_some _ _ ih1 hfound1
         omega
     | true =>
-      rw [hx, cond_true] at hfound1
+      simp only [hx, ↓reduceIte, Option.some.injEq] at hfound1
       rcases hfound1 with ⟨rfl⟩
-      match hy : y == z with
+      match hy : z == y with
       | false =>
-        rw [hy, cond_false] at hfound2
+        simp only [beq_eq_false_iff_ne, ne_eq] at hy
+        simp only [beq_iff_eq, hy, ↓reduceIte] at hfound2
         have := Inv1.lt_of_get?_eq_some _ _ ih1 hfound2
         omega
       | true =>
         simp only [beq_iff_eq] at hx hy
-        simp [hx, hy]
+        simp only [←hx, hy]
 
 /--
 This invariant says that we have already visited and inserted all nodes up to a certain index.
@@ -112,22 +116,21 @@ theorem Inv2.property (decls : Array (Decl α)) (idx upper : Nat) (map : HashMap
   | empty => omega
   | newAtom ih1 ih2 ih3 ih4 ih5 =>
     next idx' _ a' _ =>
+    replace hidx : idx ≤ idx' := by omega
     rw [HashMap.getElem?_insert]
-    match heq2 : a == a' with
+    match heq2 : a' == a with
     | false =>
-      simp only [cond_false]
-      replace hidx : idx ≤ idx' := by omega
+      simp only [Bool.false_eq_true, ↓reduceIte]
       cases Nat.eq_or_lt_of_le hidx with
       | inl hidxeq =>
         subst hidxeq
-        exfalso
-        simp only [beq_eq_false_iff_ne, ne_eq] at heq2
-        apply heq2
-        apply Eq.symm
-        simpa [ih3] using heq
-      | inr hlt => apply ih5 <;> assumption
-    | true => simp [heq2]
+        simp_all only [beq_eq_false_iff_ne, Decl.atom.injEq]
+      | inr hlt =>
+        exact ih5 hlt heq
+    | true =>
+      exact Option.isSome_iff_exists.mp rfl
   | oldAtom ih1 ih2 ih3 ih4 ih5 =>
+    simp_all only [true_implies]
     next idx' _ _ _ =>
     replace hidx : idx ≤ idx' := by omega
     cases Nat.eq_or_lt_of_le hidx with
@@ -141,7 +144,7 @@ theorem Inv2.property (decls : Array (Decl α)) (idx upper : Nat) (map : HashMap
     next idx' _ _ =>
     replace hidx : idx ≤ idx' := by omega
     cases Nat.eq_or_lt_of_le hidx with
-    | inl hidxeq => simp [hidxeq, ih3] at heq
+    | inl hidxeq => simp only [hidxeq, ih3] at heq
     | inr hlt => apply ih4 <;> assumption
   | gate ih1 ih2 ih3 ih4 =>
     next idx' _ _ _ _ _ =>
@@ -384,4 +387,3 @@ theorem relabelNat_unsat_iff {entry : Entrypoint α} [Nonempty α]
 
 end Entrypoint
 end AIG
-
