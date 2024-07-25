@@ -108,11 +108,12 @@ theorem Cache.get?_bounds {decls : Array (Decl α)} {idx : Nat} (c : Cache α de
     simp only [HashMap.getElem?_insert] at hfound
     match heq:decl == decl' with
     | true =>
-      simp only [heq, cond_true, Option.some.injEq] at hfound
+      simp only [beq_iff_eq] at heq
+      simp only [heq, beq_self_eq_true, ↓reduceIte, Option.some.injEq] at hfound
       simp
       omega
     | false =>
-      simp only [heq, cond_false] at hfound
+      simp only [BEq.symm_false heq, Bool.false_eq_true, ↓reduceIte] at hfound
       specialize ih hfound
       simp
       omega
@@ -143,11 +144,12 @@ theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α 
     . simp only [HashMap.getElem?_insert] at hfound
       match heq:decl == decl' with
       | true =>
+        simp only [beq_iff_eq] at heq
         simp [heq] at hfound
         omega
       | false =>
         apply ih
-        simpa [heq] using hfound
+        simpa [BEq.symm_false heq] using hfound
     . next hbounds =>
       simp only [HashMap.getElem?_insert] at hfound
       match heq:decl == decl' with
@@ -157,7 +159,7 @@ theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α 
       | false =>
         exfalso
         apply hbounds
-        simp only [heq, cond_false] at hfound
+        simp only [BEq.symm_false heq, cond_false] at hfound
         specialize ih _ hfound
         apply Array.lt_of_get
         assumption
