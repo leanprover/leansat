@@ -18,7 +18,7 @@ structure BVBit where
   -/
   var : Nat
   /--
-  The which bit we take out of the BitVec variable by getLsb.
+  The bit that we take out of the BitVec variable by getLsb.
   -/
   idx : Fin w
   deriving Hashable, DecidableEq, Repr
