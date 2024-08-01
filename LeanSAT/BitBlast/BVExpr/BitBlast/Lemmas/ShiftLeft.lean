@@ -162,6 +162,7 @@ theorem blastShiftLeftConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget 
   apply blastShiftLeftConst.go_eq_eval_getLsb
   omega
 
+/-
 opaque shiftLeftRec (x : BitVec w0) (y : BitVec w1) (n : Nat) : BitVec w0
 
 @[simp]
@@ -182,6 +183,7 @@ theorem shiftLeft_eq_shiftLeft_rec (x : BitVec w0) (y : BitVec w1) :
 theorem getLsb_shiftLeft' (x : BitVec w) (y : BitVec w₂) (i : Nat) :
     (x <<< y).getLsb i = (decide (i < w) && !decide (i < y.toNat) && x.getLsb (i - y.toNat)) := by
   sorry
+  -/
 
 namespace blastShiftLeft
 
@@ -200,7 +202,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
   intro idx hidx
   generalize hg : twoPowShift aig target = res
   rcases target with ⟨n, lstream, rstream, pow⟩
-  simp only [BitVec.and_twoPow_eq]
+  simp only [BitVec.and_twoPow]
   unfold twoPowShift at hg
   dsimp at hg
   split at hg
@@ -213,17 +215,18 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
       rw [hright]
       simp only [hif1, ↓reduceIte]
       split
-      . simp only [getLsb_shiftLeft', BitVec.toNat_twoPow, Bool.false_eq, Bool.and_eq_false_imp,
-        Bool.and_eq_true, decide_eq_true_eq, Bool.not_eq_true', decide_eq_false_iff_not, Nat.not_lt,
-        and_imp]
+      . simp only [BitVec.shiftLeft_eq', BitVec.toNat_twoPow, BitVec.getLsb_shiftLeft,
+        Bool.false_eq, Bool.and_eq_false_imp, Bool.and_eq_true, decide_eq_true_eq,
+        Bool.not_eq_true', decide_eq_false_iff_not, Nat.not_lt, and_imp]
         intros
         apply BitVec.getLsb_ge
         omega
       . next hif2 =>
         rw [hleft]
         simp only [Nat.not_lt] at hif2
-        simp only [getLsb_shiftLeft', hidx, decide_True, BitVec.toNat_twoPow, Bool.true_and,
-          Bool.iff_and_self, Bool.not_eq_true', decide_eq_false_iff_not, Nat.not_lt]
+        simp only [BitVec.shiftLeft_eq', BitVec.toNat_twoPow, BitVec.getLsb_shiftLeft, hidx,
+          decide_True, Bool.true_and, Bool.iff_and_self, Bool.not_eq_true', decide_eq_false_iff_not,
+          Nat.not_lt]
         omega
     . next hif1 =>
       simp only [Bool.not_eq_true] at hif1
@@ -248,7 +251,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
 theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat)
       (hcurr : curr ≤ n - 1) (acc : AIG.RefStream aig w)
     (lhs : BitVec w) (rhs : BitVec n) (assign : α → Bool)
-    (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.getRef idx hidx, assign⟧ = (shiftLeftRec lhs rhs curr).getLsb idx)
+    (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.getRef idx hidx, assign⟧ = (BitVec.shiftLeftRec lhs rhs curr).getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < n), ⟦aig, distance.getRef idx hidx, assign⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
@@ -257,7 +260,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr 
           assign
         ⟧
           =
-        (shiftLeftRec lhs rhs (n - 1)).getLsb idx := by
+        (BitVec.shiftLeftRec lhs rhs (n - 1)).getLsb idx := by
   intro idx hidx
   generalize hgo : go aig distance curr hcurr acc = res
   unfold go at hgo
@@ -266,8 +269,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr 
   . rw [← hgo]
     rw [go_eq_eval_getLsb]
     . intro idx hidx
-      simp only [shiftLeftRec_succ]
-      rw [twoPowShift_eq (lhs := shiftLeftRec lhs rhs curr)]
+      simp only [BitVec.shiftLeftRec_succ]
+      rw [twoPowShift_eq (lhs := BitVec.shiftLeftRec lhs rhs curr)]
       . simp [hacc]
       . simp [hright]
     . intro idx hidx
@@ -294,7 +297,7 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTar
           =
         (lhs <<< rhs).getLsb idx := by
   intro idx hidx
-  rw [shiftLeft_eq_shiftLeft_rec]
+  rw [BitVec.shiftLeft_eq_shiftLeftRec]
   generalize hg : blastShiftLeft aig target = res
   rcases target with ⟨n, target, distance⟩
   unfold blastShiftLeft at hg
@@ -304,7 +307,7 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTar
     dsimp
     subst hzero
     rw [← hg]
-    simp only [hleft, Nat.zero_sub, shiftLeftRec_zero, BitVec.and_twoPow_eq, Nat.le_refl,
+    simp only [hleft, Nat.zero_sub, BitVec.shiftLeftRec_zero, BitVec.and_twoPow, Nat.le_refl,
       BitVec.getLsb_ge, Bool.false_eq_true, ↓reduceIte, BitVec.reduceHShiftLeft',
       BitVec.getLsb_shiftLeft, Nat.sub_zero, Bool.iff_and_self, Bool.and_eq_true, decide_eq_true_eq,
       Bool.not_eq_true', decide_eq_false_iff_not, Nat.not_lt, Nat.zero_le, and_true]
@@ -312,7 +315,7 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTar
   . rw [← hg]
     rw [blastShiftLeft.go_eq_eval_getLsb]
     . intro idx hidx
-      simp only [shiftLeftRec_zero]
+      simp only [BitVec.shiftLeftRec_zero]
       rw [blastShiftLeft.twoPowShift_eq]
       . simp [hleft]
       . simp [hright]

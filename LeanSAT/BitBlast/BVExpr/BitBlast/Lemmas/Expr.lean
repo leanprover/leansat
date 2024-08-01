@@ -113,7 +113,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       apply BitVec.getLsb_ge
       omega
   | shiftLeft lhs rhs lih rih =>
-    simp [go]
+    simp only [go, eval_shiftLeft]
     apply blastShiftLeft_eq_eval_getLsb
     . intros
       dsimp
