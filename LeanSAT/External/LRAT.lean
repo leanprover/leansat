@@ -20,67 +20,67 @@ This implements a (correct) version of the grammar presented in:
 https://www.cs.cmu.edu/~mheule/publications/lrat.pdf
 -/
 
-open Parsec Byte
+open Parsec ByteArray
 
 @[inline]
-def parsePos : Parsec ByteArray.Iterator Nat := do
-  let ident ← Byte.digits
+def parsePos : Parser Nat := do
+  let ident ← digits
   if ident == 0 then
     fail "id was 0"
   else
     return ident
 
 @[inline]
-def parseNeg : Parsec ByteArray.Iterator  Int := do
-  skipChar '-'
+def parseNeg : Parser  Int := do
+  skipByteChar '-'
   let nat ← parsePos
   return -nat
 
 @[inline]
-def parseId : Parsec ByteArray.Iterator Nat := parsePos
+def parseId : Parser Nat := parsePos
 
 @[inline]
-def parseZero : Parsec ByteArray.Iterator Unit := skipChar '0'
+def parseZero : Parser Unit := skipByteChar '0'
 
-def parseIdList : Parsec ByteArray.Iterator (Array Nat) := do
+def parseIdList : Parser (Array Nat) := do
   many idWs
 where
   @[inline]
-  idWs : Parsec ByteArray.Iterator Nat := do
+  idWs : Parser Nat := do
     let ident ← attempt parseId
-    skipChar ' '
+    skipByteChar ' '
     return ident
 
-def parseDelete (_ident : Nat) : Parsec ByteArray.Iterator IntAction := do
-  skipChar 'd'
-  skipChar ' '
+def parseDelete (_ident : Nat) : Parser IntAction := do
+  skipByteChar 'd'
+  skipByteChar ' '
   let idList ← parseIdList
   parseZero
   return .del idList
 
-def parseLit : Parsec ByteArray.Iterator Int := do
+def parseLit : Parser Int := do
   parseNeg <|> (Int.ofNat <$> parsePos)
 
-def parseClause : Parsec ByteArray.Iterator (Array Int) := do
+def parseClause : Parser (Array Int) := do
   let lits ← many litWs
   parseZero
   return lits
 where
   @[inline]
-  litWs : Parsec ByteArray.Iterator Int := do
+  litWs : Parser Int := do
     let lit ← attempt parseLit
-    skipChar ' '
+    skipByteChar ' '
     return lit
 
-def parseRes : Parsec ByteArray.Iterator (Nat × Array Nat) := do
+def parseRes : Parser (Nat × Array Nat) := do
   let lhs ← parseNeg
-  skipChar ' '
+  skipByteChar ' '
   let idents ← parseIdList
   return (lhs.natAbs, idents)
 
-def parseRat (ident : Nat) : Parsec ByteArray.Iterator IntAction := do
+def parseRat (ident : Nat) : Parser IntAction := do
   let clause ← parseClause
-  skipChar ' '
+  skipByteChar ' '
   let rupHints ← parseIdList
   let ratHints ← many (attempt parseRes)
   parseZero
@@ -90,25 +90,25 @@ def parseRat (ident : Nat) : Parsec ByteArray.Iterator IntAction := do
   | _, 0 => return .addRup ident clause rupHints
   | _, _ => return .addRat ident clause (getPivot clause) rupHints ratHints
 
-def parseLine : Parsec ByteArray.Iterator IntAction := do
+def parseLine : Parser IntAction := do
   let ident ← parseId
-  skipChar ' '
+  skipByteChar ' '
   parseDelete ident <|> parseRat ident
 
-partial def parseLines : Parsec ByteArray.Iterator (Array IntAction) :=
+partial def parseLines : Parser (Array IntAction) :=
   go #[]
 where
-  go (actions : Array IntAction) : Parsec ByteArray.Iterator (Array IntAction) := do
+  go (actions : Array IntAction) : Parser (Array IntAction) := do
     if (← peek!) == 'c'.toNat.toUInt8 then
       let _ ← many (satisfy (· != '\n'.toNat.toUInt8))
-      skipChar '\n'
+      skipByteChar '\n'
       if ← eof? then
         pure actions
       else
         go actions
     else
       let action ← parseLine
-      skipChar '\n'
+      skipByteChar '\n'
       let actions := actions.push action
       if ← eof? then
         pure actions
@@ -128,12 +128,12 @@ def readFileQuick (path : System.FilePath) : IO ByteArray := do
 
 def loadLRATProof (path : System.FilePath) : IO (Array IntAction) := do
   let proof ← readFileQuick path
-  match Parser.parseLines.run <| .fresh proof with
+  match Parser.parseLines.run proof with
   | .ok actions => return actions
   | .error err => throw <| .userError err
 
 def parseLRATProof (proof : ByteArray) : Option (Array IntAction) :=
-  match Parser.parseLines.run <| .fresh proof with
+  match Parser.parseLines.run proof with
   | .ok actions => some actions
   | .error .. => none
 
