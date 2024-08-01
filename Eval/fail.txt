@@ -1,13 +1,6 @@
 bitvec_AndOrXor_2443.lean
-bitvec_InstCombineShift__239.lean
-bitvec_InstCombineShift__279.lean
-bitvec_InstCombineShift__422_1.lean
 bitvec_InstCombineShift__422_2.lean
-bitvec_InstCombineShift__440.lean
 bitvec_InstCombineShift__458.lean
-bitvec_InstCombineShift__476.lean
-bitvec_InstCombineShift__497.lean
-bitvec_InstCombineShift__582.lean
 g2008h02h16hSDivOverflow2_proof.lean
 g2008h02h23hMulSub_proof.lean
 gadd2_proof.lean
