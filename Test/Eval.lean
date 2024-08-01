@@ -131,3 +131,10 @@ import Test.Eval.bitvec_InstCombineShift__497_alt
 import Test.Eval.bitvec_160
 import Test.Eval.bitvec_290__292
 import Test.Eval.bitvec_InstCombineShift__351
+import Test.Eval.bitvec_InstCombineShift__239
+import Test.Eval.bitvec_InstCombineShift__279
+import Test.Eval.bitvec_InstCombineShift__422_1
+import Test.Eval.bitvec_InstCombineShift__440
+import Test.Eval.bitvec_InstCombineShift__476
+import Test.Eval.bitvec_InstCombineShift__497
+import Test.Eval.bitvec_InstCombineShift__582
