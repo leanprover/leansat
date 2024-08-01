@@ -12,30 +12,30 @@ inductive SolverResult where
 
 namespace SatWitnessParser
 
-open LRAT Parsec Byte
+open LRAT Parsec ByteArray
 
-def parsePartialAssignment : Parsec ByteArray.Iterator (Bool × (Array (Bool × Nat))) := do
-  skipChar 'v'
+def parsePartialAssignment : Parser (Bool × (Array (Bool × Nat))) := do
+  skipByteChar 'v'
   let idents ← many (attempt wsLit)
   let idents := idents.map (fun i => if i > 0 then (true, i.natAbs) else (false, i.natAbs))
   Parsec.tryCatch
     (skipString " 0")
     (csuccess := fun _ => pure (true, idents))
     (cerror := fun _ => do
-      skipChar '\n'
+      skipByteChar '\n'
       return (false, idents)
     )
 where
   @[inline]
-  wsLit : Parsec ByteArray.Iterator Int := do
-    skipChar ' '
+  wsLit : Parser Int := do
+    skipByteChar ' '
     let lit ← LRAT.Parser.parseLit
     return lit
 
-partial def parseLines : Parsec ByteArray.Iterator (Array (Bool × Nat)) :=
+partial def parseLines : Parser (Array (Bool × Nat)) :=
   go #[]
 where
-  go (acc : Array (Bool × Nat)) : Parsec ByteArray.Iterator (Array (Bool × Nat)) := do
+  go (acc : Array (Bool × Nat)) : Parser (Array (Bool × Nat)) := do
     let (terminal?, additionalAssignment) ← parsePartialAssignment
     let acc := acc ++ additionalAssignment
     if terminal? then
@@ -43,7 +43,7 @@ where
     else
       go acc
 
-def parseHeader : Parsec ByteArray.Iterator Unit := do
+def parseHeader : Parser Unit := do
   skipString "s SATISFIABLE\n"
 
 /--
@@ -51,7 +51,7 @@ Parse the witness format of a SAT solver. The rough grammar for this is:
 line = "v" (" " lit)* (" " 0)?\n
 witness = "s SATISFIABLE\n" line+
 -/
-def parse : Parsec ByteArray.Iterator (Array (Bool × Nat)) := do
+def parse : Parser (Array (Bool × Nat)) := do
   parseHeader
   parseLines
 
@@ -118,7 +118,7 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath)
     if stdout.startsWith "s UNSATISFIABLE" then
       return .unsat
     else if stdout.startsWith "s SATISFIABLE" then
-      match SatWitnessParser.parse.run <| .fresh stdout.toUTF8 with
+      match SatWitnessParser.parse.run stdout.toUTF8 with
       | .ok assignment =>
         return .sat assignment
       | .error err =>
