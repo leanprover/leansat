@@ -162,29 +162,6 @@ theorem blastShiftLeftConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget 
   apply blastShiftLeftConst.go_eq_eval_getLsb
   omega
 
-/-
-opaque shiftLeftRec (x : BitVec w0) (y : BitVec w1) (n : Nat) : BitVec w0
-
-@[simp]
-theorem shiftLeftRec_zero (x : BitVec w0) (y : BitVec w1) :
-    shiftLeftRec x y 0 = x <<< (y &&& BitVec.twoPow w1 0)  := by
-  sorry
-
-@[simp]
-theorem shiftLeftRec_succ (x : BitVec w0) (y : BitVec w1) :
-    shiftLeftRec x y (n + 1) =
-      (shiftLeftRec x y n) <<< (y &&& BitVec.twoPow w1 (n + 1)) := by
-  sorry
-
-theorem shiftLeft_eq_shiftLeft_rec (x : BitVec w0) (y : BitVec w1) :
-    x <<< y = shiftLeftRec x y (w1 - 1) := by
-  sorry
-
-theorem getLsb_shiftLeft' (x : BitVec w) (y : BitVec w₂) (i : Nat) :
-    (x <<< y).getLsb i = (decide (i < w) && !decide (i < y.toNat) && x.getLsb (i - y.toNat)) := by
-  sorry
-  -/
-
 namespace blastShiftLeft
 
 theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : BitVec w)

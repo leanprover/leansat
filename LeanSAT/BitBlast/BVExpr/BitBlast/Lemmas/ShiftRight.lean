@@ -251,27 +251,6 @@ theorem blastArithShiftRightConst_eq_eval_getLsb (aig : AIG α) (target : ShiftT
   rw [blastArithShiftRightConst.go_eq_eval_getLsb]
   omega
 
-opaque ushiftRight_rec (x : BitVec w₁) (y : BitVec w₂) (n : Nat) : BitVec w₁
-
-@[simp]
-theorem ushiftRight_rec_zero (x : BitVec w₁) (y : BitVec w₂) :
-    ushiftRight_rec x y 0 = x >>> (y &&& BitVec.twoPow w₂ 0)  := by
-  sorry
-
-@[simp]
-theorem ushiftRight_rec_succ (x : BitVec w₁) (y : BitVec w₂) :
-    ushiftRight_rec x y (n + 1) =
-      (ushiftRight_rec x y n) >>> (y &&& BitVec.twoPow w₂ (n + 1)) := by
-  sorry
-
-theorem shiftRight_eq_shiftRight_rec (x : BitVec ℘) (y : BitVec w₂) :
-    x >>> y = ushiftRight_rec x y (w₂ - 1) := by
-  sorry
-
-theorem getLsb_shiftRight' (x : BitVec w) (y : BitVec w₂) (i : Nat) :
-    (x >>> y).getLsb i = x.getLsb (y.toNat + i) := by
-  sorry
-
 namespace blastShiftRight
 
 theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : BitVec w)
@@ -289,7 +268,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
   intro idx hidx
   generalize hg : twoPowShift aig target = res
   rcases target with ⟨n, lstream, rstream, pow⟩
-  simp only [BitVec.and_twoPow_eq]
+  simp only [BitVec.and_twoPow]
   unfold twoPowShift at hg
   dsimp at hg
   split at hg
@@ -304,8 +283,9 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
       split
       . next hif2 =>
         rw [hleft]
-        simp [getLsb_shiftRight']
-      . simp only [getLsb_shiftRight', BitVec.toNat_twoPow, Bool.false_eq]
+        simp
+      . simp only [BitVec.ushiftRight_eq', BitVec.toNat_twoPow, BitVec.getLsb_ushiftRight,
+        Bool.false_eq]
         apply BitVec.getLsb_ge
         omega
     . next hif1 =>
@@ -331,7 +311,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
 theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat)
       (hcurr : curr ≤ n - 1) (acc : AIG.RefStream aig w)
     (lhs : BitVec w) (rhs : BitVec n) (assign : α → Bool)
-    (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.getRef idx hidx, assign⟧ = (ushiftRight_rec lhs rhs curr).getLsb idx)
+    (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.getRef idx hidx, assign⟧ = (BitVec.ushiftRightRec lhs rhs curr).getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < n), ⟦aig, distance.getRef idx hidx, assign⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
@@ -340,7 +320,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr 
           assign
         ⟧
           =
-        (ushiftRight_rec lhs rhs (n - 1)).getLsb idx := by
+        (BitVec.ushiftRightRec lhs rhs (n - 1)).getLsb idx := by
   intro idx hidx
   generalize hgo : go aig distance curr hcurr acc = res
   unfold go at hgo
@@ -349,8 +329,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr 
   . rw [← hgo]
     rw [go_eq_eval_getLsb]
     . intro idx hidx
-      simp only [ushiftRight_rec_succ]
-      rw [twoPowShift_eq (lhs := ushiftRight_rec lhs rhs curr)]
+      simp only [BitVec.ushiftRightRec_succ]
+      rw [twoPowShift_eq (lhs := BitVec.ushiftRightRec lhs rhs curr)]
       . simp [hacc]
       . simp [hright]
     . intro idx hidx
@@ -377,7 +357,7 @@ theorem blastShiftRight_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTa
           =
         (lhs >>> rhs).getLsb idx := by
   intro idx hidx
-  rw [shiftRight_eq_shiftRight_rec]
+  rw [BitVec.shiftRight_eq_ushiftRightRec]
   generalize hres : blastShiftRight aig target = res
   rcases target with ⟨n, target, distance⟩
   unfold blastShiftRight at hres
@@ -387,11 +367,11 @@ theorem blastShiftRight_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTa
     dsimp
     subst hzero
     rw [← hres]
-    simp [hleft, BitVec.and_twoPow_eq]
+    simp [hleft, BitVec.and_twoPow]
   . rw [← hres]
     rw [blastShiftRight.go_eq_eval_getLsb]
     . intro idx hidx
-      simp only [ushiftRight_rec_zero]
+      simp only [BitVec.ushiftRightRec_zero]
       rw [blastShiftRight.twoPowShift_eq]
       . simp [hleft]
       . simp [hright]

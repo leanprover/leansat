@@ -125,7 +125,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     . intros
       rw [← rih]
   | shiftRight lhs rhs lih rih =>
-    simp [go]
+    simp only [go, eval_shiftRight]
     apply blastShiftRight_eq_eval_getLsb
     . intros
       dsimp
