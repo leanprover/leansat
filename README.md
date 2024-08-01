@@ -43,6 +43,16 @@ The package offers three different SAT tactics for proving goals involving `BitV
 3. `bv_decide?` this offers a code action to turn a `bv_decide` invocation automatically into a
    `bv_check` one.
 
+There are also some options to influence the behavior of `bv_decide`:
+- `sat.solver`: The name of the SAT solver used by LeanSAT, default "cadical". Currently LeanSAT
+   only guarantees compatability with CaDiCal but if CaDiCal has a non default name this option
+   is still useful.
+- `sat.timeout`: The timeout for waiting for the SAT solver in seconds, default 10.
+- `bv.trimProofs`: Whether to run the trimming algorithm on LRAT proofs, default true.
+- `trace.bv` and `trace.sat` for inspecting the inner workings of LeanSAT.
+- `debug.skipKernelTC`: may be set to true to disable actually checking the LRAT proof.
+  LeanSAT will still run bitblasting + SAT solving so this option essentially trusts the solver.
+
 ## Architecture
 `bv_decide` roughly runs through the following steps:
 1. Apply `by_contra` to start a proof by contradiction.
