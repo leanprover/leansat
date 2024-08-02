@@ -41,3 +41,11 @@ theorem cast_unit_7 (x : BitVec 64) : x.signExtend 128 = (x.signExtend 64).signE
 set_option trace.bv true in
 theorem cast_unit_8 (x : BitVec 64) : (x.signExtend 128 = x.zeroExtend 128) ↔ (x.msb = false) := by
   bv_decide
+
+set_option trace.bv true in
+theorem cast_unit_9 (x : BitVec 32) : (x.replicate 20).zeroExtend 32 = x := by
+  bv_decide
+
+set_option trace.bv true in
+theorem cast_unit_10 (x : BitVec 32) : (x.replicate 20).getLsb 40 = x.getLsb 8 := by
+  bv_decide
