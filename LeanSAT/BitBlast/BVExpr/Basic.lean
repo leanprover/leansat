@@ -208,6 +208,7 @@ A unary operation on two `BVExpr`.
 Concatenate two bit vectors
 -/
 | append (lhs : BVExpr l) (rhs : BVExpr r) : BVExpr (l + r)
+| replicate (n : Nat) (expr : BVExpr w) : BVExpr (w * n)
 /--
 sign extend a `BitVec` by some constant amount.
 -/
@@ -231,6 +232,7 @@ def toString : BVExpr w → String
   | .bin lhs op rhs => s!"({lhs.toString} {op.toString} {rhs.toString})"
   | .un op operand => s!"({op.toString} {toString operand})"
   | .append lhs rhs => s!"({toString lhs} ++ {toString rhs})"
+  | .replicate n expr => s!"(replicate {n} {toString expr})"
   | .signExtend v expr => s!"(sext {v} {expr.toString})"
   | .shiftLeft lhs rhs => s!"({lhs.toString} << {rhs.toString})"
   | .shiftRight lhs rhs => s!"({lhs.toString} >> {rhs.toString})"
@@ -269,6 +271,7 @@ def eval (assign : Assignment) : BVExpr w → BitVec w
   | .bin lhs op rhs => op.eval (eval assign lhs) (eval assign rhs)
   | .un op operand => op.eval (eval assign operand)
   | .append lhs rhs => (eval assign lhs) ++ (eval assign rhs)
+  | .replicate n expr => BitVec.replicate n (eval assign expr)
   | .signExtend v expr => BitVec.signExtend v (eval assign expr)
   | .shiftLeft lhs rhs => (eval assign lhs) <<< (eval assign rhs)
   | .shiftRight lhs rhs => (eval assign lhs) >>> (eval assign rhs)
@@ -298,6 +301,10 @@ theorem eval_un : eval assign (.un op operand) = op.eval (operand.eval assign) :
 
 @[simp]
 theorem eval_append : eval assign (.append lhs rhs) = (lhs.eval assign) ++ (rhs.eval assign) := by
+  rfl
+
+@[simp]
+theorem eval_replicate : eval assign (.replicate n expr) = BitVec.replicate n (expr.eval assign) := by
   rfl
 
 @[simp]
