@@ -31,6 +31,7 @@ where
     else
       have : curr = n := by omega
       this ▸ s
+  termination_by n - curr
 
 instance : AIG.LawfulStreamOperator α ReplicateTarget blastReplicate where
   le_size := by simp [blastReplicate]
