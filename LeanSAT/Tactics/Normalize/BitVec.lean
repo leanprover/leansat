@@ -213,6 +213,8 @@ theorem BitVec.max_ult' (a : BitVec w) : (BitVec.ult (-1#w) a) = false := by
   rw [BitVec.lt_ult] at this
   simp [this]
 
+attribute [bv_normalize] BitVec.replicate_zero_eq
+
 end Normalize
 end BVDecide
 
