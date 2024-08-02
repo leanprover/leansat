@@ -12,6 +12,7 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.ShiftRight
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.ZeroExtend
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Append
+import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Replicate
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Extract
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.RotateLeft
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.RotateRight
@@ -71,7 +72,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     . next hsplit =>
       simp only [hsplit, decide_False, cond_false]
       rw [go_denote_mem_prefix, lih]
-  | replicate n expr ih => sorry
+  | replicate n expr ih => simp [go, ih, hidx]
   | signExtend v inner ih =>
     rename_i originalWidth
     generalize hgo : (go aig (signExtend v inner)).val = res
