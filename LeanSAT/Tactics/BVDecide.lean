@@ -62,6 +62,8 @@ where
   | .un op operand => mkApp3 (mkConst ``BVExpr.un) (toExpr w) (toExpr op) (go operand)
   | .append (l := l) (r := r) lhs rhs =>
     mkApp4 (mkConst ``BVExpr.append) (toExpr l) (toExpr r) (go lhs) (go rhs)
+  | .replicate (w := oldWidth) w inner =>
+    mkApp3 (mkConst ``BVExpr.replicate) (toExpr oldWidth) (toExpr w) (go inner)
   | .extract (w := oldWidth) hi lo expr =>
     mkApp4 (mkConst ``BVExpr.extract) (toExpr oldWidth) (toExpr hi) (toExpr lo) (go expr)
   | .shiftLeft (m := m) (n := n) lhs rhs =>
@@ -248,6 +250,10 @@ theorem append_congr (lw rw : Nat) (lhs lhs' : BitVec lw) (rhs rhs' : BitVec rw)
     lhs' ++ rhs' = lhs ++ rhs := by
   simp[*]
 
+theorem replicate_congr (n : Nat) (w : Nat) (expr expr' : BitVec w) (h : expr' = expr) :
+    BitVec.replicate n expr' = BitVec.replicate n expr := by
+  simp[*]
+
 theorem extract_congr (hi lo : Nat) (w : Nat) (x x' : BitVec w) (h1 : x = x') :
     BitVec.extractLsb hi lo x' = BitVec.extractLsb hi lo x := by
   simp[*]
@@ -394,6 +400,24 @@ partial def of (x : Expr) : M (Option ReifiedBVExpr) := do
         rhsExpr rhsEval
         lhsProof rhsProof
     return some ⟨lhs.width + rhs.width, bvExpr, proof, expr⟩
+  | BitVec.replicate _ nExpr innerExpr =>
+    let some inner ← ofOrAtom innerExpr | return none
+    let some n ← getNatValue? nExpr | return ← ofAtom x
+    let bvExpr := .replicate n inner.bvExpr
+    let expr := mkApp3 (mkConst ``BVExpr.replicate)
+      (toExpr inner.width)
+      (toExpr n)
+      inner.expr
+    let proof := do
+      let innerEval ← mkEvalExpr inner.width inner.expr
+      let innerProof ← inner.evalsAtAtoms
+      return mkApp5 (mkConst ``replicate_congr)
+        (toExpr n)
+        (toExpr inner.width)
+        innerExpr
+        innerEval
+        innerProof
+    return some ⟨inner.width * n, bvExpr, proof, expr⟩
   | BitVec.extractLsb _ hiExpr loExpr innerExpr =>
     let some hi ← getNatValue? hiExpr | return ← ofAtom x
     let some lo ← getNatValue? loExpr | return ← ofAtom x

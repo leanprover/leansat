@@ -71,6 +71,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     . next hsplit =>
       simp only [hsplit, decide_False, cond_false]
       rw [go_denote_mem_prefix, lih]
+  | replicate n expr ih => sorry
   | signExtend v inner ih =>
     rename_i originalWidth
     generalize hgo : (go aig (signExtend v inner)).val = res

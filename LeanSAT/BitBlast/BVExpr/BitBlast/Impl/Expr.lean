@@ -11,6 +11,7 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.ShiftRight
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Add
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.ZeroExtend
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Append
+import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Replicate
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Extract
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.RotateLeft
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.RotateRight
@@ -182,6 +183,16 @@ where
           dsimp at hlaig hraig
           omega
       ⟩
+    | .replicate n expr =>
+      let ⟨⟨aig, expr⟩, haig⟩ := go aig expr
+      let res := bitblast.blastReplicate aig ⟨n, expr, rfl⟩
+      ⟨
+        res,
+        by
+          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastReplicate)
+          dsimp at haig
+          assumption
+      ⟩
     | .extract hi lo expr =>
       let ⟨⟨eaig, estream⟩, heaig⟩ := go aig expr
       let res := bitblast.blastExtract eaig ⟨estream, hi, lo, rfl⟩
@@ -288,6 +299,13 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
       . apply Nat.le_trans
         . exact (bitblast.go aig lhs).property
         . exact (go (go aig lhs).1.aig rhs).property
+  | replicate n inner ih =>
+    dsimp [go]
+    rw [AIG.LawfulStreamOperator.decl_eq (f := blastReplicate)]
+    rw [ih]
+    apply Nat.lt_of_lt_of_le
+    . exact h1
+    . exact (go aig inner).property
   | extract hi lo inner ih =>
     dsimp [go]
     rw [AIG.LawfulStreamOperator.decl_eq (f := blastExtract)]
