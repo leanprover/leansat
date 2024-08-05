@@ -106,7 +106,6 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath)
     "-t",
     s!"{timeout}",
     "--lrat",
-    "--no-binary",
     "--quiet",
     "--unsat" -- This sets the magic parameters of cadical to optimize for UNSAT search.
   ]

@@ -187,12 +187,15 @@ def go : M (Array IntAction) := do
 
 end trim
 
+def trim (proof : Array IntAction) : IO (Array IntAction) :=
+  trim.go.run proof
+
 /--
 Trim an LRAT proof stored in one file and output it to the other.
 -/
-def trim (input : System.FilePath) (output : System.FilePath) : IO Unit := do
+def trimFile (input : System.FilePath) (output : System.FilePath) : IO Unit := do
   let proof ← loadLRATProof input
-  let trimmed ← trim.go.run proof
+  let trimmed ← trim proof
   dumpLRATProof output trimmed
 
 end LRAT

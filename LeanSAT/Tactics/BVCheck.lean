@@ -27,7 +27,7 @@ def mkContext (lratPath : System.FilePath) : TermElabM BVDecide.TacticContext :=
 Prepare an `Expr` that proofs `bvExpr.unsat` using `ofReduceBool`.
 -/
 def lratChecker (cfg : BVDecide.TacticContext) (bvExpr : BVLogicalExpr) : MetaM Expr := do
-  let cert ← BVDecide.LratCert.ofFile cfg.lratPath cfg.prevalidate
+  let cert ← BVDecide.LratCert.ofFile cfg.lratPath cfg.trimProofs
   cert.toReflectionProof
     cfg
     bvExpr
