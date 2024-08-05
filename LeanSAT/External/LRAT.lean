@@ -312,8 +312,88 @@ where
   serializeRatHints (hints : Array (Nat × Array Nat)) : String :=
     hints.foldl (init := "") (· ++ serializeRatHint ·)
 
+partial def lratProofToBinary (proof : Array IntAction) : ByteArray :=
+  -- we will definitely need at least 4 bytes per add step and almost exclusively produce add.
+  go 0 (ByteArray.mkEmpty (4 * proof.size))
+where
+  go (idx : Nat) (acc : ByteArray) : ByteArray :=
+    if h:idx < proof.size then
+      let acc :=
+        match proof[idx] with
+        | .addEmpty id hints =>
+          let acc := startAdd acc
+          let acc := addNat acc id
+          let acc := zeroByte acc
+          let acc := hints.foldl (init := acc) addNat
+          let acc := zeroByte acc
+          acc
+        | .addRup id c hints =>
+          let acc := startAdd acc
+          let acc := addNat acc id
+          let acc := c.foldl (init := acc) addInt
+          let acc := zeroByte acc
+          let acc := hints.foldl (init := acc) addNat
+          let acc := zeroByte acc
+          acc
+        | .addRat id c _ rupHints ratHints =>
+          let acc := startAdd acc
+          let acc := addNat acc id
+          let acc := c.foldl (init := acc) addInt
+          let acc := zeroByte acc
+          let acc := rupHints.foldl (init := acc) addNat
+          let ratHintFolder acc hint :=
+            let acc := addInt acc (-hint.fst)
+            let acc := hint.snd.foldl (init := acc) addNat
+            acc
+          let acc := ratHints.foldl (init := acc) ratHintFolder
+          let acc := zeroByte acc
+          acc
+        | .del ids =>
+          let acc := startDelete acc
+          let acc := ids.foldl (init := acc) addNat
+          let acc := zeroByte acc
+          acc
+      go (idx + 1) acc
+    else
+      acc
+
+  addInt (acc : ByteArray) (lit : Int) : ByteArray :=
+    let mapped :=
+      if lit > 0 then
+        2 * lit.natAbs
+      else
+        2 * lit.natAbs + 1
+    assert! mapped ≤ (2^64 - 1) -- our parser "only" supports 64 bit literals
+    let mapped := mapped.toUInt64
+    variableLengthEncode acc mapped 0
+
+  variableLengthEncode (acc : ByteArray) (lit : UInt64) (idx : Nat) : ByteArray :=
+    -- the literal may never be zero in the first step already, that would be illegal
+    if lit == 0 then
+      acc
+    else
+      let chunk :=
+        if lit > 127 then
+          (lit.toUInt8 &&& 127) ||| 128
+        else
+          lit.toUInt8 &&& 127
+      let acc := acc.push chunk
+      variableLengthEncode acc (lit >>> 7) (idx + 1)
+
+  @[inline]
+  startAdd (acc : ByteArray) : ByteArray := acc.push 'a'.toUInt8
+
+  @[inline]
+  startDelete (acc : ByteArray) : ByteArray := acc.push 'd'.toUInt8
+
+  @[inline]
+  zeroByte (acc : ByteArray) : ByteArray := acc.push 0
+
+  @[inline]
+  addNat (acc : ByteArray) (n : Nat) : ByteArray := addInt acc n
+
 def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) : IO Unit := do
-  let out := lratProofToString proof
-  IO.FS.writeFile path out
+  let out := lratProofToBinary proof
+  IO.FS.writeBinFile path out
 
 end LRAT
