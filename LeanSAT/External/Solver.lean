@@ -29,7 +29,7 @@ where
   @[inline]
   wsLit : Parser Int := do
     skipByteChar ' '
-    let lit ← LRAT.Parser.parseLit
+    let lit ← LRAT.Parser.Text.parseLit
     return lit
 
 partial def parseLines : Parser (Array (Bool × Nat)) :=
