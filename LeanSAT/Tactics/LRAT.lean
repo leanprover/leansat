@@ -97,21 +97,31 @@ def withTempFile [Monad m] [MonadFinally m] [MonadLiftT IO m] (f : System.FilePa
   finally
     IO.FS.removeFile file
 
-def LratCert.ofFile (lratPath : System.FilePath) (trimProofs : Bool) : IO LratCert := do
+def LratCert.ofFile (lratPath : System.FilePath) (trimProofs : Bool) : MetaM LratCert := do
   let proofInput ← LRAT.readFileQuick lratPath
-  -- TODO: timing code
-  -- This is necessary because the proof might be in the binary format in which case we cannot
-  -- store it as a string in the environment.
-  match LRAT.parseLRATProof proofInput with
-  | some proof =>
-    let proof ←
-      if trimProofs then
+  let proof ←
+    withTraceNode `sat (fun _ => return s!"Parsing LRAT file") do
+      -- lazyPure to prevent compiler lifting
+      let proof? ← IO.lazyPure (fun _ => LRAT.parseLRATProof proofInput)
+      match proof? with
+      | some proof => pure proof
+      | none => throwError "SAT solver produced invalid LRAT"
+
+  trace[sat] s!"LRAT proof has {proof.size} steps before trimming"
+
+  let proof ←
+    if trimProofs then
+      withTraceNode `sat (fun _ => return "Trimming LRAT proof") do
         LRAT.trim proof
-      else
-        pure proof
-    let newProof := LRAT.lratProofToString proof
-    return newProof
-  | none => throw <| IO.userError "SAT solver produced invalid LRAT"
+    else
+      pure proof
+
+  trace[sat] s!"LRAT proof has {proof.size} steps after trimming"
+
+  -- This is necessary because the proof might be in the binary format in which case we cannot
+  -- store it as a string in the environment (yet) due to missing support for binary literals.
+  let newProof := LRAT.lratProofToString proof
+  return newProof
 
 /--
 Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
