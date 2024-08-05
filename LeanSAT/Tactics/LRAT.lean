@@ -7,6 +7,7 @@ import LeanSAT.Tactics.Glue
 import LeanSAT.Tactics.Attr
 import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.LRATCheckerSound
+import LeanSAT.LRAT.Trim
 import LeanSAT.External.Solver
 
 open Lean Elab Meta Sat
@@ -22,9 +23,9 @@ structure TacticContext where
   reflectionDef : Name
   solver : String
   lratPath : System.FilePath
-  prevalidate : Bool
   graphviz : Bool
   timeout : Nat
+  trimProofs : Bool
 
 def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticContext := do
   let exprDef ← Lean.Elab.Term.mkAuxName `_expr_def
@@ -33,8 +34,8 @@ def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticC
   let solver := sat.solver.get (← getOptions)
   let timeout := sat.timeout.get (← getOptions)
   let graphviz := bv.graphviz.get (← getOptions)
-  let prevalidate := sat.prevalidate.get (← getOptions)
-  return { exprDef, certDef, reflectionDef, solver, lratPath, prevalidate, graphviz, timeout }
+  let trimProofs := bv.trimProofs.get (← getOptions)
+  return { exprDef, certDef, reflectionDef, solver, lratPath, graphviz, timeout, trimProofs }
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
@@ -96,15 +97,21 @@ def withTempFile [Monad m] [MonadFinally m] [MonadLiftT IO m] (f : System.FilePa
   finally
     IO.FS.removeFile file
 
-def LratCert.ofFile (lratPath : System.FilePath) (prevalidate : Bool) : IO LratCert := do
-  let proof ← LRAT.readFileQuick lratPath
-  -- This is just a sanity check to verify that the proof does indeed parse.
-  -- The parsing relevant for the reflection proof happens in the reflection term.
-  -- As parsing can be expensive this is configured through a default-disabled option.
-  if prevalidate then
-    if LRAT.parseLRATProof proof |>.isNone then
-      throw <| IO.userError "SAT solver produced invalid LRAT"
-  return String.fromUTF8! proof
+def LratCert.ofFile (lratPath : System.FilePath) (trimProofs : Bool) : IO LratCert := do
+  let proofInput ← LRAT.readFileQuick lratPath
+  -- TODO: timing code
+  -- This is necessary because the proof might be in the binary format in which case we cannot
+  -- store it as a string in the environment.
+  match LRAT.parseLRATProof proofInput with
+  | some proof =>
+    let proof ←
+      if trimProofs then
+        LRAT.trim proof
+      else
+        pure proof
+    let newProof := LRAT.lratProofToString proof
+    return newProof
+  | none => throw <| IO.userError "SAT solver produced invalid LRAT"
 
 /--
 Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
@@ -112,7 +119,7 @@ Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
 This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
 -/
 def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath)
-    (prevalidate : Bool) (timeout : Nat) : MetaM (Except (Array (Bool × Nat)) LratCert) := do
+    (trimProofs : Bool) (timeout : Nat) : MetaM (Except (Array (Bool × Nat)) LratCert) := do
   withTempFile fun cnfPath => do
     withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
       -- lazyPure to prevent compiler lifting
@@ -126,7 +133,7 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
 
     let lratProof ←
       withTraceNode `sat (fun _ => return "Obtaining LRAT certificate") do
-        LratCert.ofFile lratPath prevalidate
+        LratCert.ofFile lratPath trimProofs
 
     return .ok lratProof
 

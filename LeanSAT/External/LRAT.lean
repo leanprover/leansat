@@ -285,9 +285,8 @@ def parseLRATProof (proof : ByteArray) : Option (Array IntAction) :=
   | .ok actions => some actions
   | .error .. => none
 
-def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) : IO Unit := do
-  let out := proof.foldl (init := "") (· ++ serialize · ++ "\n")
-  IO.FS.writeFile path out
+def lratProofToString (proof : Array IntAction) : String :=
+  proof.foldl (init := "") (· ++ serialize · ++ "\n")
 where
   serialize (a : IntAction) : String :=
     match a with
@@ -298,8 +297,8 @@ where
     | .addRat id c _ rupHints ratHints =>
       s!"{id} {serializeClause c}0 {serializeIdList rupHints}0 {serializeRatHints ratHints}0"
     | .del ids =>
-      -- Note: 1 is not an actual id but we never produce delete anyways
-      s!"1 d{serializeIdList ids}0"
+      -- Note: 1 is not an actual id but our parser ignores identies on d anyways.
+      s!"1 d {serializeIdList ids}0"
 
   serializeIdList (ids : Array Nat) : String :=
     ids.foldl (init := "") (· ++ s!"{·} ")
@@ -312,5 +311,9 @@ where
 
   serializeRatHints (hints : Array (Nat × Array Nat)) : String :=
     hints.foldl (init := "") (· ++ serializeRatHint ·)
+
+def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) : IO Unit := do
+  let out := lratProofToString proof
+  IO.FS.writeFile path out
 
 end LRAT

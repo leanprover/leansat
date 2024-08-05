@@ -16,11 +16,6 @@ register_option sat.solver : String := {
   descr := "name of the SAT solver used by LeanSAT tactics"
 }
 
-register_option sat.prevalidate : Bool := {
-  defValue := false
-  descr := "Parse the LRAT proof before passing it into the kernel. Useful debugging."
-}
-
 register_option sat.timeout : Nat := {
   defValue := 10
   descr := "the number of seconds that the sat solver is run before aborting"
