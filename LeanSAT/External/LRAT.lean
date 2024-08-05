@@ -392,8 +392,13 @@ where
   @[inline]
   addNat (acc : ByteArray) (n : Nat) : ByteArray := addInt acc n
 
-def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) : IO Unit := do
-  let out := lratProofToBinary proof
+def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) (binaryProofs : Bool)
+    : IO Unit := do
+  let out :=
+    if binaryProofs then
+      lratProofToBinary proof
+    else
+      lratProofToString proof |>.toUTF8
   IO.FS.writeBinFile path out
 
 end LRAT

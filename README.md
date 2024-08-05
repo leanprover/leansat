@@ -49,6 +49,7 @@ There are also some options to influence the behavior of `bv_decide`:
    is still useful.
 - `sat.timeout`: The timeout for waiting for the SAT solver in seconds, default 10.
 - `sat.trimProofs`: Whether to run the trimming algorithm on LRAT proofs, default true.
+- `sat.binaryProofs`: Whether to use the binary LRAT proof format, default true.
 - `trace.bv` and `trace.sat` for inspecting the inner workings of LeanSAT.
 - `debug.skipKernelTC`: may be set to true to disable actually checking the LRAT proof.
   LeanSAT will still run bitblasting + SAT solving so this option essentially trusts the solver.

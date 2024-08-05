@@ -26,16 +26,29 @@ structure TacticContext where
   graphviz : Bool
   timeout : Nat
   trimProofs : Bool
+  binaryProofs : Bool
 
 def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticContext := do
   let exprDef ← Lean.Elab.Term.mkAuxName `_expr_def
   let certDef ← Lean.Elab.Term.mkAuxName `_cert_def
   let reflectionDef ← Lean.Elab.Term.mkAuxName `_reflection_def
-  let solver := sat.solver.get (← getOptions)
-  let timeout := sat.timeout.get (← getOptions)
-  let graphviz := bv.graphviz.get (← getOptions)
-  let trimProofs := sat.trimProofs.get (← getOptions)
-  return { exprDef, certDef, reflectionDef, solver, lratPath, graphviz, timeout, trimProofs }
+  let opts ← getOptions
+  let solver := sat.solver.get opts
+  let timeout := sat.timeout.get opts
+  let graphviz := bv.graphviz.get opts
+  let trimProofs := sat.trimProofs.get opts
+  let binaryProofs := sat.binaryProofs.get opts
+  return {
+    exprDef,
+    certDef,
+    reflectionDef,
+    solver,
+    lratPath,
+    graphviz,
+    timeout,
+    trimProofs,
+    binaryProofs
+  }
 
 /--
 A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
@@ -129,7 +142,8 @@ Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
 This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
 -/
 def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath)
-    (trimProofs : Bool) (timeout : Nat) : MetaM (Except (Array (Bool × Nat)) LratCert) := do
+    (trimProofs : Bool) (timeout : Nat) (binaryProofs : Bool)
+    : MetaM (Except (Array (Bool × Nat)) LratCert) := do
   withTempFile fun cnfPath => do
     withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
       -- lazyPure to prevent compiler lifting
@@ -137,7 +151,7 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
 
     let res ←
       withTraceNode `sat (fun _ => return "Running SAT solver") do
-        satQuery solver cnfPath lratPath timeout
+        satQuery solver cnfPath lratPath timeout binaryProofs
     if let .sat assignment := res then
       return .error assignment
 
