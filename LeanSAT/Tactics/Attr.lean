@@ -26,6 +26,11 @@ register_option sat.trimProofs : Bool := {
   descr := "Whether to run the trimming algorithm on LRAT proofs"
 }
 
+register_option sat.binaryProofs : Bool := {
+  defValue := true
+  descr := "Whether to use the binary LRAT proof format"
+}
+
 register_option bv.graphviz : Bool := {
   defValue := false
   descr := "Output the AIG as graphviz file when using the bv_decide tactic"

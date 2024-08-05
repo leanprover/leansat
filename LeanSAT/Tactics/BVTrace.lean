@@ -45,7 +45,7 @@ def evalBvTrace : Tactic := fun stx =>
     | some .. =>
       if cfg.trimProofs then
         let lratPath := (← BVCheck.getSrcDir) / lratFile
-        LRAT.trimFile lratPath lratPath
+        LRAT.trimFile lratPath lratPath cfg.binaryProofs
       let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)
   | _ => throwUnsupportedSyntax

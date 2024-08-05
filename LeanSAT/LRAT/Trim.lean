@@ -193,9 +193,10 @@ def trim (proof : Array IntAction) : IO (Array IntAction) :=
 /--
 Trim an LRAT proof stored in one file and output it to the other.
 -/
-def trimFile (input : System.FilePath) (output : System.FilePath) : IO Unit := do
+def trimFile (input : System.FilePath) (output : System.FilePath) (binaryProofs : Bool)
+    : IO Unit := do
   let proof ← loadLRATProof input
   let trimmed ← trim proof
-  dumpLRATProof output trimmed
+  dumpLRATProof output trimmed binaryProofs
 
 end LRAT

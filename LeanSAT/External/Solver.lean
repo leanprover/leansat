@@ -98,17 +98,19 @@ path set up so that it can be run via the command `cadical` in terminal. If the 
 cadical on the CNF file at `problemPath` and output an LRAT result to `proofOutput`.
 -/
 def satQuery (solverPath := "cadical") (problemPath : System.FilePath)
-    (proofOutput : System.FilePath) (timeout : Nat) : CoreM SolverResult := do
+    (proofOutput : System.FilePath) (timeout : Nat) (binaryProofs : Bool) : CoreM SolverResult := do
   let cmd := solverPath
-  let args := #[
+  let mut args := #[
     problemPath.toString,
     proofOutput.toString,
     "-t",
     s!"{timeout}",
     "--lrat",
+    s!"--binary={binaryProofs}",
     "--quiet",
     "--unsat" -- This sets the magic parameters of cadical to optimize for UNSAT search.
   ]
+
   let out ← runInterruptible { cmd, args, stdin := .piped, stdout := .piped, stderr := .null }
   if out.exitCode == 255 then
     throwError s!"Failed to execute external prover:\n{out.stderr}"

@@ -950,7 +950,7 @@ def lratBitblaster (cfg : TacticContext) (bv : BVLogicalExpr)
 
   let res ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      runExternal encoded cfg.solver cfg.lratPath cfg.trimProofs cfg.timeout
+      runExternal encoded cfg.solver cfg.lratPath cfg.trimProofs cfg.timeout cfg.binaryProofs
 
   match res with
   | .ok cert =>
