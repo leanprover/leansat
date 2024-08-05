@@ -34,7 +34,7 @@ def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticC
   let solver := sat.solver.get (← getOptions)
   let timeout := sat.timeout.get (← getOptions)
   let graphviz := bv.graphviz.get (← getOptions)
-  let trimProofs := bv.trimProofs.get (← getOptions)
+  let trimProofs := sat.trimProofs.get (← getOptions)
   return { exprDef, certDef, reflectionDef, solver, lratPath, graphviz, timeout, trimProofs }
 
 /--

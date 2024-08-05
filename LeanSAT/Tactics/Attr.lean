@@ -21,14 +21,14 @@ register_option sat.timeout : Nat := {
   descr := "the number of seconds that the sat solver is run before aborting"
 }
 
+register_option sat.trimProofs : Bool := {
+  defValue := true
+  descr := "Whether to run the trimming algorithm on LRAT proofs"
+}
+
 register_option bv.graphviz : Bool := {
   defValue := false
   descr := "Output the AIG as graphviz file when using the bv_decide tactic"
-}
-
-register_option bv.trimProofs : Bool := {
-  defValue := true
-  descr := "Whether to run the trimming algorithm on LRAT proofs"
 }
 
 initialize bvNormalizeExt : Meta.SimpExtension ←
