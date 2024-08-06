@@ -1,22 +1,31 @@
 /-
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Josh Clune
+Authors: Josh Clune, Henrik Böving
 -/
 
 namespace Sat
 
 /--
-For variables of type `α` and clauses of type `β`, `HSat.eval p c` is meant to determine whether
-a clause `c` is true under assignment `p`.
+For variables of type `α` and formulas of type `β`, `HSat.eval a f` is meant to determine whether
+a formula `f` is true under assignment `a`.
 -/
 class HSat (α : Type u) (β : Type v) :=
   (eval : (α → Bool) → β → Prop)
 
-
+/--
+`a ⊨ f` reads formula `f` is true under assignment `a`.
+-/
 scoped infix:25 " ⊨ " => HSat.eval
+
+/--
+`a ⊭ f` reads clause `f` is false under assignment `a`.
+-/
 scoped notation:25 p:25 " ⊭ " f:30 => ¬(HSat.eval p f)
 
+/--
+`f` is not true under any assignment.
+-/
 def unsatisfiable (α : Type u) {σ : Type v} [HSat α σ] (f : σ) : Prop :=
   ∀ (p : α → Bool), p ⊭ f
 
@@ -35,6 +44,9 @@ def equisat (α : Type u) {σ1 : Type v} {σ2 : Type w} [HSat α σ1] [HSat α �
     : Prop :=
   unsatisfiable α f1 ↔ unsatisfiable α f2
 
+/--
+For any given assignment `f1` or `f2` is not true.
+-/
 def incompatible (α : Type u) {σ1 : Type v} {σ2 : Type w} [HSat α σ1] [HSat α σ2] (f1 : σ1)
     (f2 : σ2) : Prop :=
   ∀ (p : α → Bool), (p ⊭ f1) ∨ (p ⊭ f2)
@@ -61,7 +73,7 @@ protected theorem limplies.trans {α : Type u} {σ1 : Type v} {σ2 : Type w} {σ
     [HSat α σ2] [HSat α σ3] (f1 : σ1) (f2 : σ2) (f3 : σ3)
     : limplies α f1 f2 → limplies α f2 f3 → limplies α f1 f3 := by
   intros f1_implies_f2 f2_implies_f3 p p_entails_f1
-  exact f2_implies_f3 p $ f1_implies_f2 p p_entails_f1
+  exact f2_implies_f3 p <| f1_implies_f2 p p_entails_f1
 
 theorem liff_iff_limplies_and_limplies {α : Type u} {σ1 : Type v} {σ2 : Type w} [HSat α σ1]
     [HSat α σ2] (f1 : σ1) (f2 : σ2)
@@ -95,13 +107,13 @@ theorem limplies_unsat {α : Type u} {σ1 : Type v} {σ2 : Type w} [HSat α σ1]
     (f2 : σ2) (h : limplies α f2 f1)
     : unsatisfiable α f1 → unsatisfiable α f2 := by
   intros f1_unsat p p_entails_f2
-  exact f1_unsat p $ h p p_entails_f2
+  exact f1_unsat p <| h p p_entails_f2
 
 theorem incompatible_of_unsat (α : Type u) {σ1 : Type v} {σ2 : Type w} [HSat α σ1] [HSat α σ2]
     (f1 : σ1) (f2 : σ2)
     : unsatisfiable α f1 → incompatible α f1 f2 := by
   intro h p
-  exact Or.inl $ h p
+  exact Or.inl <| h p
 
 theorem unsat_of_limplies_and_incompatible (α : Type u) {σ1 : Type v} {σ2 : Type w} [HSat α σ1]
     [HSat α σ2] (f1 : σ1) (f2 : σ2)
@@ -111,13 +123,13 @@ theorem unsat_of_limplies_and_incompatible (α : Type u) {σ1 : Type v} {σ2 : T
   . next h2 =>
     exact h2 pf1
   . next h2 =>
-    exact h2 $ h1 p pf1
+    exact h2 <| h1 p pf1
 
 protected theorem incompatible.symm {α : Type u} {σ1 : Type v} {σ2 : Type w} [HSat α σ1] [HSat α σ2]
     (f1 : σ1) (f2 : σ2)
     : incompatible α f1 f2 ↔ incompatible α f2 f1 := by
   constructor
   . intro h p
-    exact Or.symm $ h p
+    exact Or.symm <| h p
   . intro h p
-    exact Or.symm $ h p
+    exact Or.symm <| h p
