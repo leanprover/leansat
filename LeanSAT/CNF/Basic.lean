@@ -16,16 +16,27 @@ The literal `(i, b)` is satisfied is the assignment to `i` agrees with `b`.
 -/
 abbrev CNF.Clause (α : Type u) : Type u := List (Literal α)
 
+/--
+A CNF formula.
+
+Literals are identified by members of `α`.
+-/
 abbrev CNF (α : Type u) : Type u := List (CNF.Clause α)
 
 namespace CNF
 
+/--
+Evaluating a `Clause` with respect to an assignment `f`.
+-/
 def Clause.eval (f : α → Bool) (c : Clause α) : Bool := c.any fun (i, n) => f i == n
 
 @[simp] theorem Clause.eval_nil (f : α → Bool) : Clause.eval f [] = false := rfl
 @[simp] theorem Clause.eval_succ (f : α → Bool) :
     Clause.eval f (i :: c) = (f i.1 == i.2 || Clause.eval f c) := rfl
 
+/--
+Evaluating a `CNF` formula with respect to an assignment `f`.
+-/
 def eval (f : α → Bool) (g : CNF α) : Bool := g.all fun c => c.eval f
 
 @[simp] theorem eval_nil (f : α → Bool) : eval f [] = true := rfl
@@ -51,6 +62,9 @@ instance : HSat α (CNF α) where
 
 namespace Clause
 
+/--
+Literal `a` occurs in `Clause` `c`.
+-/
 def mem (a : α) (c : Clause α) : Prop := (a, false) ∈ c ∨ (a, true) ∈ c
 
 instance {a : α} {c : Clause α} [DecidableEq α] : Decidable (mem a c) :=
@@ -86,6 +100,9 @@ theorem eval_congr (f g : α → Bool) (c : Clause α) (w : ∀ i, mem i c → f
 
 end Clause
 
+/--
+Literal `a` occurs in `CNF` formula `g`.
+-/
 def mem (a : α) (g : CNF α) : Prop := ∃ c, c ∈ g ∧ c.mem a
 
 instance {a : α} {g : CNF α} [DecidableEq α] : Decidable (mem a g) :=
@@ -163,3 +180,5 @@ theorem eval_congr (f g : α → Bool) (x : CNF α) (w : ∀ i, mem i x → f i 
     · intro i h
       apply w
       simp [h]
+
+end CNF
