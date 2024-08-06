@@ -3,8 +3,10 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.Sat.Basic
+import LeanSAT.Sat
 import LeanSAT.Util.PosFin
+
+open Sat
 
 /-- The `Assignment` inductive datatype is used in the `assignments` field of default formulas (defined in
     Formula.Implementation.lean) to store and quickly access information about whether unit literals are

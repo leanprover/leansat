@@ -6,6 +6,8 @@ Authors: Josh Clune
 import LeanSAT.External.LRAT
 import LeanSAT.LRAT.Formula.Instance
 
+open Sat
+
 namespace LRAT
 
 inductive Result
