@@ -13,6 +13,9 @@ namespace CNF
 
 namespace Clause
 
+/--
+Change the literal type in a `Clause` from `α` to `β` by using `f`.
+-/
 def relabel (f : α → β) (c : Clause α) : Clause β := c.map (fun (i, n) => (f i, n))
 
 @[simp] theorem eval_relabel {f : α → β} {g : β → Bool} {x : Clause α} :
@@ -43,6 +46,9 @@ It is convenient to be able to construct a CNF using a more complicated literal 
 but eventually we need to embed in `Nat`.
 -/
 
+/--
+Change the literal type in a `CNF` formula from `α` to `β` by using `f`.
+-/
 def relabel (f : α → β) (g : CNF α) : CNF β := g.map (Clause.relabel f)
 
 @[simp] theorem eval_relabel (f : α → β) (g : β → Bool) (x : CNF α) :
