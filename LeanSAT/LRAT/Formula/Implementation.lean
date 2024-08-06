@@ -5,6 +5,7 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Formula.Class
 import LeanSAT.LRAT.Assignment
+import LeanSAT.CNF.Basic
 
 namespace LRAT
 
@@ -105,13 +106,13 @@ def insertUnit : Array (Literal (PosFin n)) × Array Assignment × Bool →
     else (units.push (l, b), assignments.modify l (addAssignment b), foundContradiction || curAssignment != unassigned)
 
 /-- Returns an updated formula f and a bool which indicates whether a contradiction was found in the process of updating f -/
-def insertRupUnits {n : Nat} (f : DefaultFormula n) (ls : List (Literal (PosFin n))) : DefaultFormula n × Bool :=
+def insertRupUnits {n : Nat} (f : DefaultFormula n) (ls : CNF.Clause (PosFin n)) : DefaultFormula n × Bool :=
   let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
   let (rupUnits, assignments, foundContradiction) := ls.foldl insertUnit (rupUnits, assignments, false)
   (⟨clauses, rupUnits, ratUnits, assignments⟩, foundContradiction)
 
 /-- Returns an updated formula f and a bool which indicates whether a contradiction was found in the process of updating f -/
-def insertRatUnits {n : Nat} (f : DefaultFormula n) (ls : List (Literal (PosFin n))) : DefaultFormula n × Bool :=
+def insertRatUnits {n : Nat} (f : DefaultFormula n) (ls : CNF.Clause (PosFin n)) : DefaultFormula n × Bool :=
   let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
   let (ratUnits, assignments, foundContradiction) := ls.foldl insertUnit (ratUnits, assignments, false)
   (⟨clauses, rupUnits, ratUnits, assignments⟩, foundContradiction)
@@ -134,8 +135,8 @@ def restoreAssignments {n : Nat} (assignments : Array Assignment) (derivedLits :
   Array Assignment := derivedLits.foldl clearUnit assignments
 
 /-- The fold function used for performRupCheck -/
-def confirmRupHint {n : Nat} (clauses : Array (Option (DefaultClause n))) : Array Assignment × List (Literal (PosFin n)) × Bool × Bool →
-  Nat → Array Assignment × List (Literal (PosFin n)) × Bool × Bool :=
+def confirmRupHint {n : Nat} (clauses : Array (Option (DefaultClause n))) : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool →
+  Nat → Array Assignment × CNF.Clause (PosFin n) × Bool × Bool :=
   fun (assignments, derivedLits, derivedEmpty, encounteredError) id =>
     if (encounteredError || derivedEmpty) then (assignments, derivedLits, derivedEmpty, encounteredError)
     else
@@ -163,7 +164,7 @@ def confirmRupHint {n : Nat} (clauses : Array (Option (DefaultClause n))) : Arra
 
     Note: This function assumes that any rupUnits and ratUnits corresponding to this rup check have already been added to f. -/
 def performRupCheck {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat) :
-  DefaultFormula n × List (Literal (PosFin n)) × Bool × Bool :=
+  DefaultFormula n × CNF.Clause (PosFin n) × Bool × Bool :=
   let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
   let (assignments, derivedLits, derivedEmpty, encounteredError) := rupHints.foldl (confirmRupHint clauses) (assignments, [], false, false)
   (⟨clauses, rupUnits, ratUnits, assignments⟩, derivedLits, derivedEmpty, encounteredError)

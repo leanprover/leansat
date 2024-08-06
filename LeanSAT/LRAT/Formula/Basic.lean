@@ -342,7 +342,7 @@ theorem insert_readyForRatAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
   . simp only [insert, h.1] <;> split <;> rfl
   . exact insert_readyForRupAdd f c h.2
 
-theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : List (Literal (PosFin n)))
+theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n))
   (c : DefaultClause n) : c ∈ toList (insertRupUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
   simp only [toList, insertRupUnits, Array.toList_eq, List.append_assoc, List.mem_append,
     List.mem_filterMap, id_eq, exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]
@@ -379,7 +379,7 @@ theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : List (Li
       exact ⟨h_insertUnit_fold, h2⟩
   . exact (Or.inr ∘ Or.inr ∘ Or.inr) h
 
-theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : List (Literal (PosFin n)))
+theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n))
   (c : DefaultClause n) : c ∈ toList (insertRatUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
   simp only [toList, insertRatUnits, Array.toList_eq, List.append_assoc, List.mem_append,
     List.mem_filterMap, id_eq, exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]

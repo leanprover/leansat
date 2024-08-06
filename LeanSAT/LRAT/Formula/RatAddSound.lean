@@ -63,7 +63,7 @@ theorem entails_of_irrelevant_assignment {n : Nat} {p : (PosFin n) → Bool} {c 
         exact pv
 
 theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ assignments_invariant f)
-    (units : List (Literal (PosFin n))) : assignments_invariant (insertRatUnits f units).1 := by
+    (units : CNF.Clause (PosFin n)) : assignments_invariant (insertRatUnits f units).1 := by
   have h := insertRatUnits_postcondition f ⟨hf.1, hf.2.1⟩ units
   have hsize : (insertRatUnits f units).1.assignments.size = n := by rw [insertRatUnits_preserves_assignments_size, hf.2.1]
   apply Exists.intro hsize
@@ -193,7 +193,7 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
     have fc_satisfies_assignments_invariant : assignments_invariant fc.1 :=
       insertRatUnits_preserves_assignments_invariant f hf (negate c)
     exact assignments_invariant_entails_limplies fc.1 fc_satisfies_assignments_invariant
-  have h_inductive (idx : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) (ih : motive idx.1 acc) :=
+  have h_inductive (idx : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) (ih : motive idx.1 acc) :=
     confirmRupHint_preserves_motive fc.1 rupHints idx acc ih
   rcases Array.foldl_induction motive h_base h_inductive with ⟨_, h1, h2⟩
   have fc_incompatible_confirmRupHint_fold_res := (h2 confirmRupHint_success)
@@ -361,7 +361,7 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
   have h_base : motive 0 (f.assignments, [], false, false) := by
     simp only [confirmRupHint_fold_entails_hsat_motive, f_assignments_invariant.1, false_implies, and_true, true_and,
       assignments_invariant_entails_limplies f f_assignments_invariant, motive]
-  have h_inductive (idx : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) (ih : motive idx.1 acc) :=
+  have h_inductive (idx : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) (ih : motive idx.1 acc) :=
     confirmRupHint_preserves_motive f rupHints idx acc ih
   rcases Array.foldl_induction motive h_base h_inductive with ⟨hsize, h1, _⟩
   apply Exists.intro hsize
@@ -372,10 +372,10 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
   specialize h1 i
   have i_in_bounds :
     i.1 < (rupHints.foldl (fun b => confirmRupHint f.clauses b) (f.assignments, [], false, false) 0 rupHints.size).1.size := by
-    let in_bounds_motive (_idx : Nat) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool) := acc.1.size = n
+    let in_bounds_motive (_idx : Nat) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) := acc.1.size = n
     have in_bounds_base : in_bounds_motive 0 (f.assignments, [], false, false) := by
       simp only [f_assignments_invariant.1, in_bounds_motive]
-    have in_bounds_inductive (idx : Fin rupHints.size) (acc : Array Assignment × List (Literal (PosFin n)) × Bool × Bool)
+    have in_bounds_inductive (idx : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool)
       (ih : in_bounds_motive idx.1 acc) : in_bounds_motive (idx.1 + 1) (confirmRupHint f.clauses acc rupHints[idx]) := by
       have h := confirmRupHint_preserves_assignments_size f.clauses acc.1 acc.2.1 acc.2.2.1 acc.2.2.2 rupHints[idx]
       have : (acc.fst, acc.snd.fst, acc.snd.snd.fst, acc.snd.snd.snd) = acc := rfl

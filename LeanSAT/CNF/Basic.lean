@@ -14,9 +14,9 @@ A clause in a CNF.
 
 The literal `(i, b)` is satisfied is the assignment to `i` agrees with `b`.
 -/
-abbrev CNF.Clause (α : Type) : Type := List (Literal α)
+abbrev CNF.Clause (α : Type u) : Type u := List (Literal α)
 
-abbrev CNF (α : Type) : Type := List (CNF.Clause α)
+abbrev CNF (α : Type u) : Type u := List (CNF.Clause α)
 
 namespace CNF
 

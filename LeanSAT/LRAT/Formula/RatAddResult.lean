@@ -12,13 +12,13 @@ namespace DefaultFormula
 
 open Sat DefaultClause DefaultFormula Assignment Misc
 
-theorem insertRatUnits_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (units : List (Literal (PosFin n))) :
+theorem insertRatUnits_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n)) :
   (f.insertRatUnits units).1.assignments.size = f.assignments.size := by
   simp only [insertRatUnits]
   exact insertUnit_fold_preserves_size f.ratUnits f.assignments false
 
 theorem insertRatUnits_postcondition {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
-    (units : List (Literal (PosFin n))) :
+    (units : CNF.Clause (PosFin n)) :
       let assignments := (insertRatUnits f units).fst.assignments
       have hsize : assignments.size = n := by
         rw [← hf.2]
@@ -37,7 +37,7 @@ theorem insertRatUnits_postcondition {n : Nat} (f : DefaultFormula n) (hf : f.ra
   exact insertUnit_fold_preserves_invariant f.assignments hf.2 f.ratUnits f.assignments hsize false units h0
 
 theorem insertRatUnits_nodup {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
-    (units : List (Literal (PosFin n))) :
+    (units : CNF.Clause (PosFin n)) :
       ∀ i : Fin (f.insertRatUnits units).1.ratUnits.size, ∀ j : Fin (f.insertRatUnits units).1.ratUnits.size,
         i ≠ j → (f.insertRatUnits units).1.ratUnits[i] ≠ (f.insertRatUnits units).1.ratUnits[j] := by
   intro i j i_ne_j
@@ -101,7 +101,7 @@ theorem insertRatUnits_nodup {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits =
           simp (config := { decide := true }) only [hi] at h5
 
 theorem clear_insertRat_base_case {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
-    (units : List (Literal (PosFin n))) :
+    (units : CNF.Clause (PosFin n)) :
       let insertRat_res := insertRatUnits f units
       clear_insert_induction_motive f hf.2 insertRat_res.1.ratUnits 0 insertRat_res.1.assignments := by
   have insertRatUnits_assignments_size := insertRatUnits_preserves_assignments_size f units
@@ -112,7 +112,7 @@ theorem clear_insertRat_base_case {n : Nat} (f : DefaultFormula n) (hf : f.ratUn
   exact insertRatUnits_postcondition f hf units i
 
 theorem clear_insertRat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
-    (units : List (Literal (PosFin n))) : clearRatUnits (f.insertRatUnits units).1 = f := by
+    (units : CNF.Clause (PosFin n)) : clearRatUnits (f.insertRatUnits units).1 = f := by
   simp only [clearRatUnits]
   ext
   . simp only [insertRatUnits]

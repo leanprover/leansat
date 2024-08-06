@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import LeanSAT.Sat.Basic
-import LeanSAT.Sat.Literal
+import LeanSAT.CNF.Basic
 import LeanSAT.Util.PosFin
 import LeanSAT.Util.Misc
 import LeanSAT.LRAT.Assignment
@@ -26,7 +26,7 @@ open Misc Literal Assignment ReduceResult
 /-- Typeclass for clauses. An instance [Clause α β] indicates that β is
     the type of a clause with variables of type α. -/
 class Clause (α : outParam (Type u)) (β : Type v) where
-  toList : β → List (Literal α)
+  toList : β → CNF.Clause α
   not_tautology : ∀ c : β, ∀ l : Literal α, l ∉ toList c ∨ negateLiteral l ∉ toList c
   ofArray : Array (Literal α) → Option β -- Returns none if the given array contains complementary literals
   ofArray_eq :
@@ -38,7 +38,7 @@ class Clause (α : outParam (Type u)) (β : Type v) where
   unit_eq : ∀ l : Literal α, toList (unit l) = [l]
   isUnit : β → Option (Literal α)
   isUnit_iff : ∀ c : β, ∀ l : Literal α, isUnit c = some l ↔ toList c = [l]
-  negate : β → List (Literal α)
+  negate : β → CNF.Clause α
   negate_iff : ∀ c : β, negate c = (toList c).map negateLiteral
   insert : β → Literal α → Option β -- Returns none if the result is a tautology
   delete : β → Literal α → β
@@ -75,7 +75,7 @@ end Clause
     is structured in this manner is that the `nodup` field was only included in a later stage of the verification process when it became clear that
     it was needed. -/
 @[ext] structure DefaultClause (numVarsSucc : Nat) where
-  clause : List (Literal (PosFin numVarsSucc))
+  clause : CNF.Clause (PosFin numVarsSucc)
   nodupkey : ∀ l : PosFin numVarsSucc, (l, true) ∉ clause ∨ (l, false) ∉ clause
   nodup : List.Nodup clause
 
@@ -87,7 +87,7 @@ instance {n : Nat} : ToString (DefaultClause n) where
 
 namespace DefaultClause
 
-def toList {n : Nat} (c : DefaultClause n) : List (Literal (PosFin n)) := c.clause
+def toList {n : Nat} (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause
 
 theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : ¬ l ∈ toList c ∨ ¬negateLiteral l ∈ toList c := by
   simp only [toList, negateLiteral]
@@ -138,7 +138,7 @@ theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
     simp only [false_iff]
     apply hne
 
-def negate {n : Nat} (c : DefaultClause n) : List (Literal (PosFin n)) := c.clause.map negateLiteral
+def negate {n : Nat} (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause.map negateLiteral
 
 theorem negate_iff {n : Nat} (c : DefaultClause n) : negate c = (toList c).map negateLiteral := rfl
 
