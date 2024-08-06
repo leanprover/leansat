@@ -5,7 +5,6 @@ Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.ShiftRight
-import LeanSAT.Tactics.Normalize.BitVec
 
 open AIG
 
@@ -298,7 +297,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
       simp only [hif1, Bool.false_eq_true, ↓reduceIte]
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftRightConst)]
       rw [hleft]
-      simp only [BVDecide.Normalize.BitVec.shiftRight_zero]
+      simp
   . have : rhs.getLsb pow = false := by
       apply BitVec.getLsb_ge
       dsimp
@@ -306,7 +305,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
     simp only [this, Bool.false_eq_true, ↓reduceIte]
     rw [← hg]
     rw [hleft]
-    simp only [BVDecide.Normalize.BitVec.shiftRight_zero]
+    simp
 
 theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat)
       (hcurr : curr ≤ n - 1) (acc : AIG.RefStream aig w)
