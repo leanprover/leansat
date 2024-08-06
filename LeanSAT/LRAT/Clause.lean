@@ -20,13 +20,13 @@ inductive ReduceResult (α : Type u)
   | reducedToUnit (l : Literal α)
   | reducedToNonunit
 
-open Misc Literal Assignment ReduceResult
+open Misc Assignment ReduceResult
 
 /-- Typeclass for clauses. An instance [Clause α β] indicates that β is
     the type of a clause with variables of type α. -/
 class Clause (α : outParam (Type u)) (β : Type v) where
   toList : β → CNF.Clause α
-  not_tautology : ∀ c : β, ∀ l : Literal α, l ∉ toList c ∨ negateLiteral l ∉ toList c
+  not_tautology : ∀ c : β, ∀ l : Literal α, l ∉ toList c ∨ Literal.negate l ∉ toList c
   ofArray : Array (Literal α) → Option β -- Returns none if the given array contains complementary literals
   ofArray_eq :
     ∀ arr : Array (Literal α), (∀ i : Fin arr.size, ∀ j : Fin arr.size, i.1 ≠ j.1 → arr[i] ≠ arr[j]) →
@@ -38,7 +38,7 @@ class Clause (α : outParam (Type u)) (β : Type v) where
   isUnit : β → Option (Literal α)
   isUnit_iff : ∀ c : β, ∀ l : Literal α, isUnit c = some l ↔ toList c = [l]
   negate : β → CNF.Clause α
-  negate_iff : ∀ c : β, negate c = (toList c).map negateLiteral
+  negate_iff : ∀ c : β, negate c = (toList c).map Literal.negate
   insert : β → Literal α → Option β -- Returns none if the result is a tautology
   delete : β → Literal α → β
   delete_iff : ∀ c : β, ∀ l : Literal α, ∀ l' : Literal α,
@@ -88,8 +88,8 @@ namespace DefaultClause
 
 def toList {n : Nat} (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause
 
-theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : ¬ l ∈ toList c ∨ ¬negateLiteral l ∈ toList c := by
-  simp only [toList, negateLiteral]
+theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : ¬ l ∈ toList c ∨ ¬Literal.negate l ∈ toList c := by
+  simp only [toList, Literal.negate]
   have h := c.nodupkey l.1
   by_cases hl : l.2
   . simp only [hl, Bool.not_true]
@@ -137,9 +137,9 @@ theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
     simp only [false_iff]
     apply hne
 
-def negate {n : Nat} (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause.map negateLiteral
+def negate {n : Nat} (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause.map Literal.negate
 
-theorem negate_iff {n : Nat} (c : DefaultClause n) : negate c = (toList c).map negateLiteral := rfl
+theorem negate_iff {n : Nat} (c : DefaultClause n) : negate c = (toList c).map Literal.negate := rfl
 
 /-- Attempts to add the literal (idx, b) to clause c. Returns none if doing so would make c a tautology -/
 def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClause n) :=

@@ -30,7 +30,7 @@ instance : LawfulBEq Result where
     intro a
     cases a <;> decide
 
-open List Clause Formula Result Action Formula Literal
+open List Clause Formula Result Action Formula
 
 def incrementalLRATChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (action : Action β α) : σ × Result :=
   match action with

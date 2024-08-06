@@ -5,8 +5,6 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Formula.RupAddSound
 
-open Literal
-
 namespace LRAT
 namespace DefaultFormula
 
@@ -208,7 +206,7 @@ theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p 
             have insertRupUnits_rw : (insertRupUnits f (negate c)).1 =
               ⟨(insertRupUnits f (negate c)).1.clauses, (insertRupUnits f (negate c)).1.rupUnits,
                (insertRupUnits f (negate c)).1.ratUnits, (insertRupUnits f (negate c)).1.assignments⟩ := rfl
-            simp only [performRatCheck_fold_preserves_formula performRupCheck_res h_performRupCheck_res (negateLiteral p) ratHints,
+            simp only [performRatCheck_fold_preserves_formula performRupCheck_res h_performRupCheck_res (Literal.negate p) ratHints,
               performRupCheck_preserves_clauses, performRupCheck_preserves_rupUnits, performRupCheck_preserves_ratUnits,
               restoreAssignments_performRupCheck fc fc_assignments_size, ← insertRupUnits_rw,
               clear_insertRup f f_readyForRatAdd.2 (negate c), fc, performRupCheck_res]

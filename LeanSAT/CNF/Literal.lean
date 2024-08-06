@@ -5,6 +5,9 @@ Authors: Josh Clune
 -/
 import LeanSAT.Sat
 
+/--
+CNF literals identified by some type `α`.
+-/
 abbrev Literal (α : Type u) := α × Bool
 
 namespace Literal
@@ -21,8 +24,14 @@ instance (p : α → Bool) (l : Literal α) : Decidable (p ⊨ l) := by
   rw [HSat.eval, instHSat]
   exact Bool.decEq (p l.fst) l.snd
 
-def negateLiteral (l : Literal α) := (l.1, not l.2)
+/--
+Flip the polarity of `l`.
+-/
+def negate (l : Literal α) : Literal α := (l.1, not l.2)
 
+/--
+Output `l` as a DIMACS literal identifier.
+-/
 def dimacs [ToString α] (l : Literal α) : String :=
   if l.2 then
     s!"{l.1}"

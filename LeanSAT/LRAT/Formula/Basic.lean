@@ -6,8 +6,6 @@ Authors: Josh Clune
 import LeanSAT.LRAT.Formula.Implementation
 import LeanSAT.LRAT.CNF
 
-open Literal
-
 namespace LRAT
 namespace DefaultFormula
 

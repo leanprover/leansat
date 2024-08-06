@@ -5,8 +5,6 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Formula.RupAddResult
 
-open Literal
-
 namespace LRAT
 namespace DefaultFormula
 
@@ -146,7 +144,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
       rw [i_rw, ← h1]
       apply List.get_mem
     have ib_in_insertUnit_fold := mem_insertUnit_fold_units f.rupUnits f.assignments false (negate c) (i, b) ib_in_insertUnit_fold
-    simp only [negate, negateLiteral, List.mem_map, Prod.mk.injEq, Prod.exists, Bool.exists_bool,
+    simp only [negate, Literal.negate, List.mem_map, Prod.mk.injEq, Prod.exists, Bool.exists_bool,
       Bool.not_false, Bool.not_true, f_readyForRupAdd.1, Array.data_toArray, List.find?, List.not_mem_nil, or_false]
       at ib_in_insertUnit_fold
     rw [hboth] at h2
@@ -195,12 +193,12 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
       have i_rw : i = ⟨i.1, i.2⟩ := rfl
       rw [i_rw, ← h2]
       apply List.get_mem
-    simp only [f_readyForRupAdd.1, negate, negateLiteral] at i_true_in_insertUnit_fold i_false_in_insertUnit_fold
+    simp only [f_readyForRupAdd.1, negate, Literal.negate] at i_true_in_insertUnit_fold i_false_in_insertUnit_fold
     have i_true_in_insertUnit_fold :=
-      mem_insertUnit_fold_units #[] f.assignments false (c.clause.map negateLiteral) (i, true) i_true_in_insertUnit_fold
+      mem_insertUnit_fold_units #[] f.assignments false (c.clause.map Literal.negate) (i, true) i_true_in_insertUnit_fold
     have i_false_in_insertUnit_fold :=
-      mem_insertUnit_fold_units #[] f.assignments false (c.clause.map negateLiteral) (i, false) i_false_in_insertUnit_fold
-    simp only [negateLiteral, List.mem_map, Prod.mk.injEq, Bool.not_eq_true', Prod.exists,
+      mem_insertUnit_fold_units #[] f.assignments false (c.clause.map Literal.negate) (i, false) i_false_in_insertUnit_fold
+    simp only [Literal.negate, List.mem_map, Prod.mk.injEq, Bool.not_eq_true', Prod.exists,
       exists_eq_right_right, exists_eq_right, Array.data_toArray, List.find?, List.not_mem_nil, or_false,
       Bool.not_eq_false'] at i_true_in_insertUnit_fold i_false_in_insertUnit_fold
     have c_not_tautology := Clause.not_tautology c (i, true)
@@ -729,8 +727,8 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
     rcases unsat_c_in_fc with ⟨v, ⟨v_in_neg_c, unsat_c_eq⟩ | ⟨v_in_neg_c, unsat_c_eq⟩⟩ | unsat_c_in_f
     . simp only [negate_iff, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨_, v'_eq_v⟩ | ⟨v'_in_c, v'_eq_v⟩⟩
-      . simp only [negateLiteral, Bool.not_false, Prod.mk.injEq, and_false] at v'_eq_v
-      . simp only [negateLiteral, Bool.not_true, Prod.mk.injEq, and_true] at v'_eq_v
+      . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_false] at v'_eq_v
+      . simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_true] at v'_eq_v
         simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
           unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
@@ -745,7 +743,7 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
         cases pv
     . simp only [negate_iff, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨v'_in_c, v'_eq_v⟩ | ⟨_, v'_eq_v⟩⟩
-      . simp only [negateLiteral, Bool.not_false, Prod.mk.injEq, and_true] at v'_eq_v
+      . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_true] at v'_eq_v
         simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
           unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
@@ -757,7 +755,7 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
         simp only [(· ⊨ ·), Bool.not_eq_true] at pv
         simp only [p_unsat_c] at pv
         cases pv
-      . simp only [negateLiteral, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
+      . simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
     . simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at pf
       exact p_unsat_c $ pf unsat_c unsat_c_in_f
 

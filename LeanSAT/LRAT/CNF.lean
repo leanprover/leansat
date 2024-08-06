@@ -7,15 +7,15 @@ import LeanSAT.LRAT.Formula.Class
 
 namespace LRAT
 
-open Literal Clause Formula Misc Sat
+open Clause Formula Misc Sat
 
 namespace Literal
 
 theorem sat_iff (p : α → Bool) (a : α) (b : Bool) : p ⊨ (a, b) ↔ (p a) = b := by
   simp only [HSat.eval]
 
-theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ negateLiteral l ↔ p ⊭ l := by
-  simp only [negateLiteral, sat_iff]
+theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ Literal.negate l ↔ p ⊭ l := by
+  simp only [Literal.negate, sat_iff]
   constructor
   . intro h pl
     rw [sat_iff, h, not] at pl
@@ -26,7 +26,7 @@ theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ negate
     split <;> simp_all
 
 theorem unsat_of_limplies_complement [HSat α t] (x : t) (l : Literal α) :
-    limplies α x l → limplies α x (negateLiteral l) → unsatisfiable α x := by
+    limplies α x l → limplies α x (Literal.negate l) → unsatisfiable α x := by
   intro h1 h2 p px
   specialize h1 p px
   specialize h2 p px
@@ -69,7 +69,7 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
         exfalso
         rcases not_tautology c (v, true) with v_not_in_c | negv_not_in_c
         . exact v_not_in_c h1
-        . simp only [negateLiteral, Bool.not_true] at negv_not_in_c
+        . simp only [Literal.negate, Bool.not_true] at negv_not_in_c
           exact negv_not_in_c h2
   . intro h p pl
     apply Exists.intro l.1

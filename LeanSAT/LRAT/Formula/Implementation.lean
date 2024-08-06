@@ -9,7 +9,7 @@ import LeanSAT.CNF.Basic
 
 namespace LRAT
 
-open Assignment DefaultClause Literal Std ReduceResult Sat
+open Assignment DefaultClause Std ReduceResult Sat
 
 /-- The structure `DefaultFormula n` takes in a parameter `n` which is intended to be one greater than the total number of variables that
     can appear in the formula (hence why the parameter `n` is called `numVarsSucc` below). The structure has 4 fields:
@@ -191,14 +191,14 @@ def performRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHin
 
 /-- Returns an array of indices corresponding to clauses that contain the negation of l -/
 def getRatClauseIndices {n : Nat} (clauses : Array (Option (DefaultClause n))) (l : Literal (PosFin n)) : Array Nat :=
-  let negL := negateLiteral l
+  let negL := Literal.negate l
   let filter_fn := fun i =>
     match clauses[i]! with
     | none => false
     | some c => c.contains negL
   (Array.range clauses.size).filter filter_fn
 
-/-- Checks that for each clause c ∈ f such that (negateLiteral pivot) ∈ c, c's index is in ratHints.map (fun x => x.1). This
+/-- Checks that for each clause c ∈ f such that (Literal.negate pivot) ∈ c, c's index is in ratHints.map (fun x => x.1). This
     function assumes that ratHints are ordered by the value of their first argument, which is consistent with LRAT's specification -/
 def ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (pivot : Literal (PosFin n)) (ratHints : Array (Nat × Array Nat)) : Bool :=
   let ratClauseIndices := getRatClauseIndices f.clauses pivot
@@ -250,7 +250,7 @@ def performRatAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (pivot 
       else if derivedEmpty then (f, false) -- This should be a rupAdd rather than a ratAdd
       else -- derivedEmpty is false and encounteredError is false
         let fold_fn := fun (f, allChecksPassed) ratHint =>
-          if allChecksPassed then performRatCheck f (negateLiteral pivot) ratHint
+          if allChecksPassed then performRatCheck f (Literal.negate pivot) ratHint
           else (f, false)
         let (f, allChecksPassed) := ratHints.foldl fold_fn (f, true)
         if not allChecksPassed then (f, false)
