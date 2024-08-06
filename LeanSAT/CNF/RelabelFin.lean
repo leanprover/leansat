@@ -11,6 +11,9 @@ open Sat
 
 namespace CNF
 
+/--
+Obtain the literal with the largest identifier in `c`.
+-/
 def Clause.maxLiteral (c : Clause Nat) : Option Nat := (c.map (·.1)) |>.maximum?
 
 theorem Clause.of_maxLiteral_eq_some (c : Clause Nat) (h : c.maxLiteral = some maxLit) :
@@ -40,6 +43,9 @@ theorem Clause.of_maxLiteral_eq_none (c : Clause Nat) (h : c.maxLiteral = none) 
   simp only [maxLiteral, List.maximum?_eq_none_iff, List.map_eq_nil] at h
   simp only [h, not_mem_nil] at hlit
 
+/--
+Obtain the literal with the largest identifier in `g`.
+-/
 def maxLiteral (g : CNF Nat) : Option Nat :=
   List.filterMap Clause.maxLiteral g |>.maximum?
 
@@ -60,28 +66,18 @@ theorem of_maxLiteral_eq_some (c : CNF Nat) (h : c.maxLiteral = some maxLit) :
   have h2 := Clause.of_maxLiteral_eq_some clause hlocal lit hclause2
   omega
 
--- TODO: probably upstream?
-theorem List.all_none_of_filterMap_eq_nil (h : List.filterMap f xs = []) : ∀ x ∈ xs, f x = none := by
-  intro x hx
-  induction xs with
-  | nil => contradiction
-  | cons y ys ih =>
-    simp [List.filterMap] at h
-    split at h
-    . cases hx with
-      | head => assumption
-      | tail _ hmem => exact ih h hmem
-    . contradiction
-
 theorem of_maxLiteral_eq_none (c : CNF Nat) (h : c.maxLiteral = none) :
     ∀ lit, ¬mem lit c := by
   intro lit hlit
   simp only [maxLiteral, List.maximum?_eq_none_iff] at h
   dsimp [mem] at hlit
   rcases hlit with ⟨clause, ⟨hclause1, hclause2⟩⟩
-  have := Clause.of_maxLiteral_eq_none clause (List.all_none_of_filterMap_eq_nil h clause hclause1) lit
+  have := Clause.of_maxLiteral_eq_none clause (List.forall_none_of_filterMap_eq_nil h clause hclause1) lit
   contradiction
 
+/--
+An upper bound for the amount of distinct literals in `g`.
+-/
 def numLiterals (g : CNF Nat) :=
   match g.maxLiteral with
   | none => 0
@@ -98,6 +94,12 @@ theorem lt_numLiterals {g : CNF Nat} (h : mem a g) : a < numLiterals g := by
 theorem numLiterals_pos {g : CNF Nat} (h : mem a g) : 0 < numLiterals g :=
   Nat.lt_of_le_of_lt (Nat.zero_le _) (lt_numLiterals h)
 
+/--
+Relabel `g` to a `CNF` formula with a known upper bound for its literals.
+
+This operation might be useful when e.g. using the literals to index into an array of known size
+without conducting bounds checks.
+-/
 def relabelFin (g : CNF Nat) : CNF (Fin g.numLiterals) :=
   if h : ∃ a, mem a g then
     let n := g.numLiterals
