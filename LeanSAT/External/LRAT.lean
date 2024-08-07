@@ -8,6 +8,8 @@ import Lean.Data.Parsec
 
 namespace LRAT
 
+open Std.Sat
+
 def getPivot (clause : Array Int) : Literal Nat :=
   let pivotInt := clause[0]!
   if pivotInt > 0 then (pivotInt.natAbs, true)

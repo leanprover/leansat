@@ -8,7 +8,7 @@ import LeanSAT.LRAT.Formula.RatAddResult
 namespace LRAT
 namespace DefaultFormula
 
-open Sat DefaultClause DefaultFormula Assignment Misc ReduceResult
+open Std Sat DefaultClause DefaultFormula Assignment Misc ReduceResult
 
 theorem mem_of_necessary_assignment {n : Nat} {p : (PosFin n) → Bool} {c : DefaultClause n} {l : Literal (PosFin n)}
   (p_entails_c : p ⊨ c) (p'_not_entails_c : (fun v => if v = l.1 then l.2 else p v) ⊭ c) :

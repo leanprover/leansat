@@ -10,7 +10,7 @@ import LeanSAT.LRAT.LRATCheckerSound
 import LeanSAT.LRAT.Trim
 import LeanSAT.External.Solver
 
-open Lean Elab Meta Sat
+open Lean Elab Meta Std Sat
 
 namespace BVDecide
 
@@ -93,7 +93,7 @@ instance : ToExpr LRAT.IntAction where
 /--
 Turn a `CNF` from the reflection framework into the correct format for the LRAT framework.
 -/
-def LratFormula.ofCnf (cnf : CNF Nat) : LratFormula := ⟨cnf.convertLRAT⟩
+def LratFormula.ofCnf (cnf : CNF Nat) : LratFormula := ⟨CNF.convertLRAT cnf⟩
 
 /--
 Create a temporary file using `mktemp` and return the path to it.
@@ -197,7 +197,7 @@ def verifyCert (formula : LratFormula) (cert : LratCert) : Bool :=
   | none => false
 
 theorem verifyCert_correct
-    : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) cert = true → unsatisfiable Nat cnf := by
+    : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) cert = true → cnf.Unsat := by
   intro c b h1
   dsimp [verifyCert] at h1
   split at h1
@@ -218,7 +218,8 @@ theorem verifyCert_correct
     apply CNF.unsat_of_lift_unsat c
     intro assignment
     unfold CNF.convertLRAT at h2
-    replace h2 := (LRAT.unsat_of_cons_none_unsat _ h2) assignment
+    have h2 := (LRAT.unsat_of_cons_none_unsat _ h2) assignment
+    apply eq_false_of_ne_true
     intro h3
     apply h2
     simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
@@ -227,7 +228,7 @@ theorem verifyCert_correct
       CNF.convertLRAT', Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
       List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
     rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
-    simp only [(· ⊨ ·), CNF.eval, List.all_eq_true] at h3
+    simp only [CNF.eval, List.all_eq_true] at h3
     split at hrclause2
     . next heq =>
       rw [← heq] at hrclause2

@@ -8,7 +8,7 @@ import LeanSAT.LRAT.Clause
 
 namespace LRAT
 
-open Sat
+open Std Sat
 
 /-- Typeclass for formulas. An instance [Formula α β σ] indicates that σ is
     the type of a formula with variables of type α, clauses of type β, and clause ids of type Nat -/

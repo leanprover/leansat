@@ -9,7 +9,7 @@ import LeanSAT.LRAT.CNF
 namespace LRAT
 namespace DefaultFormula
 
-open Sat DefaultClause DefaultFormula Assignment Misc
+open Std Sat DefaultClause DefaultFormula Assignment Misc
 
 /-- This invariant states that if the `assignments` field of a default formula `f` indicates that `f`
     contains an assignment `b` at index `i`, then the unit literal `(i, b)` must be included in `f`.

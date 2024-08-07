@@ -8,7 +8,7 @@ import LeanSAT.LRAT.Formula.RupAddResult
 namespace LRAT
 namespace DefaultFormula
 
-open Sat DefaultClause DefaultFormula Assignment Misc ReduceResult
+open Std Sat DefaultClause DefaultFormula Assignment Misc ReduceResult
 
 theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assignment) (assignments_size : assignments.size = n)
     (units : Array (Literal (PosFin n))) (foundContradiction : Bool) (l : Literal (PosFin n)) :

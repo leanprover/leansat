@@ -8,7 +8,7 @@ import LeanSAT.LRAT.Formula.Basic
 namespace LRAT
 namespace DefaultFormula
 
-open Sat DefaultClause DefaultFormula Assignment Misc
+open Std Sat DefaultClause DefaultFormula Assignment Misc
 
 theorem insertUnit_preserves_size {n : Nat} (units: Array (Literal (PosFin n))) (assignments : Array Assignment)
     (b : Bool) (l : Literal (PosFin n)) : (insertUnit (units, assignments, b) l).2.1.size = assignments.size := by

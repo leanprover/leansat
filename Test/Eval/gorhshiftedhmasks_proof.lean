@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem or_and_shifts1_thm (x : _root_.BitVec 32) :
   x <<< 3 &&& 15#32 ||| x <<< 5 &&& 60#32 = x <<< 3 &&& 8#32 ||| x <<< 5 &&& 32#32 := by
   bv_decide

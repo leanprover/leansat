@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem shl_and_and_thm (x x_1 : _root_.BitVec 8) :
     x_1 <<< 4 &&& (x <<< 4 &&& 88#8) = (x &&& x_1) <<< 4 &&& 80#8 := by
   bv_decide

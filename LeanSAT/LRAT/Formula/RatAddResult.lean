@@ -8,7 +8,7 @@ import LeanSAT.LRAT.Formula.RupAddSound
 namespace LRAT
 namespace DefaultFormula
 
-open Sat DefaultClause DefaultFormula Assignment Misc
+open Std Sat DefaultClause DefaultFormula Assignment Misc
 
 theorem insertRatUnits_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n)) :
   (f.insertRatUnits units).1.assignments.size = f.assignments.size := by

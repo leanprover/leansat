@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem hxor2_test1_thm (x x_1 : _root_.BitVec 447) :
   x_1 &&& 70368744177664#447 ^^^ x &&& 70368744177663#447 =
     x_1 &&& 70368744177664#447 ||| x &&& 70368744177663#447 := by

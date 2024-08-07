@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem test_thm (x : _root_.BitVec 32) :
     (x.sshiftRight 17).sshiftRight 17 = x.sshiftRight 31 := by
   bv_decide

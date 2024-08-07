@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 
 theorem gand_test2_thm (x : _root_.BitVec 32) :
     x &&& 4294967295#32 = x := by

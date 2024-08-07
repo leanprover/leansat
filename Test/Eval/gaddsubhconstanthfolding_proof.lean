@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem add_const_const_sub_thm (x : _root_.BitVec 32) :
   2#32 + x * 4294967295#32 + 4294967288#32 = x * 4294967295#32 + 4294967290#32 := by
   bv_decide

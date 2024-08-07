@@ -3,12 +3,12 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.CNF.Basic
+import Std.Sat.CNF.Basic
 import LeanSAT.Util.PosFin
 import LeanSAT.Util.Misc
 import LeanSAT.LRAT.Assignment
 
-open Sat
+open Std Sat
 
 namespace LRAT
 
@@ -49,6 +49,12 @@ class Clause (α : outParam (Type u)) (β : Type v) where
   dimacs : β → String
 
 namespace Clause
+
+instance : HSat α (Literal α) where
+  eval := fun p l => p l.1 = l.2
+
+instance (p : α → Bool) (l : Literal α) : Decidable (p ⊨ l) :=
+  inferInstanceAs (Decidable (p l.1 = l.2))
 
 instance [Clause α β] : HSat α β :=
   { eval := fun p c => (toList c).any fun (l : Literal α) => p ⊨ l }

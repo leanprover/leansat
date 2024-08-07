@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem pr40493_neg3_thm (x : _root_.BitVec 32) :
     x * 12#32 &&& 4#32 = x <<< 2 &&& 4#32 := by
   bv_decide

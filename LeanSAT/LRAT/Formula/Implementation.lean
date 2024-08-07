@@ -5,11 +5,11 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Formula.Class
 import LeanSAT.LRAT.Assignment
-import LeanSAT.CNF.Basic
+import Std.Sat.CNF.Basic
 
 namespace LRAT
 
-open Assignment DefaultClause Std ReduceResult Sat
+open Assignment DefaultClause Std ReduceResult Std Sat
 
 /-- The structure `DefaultFormula n` takes in a parameter `n` which is intended to be one greater than the total number of variables that
     can appear in the formula (hence why the parameter `n` is called `numVarsSucc` below). The structure has 4 fields:

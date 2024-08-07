@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem gcanonicalize_shrshlhtomasking_positive_sameconst_thm (x : _root_.BitVec 32) :
     x <<< 5 >>> 5 = x &&& 134217727#32 := by
   bv_decide

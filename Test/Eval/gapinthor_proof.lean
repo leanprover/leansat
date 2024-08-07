@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem inthor_test1_thm (x : _root_.BitVec 23) :
     x ||| 8388607#23 ^^^ x = 8388607#23 := by
   bv_decide

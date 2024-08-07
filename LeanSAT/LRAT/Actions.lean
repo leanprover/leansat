@@ -8,6 +8,8 @@ import LeanSAT.LRAT.Clause
 
 namespace LRAT
 
+open Std.Sat
+
 /-- β is for the type of a clause, α is for the type of variables -/
 inductive Action (β : (Type v)) (α : (Type w))
   | addEmpty (id : Nat) (rupHints : Array Nat)

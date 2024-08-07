@@ -3,11 +3,11 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.CNF.RelabelFin
+import Std.Sat.CNF.RelabelFin
 
 import LeanSAT.LRAT.LRATChecker
 
-open Lean Elab Meta Sat
+open Lean Elab Meta Std Sat
 
 /--
 Turn a `CNF Nat`, that might contain `0` as a variable, to a `CNF PosFin`.
@@ -19,7 +19,7 @@ def CNF.lift (cnf : CNF Nat) : CNF (PosFin (cnf.numLiterals + 1)) :=
   cnf.relabel (fun lit => ⟨lit.val + 1, by omega⟩)
 
 theorem CNF.unsat_of_lift_unsat (cnf : CNF Nat)
-    : unsatisfiable (PosFin (cnf.numLiterals + 1)) cnf.lift → unsatisfiable Nat cnf := by
+    : (CNF.lift cnf).Unsat → cnf.Unsat := by
   intro h2
   have h3 :=
     CNF.unsat_relabel_iff
@@ -83,7 +83,7 @@ theorem CNF.Clause.mem_lrat_of_mem (clause : CNF.Clause (PosFin n)) (h1 : l ∈ 
             rw [Array.foldr_eq_foldr_data,Array.toArray_data]
             exact heq
 
-theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n)) (h : clause.convertLRAT' = some lratClause) :
+theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n)) (h : Clause.convertLRAT' clause = some lratClause) :
     clause.eval assign → assign ⊨ lratClause := by
   intro h2
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
@@ -111,11 +111,11 @@ def CNF.convertLRAT (cnf : CNF Nat) : LRAT.DefaultFormula (cnf.numLiterals + 1) 
   let lratCnf := CNF.convertLRAT' lifted
   LRAT.DefaultFormula.ofArray (none :: lratCnf).toArray
 
-theorem CNF.convertLRAT_readfyForRupAdd (cnf : CNF Nat) : LRAT.DefaultFormula.readyForRupAdd cnf.convertLRAT := by
+theorem CNF.convertLRAT_readfyForRupAdd (cnf : CNF Nat) : LRAT.DefaultFormula.readyForRupAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
   apply LRAT.DefaultFormula.ofArray_readyForRupAdd
 
-theorem CNF.convertLRAT_readfyForRatAdd (cnf : CNF Nat) : LRAT.DefaultFormula.readyForRatAdd cnf.convertLRAT := by
+theorem CNF.convertLRAT_readfyForRatAdd (cnf : CNF Nat) : LRAT.DefaultFormula.readyForRatAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
   apply LRAT.DefaultFormula.ofArray_readyForRatAdd
 

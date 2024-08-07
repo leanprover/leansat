@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem and_signbit_shl_thm (x : _root_.BitVec 32) :
     (x &&& 4294901760#32) <<< 8 = x <<< 8 &&& 4278190080#32 := by
   bv_decide

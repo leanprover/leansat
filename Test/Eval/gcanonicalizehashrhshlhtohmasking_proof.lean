@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 
 theorem positive_sameconst_thm (x : _root_.BitVec 8) :
     x.sshiftRight 3 <<< 3 = x &&& 248#8 := by

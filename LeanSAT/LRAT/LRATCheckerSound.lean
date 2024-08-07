@@ -6,7 +6,7 @@ Authors: Josh Clune
 import LeanSAT.LRAT.LRATChecker
 import LeanSAT.LRAT.CNF
 
-open LRAT Result Formula Clause Sat
+open LRAT Result Formula Clause Std Sat
 
 theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (rupHints: Array Nat) (rupAddSuccess : (Formula.performRupAdd f Clause.empty rupHints).snd = true) : unsatisfiable α f := by

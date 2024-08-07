@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem gapinthand_test2_thm (x : _root_.BitVec 15) :
     x &&& 32767#15 = x := by
   bv_decide

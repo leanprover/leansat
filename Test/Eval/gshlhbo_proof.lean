@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem gshlbo_lshr_add_thm (x x_1 : _root_.BitVec 8) :
   (x_1 >>> 5 + x + x.sdiv 42#8 * 214#8) <<< 5 = (x + x.sdiv 42#8 * 214#8) <<< 5 + x_1 &&& 224#8 := by
   bv_decide

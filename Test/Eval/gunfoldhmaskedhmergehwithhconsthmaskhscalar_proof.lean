@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.BVDecide
 
-open Std (BitVec)
+
 theorem gunfoldhmaskedhmergewithhconsthmaskhscalar_scalar0_thm (x x_1 : _root_.BitVec 4) :
     (x_1 ^^^ x) &&& 1#4 ^^^ x = x_1 &&& 1#4 ||| x &&& 14#4 := by
   bv_decide

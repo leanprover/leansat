@@ -5,7 +5,6 @@ Authors: Henrik Böving
 -/
 import LeanSAT.AIG
 import LeanSAT.BitBlast
-import LeanSAT.CNF
 import LeanSAT.External
 import LeanSAT.LRAT
 import LeanSAT.Sat

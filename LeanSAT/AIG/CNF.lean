@@ -5,9 +5,9 @@ Authors: Henrik Böving
 -/
 import LeanSAT.AIG.Basic
 import LeanSAT.AIG.Lemmas
-import LeanSAT.CNF
+import Std.Sat.CNF
 
-open Sat
+open Std Sat
 
 /-!
 This module contains an implementation of a verified Tseitin transformation on AIGs. The key results
@@ -55,7 +55,7 @@ theorem atomToCNF_eval :
     (atomToCNF output a).eval assign
       =
     (assign output == assign a) := by
-  simp only [atomToCNF, CNF.eval_succ, CNF.Clause.eval_succ, beq_true, beq_false,
+  simp only [atomToCNF, CNF.eval_cons, CNF.Clause.eval_cons, beq_true, beq_false,
     CNF.Clause.eval_nil, Bool.or_false, CNF.eval_nil, Bool.and_true]
   cases assign output <;> cases assign a <;> decide
 
@@ -388,7 +388,7 @@ The key invariant about the `State` itself (without cache): The CNF we produce i
 at `cnfSatAssignment`.
 -/
 def State.Inv (cnf : CNF (CNFVar aig)) : Prop :=
-  ∀ (assign1 : Nat → Bool), (cnfSatAssignment aig assign1) ⊨ cnf
+  ∀ (assign1 : Nat → Bool), cnf.Sat (cnfSatAssignment aig assign1)
 
 /--
 The `State` invariant always holds when we have an empty CNF.
@@ -404,7 +404,7 @@ theorem State.Inv_append (h1 : State.Inv cnf1) (h2 : State.Inv cnf2) :
   intro assign1
   specialize h1 assign1
   specialize h2 assign1
-  simp [(· ⊨ ·)] at h1 h2 ⊢
+  simp [CNF.sat_def] at h1 h2 ⊢
   constructor <;> assumption
 
 /--
@@ -413,7 +413,7 @@ theorem State.Inv_append (h1 : State.Inv cnf1) (h2 : State.Inv cnf2) :
 theorem State.Inv_constToCNF (heq : aig.decls[upper] = .const b) :
     State.Inv (aig := aig) (Decl.constToCNF (.inr ⟨upper, h⟩) b) := by
   intro assign1
-  simp [(· ⊨ ·), denote_idx_const heq]
+  simp [CNF.sat_def, denote_idx_const heq]
 
 /--
 `State.Inv` holds for the CNF that we produce for a `Decl.atom`
@@ -421,7 +421,7 @@ theorem State.Inv_constToCNF (heq : aig.decls[upper] = .const b) :
 theorem State.Inv_atomToCNF (heq : aig.decls[upper] = .atom a) :
     State.Inv (aig := aig) (Decl.atomToCNF (.inr ⟨upper, h⟩) (.inl a)) := by
   intro assign1
-  simp [(· ⊨ ·), denote_idx_atom heq]
+  simp [CNF.sat_def, denote_idx_atom heq]
 
 /--
 `State.Inv` holds for the CNF that we produce for a `Decl.gate`
@@ -438,7 +438,7 @@ theorem State.Inv_gateToCNF {aig : AIG Nat} {h}
         rinv)
     := by
   intro assign1
-  simp [(· ⊨ ·), denote_idx_gate heq]
+  simp [CNF.sat_def, denote_idx_gate heq]
 
 /--
 The state to accumulate CNF clauses as we run our Tseitin transformation on the AIG.
@@ -541,29 +541,37 @@ def State.addGate (state : State aig) {hlb} {hrb} (idx : Nat) (h : idx < aig.dec
 /--
 Evaluate the CNF contained within the state.
 -/
-def State.eval (state : State aig) (assign : CNFVar aig → Bool) : Bool :=
+def State.eval (assign : CNFVar aig → Bool) (state : State aig) : Bool :=
   state.cnf.eval assign
 
 /--
 The CNF within the state is sat.
 -/
-def State.sat (assign : CNFVar aig → Bool) (state : State aig) : Prop :=
-  assign ⊨ state.cnf
+def State.Sat (assign : CNFVar aig → Bool) (state : State aig) : Prop :=
+  state.cnf.Sat assign
 
-instance : HSat (CNFVar aig) (State aig) where
-  eval := State.sat
+/--
+The CNF within the state is unsat.
+-/
+def State.Unsat (state : State aig) : Prop :=
+  state.cnf.Unsat
+
+theorem State.sat_def (assign : CNFVar aig → Bool) (state : State aig) :
+    state.Sat assign ↔ state.cnf.Sat assign := by
+  rfl
+
+theorem State.unsat_def (state : State aig) :
+    state.Unsat ↔ state.cnf.Unsat := by
+  rfl
 
 @[simp]
-theorem State.eval_eq : State.eval state assign = state.cnf.eval assign := by simp [State.eval]
+theorem State.eval_eq : State.eval assign state = state.cnf.eval assign := by simp [State.eval]
 
-theorem State.liff (state : State aig) :
-    Sat.liff (CNFVar aig) state state.cnf := by
-  simp [Sat.liff, (· ⊨ ·), sat]
+@[simp]
+theorem State.sat_iff : State.Sat assign state ↔ state.cnf.Sat assign := by simp [State.sat_def]
 
-theorem State.equisat (state : State aig) :
-    Sat.equisat (CNFVar aig) state state.cnf := by
-  apply Sat.liff_unsat
-  apply State.liff
+@[simp]
+theorem State.unsat_iff : State.Unsat state ↔ state.cnf.Unsat := by simp [State.unsat_def]
 
 end toCNF
 
@@ -650,9 +658,9 @@ The CNF returned by `go` will always be SAT at `cnfSatAssignment`.
 -/
 theorem toCNF.go_sat (aig : AIG Nat) (start : Nat) (h1 : start < aig.decls.size) (assign1 : Nat → Bool)
     (state : toCNF.State aig) :
-    (cnfSatAssignment aig assign1) ⊨ (go aig start h1 state).val := by
+    (go aig start h1 state).val.Sat (cnfSatAssignment aig assign1)  := by
   have := (go aig start h1 state).val.inv assign1
-  rw [State.liff]
+  rw [State.sat_iff]
   simp [this]
 
 /--
@@ -664,7 +672,7 @@ theorem toCNF.go_as_denote (aig : AIG Nat) (start) (h1) (assign1) :
     (⟦aig, ⟨start, h1⟩, assign1⟧ = sat?) := by
   intro h
   have := go_sat aig start h1 assign1 (.empty aig)
-  simp [(· ⊨ ·), State.sat] at this
+  simp [CNF.sat_def, State.Sat] at this
   simpa [this] using h
 
 /--
@@ -673,9 +681,8 @@ Connect SAT results about the AIG to SAT results about the CNF.
 theorem toCNF.denote_as_go {assign : AIG.CNFVar aig → Bool}:
     (⟦aig, ⟨start, h1⟩, projectLeftAssign assign⟧ = false)
       →
-    (assign ⊭ ([(.inr ⟨start, h1⟩, true)] :: (go aig start h1 (.empty aig)).val.cnf)) := by
+    CNF.eval assign (([(.inr ⟨start, h1⟩, true)] :: (go aig start h1 (.empty aig)).val.cnf)) = false := by
   intro h
-  simp only [(· ⊨ ·)]
   match heval1:(go aig start h1 (State.empty aig)).val.cnf.eval assign with
   | true =>
     have heval2 := (go aig start h1 (.empty aig)).val.cache.inv.heval
@@ -688,14 +695,14 @@ theorem toCNF.denote_as_go {assign : AIG.CNFVar aig → Bool}:
 /--
 An AIG is unsat iff its CNF is unsat.
 -/
-theorem toCNF_equisat (entry : Entrypoint Nat) : unsatisfiable Nat (toCNF entry) ↔ entry.Unsat := by
+theorem toCNF_equisat (entry : Entrypoint Nat) : (toCNF entry).Unsat ↔ entry.Unsat := by
   dsimp [toCNF]
   rw [CNF.unsat_relabel_iff]
   . constructor
     . intro h assign1
       apply toCNF.go_as_denote
       specialize h (toCNF.cnfSatAssignment entry.aig assign1)
-      simpa [(· ⊨ ·)] using h
+      simpa using h
     . intro h assign
       apply toCNF.denote_as_go
       specialize h (toCNF.projectLeftAssign assign)
