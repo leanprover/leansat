@@ -37,8 +37,8 @@ def fold (aig : AIG α) (target : FoldTarget aig) : Entrypoint α :=
 where
   @[specialize]
   go (aig : AIG α) (acc : Ref aig) (idx : Nat) (len : Nat) (input : RefStream aig len)
-     (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f]
-  : Entrypoint α :=
+     (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f] :
+     Entrypoint α :=
     if hidx:idx < len then
       let res := f aig ⟨acc, input.get idx hidx⟩
       let aig := res.aig
@@ -53,8 +53,8 @@ where
   termination_by len - idx
 
 theorem fold.go_le_size {aig : AIG α} (acc : Ref aig) (idx : Nat) (s : RefStream aig len)
-    (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f]
-    : aig.decls.size ≤ (go aig acc idx len s f).1.decls.size := by
+    (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f] :
+    aig.decls.size ≤ (go aig acc idx len s f).1.decls.size := by
   unfold go
   split
   . next h =>
@@ -64,17 +64,17 @@ theorem fold.go_le_size {aig : AIG α} (acc : Ref aig) (idx : Nat) (s : RefStrea
   . simp
   termination_by len - idx
 
-theorem fold_le_size {aig : AIG α} (target : FoldTarget aig)
-    : aig.decls.size ≤ (fold aig target).1.decls.size := by
+theorem fold_le_size {aig : AIG α} (target : FoldTarget aig) :
+    aig.decls.size ≤ (fold aig target).1.decls.size := by
   unfold fold
   dsimp
   refine Nat.le_trans ?_ (by apply fold.go_le_size)
   apply LawfulOperator.le_size (f := mkConstCached)
 
 theorem fold.go_decl_eq {aig : AIG α} (acc : Ref aig) (i : Nat) (s : RefStream aig len)
-    (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f]
-    : ∀ (idx : Nat) (h1) (h2),
-        (go aig acc i len s f).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
+    (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f] :
+    ∀ (idx : Nat) (h1) (h2),
+      (go aig acc i len s f).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig acc i len s f = res
   unfold go at hgo
   split at hgo
@@ -90,11 +90,11 @@ theorem fold.go_decl_eq {aig : AIG α} (acc : Ref aig) (i : Nat) (s : RefStream 
     simp
 termination_by len - i
 
-theorem fold_decl_eq {aig : AIG α} (target : FoldTarget aig)
-    : ∀ idx (h1 : idx < aig.decls.size) (h2),
-        (fold aig target).1.decls[idx]'h2
-          =
-        aig.decls[idx]'h1 := by
+theorem fold_decl_eq {aig : AIG α} (target : FoldTarget aig) :
+    ∀ idx (h1 : idx < aig.decls.size) (h2),
+      (fold aig target).1.decls[idx]'h2
+        =
+      aig.decls[idx]'h1 := by
   intros
   unfold fold
   dsimp
@@ -110,18 +110,18 @@ instance : LawfulOperator α FoldTarget fold where
 namespace fold
 
 theorem denote_go_and {aig : AIG α} (acc : AIG.Ref aig) (curr : Nat) (hcurr : curr ≤ len)
-      (input : RefStream aig len)
-    : ⟦
-        (go aig acc curr len input mkAndCached).aig,
-        (go aig acc curr len input mkAndCached).ref,
-        assign
-      ⟧
-        =
-      (
-        ⟦aig, acc, assign⟧
-          ∧
-        (∀ (idx : Nat) (hidx1 : idx < len), curr ≤ idx → ⟦aig, input.get idx hidx1, assign⟧)
-      ):= by
+    (input : RefStream aig len) :
+    ⟦
+      (go aig acc curr len input mkAndCached).aig,
+      (go aig acc curr len input mkAndCached).ref,
+      assign
+    ⟧
+      =
+    (
+      ⟦aig, acc, assign⟧
+        ∧
+      (∀ (idx : Nat) (hidx1 : idx < len), curr ≤ idx → ⟦aig, input.get idx hidx1, assign⟧)
+    ) := by
   generalize hgo : go aig acc curr len input mkAndCached = res
   unfold go at hgo
   split at hgo
@@ -163,11 +163,10 @@ termination_by len - curr
 end fold
 
 @[simp]
-theorem denote_fold_and {aig : AIG α} (s : RefStream aig len)
-    : ⟦(fold aig (FoldTarget.mkAnd s)), assign⟧
-        ↔
-      (∀ (idx : Nat) (hidx : idx < len), ⟦aig, s.get idx hidx, assign⟧)
-     := by
+theorem denote_fold_and {aig : AIG α} (s : RefStream aig len) :
+    ⟦(fold aig (FoldTarget.mkAnd s)), assign⟧
+      ↔
+    (∀ (idx : Nat) (hidx : idx < len), ⟦aig, s.get idx hidx, assign⟧) := by
   unfold fold
   simp only [FoldTarget.mkAnd]
   rw [fold.denote_go_and]

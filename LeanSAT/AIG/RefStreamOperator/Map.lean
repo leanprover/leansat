@@ -23,9 +23,8 @@ namespace LawfulMapOperator
 
 @[simp]
 theorem denote_prefix_cast_ref {aig : AIG α} {input1 input2 : Ref aig}
-    {f : (aig : AIG α) → Ref aig → Entrypoint α}
-    [LawfulOperator α Ref f] [LawfulMapOperator α f] {h}
-      :
+    {f : (aig : AIG α) → Ref aig → Entrypoint α} [LawfulOperator α Ref f] [LawfulMapOperator α f]
+    {h} :
     ⟦f (f aig input1).aig (input2.cast h), assign⟧
       =
     ⟦f aig input2, assign⟧ := by
@@ -55,8 +54,8 @@ where
   @[specialize]
   go {len : Nat} (aig : AIG α) (idx : Nat) (hidx : idx ≤ len) (s : RefStream aig idx)
       (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
-      [LawfulOperator α Ref f] [LawfulMapOperator α f]
-      : RefStreamEntry α len :=
+      [LawfulOperator α Ref f] [LawfulMapOperator α f] :
+      RefStreamEntry α len :=
     if hidx:idx < len then
       let res := f aig (input.get idx hidx)
       let aig := res.aig
@@ -76,8 +75,8 @@ where
 
 theorem map.go_le_size {aig : AIG α} (idx : Nat) (hidx) (s : RefStream aig idx)
     (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
-    [LawfulOperator α Ref f] [LawfulMapOperator α f]
-    : aig.decls.size ≤ (go aig idx hidx s input f).aig.decls.size := by
+    [LawfulOperator α Ref f] [LawfulMapOperator α f] :
+    aig.decls.size ≤ (go aig idx hidx s input f).aig.decls.size := by
   unfold go
   split
   . next h =>
@@ -87,15 +86,15 @@ theorem map.go_le_size {aig : AIG α} (idx : Nat) (hidx) (s : RefStream aig idx)
   . simp
   termination_by len - idx
 
-theorem map_le_size {aig : AIG α} (target : MapTarget aig len)
-    : aig.decls.size ≤ (map aig target).aig.decls.size := by
+theorem map_le_size {aig : AIG α} (target : MapTarget aig len) :
+    aig.decls.size ≤ (map aig target).aig.decls.size := by
   unfold map
   apply map.go_le_size
 
 theorem map.go_decl_eq {aig : AIG α} (i) (hi)
     (s : RefStream aig i) (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
-    [LawfulOperator α Ref f] [LawfulMapOperator α f]
-    : ∀ (idx : Nat) (h1) (h2), (go aig i hi s input f).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
+    [LawfulOperator α Ref f] [LawfulMapOperator α f] :
+    ∀ (idx : Nat) (h1) (h2), (go aig i hi s input f).1.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig i hi s input f = res
   unfold go at hgo
   split at hgo
@@ -112,11 +111,11 @@ theorem map.go_decl_eq {aig : AIG α} (i) (hi)
     simp
 termination_by len - i
 
-theorem map_decl_eq {aig : AIG α} (target : MapTarget aig len)
-    : ∀ idx (h1 : idx < aig.decls.size) (h2),
-        (map aig target).1.decls[idx]'h2
-          =
-        aig.decls[idx]'h1 := by
+theorem map_decl_eq {aig : AIG α} (target : MapTarget aig len) :
+    ∀ idx (h1 : idx < aig.decls.size) (h2),
+      (map aig target).1.decls[idx]'h2
+        =
+      aig.decls[idx]'h1 := by
   intros
   unfold map
   apply map.go_decl_eq
@@ -129,12 +128,12 @@ namespace map
 
 theorem go_get_aux {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
     (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
-    [LawfulOperator α Ref f] [LawfulMapOperator α f]
+    [LawfulOperator α Ref f] [LawfulMapOperator α f] :
     -- The hfoo here is a trick to make the dependent type gods happy
-    : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig curr hcurr s input f).stream.get idx (by omega)
-          =
-        (s.get idx hidx).cast hfoo := by
+    ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
+      (go aig curr hcurr s input f).stream.get idx (by omega)
+        =
+      (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig curr hcurr s input f = res
   unfold go at hgo
@@ -158,20 +157,20 @@ theorem go_get_aux {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefSt
 termination_by len - curr
 
 theorem go_get {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
-      (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
-      [LawfulOperator α Ref f] [LawfulMapOperator α f]
-    : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig curr hcurr s input f).stream.get idx (by omega)
-          =
-        (s.get idx hidx).cast (by apply go_le_size) := by
+    (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
+    [LawfulOperator α Ref f] [LawfulMapOperator α f] :
+    ∀ (idx : Nat) (hidx : idx < curr),
+      (go aig curr hcurr s input f).stream.get idx (by omega)
+        =
+      (s.get idx hidx).cast (by apply go_le_size) := by
   intros
   apply go_get_aux
 
 theorem go_denote_mem_prefix {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len)
-      (s : RefStream aig curr) (input : RefStream aig len)
-      (f : (aig : AIG α) → Ref aig → Entrypoint α) [LawfulOperator α Ref f] [LawfulMapOperator α f]
-      (start : Nat) (hstart)
-  : ⟦
+    (s : RefStream aig curr) (input : RefStream aig len)
+    (f : (aig : AIG α) → Ref aig → Entrypoint α) [LawfulOperator α Ref f] [LawfulMapOperator α f]
+    (start : Nat) (hstart) :
+    ⟦
       (go aig curr hcurr s input f).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
       assign
@@ -186,14 +185,14 @@ theorem go_denote_mem_prefix {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len)
     apply go_le_size
 
 theorem denote_go {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
-      (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
-      [LawfulOperator α Ref f] [LawfulMapOperator α f]
-    : ∀ (idx : Nat) (hidx1 : idx < len),
-        curr ≤ idx
-          →
-        ⟦(go aig curr hcurr s input f).aig, (go aig curr hcurr s input f).stream.get idx hidx1, assign⟧
-          =
-        ⟦f aig (input.get idx hidx1), assign⟧ := by
+    (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
+    [LawfulOperator α Ref f] [LawfulMapOperator α f] :
+    ∀ (idx : Nat) (hidx1 : idx < len),
+      curr ≤ idx
+        →
+      ⟦(go aig curr hcurr s input f).aig, (go aig curr hcurr s input f).stream.get idx hidx1, assign⟧
+        =
+      ⟦f aig (input.get idx hidx1), assign⟧ := by
   intro idx hidx1 hidx2
   generalize hgo : go aig curr hcurr s input f = res
   unfold go at hgo
@@ -220,11 +219,11 @@ termination_by len - curr
 end map
 
 @[simp]
-theorem denote_map {aig : AIG α} (target : MapTarget aig len)
-    : ∀ (idx : Nat) (hidx : idx < len),
-        ⟦(map aig target).aig, (map aig target).stream.get idx hidx, assign⟧
-          =
-        ⟦target.func aig (target.stream.get idx hidx), assign⟧ := by
+theorem denote_map {aig : AIG α} (target : MapTarget aig len) :
+    ∀ (idx : Nat) (hidx : idx < len),
+      ⟦(map aig target).aig, (map aig target).stream.get idx hidx, assign⟧
+        =
+      ⟦target.func aig (target.stream.get idx hidx), assign⟧ := by
   intro idx hidx
   unfold map
   apply map.denote_go
