@@ -688,7 +688,7 @@ theorem toCNF.denote_as_go {assign : AIG.CNFVar aig → Bool}:
 /--
 An AIG is unsat iff its CNF is unsat.
 -/
-theorem toCNF_equisat (entry : Entrypoint Nat) : unsatisfiable Nat (toCNF entry) ↔ entry.unsat := by
+theorem toCNF_equisat (entry : Entrypoint Nat) : unsatisfiable Nat (toCNF entry) ↔ entry.Unsat := by
   dsimp [toCNF]
   rw [CNF.unsat_relabel_iff]
   . constructor

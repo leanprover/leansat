@@ -130,14 +130,14 @@ theorem denote_relabel (aig : AIG α) (f : α → β) (start : Nat) {hidx}
     rw [denote_relabel aig f rhs assign]
 
 theorem unsat_relabel {aig : AIG α} (f : α → β) {hidx}
-    : aig.unsatAt idx hidx → (aig.relabel f).unsatAt idx (by simp[hidx]) := by
+    : aig.UnsatAt idx hidx → (aig.relabel f).UnsatAt idx (by simp[hidx]) := by
   intro h assign
   specialize h (assign ∘ f)
   simp [h]
 
 theorem relabel_unsat_iff [Nonempty α] {aig : AIG α} {f : α → β} {hidx1} {hidx2}
     (hinj : ∀ x y, x ∈ aig → y ∈ aig → f x = f y → x = y)
-    : (aig.relabel f).unsatAt idx hidx1 ↔ aig.unsatAt idx hidx2 := by
+    : (aig.relabel f).UnsatAt idx hidx1 ↔ aig.UnsatAt idx hidx2 := by
   constructor
   . intro h assign
     let g : β → α := fun b =>
@@ -176,8 +176,8 @@ theorem relabel_size_eq {entry : Entrypoint α} {f : α → β} :
 
 theorem relabel_unsat_iff [Nonempty α] {entry : Entrypoint α} {f : α → β}
     (hinj : ∀ x y, x ∈ entry.aig → y ∈ entry.aig → f x = f y → x = y)
-    : (entry.relabel f).unsat ↔ entry.unsat := by
-  simp [relabel, unsat]
+    : (entry.relabel f).Unsat ↔ entry.Unsat := by
+  simp [relabel, Unsat]
   rw [AIG.relabel_unsat_iff]
   assumption
 

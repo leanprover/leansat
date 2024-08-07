@@ -48,20 +48,20 @@ inductive Cache.WF : Array (Decl α) → HashMap (Decl α) Nat → Prop where
   /--
   An empty `Cache` is valid for any `Array Decl` as it never has a hit.
   -/
-  | empty : Cache.WF decls {}
+  | empty : WF decls {}
   /--
   Given a `cache`, valid with respect to some `decls`, we can extend the `decls` without
   extending the cache and remain valid.
   -/
-  | push_id (h : Cache.WF decls cache) : Cache.WF (decls.push decl) cache
+  | push_id (h : WF decls cache) : WF (decls.push decl) cache
   /--
   Given a `cache`, valid with respect to some `decls`, we can extend the `decls`
   and the `cache` at the same time with the same values and remaind valid.
   -/
-  | push_cache (h : Cache.WF decls cache) : Cache.WF (decls.push decl) (cache.insert decl decls.size)
+  | push_cache (h : WF decls cache) : WF (decls.push decl) (cache.insert decl decls.size)
 
 /--
-A cache that is valid with respect to some `Array Decl`.
+A cache for reusing elements from `decls` if they are available.
 -/
 def Cache (α : Type) [DecidableEq α] [Hashable α] (decls : Array (Decl α)) :=
   { map : HashMap (Decl α) Nat // Cache.WF decls map }
@@ -85,6 +85,9 @@ def Cache.insert (decls : Array (Decl α)) (cache : Cache α decls) (decl : Decl
     : Cache α (decls.push decl) :=
   ⟨cache.val.insert decl decls.size, Cache.WF.push_cache cache.property⟩
 
+/--
+Contains the index of `decl` in `decls` along with a proof that the index is indeed correct.
+-/
 structure CacheHit (decls : Array (Decl α)) (decl : Decl α) where
   idx : Nat
   hbound : idx < decls.size
@@ -95,7 +98,8 @@ All indices, found in a `Cache` that is valid with respect to some `decls`, are 
 `decls`.
 -/
 theorem Cache.get?_bounds {decls : Array (Decl α)} {idx : Nat} (c : Cache α decls) (decl : Decl α)
-    (hfound : c.val[decl]? = some idx) : idx < decls.size := by
+    (hfound : c.val[decl]? = some idx) :
+    idx < decls.size := by
   rcases c with ⟨cache, hcache⟩
   induction hcache with
   | empty => simp at hfound
@@ -119,10 +123,11 @@ theorem Cache.get?_bounds {decls : Array (Decl α)} {idx : Nat} (c : Cache α de
       omega
 
 /--
-If `Cache.find? decl` returns `some i` then `decls[i] = decl` holds.
+If `Cache.get? decl` returns `some i` then `decls[i] = decl` holds.
 -/
 theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α decls) (decl : Decl α)
-    (hfound : c.val[decl]? = some idx) : decls[idx]'(Cache.get?_bounds c decl hfound) = decl := by
+    (hfound : c.val[decl]? = some idx) :
+    decls[idx]'(Cache.get?_bounds c decl hfound) = decl := by
   rcases c with ⟨cache, hcache⟩
   induction hcache generalizing decl with
   | empty => simp at hfound
@@ -218,13 +223,16 @@ An `AIG` with an empty AIG and cache.
 -/
 def empty : AIG α := { decls := #[], cache := Cache.empty #[], inv := IsDag.empty }
 
-def mem (a : α) (aig : AIG α) : Prop := (.atom a) ∈ aig.decls
+/--
+The atom `a` occurs in `aig`.
+-/
+def Mem (a : α) (aig : AIG α) : Prop := (.atom a) ∈ aig.decls
 
 instance : Membership α (AIG α) where
-  mem := mem
+  mem := Mem
 
 /--
-A reference to a node within an AIG.
+A reference to a node within an AIG. This is the `AIG` analog of `Bool`.
 -/
 structure Ref (aig : AIG α) where
   gate : Nat
@@ -232,7 +240,8 @@ structure Ref (aig : AIG α) where
 
 @[inline]
 def Ref.cast {aig1 aig2 : AIG α} (ref : Ref aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size) : Ref aig2 :=
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    Ref aig2 :=
   { ref with hgate := by have := ref.hgate; omega }
 
 structure BinaryInput (aig : AIG α) where
@@ -241,7 +250,8 @@ structure BinaryInput (aig : AIG α) where
 
 @[inline]
 def BinaryInput.cast {aig1 aig2 : AIG α} (input : BinaryInput aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size) : BinaryInput aig2 :=
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    BinaryInput aig2 :=
   { input with lhs := input.lhs.cast h, rhs := input.rhs.cast h }
 
 structure TernaryInput (aig : AIG α) where
@@ -251,12 +261,13 @@ structure TernaryInput (aig : AIG α) where
 
 @[inline]
 def TernaryInput.cast {aig1 aig2 : AIG α} (input : TernaryInput aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size) : TernaryInput aig2 :=
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    TernaryInput aig2 :=
   { input with discr := input.discr.cast h, lhs := input.lhs.cast h, rhs := input.rhs.cast h }
 
 /--
 An entrypoint into an `AIG`. This can be used to evaluate a circuit, starting at a certain node,
-with `AIG.denote` or to construct bigger circuits
+with `AIG.denote` or to construct bigger circuits on top of this specific node.
 -/
 structure Entrypoint (α : Type) [DecidableEq α] [Hashable α] where
   /--
@@ -269,9 +280,7 @@ structure Entrypoint (α : Type) [DecidableEq α] [Hashable α] where
   ref : Ref aig
 
 /--
-Transform an entrypoint into a graphviz compatible format.
-StateM collects the array indices for all occuring nodes and computes the edges on the way.
-Afterwards generate the node declarations once.
+Transform an `Entrypoint` into a graphviz string. Useful for debugging purposes.
 -/
 def toGraphviz {α : Type} [DecidableEq α] [ToString α] [Hashable α] (entry : Entrypoint α)
     : String :=
@@ -304,11 +313,17 @@ where
     | Decl.atom i => s!"{idx} [label=\"{i}\", shape=doublecircle];"
     | Decl.gate _ _ _ _ => s!"{idx} [label=\"{idx} ∧\",shape=trapezium];"
 
+/--
+A stream of references into `aig`. This is the `AIG` analog of `BitVec`.
+-/
 structure RefStream (aig : AIG α) (length : Nat) where
   refs : Array Nat
   hlen : refs.size = length
   hrefs : ∀ (h : i < length), refs[i] < aig.decls.size
 
+/--
+A sequence of references bundled with their AIG. In some sense a generalization of `Entrypoint`.
+-/
 structure RefStreamEntry (α : Type) [DecidableEq α] [Hashable α] [DecidableEq α] (length : Nat) where
   aig : AIG α
   stream : RefStream aig length
@@ -329,11 +344,12 @@ structure ExtendTarget (aig : AIG α) (newWidth : Nat) where
 /--
 Evaluate an `AIG.Entrypoint` using some assignment for atoms.
 -/
-def denote (entry : Entrypoint α) (assign : α → Bool) : Bool :=
+def denote (assign : α → Bool) (entry : Entrypoint α)  : Bool :=
   go entry.ref.gate entry.aig.decls assign entry.ref.hgate entry.aig.inv
 where
   go (x : Nat) (decls : Array (Decl α)) (assign : α → Bool) (h1 : x < decls.size)
-      (h2 : IsDag α decls) : Bool :=
+      (h2 : IsDag α decls) :
+      Bool :=
     match h3 : decls[x] with
     | .const b => b
     | .atom v => assign v
@@ -347,8 +363,8 @@ scoped syntax "⟦" term ", " term "⟧" : term
 scoped syntax "⟦" term ", " term ", " term "⟧" : term
 
 macro_rules
-| `(⟦$entry, $assign⟧) => `(denote $entry $assign)
-| `(⟦$aig, $ref, $assign⟧) => `(denote (Entrypoint.mk $aig $ref) $assign)
+| `(⟦$entry, $assign⟧) => `(denote $assign $entry )
+| `(⟦$aig, $ref, $assign⟧) => `(denote $assign (Entrypoint.mk $aig $ref))
 
 @[app_unexpander AIG.denote]
 def unexpandDenote : Lean.PrettyPrinter.Unexpander
@@ -357,11 +373,11 @@ def unexpandDenote : Lean.PrettyPrinter.Unexpander
   | `($(_) $entry $assign) => `(⟦$entry, $assign⟧)
   | _ => throw ()
 
-def unsatAt (aig : AIG α) (start : Nat) (h : start < aig.decls.size) : Prop :=
+def UnsatAt (aig : AIG α) (start : Nat) (h : start < aig.decls.size) : Prop :=
   ∀ assign, ⟦aig, ⟨start, h⟩, assign⟧ = false
 
-def Entrypoint.unsat (entry : Entrypoint α) : Prop :=
-  entry.aig.unsatAt entry.ref.gate entry.ref.hgate
+def Entrypoint.Unsat (entry : Entrypoint α) : Prop :=
+  entry.aig.UnsatAt entry.ref.gate entry.ref.hgate
 
 /--
 An input to an AIG gate.
@@ -378,8 +394,8 @@ structure Fanin (aig : AIG α) where
 
 @[inline]
 def Fanin.cast {aig1 aig2 : AIG α} (fanin : Fanin aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : Fanin aig2 :=
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    Fanin aig2 :=
   { fanin with ref := fanin.ref.cast h }
 
 /--
@@ -391,8 +407,8 @@ structure GateInput (aig : AIG α) where
 
 @[inline]
 def GateInput.cast {aig1 aig2 : AIG α} (input : GateInput aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : GateInput aig2 :=
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    GateInput aig2 :=
   { input with lhs := input.lhs.cast h, rhs := input.rhs.cast h }
 
 /--
@@ -434,7 +450,7 @@ def mkAtom (aig : AIG α) (n : α) : Entrypoint α :=
   ⟨{ decls, inv, cache }, ⟨g, by simp [g, decls]⟩⟩
 
 /--
-Build an constant node in `aig`. Note that his version is only meant for proving,
+Build a constant node in `aig`. Note that his version is only meant for proving,
 for production purposes use `AIG.mkConstCached` and equality theorems to this one.
 -/
 def mkConst (aig : AIG α) (val : Bool) : Entrypoint α :=

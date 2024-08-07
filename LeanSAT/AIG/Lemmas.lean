@@ -258,7 +258,7 @@ theorem denote_idx_trichotomy {aig : AIG α} {hstart : start < aig.decls.size}
   . exact hgate
 
 theorem mem_def {aig : AIG α} {a : α} : (a ∈ aig) = ((.atom a) ∈ aig.decls) := by
-  simp [Membership.mem, mem]
+  simp [Membership.mem, Mem]
 
 theorem denote_congr (assign1 assign2 : α → Bool) (aig : AIG α) (idx : Nat)
     (hidx : idx < aig.decls.size) (h : ∀ a, a ∈ aig → assign1 a = assign2 a)

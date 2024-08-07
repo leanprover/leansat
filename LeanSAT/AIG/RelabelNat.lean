@@ -335,7 +335,7 @@ theorem relabelNat_size_eq_size {aig : AIG α} : aig.relabelNat.decls.size = aig
 `relabelNat` preserves unsatisfiablility.
 -/
 theorem relabelNat_unsat_iff [Nonempty α] {aig : AIG α} {hidx1} {hidx2}
-    : (aig.relabelNat).unsatAt idx hidx1 ↔ aig.unsatAt idx hidx2 := by
+    : (aig.relabelNat).UnsatAt idx hidx1 ↔ aig.UnsatAt idx hidx2 := by
   dsimp [relabelNat, relabelNat']
   rw [relabel_unsat_iff]
   intro x y hx hy heq
@@ -381,8 +381,8 @@ def relabelNat (entry : Entrypoint α) : Entrypoint Nat :=
 `relabelNat` preserves unsatisfiablility.
 -/
 theorem relabelNat_unsat_iff {entry : Entrypoint α} [Nonempty α]
-    : (entry.relabelNat).unsat ↔ entry.unsat:= by
-  simp [relabelNat, unsat]
+    : (entry.relabelNat).Unsat ↔ entry.Unsat:= by
+  simp [relabelNat, Unsat]
   rw [AIG.relabelNat_unsat_iff]
 
 end Entrypoint
