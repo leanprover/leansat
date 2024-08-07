@@ -32,7 +32,7 @@ structure IsPrefix (decls1 decls2 : Array (Decl α)) : Prop where
 If `decls1` is a prefix of `decls2` and we start evaluating `decls2` at an
 index in bounds of `decls1` we can evluate at `decls1`.
 -/
-theorem denote.go_eq_of_aig_eq (decls1 decls2 : Array (Decl α)) (start : Nat) {hdag1} {hdag2}
+theorem denote.go_eq_of_IsPrefix (decls1 decls2 : Array (Decl α)) (start : Nat) {hdag1} {hdag2}
     {hbounds1} {hbounds2} (hprefix : IsPrefix decls1 decls2) :
     denote.go start decls2 assign hbounds2 hdag2
       =
@@ -48,7 +48,7 @@ theorem denote.go_eq_of_aig_eq (decls1 decls2 : Array (Decl α)) (start : Nat) {
     split <;> simp_all
   . next lhs rhs linv rinv heq =>
     rw [hidx1] at heq
-    have foo := hdag1 start lhs rhs linv rinv hbounds1 heq
+    have := hdag1 start lhs rhs linv rinv hbounds1 heq
     have hidx2 := hprefix.idx_eq lhs (by omega)
     have hidx3 := hprefix.idx_eq rhs (by omega)
     split
@@ -56,21 +56,21 @@ theorem denote.go_eq_of_aig_eq (decls1 decls2 : Array (Decl α)) (start : Nat) {
     . simp_all
     . simp_all
       congr 2
-      . apply denote.go_eq_of_aig_eq
+      . apply denote.go_eq_of_IsPrefix
         assumption
-      . apply denote.go_eq_of_aig_eq
+      . apply denote.go_eq_of_IsPrefix
         assumption
-termination_by sizeOf start
+termination_by start
 
-@[inherit_doc denote.go_eq_of_aig_eq ]
-theorem denote.eq_of_aig_eq (entry : Entrypoint α) (newAIG : AIG α)
+@[inherit_doc denote.go_eq_of_IsPrefix ]
+theorem denote.eq_of_IsPrefix (entry : Entrypoint α) (newAIG : AIG α)
       (hprefix : IsPrefix entry.aig.decls newAIG.decls) :
     ⟦newAIG, ⟨entry.ref.gate, (by have := entry.ref.hgate; have := hprefix.size_le; omega)⟩, assign⟧
       =
     ⟦entry, assign⟧
     := by
   unfold denote
-  apply denote.go_eq_of_aig_eq
+  apply denote.go_eq_of_IsPrefix
   assumption
 
 abbrev ExtendingEntrypoint (aig : AIG α) : Type :=
@@ -79,6 +79,13 @@ abbrev ExtendingEntrypoint (aig : AIG α) : Type :=
 abbrev ExtendingRefStreamEntry (aig : AIG α) (len : Nat) : Type :=
   { ref : RefStreamEntry α len // aig.decls.size ≤ ref.aig.decls.size }
 
+/--
+A function `f` that takes some `aig : AIG α` and an argument of type `β aig` is called a lawful
+AIG operator if it only extends the `AIG` but never modifies already existing nodes.
+
+This guarantees that applying such a function will not change the semantics of any existing parts
+of the circuit, allowing us to perform local reasoning on the AIG.
+-/
 class LawfulOperator (α : Type) [Hashable α] [DecidableEq α]
     (β : AIG α → Type) (f : (aig : AIG α) → β aig → Entrypoint α)  where
   le_size : ∀ (aig : AIG α) (input : β aig), aig.decls.size ≤ (f aig input).aig.decls.size
@@ -104,14 +111,14 @@ theorem lt_size (entry : Entrypoint α) (input : β entry.aig) :
     apply le_size
   omega
 
-theorem lt_size_of_lt_aig_size (aig : AIG α) (input : β aig) (h : x < aig.decls.size)
-    : x < (f aig input).aig.decls.size := by
+theorem lt_size_of_lt_aig_size (aig : AIG α) (input : β aig) (h : x < aig.decls.size) :
+    x < (f aig input).aig.decls.size := by
   apply Nat.lt_of_lt_of_le
   . exact h
   . exact le_size aig input
 
-theorem le_size_of_le_aig_size (aig : AIG α) (input : β aig) (h : x ≤ aig.decls.size)
-    : x ≤ (f aig input).aig.decls.size := by
+theorem le_size_of_le_aig_size (aig : AIG α) (input : β aig) (h : x ≤ aig.decls.size) :
+    x ≤ (f aig input).aig.decls.size := by
   apply Nat.le_trans
   . exact h
   . exact le_size aig input
@@ -121,7 +128,7 @@ theorem denote_input_entry (entry : Entrypoint α) {input} {h} :
     ⟦(f entry.aig input).aig, ⟨entry.ref.gate, h⟩, assign⟧
       =
     ⟦entry, assign⟧ :=  by
-  apply denote.eq_of_aig_eq
+  apply denote.eq_of_IsPrefix
   apply IsPrefix_aig
 
 @[simp]

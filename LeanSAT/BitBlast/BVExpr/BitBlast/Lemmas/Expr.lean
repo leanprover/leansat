@@ -38,7 +38,7 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (expr : BVExpr w) (assign : Assig
     ⟧
       =
     ⟦aig, ⟨start, hstart⟩, assign.toAIGAssignment⟧ := by
-  apply denote.eq_of_aig_eq (entry := ⟨aig, start,hstart⟩)
+  apply denote.eq_of_IsPrefix (entry := ⟨aig, start,hstart⟩)
   apply IsPrefix.of
   . intros
     apply go_decl_eq

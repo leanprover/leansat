@@ -129,7 +129,7 @@ theorem ofBoolExprCached.go_denote_entry (entry : Entrypoint β) {h}:
     ⟦(go expr entry.aig atomHandler).val.aig, ⟨entry.ref.gate, h⟩, assign ⟧
       =
     ⟦entry, assign⟧ := by
-  apply denote.eq_of_aig_eq
+  apply denote.eq_of_IsPrefix
   apply ofBoolExprCached.go_IsPrefix_aig
 
 variable {α : Type} [Hashable α] [DecidableEq α]

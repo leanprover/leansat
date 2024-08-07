@@ -56,7 +56,7 @@ theorem denote_input_entry (entry : Entrypoint α) {input : β entry.aig len} {h
     ⟦(f entry.aig input).aig, ⟨entry.ref.gate, h⟩, assign ⟧
       =
     ⟦entry, assign⟧ :=  by
-  apply denote.eq_of_aig_eq
+  apply denote.eq_of_IsPrefix
   apply IsPrefix_aig
 
 @[simp]

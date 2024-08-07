@@ -59,7 +59,7 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx)
     ⟧
       =
     ⟦aig, ⟨start, hstart⟩, assign⟧ := by
-  apply denote.eq_of_aig_eq (entry := ⟨aig, start,hstart⟩)
+  apply denote.eq_of_IsPrefix (entry := ⟨aig, start,hstart⟩)
   apply IsPrefix.of
   . intros
     apply go_decl_eq

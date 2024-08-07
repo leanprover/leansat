@@ -17,39 +17,38 @@ variable {α : Type} [Hashable α] [DecidableEq α]
 
 @[simp]
 theorem Ref_cast {aig1 aig2 : AIG α} (ref : Ref aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : (ref.cast h).gate = ref.gate := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    (ref.cast h).gate = ref.gate := rfl
 
--- XXX: This lemma is both helpful and unhelpful in certain situations :/
 @[simp]
 theorem Ref_cast' {aig1 aig2 : AIG α} (ref : Ref aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : (ref.cast h) = ⟨ref.gate, by have := ref.hgate; omega⟩ := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    (ref.cast h) = ⟨ref.gate, by have := ref.hgate; omega⟩ := rfl
 
 @[simp]
 theorem Fanin_cast_ref {aig1 aig2 : AIG α} (fanin : Fanin aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : (fanin.cast h).ref = fanin.ref.cast h := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    (fanin.cast h).ref = fanin.ref.cast h := rfl
 
 @[simp]
 theorem Fanin_cast_inv {aig1 aig2 : AIG α} (fanin : Fanin aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : (fanin.cast h).inv = fanin.inv := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    (fanin.cast h).inv = fanin.inv := rfl
 
 @[simp]
 theorem GateInput_cast_lhs {aig1 aig2 : AIG α} (input : GateInput aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : (input.cast h).lhs = input.lhs.cast h := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    (input.cast h).lhs = input.lhs.cast h := rfl
 
 @[simp]
 theorem GateInput_cast_rhs {aig1 aig2 : AIG α} (input : GateInput aig1)
-    (h : aig1.decls.size ≤ aig2.decls.size)
-    : (input.cast h).rhs = input.rhs.cast h := rfl
+    (h : aig1.decls.size ≤ aig2.decls.size) :
+    (input.cast h).rhs = input.rhs.cast h := rfl
 
 @[simp]
 theorem BinaryInput.cast_each {aig1 aig2 : AIG α} (lhs rhs : Ref aig1)
-    (h1 h2 : aig1.decls.size ≤ aig2.decls.size)
-    : BinaryInput.mk (lhs.cast h1) (rhs.cast h2) = (BinaryInput.mk lhs rhs).cast h2 := by
+    (h1 h2 : aig1.decls.size ≤ aig2.decls.size) :
+    BinaryInput.mk (lhs.cast h1) (rhs.cast h2) = (BinaryInput.mk lhs rhs).cast h2 := by
   simp [BinaryInput.cast]
 
 @[simp]
@@ -65,8 +64,8 @@ theorem denote_projected_entry' {entry : Entrypoint α} :
 /--
 `AIG.mkGate` never shrinks the underlying AIG.
 -/
-theorem mkGate_le_size (aig : AIG α) (input : GateInput aig)
-    : aig.decls.size ≤ (aig.mkGate input).aig.decls.size := by
+theorem mkGate_le_size (aig : AIG α) (input : GateInput aig) :
+    aig.decls.size ≤ (aig.mkGate input).aig.decls.size := by
   simp_arith [mkGate]
 
 /--
@@ -112,20 +111,20 @@ theorem denote_mkGate {aig : AIG α} {input : GateInput aig} :
     congr 2
     . unfold denote
       simp only [heq1]
-      apply denote.go_eq_of_aig_eq
+      apply denote.go_eq_of_IsPrefix
       apply LawfulOperator.IsPrefix_aig
     . simp [heq3]
     . unfold denote
       simp only [heq2]
-      apply denote.go_eq_of_aig_eq
+      apply denote.go_eq_of_IsPrefix
       apply LawfulOperator.IsPrefix_aig
     . simp [heq4]
 
 /--
 `AIG.mkAtom` never shrinks the underlying AIG.
 -/
-theorem mkAtom_le_size (aig : AIG α) (var : α)
-    : aig.decls.size ≤ (aig.mkAtom var).aig.decls.size := by
+theorem mkAtom_le_size (aig : AIG α) (var : α) :
+    aig.decls.size ≤ (aig.mkAtom var).aig.decls.size := by
   simp_arith [mkAtom]
 
 /--
@@ -163,8 +162,8 @@ theorem denote_mkAtom {aig : AIG α} :
 /--
 `AIG.mkConst` never shrinks the underlying AIG.
 -/
-theorem mkConst_le_size (aig : AIG α) (val : Bool)
-    : aig.decls.size ≤ (aig.mkConst val).aig.decls.size := by
+theorem mkConst_le_size (aig : AIG α) (val : Bool) :
+    aig.decls.size ≤ (aig.mkConst val).aig.decls.size := by
   simp_arith [mkConst]
 
 /--
@@ -250,19 +249,24 @@ theorem idx_trichotomy (aig : AIG α) (hstart : start < aig.decls.size) {prop : 
 theorem denote_idx_trichotomy {aig : AIG α} {hstart : start < aig.decls.size}
     (hconst : ∀ b, aig.decls[start]'hstart = .const b → ⟦aig, ⟨start, hstart⟩, assign⟧ = res)
     (hatom : ∀ a, aig.decls[start]'hstart = .atom a → ⟦aig, ⟨start, hstart⟩, assign⟧ = res)
-    (hgate : ∀ lhs rhs linv rinv, aig.decls[start]'hstart = .gate lhs rhs linv rinv → ⟦aig, ⟨start, hstart⟩, assign⟧ = res)
-    : ⟦aig, ⟨start, hstart⟩, assign⟧ = res := by
+    (hgate :
+      ∀ lhs rhs linv rinv,
+        aig.decls[start]'hstart = .gate lhs rhs linv rinv
+          →
+        ⟦aig, ⟨start, hstart⟩, assign⟧ = res
+    ) :
+    ⟦aig, ⟨start, hstart⟩, assign⟧ = res := by
   apply idx_trichotomy aig hstart
   . exact hconst
   . exact hatom
   . exact hgate
 
-theorem mem_def {aig : AIG α} {a : α} : (a ∈ aig) = ((.atom a) ∈ aig.decls) := by
+theorem mem_def {aig : AIG α} {a : α} : (a ∈ aig) ↔ ((.atom a) ∈ aig.decls) := by
   simp [Membership.mem, Mem]
 
 theorem denote_congr (assign1 assign2 : α → Bool) (aig : AIG α) (idx : Nat)
-    (hidx : idx < aig.decls.size) (h : ∀ a, a ∈ aig → assign1 a = assign2 a)
-    : ⟦aig, ⟨idx, hidx⟩, assign1⟧ = ⟦aig, ⟨idx, hidx⟩, assign2⟧ := by
+    (hidx : idx < aig.decls.size) (h : ∀ a, a ∈ aig → assign1 a = assign2 a) :
+    ⟦aig, ⟨idx, hidx⟩, assign1⟧ = ⟦aig, ⟨idx, hidx⟩, assign2⟧ := by
   apply denote_idx_trichotomy
   . intro b heq
     simp [denote_idx_const heq]
@@ -271,7 +275,6 @@ theorem denote_congr (assign1 assign2 : α → Bool) (aig : AIG α) (idx : Nat)
     apply h
     rw [mem_def]
     rw [← heq]
-    -- TODO: this should be in the array API
     rw [Array.mem_def]
     apply Array.getElem_mem_data
   . intro lhs rhs linv rinv heq
