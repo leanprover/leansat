@@ -19,13 +19,13 @@ theorem blastNot_eq_eval_getLsb (aig : AIG α) (target : RefStream aig w)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (blastNot aig target).aig,
-          (blastNot aig target).stream.getRef idx hidx,
+          (blastNot aig target).stream.get idx hidx,
           assign
         ⟧
           =
         !⟦
           aig,
-          target.getRef idx hidx,
+          target.get idx hidx,
           assign
          ⟧
         := by

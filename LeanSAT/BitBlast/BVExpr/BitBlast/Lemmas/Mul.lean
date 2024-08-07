@@ -13,16 +13,16 @@ namespace blastMul
 
 theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr + 1 ≤ w)
     (acc : AIG.RefStream aig w) (lhs rhs : AIG.RefStream aig w) (lexpr rexpr : BitVec w) (assign : Assignment)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.getRef idx hidx, assign.toAIGAssignment⟧ = lexpr.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.getRef idx hidx, assign.toAIGAssignment⟧ = rexpr.getLsb idx)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.get idx hidx, assign.toAIGAssignment⟧ = lexpr.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.get idx hidx, assign.toAIGAssignment⟧ = rexpr.getLsb idx)
     (hacc : ∀ (idx : Nat) (hidx : idx < w),
-                ⟦aig, acc.getRef idx hidx, assign.toAIGAssignment⟧
+                ⟦aig, acc.get idx hidx, assign.toAIGAssignment⟧
                   =
                 (BitVec.mulRec lexpr rexpr curr).getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (go aig (curr + 1) hcurr acc lhs rhs).aig,
-          (go aig (curr + 1) hcurr acc lhs rhs).stream.getRef idx hidx,
+          (go aig (curr + 1) hcurr acc lhs rhs).stream.get idx hidx,
           assign.toAIGAssignment
         ⟧
           =
@@ -35,20 +35,20 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
     rw [← hgo]
     rw [go_eq_eval_getLsb]
     . intro idx hidx
-      simp only [RefStream.getRef_cast, Ref_cast']
+      simp only [RefStream.get_cast, Ref_cast']
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := RefStream.ite)]
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastAdd)]
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hleft]
     . intro idx hidx
-      simp only [RefStream.getRef_cast, Ref_cast']
+      simp only [RefStream.get_cast, Ref_cast']
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := RefStream.ite)]
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastAdd)]
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hright]
     . intro idx hidx
       rw [BitVec.mulRec_succ_eq]
-      simp only [RefStream.denote_ite, RefStream.getRef_cast, Ref_cast', BitVec.ofNat_eq_ofNat]
+      simp only [RefStream.denote_ite, RefStream.get_cast, Ref_cast', BitVec.ofNat_eq_ofNat]
       split
       . next hdiscr =>
         have : rexpr.getLsb (curr + 1) = true := by
@@ -59,7 +59,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
         simp only [this, ↓reduceIte]
         rw [blastAdd_eq_eval_getLsb]
         . intros
-          simp only [RefStream.getRef_cast, Ref_cast']
+          simp only [RefStream.get_cast, Ref_cast']
           rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
           rw [hacc]
         . intros
@@ -99,10 +99,10 @@ end blastMul
 
 theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign : Assignment)
       (input : BinaryRefStream aig w)
-      (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.getRef idx hidx, assign.toAIGAssignment⟧ = lhs.getLsb idx)
-      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.getRef idx hidx, assign.toAIGAssignment⟧ = rhs.getLsb idx)
+      (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign.toAIGAssignment⟧ = lhs.getLsb idx)
+      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign.toAIGAssignment⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(blastMul aig input).aig, (blastMul aig input).stream.getRef idx hidx, assign.toAIGAssignment⟧
+        ⟦(blastMul aig input).aig, (blastMul aig input).stream.get idx hidx, assign.toAIGAssignment⟧
           =
         (lhs * rhs).getLsb idx := by
   intro idx hidx
@@ -130,8 +130,8 @@ theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign :
       . simp [Ref.hgate]
     . intro idx hidx
       rw [BitVec.mulRec_zero_eq]
-      simp only [Nat.succ_eq_add_one, RefStream.denote_ite, BinaryRefStream.rhs_getRef_cast,
-        Ref_cast', BinaryRefStream.lhs_getRef_cast, blastConst_eq_eval_getLsb,
+      simp only [Nat.succ_eq_add_one, RefStream.denote_ite, BinaryRefStream.rhs_get_cast,
+        Ref_cast', BinaryRefStream.lhs_get_cast, blastConst_eq_eval_getLsb,
         BitVec.ofNat_eq_ofNat, eval_const, BitVec.getLsb_zero, Bool.if_false_right,
         Bool.decide_eq_true]
       split

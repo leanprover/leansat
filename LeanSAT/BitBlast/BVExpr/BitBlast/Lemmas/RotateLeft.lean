@@ -15,39 +15,39 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastRotateLeft
 
-theorem go_getRef_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go input distance curr hcurr s).getRef idx (by omega)
+        (go input distance curr hcurr s).get idx (by omega)
           =
-        s.getRef idx hidx := by
+        s.get idx hidx := by
   intro idx hidx
   unfold go
   split
   . dsimp
     split
-    . rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_lt]
-    . rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_lt]
+    . rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_lt]
+    . rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_lt]
   . dsimp
-    simp only [RefStream.getRef, Ref.mk.injEq]
+    simp only [RefStream.get, Ref.mk.injEq]
     have : curr = w := by omega
     subst this
     simp
 termination_by w - curr
 
-theorem go_getRef (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
-        (go input distance curr hcurr s).getRef idx hidx1
+        (go input distance curr hcurr s).get idx hidx1
           =
         if hidx3:idx < distance % w then
-          input.getRef (w - (distance % w) + idx) (by omega)
+          input.get (w - (distance % w) + idx) (by omega)
         else
-          input.getRef (idx - (distance % w)) (by omega)
+          input.get (idx - (distance % w)) (by omega)
         := by
   intro idx hidx1 hidx2
   unfold go
@@ -57,22 +57,22 @@ theorem go_getRef (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     | inl heq =>
       split
       . split
-        . rw [go_getRef_aux]
-          rw [AIG.RefStream.getRef_push_ref_eq']
+        . rw [go_get_aux]
+          rw [AIG.RefStream.get_push_ref_eq']
           . simp [heq]
           . omega
         . omega
       . split
         . omega
-        . rw [go_getRef_aux]
-          rw [AIG.RefStream.getRef_push_ref_eq']
+        . rw [go_get_aux]
+          rw [AIG.RefStream.get_push_ref_eq']
           . simp [heq]
           . omega
     | inr heq =>
       split
-      . rw [go_getRef]
+      . rw [go_get]
         omega
-      . rw [go_getRef]
+      . rw [go_get]
         omega
   . omega
 termination_by w - curr
@@ -85,19 +85,19 @@ theorem blastRotateLeft_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig 
   : ∀ (idx : Nat) (hidx : idx < w),
       ⟦
         (blastRotateLeft aig target).aig,
-        (blastRotateLeft aig target).stream.getRef idx hidx,
+        (blastRotateLeft aig target).stream.get idx hidx,
         assign
       ⟧
         =
       if hidx2:idx < target.distance % w then
-        ⟦aig, target.stream.getRef (w - (target.distance % w) + idx) (by omega), assign⟧
+        ⟦aig, target.stream.get (w - (target.distance % w) + idx) (by omega), assign⟧
       else
-        ⟦aig, target.stream.getRef (idx - (target.distance % w)) (by omega), assign⟧
+        ⟦aig, target.stream.get (idx - (target.distance % w)) (by omega), assign⟧
       := by
   intros
   unfold blastRotateLeft
   dsimp
-  rw [blastRotateLeft.go_getRef]
+  rw [blastRotateLeft.go_get]
   . split
     . rfl
     . rfl

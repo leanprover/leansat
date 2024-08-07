@@ -115,13 +115,13 @@ theorem go_denote_mem_prefix (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (c
   . intros
     apply go_le_size
 
-theorem go_getRef_aux (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
+theorem go_get_aux (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
     (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
     -- The hfoo here is a trick to make the dependent type gods happy
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig curr hcurr cin s lhs rhs).stream.getRef idx (by omega)
+        (go aig curr hcurr cin s lhs rhs).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast hfoo := by
+        (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig curr hcurr cin s lhs rhs = res
   unfold go at hgo
@@ -129,28 +129,28 @@ theorem go_getRef_aux (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Re
   split at hgo
   . rw [← hgo]
     intro hfoo
-    rw [go_getRef_aux]
-    rw [AIG.RefStream.getRef_push_ref_lt]
+    rw [go_get_aux]
+    rw [AIG.RefStream.get_push_ref_lt]
     . simp only [Ref.cast, Ref.mk.injEq]
-      rw [AIG.RefStream.getRef_cast]
+      rw [AIG.RefStream.get_cast]
       . simp
       . assumption
     . apply go_le_size
   . rw [← hgo]
-    simp only [Nat.le_refl, RefStream.getRef, Ref_cast', Ref.mk.injEq, true_implies]
+    simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = w := by omega
     subst this
     simp
 termination_by w - curr
 
-theorem go_getRef (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
+theorem go_get (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
     (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig curr hcurr cin s lhs rhs).stream.getRef idx (by omega)
+        (go aig curr hcurr cin s lhs rhs).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast (by apply go_le_size) := by
+        (s.get idx hidx).cast (by apply go_le_size) := by
   intros
-  apply go_getRef_aux
+  apply go_get_aux
 
 theorem _root_.Bool.atLeastTwo_eq_halfAdder (lhsBit rhsBit carry : Bool)
   : Bool.atLeastTwo lhsBit rhsBit carry
@@ -161,8 +161,8 @@ theorem _root_.Bool.atLeastTwo_eq_halfAdder (lhsBit rhsBit carry : Bool)
 theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
     (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w) (assign : α → Bool)
     (lhsExpr rhsExpr : BitVec w)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.getRef idx hidx, assign⟧ = lhsExpr.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.getRef idx hidx, assign⟧ = rhsExpr.getLsb idx)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.get idx hidx, assign⟧ = lhsExpr.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.get idx hidx, assign⟧ = rhsExpr.getLsb idx)
     (hcin :
       ⟦aig, cin, assign⟧
         =
@@ -173,12 +173,12 @@ theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin 
         →
       ⟦
         (go aig curr hcurr cin s lhs rhs).aig,
-        (go aig curr hcurr cin s lhs rhs).stream.getRef idx hidx1,
+        (go aig curr hcurr cin s lhs rhs).stream.get idx hidx1,
         assign
       ⟧
         =
-      ⟦aig, lhs.getRef idx hidx1, assign⟧.xor
-        (⟦aig, rhs.getRef idx hidx1, assign⟧.xor
+      ⟦aig, lhs.get idx hidx1, assign⟧.xor
+        (⟦aig, rhs.get idx hidx1, assign⟧.xor
           (BitVec.carry idx lhsExpr rhsExpr false)) := by
   intro idx hidx1 hidx2
   generalize hgo : go aig curr hcurr cin s lhs rhs = res
@@ -189,8 +189,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin 
     cases Nat.eq_or_lt_of_le hidx2 with
     | inl heq =>
       rw [← hgo]
-      rw [go_getRef (hidx := by omega)]
-      rw [AIG.RefStream.getRef_push_ref_eq' (hidx := by rw [heq])]
+      rw [go_get (hidx := by omega)]
+      rw [AIG.RefStream.get_push_ref_eq' (hidx := by rw [heq])]
       simp only [← heq]
       rw [go_denote_mem_prefix]
       . unfold mkFullAdder
@@ -232,10 +232,10 @@ end blastAdd
 
 theorem blastAdd_eq_eval_getLsb (aig : AIG α) (lhs rhs : BitVec w) (assign : α → Bool)
       (input : BinaryRefStream aig w)
-      (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.getRef idx hidx, assign⟧ = lhs.getLsb idx)
-      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+      (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
+      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(blastAdd aig input).aig, (blastAdd aig input).stream.getRef idx hidx, assign⟧
+        ⟦(blastAdd aig input).aig, (blastAdd aig input).stream.get idx hidx, assign⟧
           =
         (lhs + rhs).getLsb idx := by
   intro idx hidx
@@ -245,17 +245,17 @@ theorem blastAdd_eq_eval_getLsb (aig : AIG α) (lhs rhs : BitVec w) (assign : α
     unfold blastAdd
     dsimp
     rw [blastAdd.go_eq_eval_getLsb _ 0 (by omega) _ _ _ _ assign lhs rhs _ _]
-    . simp only [BinaryRefStream.lhs_getRef_cast, Ref_cast', BinaryRefStream.rhs_getRef_cast]
+    . simp only [BinaryRefStream.lhs_get_cast, Ref_cast', BinaryRefStream.rhs_get_cast]
       rw [LawfulOperator.denote_mem_prefix (f := mkConstCached)]
       rw [LawfulOperator.denote_mem_prefix (f := mkConstCached)]
     . simp
     . omega
     . intros
-      simp only [BinaryRefStream.lhs_getRef_cast, Ref_cast']
+      simp only [BinaryRefStream.lhs_get_cast, Ref_cast']
       rw [LawfulOperator.denote_mem_prefix (f := mkConstCached)]
       rw [hleft]
     . intros
-      simp only [BinaryRefStream.rhs_getRef_cast, Ref_cast']
+      simp only [BinaryRefStream.rhs_get_cast, Ref_cast']
       rw [LawfulOperator.denote_mem_prefix (f := mkConstCached)]
       rw [hright]
   . assumption

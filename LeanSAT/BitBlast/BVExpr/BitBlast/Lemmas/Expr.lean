@@ -47,7 +47,7 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (expr : BVExpr w) (assign : Assig
 
 theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(go aig expr).val.aig, (go aig expr).val.stream.getRef idx hidx, assign.toAIGAssignment⟧
+        ⟦(go aig expr).val.aig, (go aig expr).val.stream.get idx hidx, assign.toAIGAssignment⟧
           =
         (expr.eval assign).getLsb idx := by
   intro idx hidx
@@ -63,7 +63,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     apply BitVec.lt_of_getLsb
   | append lhs rhs lih rih =>
     rename_i lw rw
-    simp only [go, blastAppend_eq_eval_getLsb, RefStream.getRef_cast, Ref_cast', eval_append,
+    simp only [go, blastAppend_eq_eval_getLsb, RefStream.get_cast, Ref_cast', eval_append,
       BitVec.getLsb_append]
     split
     . next hsplit =>
@@ -143,21 +143,21 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     | and =>
       simp only [go, RefStream.denote_zip, denote_mkAndCached, rih, eval_bin, BVBinOp.eval_and,
         BitVec.getLsb_and]
-      simp only [go_val_eq_bitblast, RefStream.getRef_cast]
+      simp only [go_val_eq_bitblast, RefStream.get_cast]
       rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
     | or =>
       simp only [go, RefStream.denote_zip, denote_mkOrCached, rih, eval_bin, BVBinOp.eval_or,
         BitVec.getLsb_or]
-      simp only [go_val_eq_bitblast, RefStream.getRef_cast]
+      simp only [go_val_eq_bitblast, RefStream.get_cast]
       rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
     | xor =>
       simp only [go, RefStream.denote_zip, denote_mkXorCached, rih, eval_bin, BVBinOp.eval_xor,
         BitVec.getLsb_xor]
-      simp only [go_val_eq_bitblast, RefStream.getRef_cast]
+      simp only [go_val_eq_bitblast, RefStream.get_cast]
       rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
@@ -207,7 +207,7 @@ end bitblast
 @[simp]
 theorem bitblast_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(bitblast aig expr).aig, (bitblast aig expr).stream.getRef idx hidx, assign.toAIGAssignment⟧
+        ⟦(bitblast aig expr).aig, (bitblast aig expr).stream.get idx hidx, assign.toAIGAssignment⟧
           =
         (expr.eval assign).getLsb idx
     := by

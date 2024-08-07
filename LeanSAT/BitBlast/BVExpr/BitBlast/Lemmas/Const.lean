@@ -15,13 +15,13 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastConst
 
-theorem go_getRef_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ w)
+theorem go_get_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ w)
     (s : AIG.RefStream aig curr)
     -- The hfoo here is a trick to make the dependent type gods happy
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig curr s c hcurr).stream.getRef idx (by omega)
+        (go aig curr s c hcurr).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast hfoo := by
+        (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig curr s c hcurr = res
   unfold go at hgo
@@ -29,29 +29,29 @@ theorem go_getRef_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr �
   . dsimp at hgo
     rw [← hgo]
     intro hfoo
-    rw [go_getRef_aux]
-    rw [AIG.RefStream.getRef_push_ref_lt]
+    rw [go_get_aux]
+    rw [AIG.RefStream.get_push_ref_lt]
     . simp only [Ref.cast, Ref.mk.injEq]
-      rw [AIG.RefStream.getRef_cast]
+      rw [AIG.RefStream.get_cast]
       . simp
       . assumption
     . apply go_le_size
   . dsimp at hgo
     rw [← hgo]
-    simp only [Nat.le_refl, RefStream.getRef, Ref_cast', Ref.mk.injEq, true_implies]
+    simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = w := by omega
     subst this
     simp
 termination_by w - curr
 
-theorem go_getRef (aig : AIG α) (c : BitVec w)
+theorem go_get (aig : AIG α) (c : BitVec w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig curr s c hcurr).stream.getRef idx (by omega)
+        (go aig curr s c hcurr).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast (by apply go_le_size) := by
+        (s.get idx hidx).cast (by apply go_le_size) := by
   intros
-  apply go_getRef_aux
+  apply go_get_aux
 
 theorem go_denote_mem_prefix (aig : AIG α) (idx : Nat) (hidx)
     (s : AIG.RefStream aig idx) (c : BitVec w) (start : Nat) (hstart)
@@ -76,7 +76,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
           →
         ⟦
           (go aig curr s c hcurr).aig,
-          (go aig curr s c hcurr).stream.getRef idx hidx1,
+          (go aig curr s c hcurr).stream.get idx hidx1,
           assign
         ⟧
           =
@@ -89,8 +89,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
     cases Nat.eq_or_lt_of_le hidx2 with
     | inl heq =>
       rw [← hgo]
-      rw [go_getRef]
-      rw [AIG.RefStream.getRef_push_ref_eq']
+      rw [go_get]
+      rw [AIG.RefStream.get_push_ref_eq']
       . rw [← heq]
         rw [go_denote_mem_prefix]
         . simp
@@ -108,7 +108,7 @@ end blastConst
 @[simp]
 theorem blastConst_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(blastConst aig c).aig, (blastConst aig c).stream.getRef idx hidx, assign⟧
+        ⟦(blastConst aig c).aig, (blastConst aig c).stream.get idx hidx, assign⟧
           =
         c.getLsb idx := by
   intros

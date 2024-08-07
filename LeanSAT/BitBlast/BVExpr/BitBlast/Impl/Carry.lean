@@ -23,8 +23,8 @@ where
       (lhs rhs : AIG.RefStream aig w)
       : AIG.Entrypoint α :=
     if hidx:curr < w then
-      let lin := lhs.getRef curr hidx
-      let rin := rhs.getRef curr hidx
+      let lin := lhs.get curr hidx
+      let rin := rhs.get curr hidx
       let res := mkFullAdderCarry aig ⟨lin, rin, cin⟩
       have := by
         apply AIG.LawfulOperator.le_size (f := mkFullAdderCarry)

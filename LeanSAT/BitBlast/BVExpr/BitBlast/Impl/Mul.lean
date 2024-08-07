@@ -23,7 +23,7 @@ def blastMul (aig : AIG BVBit) (input : AIG.BinaryRefStream aig w) : AIG.RefStre
       apply AIG.LawfulStreamOperator.le_size (f := blastConst)
     let input := input.cast this
     let ⟨lhs, rhs⟩ := input
-    let res := AIG.RefStream.ite aig ⟨rhs.getRef 0 (by assumption), lhs, zero⟩
+    let res := AIG.RefStream.ite aig ⟨rhs.get 0 (by assumption), lhs, zero⟩
     let aig := res.aig
     let acc := res.stream
     have := by
@@ -54,7 +54,7 @@ where
       let lhs := lhs.cast this
       let rhs := rhs.cast this
       let acc := acc.cast this
-      let res := AIG.RefStream.ite aig ⟨rhs.getRef curr h, added, acc⟩
+      let res := AIG.RefStream.ite aig ⟨rhs.get curr h, added, acc⟩
       let aig := res.aig
       let acc := res.stream
       have := by apply AIG.LawfulStreamOperator.le_size (f := AIG.RefStream.ite)

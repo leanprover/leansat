@@ -19,21 +19,21 @@ theorem blastAppend_eq_eval_getLsb (aig : AIG α) (target : AppendTarget aig new
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastAppend aig target).aig,
-        (blastAppend aig target).stream.getRef idx hidx,
+        (blastAppend aig target).stream.get idx hidx,
         assign
       ⟧
         =
       if hr:idx < target.rw then
-         ⟦aig, target.rhs.getRef idx hr, assign⟧
+         ⟦aig, target.rhs.get idx hr, assign⟧
       else
          have := target.h
-         ⟦aig, target.lhs.getRef (idx - target.rw) (by omega), assign⟧
+         ⟦aig, target.lhs.get (idx - target.rw) (by omega), assign⟧
     := by
   intros
   unfold blastAppend
   rcases target with ⟨lw, rw, lhs, rhs, ht⟩
   dsimp
-  rw [AIG.RefStream.getRef_append]
+  rw [AIG.RefStream.get_append]
   split <;> rfl
 
 

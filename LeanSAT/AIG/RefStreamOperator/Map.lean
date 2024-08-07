@@ -58,7 +58,7 @@ where
       [LawfulOperator α Ref f] [LawfulMapOperator α f]
       : RefStreamEntry α len :=
     if hidx:idx < len then
-      let res := f aig (input.getRef idx hidx)
+      let res := f aig (input.get idx hidx)
       let aig := res.aig
       let newRef := res.ref
       have := by
@@ -67,7 +67,7 @@ where
         omega
       let input := input.cast this
       let s := s.cast this
-      let s := s.pushRef newRef
+      let s := s.push newRef
       go aig (idx + 1) (by omega) s input f
     else
       have : idx = len := by omega
@@ -127,14 +127,14 @@ instance : LawfulStreamOperator α MapTarget map where
 
 namespace map
 
-theorem go_getRef_aux {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
+theorem go_get_aux {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
     (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
     [LawfulOperator α Ref f] [LawfulMapOperator α f]
     -- The hfoo here is a trick to make the dependent type gods happy
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig curr hcurr s input f).stream.getRef idx (by omega)
+        (go aig curr hcurr s input f).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast hfoo := by
+        (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig curr hcurr s input f = res
   unfold go at hgo
@@ -142,30 +142,30 @@ theorem go_getRef_aux {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : Re
   . dsimp at hgo
     rw [← hgo]
     intro hfoo
-    rw [go_getRef_aux]
-    rw [AIG.RefStream.getRef_push_ref_lt]
+    rw [go_get_aux]
+    rw [AIG.RefStream.get_push_ref_lt]
     . simp only [Ref.cast, Ref.mk.injEq]
-      rw [AIG.RefStream.getRef_cast]
+      rw [AIG.RefStream.get_cast]
       . simp
       . assumption
     . apply go_le_size
   . dsimp at hgo
     rw [← hgo]
-    simp only [Nat.le_refl, getRef, Ref_cast', Ref.mk.injEq, true_implies]
+    simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = len := by omega
     subst this
     rfl
 termination_by len - curr
 
-theorem go_getRef {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
+theorem go_get {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStream aig curr)
       (input : RefStream aig len) (f : (aig : AIG α) → Ref aig → Entrypoint α)
       [LawfulOperator α Ref f] [LawfulMapOperator α f]
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig curr hcurr s input f).stream.getRef idx (by omega)
+        (go aig curr hcurr s input f).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast (by apply go_le_size) := by
+        (s.get idx hidx).cast (by apply go_le_size) := by
   intros
-  apply go_getRef_aux
+  apply go_get_aux
 
 theorem go_denote_mem_prefix {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len)
       (s : RefStream aig curr) (input : RefStream aig len)
@@ -191,9 +191,9 @@ theorem denote_go {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStr
     : ∀ (idx : Nat) (hidx1 : idx < len),
         curr ≤ idx
           →
-        ⟦(go aig curr hcurr s input f).aig, (go aig curr hcurr s input f).stream.getRef idx hidx1, assign⟧
+        ⟦(go aig curr hcurr s input f).aig, (go aig curr hcurr s input f).stream.get idx hidx1, assign⟧
           =
-        ⟦f aig (input.getRef idx hidx1), assign⟧ := by
+        ⟦f aig (input.get idx hidx1), assign⟧ := by
   intro idx hidx1 hidx2
   generalize hgo : go aig curr hcurr s input f = res
   unfold go at hgo
@@ -202,8 +202,8 @@ theorem denote_go {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStr
     cases Nat.eq_or_lt_of_le hidx2 with
     | inl heq =>
       rw [← hgo]
-      rw [go_getRef]
-      rw [AIG.RefStream.getRef_push_ref_eq']
+      rw [go_get]
+      rw [AIG.RefStream.get_push_ref_eq']
       . simp only [← heq]
         rw [go_denote_mem_prefix]
         . simp
@@ -212,7 +212,7 @@ theorem denote_go {aig : AIG α} (curr : Nat) (hcurr : curr ≤ len) (s : RefStr
     | inr hlt =>
       rw [← hgo]
       rw [denote_go]
-      . simp [getRef_cast, -Ref_cast']
+      . simp [get_cast, -Ref_cast']
       . omega
   . omega
 termination_by len - curr
@@ -222,9 +222,9 @@ end map
 @[simp]
 theorem denote_map {aig : AIG α} (target : MapTarget aig len)
     : ∀ (idx : Nat) (hidx : idx < len),
-        ⟦(map aig target).aig, (map aig target).stream.getRef idx hidx, assign⟧
+        ⟦(map aig target).aig, (map aig target).stream.get idx hidx, assign⟧
           =
-        ⟦target.func aig (target.stream.getRef idx hidx), assign⟧ := by
+        ⟦target.func aig (target.stream.get idx hidx), assign⟧ := by
   intro idx hidx
   unfold map
   apply map.denote_go

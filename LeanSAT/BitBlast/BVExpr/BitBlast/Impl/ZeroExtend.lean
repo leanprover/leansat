@@ -21,7 +21,7 @@ where
       (s : AIG.RefStream aig curr) : AIG.RefStreamEntry α newWidth :=
     if hcurr1:curr < newWidth then
       if hcurr2:curr < w then
-        let s := s.pushRef (input.getRef curr hcurr2)
+        let s := s.push (input.get curr hcurr2)
         go aig w input newWidth (curr + 1) (by omega) s
       else
         let res := aig.mkConstCached false
@@ -32,7 +32,7 @@ where
           apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
         let input := input.cast hcast
         let s := s.cast hcast
-        let s := s.pushRef zeroRef
+        let s := s.push zeroRef
         go aig w input newWidth (curr + 1) (by omega) s
     else
       have hcurr : curr = newWidth := by omega

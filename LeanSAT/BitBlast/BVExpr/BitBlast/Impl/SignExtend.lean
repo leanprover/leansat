@@ -25,10 +25,10 @@ where
       (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) : AIG.RefStream aig newWidth :=
     if hcurr1:curr < newWidth then
       if hcurr2:curr < w then
-        let s := s.pushRef (input.getRef curr hcurr2)
+        let s := s.push (input.get curr hcurr2)
         go w hw input newWidth (curr + 1) (by omega) s
       else
-        let s := s.pushRef (input.getRef (w - 1) (by omega))
+        let s := s.push (input.get (w - 1) (by omega))
         go w hw input newWidth (curr + 1) (by omega) s
     else
       have hcurr : curr = newWidth := by omega

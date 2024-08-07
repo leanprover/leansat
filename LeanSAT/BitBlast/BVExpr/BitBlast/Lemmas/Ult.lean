@@ -16,8 +16,8 @@ variable [Hashable α] [DecidableEq α]
 
 theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : BinaryRefStream aig w)
     (assign : α → Bool)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.getRef idx hidx, assign⟧ = lhs.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
   : ⟦
       (mkUlt aig input).aig,
       (mkUlt aig input).ref,
@@ -40,7 +40,7 @@ theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : Bi
   . dsimp
     intro idx hidx
     rw [AIG.LawfulOperator.denote_mem_prefix (f := AIG.mkConstCached)]
-    . simp only [RefStream.getRef_cast, Ref_cast', BitVec.getLsb_not, hidx, decide_True,
+    . simp only [RefStream.get_cast, Ref_cast', BitVec.getLsb_not, hidx, decide_True,
         Bool.true_and]
       rw [BVExpr.bitblast.blastNot_eq_eval_getLsb]
       congr 1

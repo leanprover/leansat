@@ -17,7 +17,7 @@ structure GetLsbTarget (aig : AIG α) where
 
 def blastGetLsb (aig : AIG α) (target : GetLsbTarget aig) : AIG.Entrypoint α :=
   if h:target.idx < target.w then
-    ⟨aig, target.stream.getRef target.idx h⟩
+    ⟨aig, target.stream.get target.idx h⟩
   else
     AIG.mkConstCached aig false
 

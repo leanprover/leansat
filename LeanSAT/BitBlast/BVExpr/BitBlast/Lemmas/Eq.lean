@@ -14,8 +14,8 @@ variable [Hashable α] [DecidableEq α]
 
 theorem mkEq_denote_eq_eval_beq (aig : AIG α) (pair : AIG.BinaryRefStream aig w) (assign : α → Bool)
     (lhs rhs : BitVec w)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, pair.lhs.getRef idx hidx, assign⟧ = lhs.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, pair.rhs.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, pair.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, pair.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
     :  ⟦mkEq aig pair, assign⟧
          =
        (lhs == rhs) := by

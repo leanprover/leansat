@@ -37,43 +37,43 @@ private theorem aux4 {a b c : Nat} (hidx : a < b * c) (h : c ≤ n) : a < b * n 
   | inl h => apply aux3 <;> assumption
   | inr h => simp_all
 
-theorem go_getRef_aux (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
+theorem go_get_aux (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
     (input : AIG.RefStream aig w) (s : AIG.RefStream aig (w * curr))
     : ∀ (idx : Nat) (hidx : idx < w * curr),
-        (go n curr hcurr input s).getRef idx (aux4 hidx hcurr)
+        (go n curr hcurr input s).get idx (aux4 hidx hcurr)
           =
-        s.getRef idx hidx := by
+        s.get idx hidx := by
   intro idx hidx
   unfold go
   split
   . dsimp
-    rw [go_getRef_aux]
-    rw [AIG.RefStream.getRef_append]
+    rw [go_get_aux]
+    rw [AIG.RefStream.get_append]
     simp only [hidx, ↓reduceDIte]
     omega
   . dsimp
-    simp only [RefStream.getRef, Ref.mk.injEq]
+    simp only [RefStream.get, Ref.mk.injEq]
     have : curr = n := by omega
     subst this
     simp
 termination_by n - curr
 
-theorem go_getRef (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
+theorem go_get (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
     (input : AIG.RefStream aig w) (s : AIG.RefStream aig (w * curr))
   : ∀ (idx : Nat) (hidx1 : idx < w * n),
       w * curr ≤ idx
         →
-      (go n curr hcurr input s).getRef idx hidx1
+      (go n curr hcurr input s).get idx hidx1
         =
-      input.getRef (idx % w) (aux2 hidx1) := by
+      input.get (idx % w) (aux2 hidx1) := by
   intro idx hidx1 hidx2
   unfold go
   dsimp
   split
   . cases Nat.lt_or_ge idx (w * (curr + 1)) with
     | inl h =>
-      rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_append]
+      rw [go_get_aux]
+      rw [AIG.RefStream.get_append]
       . have : ¬ (idx < w * curr) := by omega
         simp only [this, ↓reduceDIte]
         congr 1
@@ -83,7 +83,7 @@ theorem go_getRef (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
         . assumption
       . simpa using h
     | inr h =>
-      rw [go_getRef]
+      rw [go_get]
       assumption
   . have : curr = n := by omega
     rw [this] at hidx2
@@ -98,13 +98,13 @@ theorem blastReplicate_eq_eval_getLsb (aig : AIG α) (target : ReplicateTarget a
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastReplicate aig target).aig,
-        (blastReplicate aig target).stream.getRef idx hidx,
+        (blastReplicate aig target).stream.get idx hidx,
         assign
       ⟧
         =
       ⟦
         aig,
-        target.inner.getRef (idx % target.w) (blastReplicate.aux2 (target.h ▸ hidx)),
+        target.inner.get (idx % target.w) (blastReplicate.aux2 (target.h ▸ hidx)),
         assign
       ⟧ := by
   intro idx hidx
@@ -112,5 +112,5 @@ theorem blastReplicate_eq_eval_getLsb (aig : AIG α) (target : ReplicateTarget a
   unfold blastReplicate
   dsimp
   subst h
-  rw [blastReplicate.go_getRef]
+  rw [blastReplicate.go_get]
   omega

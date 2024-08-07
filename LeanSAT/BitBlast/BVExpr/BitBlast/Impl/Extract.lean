@@ -31,15 +31,15 @@ def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth)
   else
     have : 1 = newWidth  := by omega
     let base := AIG.RefStream.empty
-    let base := base.pushRef (input.getRefD lo falseRef)
+    let base := base.push (input.getD lo falseRef)
     ⟨aig, this ▸ base⟩
 where
   go {aig : AIG α} {w : Nat} (input : AIG.RefStream aig w) (lo : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
       (falseRef : AIG.Ref aig) (s : AIG.RefStream aig curr)
     : AIG.RefStream aig newWidth :=
   if h : curr < newWidth then
-    let nextRef := input.getRefD (lo + curr) falseRef
-    let s := s.pushRef nextRef
+    let nextRef := input.getD (lo + curr) falseRef
+    let s := s.push nextRef
     go input lo (curr + 1) (by omega) falseRef s
   else
     have : curr = newWidth := by omega

@@ -23,7 +23,7 @@ where
     : AIG.RefStreamEntry α w :=
   if hidx:curr < w then
     if hdist:(distance + curr) < w then
-      let s := s.pushRef (input.getRef (distance + curr) (by omega))
+      let s := s.push (input.get (distance + curr) (by omega))
       go aig input distance (curr + 1) (by omega) s
     else
       let res := aig.mkConstCached false
@@ -33,7 +33,7 @@ where
         apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
       let s := s.cast hfinal
       let input := input.cast hfinal
-      let s := s.pushRef zeroRef
+      let s := s.push zeroRef
       go aig input distance (curr + 1) (by omega) s
   else
     have hcurr : curr = w := by omega
@@ -95,10 +95,10 @@ where
       : AIG.RefStream aig w :=
   if hidx:curr < w then
     if hdist:(distance + curr) < w then
-      let s := s.pushRef (input.getRef (distance + curr) (by omega))
+      let s := s.push (input.get (distance + curr) (by omega))
       go input distance (curr + 1) (by omega) s
     else
-      let s := s.pushRef (input.getRef (w - 1) (by omega))
+      let s := s.push (input.get (w - 1) (by omega))
       go input distance (curr + 1) (by omega) s
   else
     have hcurr : curr = w := by omega
@@ -134,7 +134,7 @@ def twoPowShift (aig : AIG α) (target : TwoPowShiftTarget aig w) : AIG.RefStrea
       apply AIG.LawfulStreamOperator.le_size (f := blastShiftRightConst)
     let rhs := rhs.cast this
     let lhs := lhs.cast this
-    AIG.RefStream.ite aig ⟨rhs.getRef pow h, shifted, lhs⟩
+    AIG.RefStream.ite aig ⟨rhs.get pow h, shifted, lhs⟩
   else
     ⟨aig, lhs⟩
 

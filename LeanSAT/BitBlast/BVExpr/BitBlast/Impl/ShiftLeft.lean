@@ -30,10 +30,10 @@ where
         apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
       let s := s.cast hfinal
       let input := input.cast hfinal
-      let s := s.pushRef zeroRef
+      let s := s.push zeroRef
       go aig input distance (curr + 1) (by omega) s
     else
-      let s := s.pushRef (input.getRef (curr - distance) (by omega))
+      let s := s.push (input.get (curr - distance) (by omega))
       go aig input distance (curr + 1) (by omega) s
   else
     have hcurr : curr = w := by omega
@@ -105,7 +105,7 @@ def twoPowShift (aig : AIG α) (target : TwoPowShiftTarget aig w) : AIG.RefStrea
       apply AIG.LawfulStreamOperator.le_size (f := blastShiftLeftConst)
     let rhs := rhs.cast this
     let lhs := lhs.cast this
-    AIG.RefStream.ite aig ⟨rhs.getRef pow h, shifted, lhs⟩
+    AIG.RefStream.ite aig ⟨rhs.get pow h, shifted, lhs⟩
   else
     ⟨aig, lhs⟩
 

@@ -40,7 +40,7 @@ where
      (f : (aig : AIG α) → BinaryInput aig → Entrypoint α) [LawfulOperator α BinaryInput f]
   : Entrypoint α :=
     if hidx:idx < len then
-      let res := f aig ⟨acc, input.getRef idx hidx⟩
+      let res := f aig ⟨acc, input.get idx hidx⟩
       let aig := res.aig
       let newAcc := res.ref
       let input := input.cast <| by
@@ -120,7 +120,7 @@ theorem denote_go_and {aig : AIG α} (acc : AIG.Ref aig) (curr : Nat) (hcurr : c
       (
         ⟦aig, acc, assign⟧
           ∧
-        (∀ (idx : Nat) (hidx1 : idx < len), curr ≤ idx → ⟦aig, input.getRef idx hidx1, assign⟧)
+        (∀ (idx : Nat) (hidx1 : idx < len), curr ≤ idx → ⟦aig, input.get idx hidx1, assign⟧)
       ):= by
   generalize hgo : go aig acc curr len input mkAndCached = res
   unfold go at hgo
@@ -128,7 +128,7 @@ theorem denote_go_and {aig : AIG α} (acc : AIG.Ref aig) (curr : Nat) (hcurr : c
   . dsimp at hgo
     rw [← hgo]
     rw [denote_go_and]
-    . simp only [denote_projected_entry, denote_mkAndCached, Bool.and_eq_true, getRef_cast,
+    . simp only [denote_projected_entry, denote_mkAndCached, Bool.and_eq_true, get_cast,
         eq_iff_iff]
       constructor
       . intro h
@@ -166,13 +166,13 @@ end fold
 theorem denote_fold_and {aig : AIG α} (s : RefStream aig len)
     : ⟦(fold aig (FoldTarget.mkAnd s)), assign⟧
         ↔
-      (∀ (idx : Nat) (hidx : idx < len), ⟦aig, s.getRef idx hidx, assign⟧)
+      (∀ (idx : Nat) (hidx : idx < len), ⟦aig, s.get idx hidx, assign⟧)
      := by
   unfold fold
   simp only [FoldTarget.mkAnd]
   rw [fold.denote_go_and]
   . simp only [denote_projected_entry, mkConstCached_eval_eq_mkConst_eval, denote_mkConst,
-    Nat.zero_le, getRef_cast, Ref_cast', true_implies, true_and]
+    Nat.zero_le, get_cast, Ref_cast', true_implies, true_and]
     constructor
     . intro h idx hidx
       specialize h idx hidx

@@ -22,12 +22,12 @@ where
     : AIG.RefStream aig w :=
   if hcurr1:curr < w then
     if hcurr2:curr < distance % w then
-      let ref := input.getRef (w - (distance % w) + curr) (by omega)
-      let s := s.pushRef ref
+      let ref := input.get (w - (distance % w) + curr) (by omega)
+      let s := s.push ref
       go input distance (curr + 1) (by omega) s
     else
-      let ref := input.getRef (curr - (distance % w)) (by omega)
-      let s := s.pushRef ref
+      let ref := input.get (curr - (distance % w)) (by omega)
+      let s := s.push ref
       go input distance (curr + 1) (by omega) s
   else
     have hcurr : curr = w := by omega

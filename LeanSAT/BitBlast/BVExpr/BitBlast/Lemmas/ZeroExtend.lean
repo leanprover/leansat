@@ -15,12 +15,12 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastZeroExtend
 
-theorem go_getRef_aux (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig w input newWidth curr hcurr s).stream.getRef idx (by omega)
+        (go aig w input newWidth curr hcurr s).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast hfoo := by
+        (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig w input newWidth curr hcurr s = res
   unfold go at hgo
@@ -29,33 +29,33 @@ theorem go_getRef_aux (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (ne
     split at hgo
     . rw [← hgo]
       intros
-      rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_lt]
+      rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_lt]
     . rw [← hgo]
       intros
-      rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_lt]
+      rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_lt]
       . simp only [Ref.cast, Ref.mk.injEq]
-        rw [AIG.RefStream.getRef_cast]
+        rw [AIG.RefStream.get_cast]
         . simp
         . assumption
       . apply go_le_size
   . dsimp at hgo
     rw [← hgo]
-    simp only [Nat.le_refl, RefStream.getRef, Ref_cast', Ref.mk.injEq, true_implies]
+    simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = newWidth := by omega
     subst this
     simp
 termination_by newWidth - curr
 
-theorem go_getRef (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
+theorem go_get (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig w input newWidth curr hcurr s).stream.getRef idx (by omega)
+        (go aig w input newWidth curr hcurr s).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast (by apply go_le_size) := by
+        (s.get idx hidx).cast (by apply go_le_size) := by
   intros
-  apply go_getRef_aux
+  apply go_get_aux
 
 theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) (start : Nat) (hstart)
@@ -80,12 +80,12 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w)
           →
         ⟦
           (go aig w input newWidth curr hcurr s).aig,
-          (go aig w input newWidth curr hcurr s).stream.getRef idx hidx1,
+          (go aig w input newWidth curr hcurr s).stream.get idx hidx1,
           assign
         ⟧
           =
         if hidx:idx < w then
-           ⟦aig, input.getRef idx hidx, assign⟧
+           ⟦aig, input.get idx hidx, assign⟧
         else
            false
     := by
@@ -101,8 +101,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w)
         rw [heq] at hsplit
         simp only [hsplit, ↓reduceDIte]
         rw [← hgo]
-        rw [go_getRef]
-        rw [AIG.RefStream.getRef_push_ref_eq']
+        rw [go_get]
+        rw [AIG.RefStream.get_push_ref_eq']
         . rw [go_denote_mem_prefix]
           . simp [heq]
           . simp [Ref.hgate]
@@ -111,8 +111,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w)
         rw [heq] at hsplit
         simp only [hsplit, ↓reduceDIte]
         rw [← hgo]
-        rw [go_getRef]
-        rw [AIG.RefStream.getRef_push_ref_eq']
+        rw [go_get]
+        rw [AIG.RefStream.get_push_ref_eq']
         . rw [go_denote_mem_prefix]
           . simp [heq]
           . simp [Ref.hgate]
@@ -139,12 +139,12 @@ theorem blastZeroExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastZeroExtend aig target).aig,
-        (blastZeroExtend aig target).stream.getRef idx hidx,
+        (blastZeroExtend aig target).stream.get idx hidx,
         assign
       ⟧
         =
       if hidx:idx < target.w then
-         ⟦aig, target.stream.getRef idx hidx, assign⟧
+         ⟦aig, target.stream.get idx hidx, assign⟧
       else
          false
     := by

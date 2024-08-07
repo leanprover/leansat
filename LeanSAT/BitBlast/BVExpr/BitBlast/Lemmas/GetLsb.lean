@@ -17,7 +17,7 @@ theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget 
     : ⟦blastGetLsb aig target, assign⟧
         =
       if h:target.idx < target.w then
-        ⟦aig, target.stream.getRef target.idx h, assign⟧
+        ⟦aig, target.stream.get target.idx h, assign⟧
       else
         false := by
   rcases target with ⟨expr, idx⟩

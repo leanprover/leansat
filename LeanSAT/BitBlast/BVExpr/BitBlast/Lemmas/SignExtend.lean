@@ -16,37 +16,37 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastSignExtend
 
-theorem go_getRef_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
+theorem go_get_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
     (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < curr),
-        (go w hw input newWidth curr hcurr s).getRef idx (by omega)
+        (go w hw input newWidth curr hcurr s).get idx (by omega)
           =
-        s.getRef idx hidx1 := by
+        s.get idx hidx1 := by
   intro idx hidx
   unfold go
   split
   . dsimp
     split
     all_goals
-      rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_lt]
+      rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_lt]
   . dsimp
-    simp only [RefStream.getRef, Ref.mk.injEq]
+    simp only [RefStream.get, Ref.mk.injEq]
     have : curr = newWidth := by omega
     subst this
     simp
 
-theorem go_getRef (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
+theorem go_get (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
     (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefStream aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
           →
-        (go w hw input newWidth curr hcurr s).getRef idx hidx1
+        (go w hw input newWidth curr hcurr s).get idx hidx1
           =
         if hidx2:idx < w then
-          input.getRef idx (by omega)
+          input.get idx (by omega)
         else
-          input.getRef (w - 1) (by omega)
+          input.get (w - 1) (by omega)
     := by
   intro idx hidx1 hcurr
   unfold go
@@ -57,13 +57,13 @@ theorem go_getRef (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w
     simp only [heq]
     split
     all_goals
-      rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_eq']
+      rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_eq']
       rw [heq]
   | inr heq =>
     split
     all_goals
-      rw [go_getRef]
+      rw [go_get]
       omega
 
 end blastSignExtend
@@ -79,14 +79,14 @@ theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastSignExtend aig target).aig,
-        (blastSignExtend aig target).stream.getRef idx hidx,
+        (blastSignExtend aig target).stream.get idx hidx,
         assign
       ⟧
         =
       if hidx:idx < target.w then
-         ⟦aig, target.stream.getRef idx hidx, assign⟧
+         ⟦aig, target.stream.get idx hidx, assign⟧
       else
-         ⟦aig, target.stream.getRef (target.w - 1) (by omega), assign⟧
+         ⟦aig, target.stream.get (target.w - 1) (by omega), assign⟧
     := by
   intro idx hidx
   generalize hg : blastSignExtend aig target = res
@@ -96,7 +96,7 @@ theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
   simp only [this, ↓reduceDIte] at hg
   rw [← hg]
   dsimp
-  rw [blastSignExtend.go_getRef]
+  rw [blastSignExtend.go_get]
   . split <;> simp only
   . omega
 

@@ -26,7 +26,7 @@ where
         intros
         apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkConstCached)
         omega
-      let s := s.pushRef bitRef
+      let s := s.push bitRef
       go aig (idx + 1) s val (by omega)
     else
       have hidx : idx = w := by omega

@@ -176,8 +176,8 @@ where
       (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
       : AIG.RefStreamEntry α w :=
     if hidx:curr < w then
-      let lin := lhs.getRef curr hidx
-      let rin := rhs.getRef curr hidx
+      let lin := lhs.get curr hidx
+      let rin := rhs.get curr hidx
       let res := mkFullAdder aig ⟨lin, rin, cin⟩
       let aig := res.aig
       let outRef := res.out
@@ -185,7 +185,7 @@ where
       let s := s.cast res.hle
       let lhs := lhs.cast res.hle
       let rhs := rhs.cast res.hle
-      let s := s.pushRef outRef
+      let s := s.push outRef
       go aig (curr + 1) (by omega) carryRef s lhs rhs
     else
       have hcurr : curr = w := by omega

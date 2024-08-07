@@ -15,12 +15,12 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastShiftRightConst
 
-theorem go_getRef_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig input distance curr hcurr s).stream.getRef idx (by omega)
+        (go aig input distance curr hcurr s).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast hfoo := by
+        (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig input distance curr hcurr s = res
   unfold go at hgo
@@ -29,33 +29,33 @@ theorem go_getRef_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig
     split at hgo
     . rw [← hgo]
       intros
-      rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_lt]
+      rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_lt]
     . rw [← hgo]
       intros
-      rw [go_getRef_aux]
-      rw [AIG.RefStream.getRef_push_ref_lt]
+      rw [go_get_aux]
+      rw [AIG.RefStream.get_push_ref_lt]
       . simp only [Ref.cast, Ref.mk.injEq]
-        rw [AIG.RefStream.getRef_cast]
+        rw [AIG.RefStream.get_cast]
         . simp
         . assumption
       . apply go_le_size
   . dsimp at hgo
     rw [← hgo]
-    simp only [Nat.le_refl, RefStream.getRef, Ref_cast', Ref.mk.injEq, true_implies]
+    simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = w := by omega
     subst this
     simp
 termination_by w - curr
 
-theorem go_getRef (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig input distance curr hcurr s).stream.getRef idx (by omega)
+        (go aig input distance curr hcurr s).stream.get idx (by omega)
           =
-        (s.getRef idx hidx).cast (by apply go_le_size) := by
+        (s.get idx hidx).cast (by apply go_le_size) := by
   intros
-  apply go_getRef_aux
+  apply go_get_aux
 
 theorem go_denote_mem_prefix (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr) (start : Nat) (hstart)
@@ -80,12 +80,12 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
           →
         ⟦
           (go aig input distance curr hcurr s).aig,
-          (go aig input distance curr hcurr s).stream.getRef idx hidx1,
+          (go aig input distance curr hcurr s).stream.get idx hidx1,
           assign
         ⟧
           =
         if hidx:(distance + idx) < w then
-          ⟦aig, input.getRef (distance + idx) (by omega), assign⟧
+          ⟦aig, input.get (distance + idx) (by omega), assign⟧
         else
           false
         := by
@@ -99,8 +99,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
       split at hgo
       . split
         . rw [← hgo]
-          rw [go_getRef]
-          rw [AIG.RefStream.getRef_push_ref_eq']
+          rw [go_get]
+          rw [AIG.RefStream.get_push_ref_eq']
           . rw [go_denote_mem_prefix]
             . simp [heq]
             . simp [Ref.hgate]
@@ -109,8 +109,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
       . split
         . omega
         . rw [← hgo]
-          rw [go_getRef]
-          rw [AIG.RefStream.getRef_push_ref_eq']
+          rw [go_get]
+          rw [AIG.RefStream.get_push_ref_eq']
           . rw [go_denote_mem_prefix]
             . simp
             . simp [Ref.hgate]
@@ -142,12 +142,12 @@ theorem blastShiftRightConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (blastShiftRightConst aig target).aig,
-          (blastShiftRightConst aig target).stream.getRef idx hidx,
+          (blastShiftRightConst aig target).stream.get idx hidx,
           assign
         ⟧
           =
         if hidx:(target.distance + idx) < w then
-          ⟦aig, target.stream.getRef (target.distance + idx) (by omega), assign⟧
+          ⟦aig, target.stream.get (target.distance + idx) (by omega), assign⟧
         else
           false
         := by
@@ -158,20 +158,20 @@ theorem blastShiftRightConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget
 
 namespace blastArithShiftRightConst
 
-theorem go_getRef (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
+theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go input distance curr hcurr s).getRef idx (by omega)
+        (go input distance curr hcurr s).get idx (by omega)
           =
-        s.getRef idx hidx := by
+        s.get idx hidx := by
   intro idx hidx
   unfold go
   split
   . split
     all_goals
-      rw [go_getRef]
-      rw [AIG.RefStream.getRef_push_ref_lt]
-  . simp only [RefStream.getRef, Ref.mk.injEq]
+      rw [go_get]
+      rw [AIG.RefStream.get_push_ref_lt]
+  . simp only [get, Ref.mk.injEq]
     have : curr = w := by omega
     subst this
     simp
@@ -183,14 +183,14 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
           →
         ⟦
           aig,
-          (go input distance curr hcurr s).getRef idx hidx1,
+          (go input distance curr hcurr s).get idx hidx1,
           assign
         ⟧
           =
         if hidx:(distance + idx) < w then
-          ⟦aig, input.getRef (distance + idx) (by omega), assign⟧
+          ⟦aig, input.get (distance + idx) (by omega), assign⟧
         else
-          ⟦aig, input.getRef (w - 1) (by omega), assign⟧
+          ⟦aig, input.get (w - 1) (by omega), assign⟧
         := by
   intro idx hidx1 hidx2
   generalize hgo : go input distance curr hcurr s = res
@@ -204,8 +204,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
         simp only [hlt, ↓reduceDIte]
         dsimp at hgo
         rw [← hgo]
-        rw [go_getRef]
-        rw [AIG.RefStream.getRef_push_ref_eq']
+        rw [go_get]
+        rw [AIG.RefStream.get_push_ref_eq']
         . simp [heq]
         . omega
       . next hlt =>
@@ -213,8 +213,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
         simp only [hlt, ↓reduceDIte]
         dsimp at hgo
         rw [← hgo]
-        rw [go_getRef]
-        rw [AIG.RefStream.getRef_push_ref_eq']
+        rw [go_get]
+        rw [AIG.RefStream.get_push_ref_eq']
         . simp [heq]
     | inr =>
       split at hgo
@@ -236,14 +236,14 @@ theorem blastArithShiftRightConst_eq_eval_getLsb (aig : AIG α) (target : ShiftT
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (blastArithShiftRightConst aig target).aig,
-          (blastArithShiftRightConst aig target).stream.getRef idx hidx,
+          (blastArithShiftRightConst aig target).stream.get idx hidx,
           assign
         ⟧
           =
         if hidx:(target.distance + idx) < w then
-          ⟦aig, target.stream.getRef (target.distance + idx) (by omega), assign⟧
+          ⟦aig, target.stream.get (target.distance + idx) (by omega), assign⟧
         else
-          ⟦aig, target.stream.getRef (w - 1) (by omega), assign⟧
+          ⟦aig, target.stream.get (w - 1) (by omega), assign⟧
         := by
   intros
   unfold blastArithShiftRightConst
@@ -254,12 +254,12 @@ namespace blastShiftRight
 
 theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : BitVec w)
     (rhs : BitVec target.n) (assign : α → Bool)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, target.lhs.getRef idx hidx, assign⟧ = lhs.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < target.n), ⟦aig, target.rhs.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, target.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < target.n), ⟦aig, target.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (twoPowShift aig target).aig,
-          (twoPowShift aig target).stream.getRef idx hidx,
+          (twoPowShift aig target).stream.get idx hidx,
           assign
         ⟧
           =
@@ -274,7 +274,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
   . split
     . next hif1 =>
       rw [← hg]
-      simp only [RefStream.denote_ite, RefStream.getRef_cast, Ref_cast',
+      simp only [RefStream.denote_ite, RefStream.get_cast, Ref_cast',
         blastShiftRightConst_eq_eval_getLsb]
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftRightConst)]
       rw [hright]
@@ -290,7 +290,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
     . next hif1 =>
       simp only [Bool.not_eq_true] at hif1
       rw [← hg]
-      simp only [RefStream.denote_ite, RefStream.getRef_cast, Ref_cast',
+      simp only [RefStream.denote_ite, RefStream.get_cast, Ref_cast',
         blastShiftRightConst_eq_eval_getLsb]
       rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftRightConst)]
       rw [hright]
@@ -310,12 +310,12 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
 theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat)
       (hcurr : curr ≤ n - 1) (acc : AIG.RefStream aig w)
     (lhs : BitVec w) (rhs : BitVec n) (assign : α → Bool)
-    (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.getRef idx hidx, assign⟧ = (BitVec.ushiftRightRec lhs rhs curr).getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < n), ⟦aig, distance.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+    (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.get idx hidx, assign⟧ = (BitVec.ushiftRightRec lhs rhs curr).getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < n), ⟦aig, distance.get idx hidx, assign⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (go aig distance curr hcurr acc).aig,
-          (go aig distance curr hcurr acc).stream.getRef idx hidx,
+          (go aig distance curr hcurr acc).stream.get idx hidx,
           assign
         ⟧
           =
@@ -345,12 +345,12 @@ end blastShiftRight
 
 theorem blastShiftRight_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTarget aig w0)
     (lhs : BitVec w0) (rhs : BitVec target.n) (assign : α → Bool)
-    (hleft : ∀ (idx : Nat) (hidx : idx < w0), ⟦aig, target.target.getRef idx hidx, assign⟧ = lhs.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < target.n), ⟦aig, target.distance.getRef idx hidx, assign⟧ = rhs.getLsb idx)
+    (hleft : ∀ (idx : Nat) (hidx : idx < w0), ⟦aig, target.target.get idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < target.n), ⟦aig, target.distance.get idx hidx, assign⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w0),
         ⟦
           (blastShiftRight aig target).aig,
-          (blastShiftRight aig target).stream.getRef idx hidx,
+          (blastShiftRight aig target).stream.get idx hidx,
           assign
         ⟧
           =
