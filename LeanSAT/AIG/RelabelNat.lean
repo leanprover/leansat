@@ -10,8 +10,8 @@ open Std
 variable {α : Type} [DecidableEq α] [Hashable α]
 
 -- TODO: auxiliary theorem, possibly upstream
-theorem _root_.Array.get_of_mem {a : α} {as : Array α}
-    : a ∈ as → (∃ (i : Fin as.size), as[i] = a) := by
+theorem _root_.Array.get_of_mem {a : α} {as : Array α} :
+    a ∈ as → (∃ (i : Fin as.size), as[i] = a) := by
   intro ha
   rcases List.get_of_mem ha.val with ⟨i, hi⟩
   exists i
@@ -29,8 +29,8 @@ inductive Inv1 : Nat → HashMap α Nat → Prop where
 | insert (hinv : Inv1 n map) (hfind : map[x]? = none) : Inv1 (n + 1) (map.insert x n)
 
 theorem Inv1.lt_of_get?_eq_some [EquivBEq α] {n m : Nat} (map : HashMap α Nat) (x : α)
-    (hinv : Inv1 n map)
-    : map[x]? = some m → m < n := by
+    (hinv : Inv1 n map) :
+    map[x]? = some m → m < n := by
   induction hinv with
   | empty => simp
   | insert ih1 ih2 ih3 =>
@@ -90,18 +90,16 @@ This invariant says that we have already visited and inserted all nodes up to a 
 inductive Inv2 (decls : Array (Decl α)) : Nat → HashMap α Nat → Prop where
 | empty : Inv2 decls 0 {}
 | newAtom (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .atom a)
-  (hmap : map[a]? = none)
-  : Inv2 decls (idx + 1) (map.insert a val)
+  (hmap : map[a]? = none) : Inv2 decls (idx + 1) (map.insert a val)
 | oldAtom (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .atom a)
-  (hmap : map[a]? = some n)
-  : Inv2 decls (idx + 1) map
-| const (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .const b)
-  : Inv2 decls (idx + 1) map
-| gate (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .gate l r li ri)
-  : Inv2 decls (idx + 1) map
+  (hmap : map[a]? = some n) : Inv2 decls (idx + 1) map
+| const (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .const b) :
+  Inv2 decls (idx + 1) map
+| gate (hinv : Inv2 decls idx map) (hlt : idx < decls.size) (hatom : decls[idx] = .gate l r li ri) :
+  Inv2 decls (idx + 1) map
 
-theorem Inv2.upper_lt_size {decls : Array (Decl α)} (hinv : Inv2 decls upper map)
-    : upper ≤ decls.size := by
+theorem Inv2.upper_lt_size {decls : Array (Decl α)} (hinv : Inv2 decls upper map) :
+    upper ≤ decls.size := by
   cases hinv <;> omega
 
 /--
@@ -110,8 +108,8 @@ that index have been inserted into the `HashMap`.
 -/
 theorem Inv2.property (decls : Array (Decl α)) (idx upper : Nat) (map : HashMap α Nat)
     (hidx : idx < upper) (a : α) (hinv : Inv2 decls upper map)
-    (heq : decls[idx]'(by have := upper_lt_size hinv; omega) = .atom a)
-    : ∃ n, map[a]? = some n := by
+    (heq : decls[idx]'(by have := upper_lt_size hinv; omega) = .atom a) :
+    ∃ n, map[a]? = some n := by
   induction hinv with
   | empty => omega
   | newAtom ih1 ih2 ih3 ih4 ih5 =>
@@ -189,8 +187,8 @@ def empty {decls : Array (Decl α)} : State α decls 0 :=
 Insert a `Decl.atom` into the `State` structure.
 -/
 def addAtom {decls : Array (Decl α)} {hidx} (state : State α decls idx) (a : α)
-    (h : decls[idx]'hidx = .atom a)
-    : State α decls (idx + 1) :=
+    (h : decls[idx]'hidx = .atom a) :
+    State α decls (idx + 1) :=
   match hmap:state.map[a]? with
   | some _ =>
     { state with
@@ -219,8 +217,8 @@ def addAtom {decls : Array (Decl α)} {hidx} (state : State α decls idx) (a : �
 Insert a `Decl.const` into the `State` structure.
 -/
 def addConst {decls : Array (Decl α)} {hidx} (state : State α decls idx) (b : Bool)
-    (h : decls[idx]'hidx = .const b)
-    : State α decls (idx + 1) :=
+    (h : decls[idx]'hidx = .const b) :
+    State α decls (idx + 1) :=
   { state with
       inv2 := by
         apply Inv2.const
@@ -232,8 +230,8 @@ def addConst {decls : Array (Decl α)} {hidx} (state : State α decls idx) (b : 
 Insert a `Decl.gate` into the `State` structure.
 -/
 def addGate {decls : Array (Decl α)} {hidx} (state : State α decls idx) (lhs rhs : Nat)
-    (linv rinv : Bool) (h : decls[idx]'hidx = .gate lhs rhs linv rinv)
-    : State α decls (idx + 1) :=
+    (linv rinv : Bool) (h : decls[idx]'hidx = .gate lhs rhs linv rinv) :
+    State α decls (idx + 1) :=
   { state with
       inv2 := by
         apply Inv2.gate
@@ -285,8 +283,8 @@ theorem ofAIG.Inv2 (aig : AIG α) : Inv2 aig.decls aig.decls.size (ofAIG aig) :=
 /--
 Assuming that we find a `Nat` for an atom in the `ofAIG` map, that `Nat` is unique in the map.
 -/
-theorem ofAIG_find_unique {aig : AIG α} (a : α) (ha : (ofAIG aig)[a]? = some n)
-    : ∀ a', (ofAIG aig)[a']? = some n → a = a' := by
+theorem ofAIG_find_unique {aig : AIG α} (a : α) (ha : (ofAIG aig)[a]? = some n) :
+    ∀ a', (ofAIG aig)[a']? = some n → a = a' := by
   intro a' ha'
   rcases ofAIG.Inv1 aig with ⟨n, hn⟩
   apply Inv1.property <;> assumption
@@ -334,8 +332,8 @@ theorem relabelNat_size_eq_size {aig : AIG α} : aig.relabelNat.decls.size = aig
 /--
 `relabelNat` preserves unsatisfiablility.
 -/
-theorem relabelNat_unsat_iff [Nonempty α] {aig : AIG α} {hidx1} {hidx2}
-    : (aig.relabelNat).UnsatAt idx hidx1 ↔ aig.UnsatAt idx hidx2 := by
+theorem relabelNat_unsat_iff [Nonempty α] {aig : AIG α} {hidx1} {hidx2} :
+    (aig.relabelNat).UnsatAt idx hidx1 ↔ aig.UnsatAt idx hidx2 := by
   dsimp [relabelNat, relabelNat']
   rw [relabel_unsat_iff]
   intro x y hx hy heq
@@ -380,8 +378,8 @@ def relabelNat (entry : Entrypoint α) : Entrypoint Nat :=
 /--
 `relabelNat` preserves unsatisfiablility.
 -/
-theorem relabelNat_unsat_iff {entry : Entrypoint α} [Nonempty α]
-    : (entry.relabelNat).Unsat ↔ entry.Unsat:= by
+theorem relabelNat_unsat_iff {entry : Entrypoint α} [Nonempty α] :
+    (entry.relabelNat).Unsat ↔ entry.Unsat:= by
   simp [relabelNat, Unsat]
   rw [AIG.relabelNat_unsat_iff]
 
