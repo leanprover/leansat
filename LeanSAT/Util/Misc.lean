@@ -6,9 +6,6 @@ Authors: Josh Clune
 
 namespace Misc
 
-theorem Subtype.ext {p : α → Prop} : ∀ {a1 a2 : { x // p x }}, (a1 : α) = (a2 : α) → a1 = a2
-  | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
-
 @[simp]
 theorem Bool.exists_bool {p : Bool → Prop} : (∃ b, p b) ↔ p false ∨ p true :=
   ⟨fun ⟨b, h⟩ => by cases b; exact Or.inl h; exact Or.inr h,
@@ -60,12 +57,6 @@ theorem Array.range_idx {n : Nat} {x : Nat} (h : x < n) : (Array.range n)[x]'(by
         simp only [Array.range, Array.mkEmpty_eq] at h_size_range
         simp only [x_eq_n, Array.mkEmpty_eq, h_size_range, Nat.lt_irrefl] at x_lt_n
       . rw [x_eq_n]
-
-theorem Array.set!_preserves_size {a : Array α} {i : Nat} {x : α} : (a.set! i x).size = a.size := by
-  rw [Array.set!, Array.setD]
-  split
-  . simp only [Array.size_set]
-  . rfl
 
 theorem Array.get_modify_at_idx {a : Array α} {i : Nat} (i_in_bounds : i < a.size) (f : α → α) :
   (a.modify i f)[i]'(by rw [Array.size_modify]; exact i_in_bounds) = f (a[i]) := by
