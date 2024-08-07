@@ -16,7 +16,7 @@ namespace AIG
 variable {α : Type} [Hashable α] [DecidableEq α]
 
 /--
-Create a not gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
+Create a not gate in the input AIG. This uses the builtin cache to enable automated subterm sharing.
 -/
 def mkNotCached (aig : AIG α) (gate : Ref aig) : Entrypoint α :=
   -- ¬x = true && invert x
@@ -53,13 +53,14 @@ def BinaryInput.asGateInput {aig : AIG α} (input : BinaryInput aig) (linv rinv 
   }
 
 /--
-Create an and gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
+Create an and gate in the input AIG. This uses the builtin cache to enable automated subterm
+sharing.
 -/
-def mkAndCached (aig : AIG α) (input : BinaryInput aig)  : Entrypoint α :=
+def mkAndCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   aig.mkGateCached <| input.asGateInput false false
 
 /--
-Create an or gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
+Create an or gate in the input AIG. This uses the builtin cache to enable automated subterm sharing.
 -/
 def mkOrCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- x or y = true && (invert (invert x && invert y))
@@ -86,7 +87,8 @@ def mkOrCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
     }
 
 /--
-Create an xor gate in the input AIG. This uses the builtin cache to enable automated subterm sharing
+Create an xor gate in the input AIG. This uses the builtin cache to enable automated subterm
+sharing.
 -/
 def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- x xor y = (invert (invert (x && y))) && (invert ((invert x) && (invert y)))
@@ -119,7 +121,7 @@ def mkXorCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
 
 /--
 Create an equality gate in the input AIG. This uses the builtin cache to enable automated subterm
-sharing
+sharing.
 -/
 def mkBEqCached (aig : AIG α) (input : BinaryInput aig) : Entrypoint α :=
   -- a == b = (invert (a && (invert b))) && (invert ((invert a) && b))

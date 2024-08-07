@@ -13,31 +13,31 @@ semantics of the gate functions in different scenarios.
 -/
 
 /--
-Encoding not as boolen expression in AIG form.
+Encoding not as boolean expression in AIG form.
 -/
 theorem not_as_aig (b : Bool) : (true && !b) = !b := by
   cases b <;> decide
 
 /--
-Encoding or as boolen expression in AIG form.
+Encoding or as boolean expression in AIG form.
 -/
 theorem or_as_aig (a b : Bool) : (!(!a && !b)) = (a || b) := by
   cases a <;> cases b <;> decide
 
 /--
-Encoding XOR as boolen expression in AIG form.
+Encoding XOR as boolean expression in AIG form.
 -/
 theorem xor_as_aig (a b : Bool) : (!(a && b) && !(!a && !b)) = (xor a b) := by
   cases a <;> cases b <;> decide
 
 /--
-Encoding BEq as boolen expression in AIG form.
+Encoding BEq as boolean expression in AIG form.
 -/
 theorem beq_as_aig (a b : Bool) : (!(a && !b) && !(!a && b)) = (a == b) := by
   cases a <;> cases b <;> decide
 
 /--
-Encoding implication as boolen expression in AIG form.
+Encoding implication as boolean expression in AIG form.
 -/
 theorem imp_as_aig (a b : Bool) : (!(a && !b)) = (!a || b) := by
   cases a <;> cases b <;> decide
@@ -47,15 +47,15 @@ namespace AIG
 variable {α : Type} [Hashable α] [DecidableEq α]
 
 @[simp]
-theorem BinaryInput_asGateInput_lhs {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool)
-    : (input.asGateInput linv rinv).lhs = ⟨input.lhs, linv⟩ := rfl
+theorem BinaryInput_asGateInput_lhs {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool) :
+    (input.asGateInput linv rinv).lhs = ⟨input.lhs, linv⟩ := rfl
 
 @[simp]
-theorem BinaryInput_asGateInput_rhs {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool)
-    : (input.asGateInput linv rinv).rhs = ⟨input.rhs, rinv⟩ := rfl
+theorem BinaryInput_asGateInput_rhs {aig : AIG α} (input : BinaryInput aig) (linv rinv : Bool) :
+    (input.asGateInput linv rinv).rhs = ⟨input.rhs, rinv⟩ := rfl
 
-theorem mkNotCached_le_size (aig : AIG α) (gate : Ref aig)
-    : aig.decls.size ≤ (aig.mkNotCached gate).aig.decls.size := by
+theorem mkNotCached_le_size (aig : AIG α) (gate : Ref aig) :
+    aig.decls.size ≤ (aig.mkNotCached gate).aig.decls.size := by
   simp only [mkNotCached]
   apply LawfulOperator.le_size_of_le_aig_size
   apply mkConstCached_le_size
@@ -82,8 +82,8 @@ theorem denote_mkNotCached {aig : AIG α} {gate : Ref aig} :
   rw [← not_as_aig]
   simp [mkNotCached, LawfulOperator.denote_mem_prefix (f := mkConstCached) gate.hgate]
 
-theorem mkAndCached_le_size (aig : AIG α) (input : BinaryInput aig)
-    : aig.decls.size ≤ (aig.mkAndCached input).aig.decls.size := by
+theorem mkAndCached_le_size (aig : AIG α) (input : BinaryInput aig) :
+    aig.decls.size ≤ (aig.mkAndCached input).aig.decls.size := by
   simp only [mkAndCached]
   apply LawfulOperator.le_size_of_le_aig_size
   omega
@@ -107,8 +107,8 @@ theorem denote_mkAndCached {aig : AIG α} {input : BinaryInput aig} :
     ⟦aig, input.rhs, assign⟧) := by
   simp [mkAndCached]
 
-theorem mkOrCached_le_size (aig : AIG α) (input : BinaryInput aig)
-    : aig.decls.size ≤ (aig.mkOrCached input).aig.decls.size := by
+theorem mkOrCached_le_size (aig : AIG α) (input : BinaryInput aig) :
+    aig.decls.size ≤ (aig.mkOrCached input).aig.decls.size := by
   simp only [mkOrCached]
   apply LawfulOperator.le_size_of_le_aig_size
   apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
@@ -143,8 +143,8 @@ theorem denote_mkOrCached {aig : AIG α} {input : BinaryInput aig} :
   simp [mkOrCached, LawfulOperator.denote_input_entry (f := mkConstCached)]
 
 
-theorem mkXorCached_le_size (aig : AIG α) {input : BinaryInput aig}
-    : aig.decls.size ≤ (aig.mkXorCached input).aig.decls.size := by
+theorem mkXorCached_le_size (aig : AIG α) {input : BinaryInput aig} :
+    aig.decls.size ≤ (aig.mkXorCached input).aig.decls.size := by
   simp only [mkXorCached]
   apply LawfulOperator.le_size_of_le_aig_size
   apply LawfulOperator.le_size_of_le_aig_size
@@ -183,8 +183,8 @@ theorem denote_mkXorCached {aig : AIG α} {input : BinaryInput aig} :
     LawfulOperator.denote_mem_prefix (f := mkGateCached) input.rhs.hgate
   ]
 
-theorem mkBEqCached_le_size (aig : AIG α) {input : BinaryInput aig}
-    : aig.decls.size ≤ (aig.mkBEqCached input).aig.decls.size := by
+theorem mkBEqCached_le_size (aig : AIG α) {input : BinaryInput aig} :
+    aig.decls.size ≤ (aig.mkBEqCached input).aig.decls.size := by
   simp only [mkBEqCached]
   apply LawfulOperator.le_size_of_le_aig_size
   apply LawfulOperator.le_size_of_le_aig_size
@@ -222,8 +222,8 @@ theorem denote_mkBEqCached {aig : AIG α} {input : BinaryInput aig} :
     LawfulOperator.denote_mem_prefix (f := mkGateCached) input.rhs.hgate
   ]
 
-theorem mkImpCached_le_size (aig : AIG α) (input : BinaryInput aig)
-    : aig.decls.size ≤ (aig.mkImpCached input).aig.decls.size := by
+theorem mkImpCached_le_size (aig : AIG α) (input : BinaryInput aig) :
+    aig.decls.size ≤ (aig.mkImpCached input).aig.decls.size := by
   simp only [mkImpCached]
   apply LawfulOperator.le_size_of_le_aig_size
   apply LawfulOperator.le_size_of_le_aig_size (f := mkConstCached)
