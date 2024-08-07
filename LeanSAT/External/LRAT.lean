@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Actions
-import LeanSAT.External.Parsec
+import Lean.Data.Parsec
 
 namespace LRAT
 
@@ -15,7 +15,10 @@ def getPivot (clause : Array Int) : Literal Nat :=
 
 namespace Parser
 
-open Parsec ByteArray
+open Lean Parsec ByteArray
+
+def eof? : Parser Bool := fun it =>
+  .success it (!Input.hasNext it)
 
 namespace Text
 /-
@@ -23,6 +26,35 @@ This implements a (corrected) version of the grammar presented in:
 https://www.cs.cmu.edu/~mheule/publications/lrat.pdf
 -/
 
+@[inline]
+def digitToNat (b : UInt8) : Nat := (b - '0'.toNat.toUInt8).toNat
+
+@[inline]
+partial def digitsCore (acc : Nat) : Parsec ByteArray.Iterator Nat := fun it =>
+  /-
+  This used to be:
+  Parsec.tryCatch digit (fun digit => parseDigitsCore (acc * 10 + digitToNat digit)) (fun _ => pure acc)
+  But this code keeps on allocating success/error values in the hot loop, we don't want that.
+  -/
+  let ⟨res, it⟩ := go it acc
+  .success it res
+where
+  go (it : ByteArray.Iterator) (acc : Nat) : (Nat × ByteArray.Iterator) :=
+    if it.hasNext then
+      let candidate := it.curr
+      if '0'.toUInt8 ≤ candidate ∧ candidate ≤ '9'.toUInt8 then
+        let digit := digitToNat candidate
+        let acc := acc * 10 + digit
+        go it.next acc
+      else
+        (acc, it)
+    else
+      (acc, it)
+
+@[inline]
+def digits : Parsec ByteArray.Iterator Nat := do
+  let d ← digit
+  digitsCore (digitToNat d.toUInt8)
 
 @[inline]
 def parsePos : Parser Nat := do

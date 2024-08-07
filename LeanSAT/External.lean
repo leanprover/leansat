@@ -5,5 +5,4 @@ Authors: Henrik Böving
 -/
 import LeanSAT.External.DimacsLRAT
 import LeanSAT.External.LRAT
-import LeanSAT.External.Parsec
 import LeanSAT.External.Solver

@@ -5,6 +5,7 @@ Authors: Josh Clune
 -/
 import LeanSAT.External.LRAT
 import Lean.CoreM
+import Lean.Data.Parsec
 
 inductive SolverResult where
 | sat (assignment : Array (Bool × Nat))
@@ -12,7 +13,8 @@ inductive SolverResult where
 
 namespace SatWitnessParser
 
-open LRAT Parsec ByteArray
+open LRAT
+open Lean Parsec ByteArray
 
 def parsePartialAssignment : Parser (Bool × (Array (Bool × Nat))) := do
   skipByteChar 'v'
