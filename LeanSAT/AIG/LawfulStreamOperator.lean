@@ -39,14 +39,14 @@ theorem lt_size (entry : Entrypoint α) (input : β entry.aig len) :
     apply le_size
   omega
 
-theorem lt_size_of_lt_aig_size (aig : AIG α) (input : β aig len) (h : x < aig.decls.size)
-    : x < (f aig input).aig.decls.size := by
+theorem lt_size_of_lt_aig_size (aig : AIG α) (input : β aig len) (h : x < aig.decls.size) :
+    x < (f aig input).aig.decls.size := by
   apply Nat.lt_of_lt_of_le
   . exact h
   . exact le_size aig input
 
-theorem le_size_of_le_aig_size (aig : AIG α) (input : β aig len) (h : x ≤ aig.decls.size)
-    : x ≤ (f aig input).aig.decls.size := by
+theorem le_size_of_le_aig_size (aig : AIG α) (input : β aig len) (h : x ≤ aig.decls.size) :
+    x ≤ (f aig input).aig.decls.size := by
   apply Nat.le_trans
   . exact h
   . exact le_size aig input
@@ -74,9 +74,9 @@ theorem denote_mem_prefix {aig : AIG α} {input : β aig len} (h) :
 
 @[simp]
 theorem denote_input_stream (s : RefStreamEntry α len) {input : β s.aig len} {hcast} :
-    ⟦(f s.aig input).aig, (s.stream.getRef idx hidx).cast hcast, assign⟧
+    ⟦(f s.aig input).aig, (s.stream.get idx hidx).cast hcast, assign⟧
       =
-    ⟦s.aig, s.stream.getRef idx hidx, assign⟧ :=  by
+    ⟦s.aig, s.stream.get idx hidx, assign⟧ :=  by
   rw [denote_mem_prefix]
   rfl
 
