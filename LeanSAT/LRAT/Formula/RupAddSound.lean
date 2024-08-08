@@ -32,13 +32,13 @@ theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assig
       apply Exists.intro i
       by_cases l.1.1 = i.1
       . next l_eq_i =>
-        simp only [l_eq_i, Array.get_modify_at_idx i_in_bounds, h]
+        simp only [l_eq_i, Array.getElem_modify_self i_in_bounds, h]
         exact add_of_both_eq_both l.2
       . next l_ne_i =>
-        rw [Array.get_modify_unchanged i_in_bounds _ l_ne_i]
+        rw [Array.getElem_modify_of_ne i_in_bounds _ l_ne_i]
         exact h
     . apply Exists.intro l.1
-      simp only [insertUnit, hl, ite_false, Array.get_modify_at_idx l_in_bounds]
+      simp only [insertUnit, hl, ite_false, Array.getElem_modify_self l_in_bounds]
       simp only [getElem!, l_in_bounds, dite_true, decidableGetElem?] at assignments_l_ne_unassigned
       by_cases l.2
       . next l_eq_true =>
@@ -659,7 +659,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           by_cases l.1 = i.1
           . next l_eq_i =>
             simp only [getElem!, Array.size_modify, i_in_bounds, ↓ reduceDIte,
-              Array.get_eq_getElem, l_eq_i, Array.get_modify_at_idx i_in_bounds (addAssignment b), decidableGetElem?]
+              Array.get_eq_getElem, l_eq_i, Array.getElem_modify_self i_in_bounds (addAssignment b), decidableGetElem?]
             simp only [getElem!, i_in_bounds, dite_true, Array.get_eq_getElem, decidableGetElem?] at pacc
             by_cases pi : p i
             . simp only [pi, decide_False]
@@ -683,7 +683,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
                 exact pacc
           . next l_ne_i =>
             simp only [getElem!, Array.size_modify, i_in_bounds,
-              Array.get_modify_unchanged i_in_bounds _ l_ne_i, dite_true,
+              Array.getElem_modify_of_ne i_in_bounds _ l_ne_i, dite_true,
               Array.get_eq_getElem, decidableGetElem?]
             simp only [getElem!, i_in_bounds, dite_true, decidableGetElem?] at pacc
             exact pacc
@@ -723,13 +723,13 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
       not_imp] at fc_unsat
     rcases fc_unsat with ⟨unsat_c, unsat_c_in_fc, p_unsat_c⟩
     have unsat_c_in_fc := mem_of_insertRupUnits f (negate c) unsat_c unsat_c_in_fc
-    simp only [Array.toList_eq, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at unsat_c_in_fc
+    simp only [Array.toList_eq, List.mem_map, Prod.exists, Bool.exists_bool] at unsat_c_in_fc
     rcases unsat_c_in_fc with ⟨v, ⟨v_in_neg_c, unsat_c_eq⟩ | ⟨v_in_neg_c, unsat_c_eq⟩⟩ | unsat_c_in_f
-    . simp only [negate_iff, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at v_in_neg_c
+    . simp only [negate_iff, List.mem_map, Prod.exists, Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨_, v'_eq_v⟩ | ⟨v'_in_c, v'_eq_v⟩⟩
       . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_false] at v'_eq_v
       . simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_true] at v'_eq_v
-        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
+        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool, ←
           unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
         rw [Clause.unit_eq] at p_unsat_c
@@ -741,10 +741,10 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
         simp only [(· ⊨ ·), Bool.not_eq_true] at pv
         simp only [p_unsat_c] at pv
         cases pv
-    . simp only [negate_iff, List.mem_map, Misc.Prod.exists, Misc.Bool.exists_bool] at v_in_neg_c
+    . simp only [negate_iff, List.mem_map, Prod.exists, Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨v'_in_c, v'_eq_v⟩ | ⟨_, v'_eq_v⟩⟩
       . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_true] at v'_eq_v
-        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool, ←
+        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool, ←
           unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
         rw [Clause.unit_eq] at p_unsat_c

@@ -25,7 +25,7 @@ theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula 
     rw [Formula.insert_iff]
     exact Or.inl rfl
   specialize pf empty empty_in_f'
-  simp only [HSat.eval, Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Misc.Prod.exists, Misc.Bool.exists_bool,
+  simp only [HSat.eval, Clause.instHSat, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool,
     empty_eq, List.any_nil] at pf
 
 theorem addRupCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
