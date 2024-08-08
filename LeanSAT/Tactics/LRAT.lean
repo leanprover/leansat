@@ -111,7 +111,7 @@ def withTempFile [Monad m] [MonadFinally m] [MonadLiftT IO m] (f : System.FilePa
     IO.FS.removeFile file
 
 def LratCert.ofFile (lratPath : System.FilePath) (trimProofs : Bool) : MetaM LratCert := do
-  let proofInput ← LRAT.readFileQuick lratPath
+  let proofInput ← IO.FS.readBinFile lratPath
   let proof ←
     withTraceNode `sat (fun _ => return s!"Parsing LRAT file") do
       -- lazyPure to prevent compiler lifting

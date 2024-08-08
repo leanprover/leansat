@@ -14,9 +14,6 @@ a description of its semantics and basic operations to construct nodes in the AI
 
 open Std
 
-theorem Array.lt_of_get {x : α} (as : Array α) {idx : Nat} {hidx : idx < as.size} (_h : as[idx]'hidx = x) : idx < as.size := by
-  exact hidx
-
 /--
 A circuit node declaration. These are not recursive but instead contain indices into an `AIG`.
 -/
@@ -140,7 +137,7 @@ theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α 
       exfalso
       apply hbounds
       specialize ih _ hfound
-      apply Array.lt_of_get
+      apply Array.lt_of_getElem
       assumption
   | push_cache wf ih =>
     rename_i decl'
@@ -166,7 +163,7 @@ theorem Cache.get?_property {decls : Array (Decl α)} {idx : Nat} (c : Cache α 
         apply hbounds
         simp only [BEq.symm_false heq, cond_false] at hfound
         specialize ih _ hfound
-        apply Array.lt_of_get
+        apply Array.lt_of_getElem
         assumption
 
 /--

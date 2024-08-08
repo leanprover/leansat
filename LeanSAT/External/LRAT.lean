@@ -299,17 +299,8 @@ def parseActions : Parser (Array IntAction) := do
 
 end Parser
 
-/--
-A quicker version of `IO.FS.readFile` for big files. Note that this assumes the file contains valid
-UTF-8. As we only use this to parse trusted input from a SAT solver this is fine.
--/
-def readFileQuick (path : System.FilePath) : IO ByteArray := do
-  let mdata ← path.metadata
-  let handle ← IO.FS.Handle.mk path .read
-  handle.read mdata.byteSize.toUSize
-
 def loadLRATProof (path : System.FilePath) : IO (Array IntAction) := do
-  let proof ← readFileQuick path
+  let proof ← IO.FS.readBinFile path
   match Parser.parseActions.run proof with
   | .ok actions => return actions
   | .error err => throw <| .userError err
