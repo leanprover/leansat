@@ -42,8 +42,8 @@ where
           apply AIG.LawfulVecOperator.le_size (f := bitblast.blastConst)
       ⟩
     | .zeroExtend (w := w) v inner =>
-      let ⟨⟨eaig, estream⟩, heaig⟩ := go aig inner
-      let res := bitblast.blastZeroExtend eaig ⟨w, estream⟩
+      let ⟨⟨eaig, evec⟩, heaig⟩ := go aig inner
+      let res := bitblast.blastZeroExtend eaig ⟨w, evec⟩
       ⟨
         res,
         by
@@ -52,8 +52,8 @@ where
           assumption
       ⟩
     | .signExtend (w := w) v inner =>
-      let ⟨⟨eaig, estream⟩, heaig⟩ := go aig inner
-      let res := bitblast.blastSignExtend eaig ⟨w, estream⟩
+      let ⟨⟨eaig, evec⟩, heaig⟩ := go aig inner
+      let res := bitblast.blastSignExtend eaig ⟨w, evec⟩
       ⟨
         res,
         by
@@ -115,10 +115,10 @@ where
             omega
         ⟩
     | .un op expr =>
-      let ⟨⟨eaig, estream⟩, heaig⟩ := go aig expr
+      let ⟨⟨eaig, evec⟩, heaig⟩ := go aig expr
       match op with
       | .not =>
-          let res := bitblast.blastNot eaig estream
+          let res := bitblast.blastNot eaig evec
           ⟨
             res,
             by
@@ -127,7 +127,7 @@ where
               omega
           ⟩
       | .shiftLeftConst distance =>
-        let res := bitblast.blastShiftLeftConst eaig ⟨estream, distance⟩
+        let res := bitblast.blastShiftLeftConst eaig ⟨evec, distance⟩
         ⟨
           res,
           by
@@ -136,7 +136,7 @@ where
             assumption
         ⟩
       | .shiftRightConst distance =>
-        let res := bitblast.blastShiftRightConst eaig ⟨estream, distance⟩
+        let res := bitblast.blastShiftRightConst eaig ⟨evec, distance⟩
         ⟨
           res,
           by
@@ -145,7 +145,7 @@ where
             assumption
         ⟩
       | .rotateLeft distance =>
-        let res := bitblast.blastRotateLeft eaig ⟨estream, distance⟩
+        let res := bitblast.blastRotateLeft eaig ⟨evec, distance⟩
         ⟨
           res,
           by
@@ -154,7 +154,7 @@ where
             assumption
         ⟩
       | .rotateRight distance =>
-        let res := bitblast.blastRotateRight eaig ⟨estream, distance⟩
+        let res := bitblast.blastRotateRight eaig ⟨evec, distance⟩
         ⟨
           res,
           by
@@ -163,7 +163,7 @@ where
             assumption
         ⟩
       | .arithShiftRightConst distance =>
-        let res := bitblast.blastArithShiftRightConst eaig ⟨estream, distance⟩
+        let res := bitblast.blastArithShiftRightConst eaig ⟨evec, distance⟩
         ⟨
           res,
           by
@@ -196,8 +196,8 @@ where
           assumption
       ⟩
     | .extract hi lo expr =>
-      let ⟨⟨eaig, estream⟩, heaig⟩ := go aig expr
-      let res := bitblast.blastExtract eaig ⟨estream, hi, lo, rfl⟩
+      let ⟨⟨eaig, evec⟩, heaig⟩ := go aig expr
+      let res := bitblast.blastExtract eaig ⟨evec, hi, lo, rfl⟩
       ⟨
         res,
         by

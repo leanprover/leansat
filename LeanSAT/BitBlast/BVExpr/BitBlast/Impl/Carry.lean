@@ -14,7 +14,7 @@ variable [Hashable α] [DecidableEq α]
 
 structure OverflowInput (aig : AIG α) where
   (w : Nat)
-  stream : AIG.BinaryRefVec aig w
+  vec : AIG.BinaryRefVec aig w
   cin : AIG.Ref aig
 
 def mkOverflowBit (aig : AIG α) (input : OverflowInput aig) : AIG.Entrypoint α :=

@@ -14,12 +14,12 @@ variable [Hashable α] [DecidableEq α]
 
 structure GetLsbTarget (aig : AIG α) where
   {w : Nat}
-  stream : AIG.RefVec aig w
+  vec : AIG.RefVec aig w
   idx : Nat
 
 def blastGetLsb (aig : AIG α) (target : GetLsbTarget aig) : AIG.Entrypoint α :=
   if h:target.idx < target.w then
-    ⟨aig, target.stream.get target.idx h⟩
+    ⟨aig, target.vec.get target.idx h⟩
   else
     AIG.mkConstCached aig false
 

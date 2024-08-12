@@ -112,7 +112,7 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
       simp only [go]
       rw [AIG.LawfulOperator.decl_eq (f := mkImpCached), rih, lih]
 
-theorem ofBoolExprCached.go_IsPrefix_aig {aig : AIG β} :
+theorem ofBoolExprCached.go_isPrefix_aig {aig : AIG β} :
     IsPrefix aig.decls (go expr aig atomHandler).val.aig.decls := by
   apply IsPrefix.of
   . intro idx h
@@ -126,7 +126,7 @@ theorem ofBoolExprCached.go_denote_entry (entry : Entrypoint β) {h} :
       =
     ⟦entry, assign⟧ := by
   apply denote.eq_of_isPrefix
-  apply ofBoolExprCached.go_IsPrefix_aig
+  apply ofBoolExprCached.go_isPrefix_aig
 
 variable {α : Type} [Hashable α] [DecidableEq α]
 def ofBoolExprCachedDirect (expr : BoolExpr α) : Entrypoint α :=

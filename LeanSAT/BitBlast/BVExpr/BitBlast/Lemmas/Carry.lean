@@ -56,8 +56,8 @@ end mkOverflowBit
 
 theorem mkOverflowBit_eq_carry (aig : AIG α) (input : OverflowInput aig) (lhs rhs : BitVec input.w)
     (assign : α → Bool)
-    (hleft : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.stream.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.stream.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
+    (hleft : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.vec.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
+    (hright : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.vec.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
   : ⟦mkOverflowBit aig input, assign⟧
       =
     BitVec.carry input.w lhs rhs ⟦aig, input.cin, assign⟧ := by
