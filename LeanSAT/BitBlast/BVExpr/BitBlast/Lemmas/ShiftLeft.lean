@@ -26,7 +26,7 @@ theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
   generalize hgo : go aig input distance curr hcurr s = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     split at hgo
     . rw [← hgo]
       intros
@@ -41,7 +41,7 @@ theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
       intros
       rw [go_get_aux]
       rw [AIG.RefVec.get_push_ref_lt]
-  . dsimp at hgo
+  . dsimp only at hgo
     rw [← hgo]
     simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = w := by omega
@@ -94,7 +94,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefVec ai
   generalize hgo : go aig input distance curr hcurr s = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     cases Nat.eq_or_lt_of_le hidx2 with
     | inl heq =>
       split at hgo
@@ -181,7 +181,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
   rcases target with ⟨n, lvec, rvec, pow⟩
   simp only [BitVec.and_twoPow]
   unfold twoPowShift at hg
-  dsimp at hg
+  dsimp only at hg
   split at hg
   . split
     . next hif1 =>
@@ -218,7 +218,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
       simp
   . have : rhs.getLsb pow = false := by
       apply BitVec.getLsb_ge
-      dsimp
+      dsimp only
       omega
     simp only [this, Bool.false_eq_true, ↓reduceIte]
     rw [← hg]
@@ -241,7 +241,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefVec aig n) (curr : N
   intro idx hidx
   generalize hgo : go aig distance curr hcurr acc = res
   unfold go at hgo
-  dsimp at hgo
+  dsimp only at hgo
   split at hgo
   . rw [← hgo]
     rw [go_eq_eval_getLsb]
@@ -278,10 +278,10 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTar
   generalize hg : blastShiftLeft aig target = res
   rcases target with ⟨n, target, distance⟩
   unfold blastShiftLeft at hg
-  dsimp at hg
+  dsimp only at hg
   split at hg
   . next hzero =>
-    dsimp
+    dsimp only
     subst hzero
     rw [← hg]
     simp only [hleft, Nat.zero_sub, BitVec.shiftLeftRec_zero, BitVec.and_twoPow, Nat.le_refl,

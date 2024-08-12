@@ -47,7 +47,7 @@ theorem blastShiftRightConst.go_le_size (aig : AIG α) (distance : Nat) (input :
     aig.decls.size ≤ (go aig input distance curr hcurr s).aig.decls.size := by
   unfold go
   split
-  . dsimp
+  . dsimp only
     split
     . refine Nat.le_trans ?_ (by apply go_le_size)
       omega
@@ -63,7 +63,7 @@ theorem blastShiftRightConst.go_decl_eq (aig : AIG α) (distance : Nat) (input :
   generalize hgo : go aig input distance curr hcurr s = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     split at hgo
     . rw [← hgo]
       intro idx h1 h2
@@ -144,7 +144,7 @@ instance : AIG.LawfulVecOperator α TwoPowShiftTarget twoPowShift where
   le_size := by
     intros
     unfold twoPowShift
-    dsimp
+    dsimp only
     split
     . apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.ite)
       apply AIG.LawfulVecOperator.le_size (f := blastShiftRightConst)
@@ -152,7 +152,7 @@ instance : AIG.LawfulVecOperator α TwoPowShiftTarget twoPowShift where
   decl_eq := by
     intros
     unfold twoPowShift
-    dsimp
+    dsimp only
     split
     . rw [AIG.LawfulVecOperator.decl_eq (f := AIG.RefVec.ite)]
       rw [AIG.LawfulVecOperator.decl_eq (f := blastShiftRightConst)]
@@ -198,7 +198,7 @@ theorem blastShiftRight.go_le_size (aig : AIG α) (distance : AIG.RefVec aig n) 
     (hcurr : curr ≤ n - 1) (acc : AIG.RefVec aig w) :
     aig.decls.size ≤ (go aig distance curr hcurr acc).aig.decls.size := by
   unfold go
-  dsimp
+  dsimp only
   split
   . refine Nat.le_trans ?_ (by apply go_le_size)
     apply AIG.LawfulVecOperator.le_size (f := blastShiftRight.twoPowShift)
@@ -211,7 +211,7 @@ theorem blastShiftRight.go_decl_eq (aig : AIG α) (distance : AIG.RefVec aig n) 
         (go aig distance curr hcurr acc).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig distance curr hcurr acc = res
   unfold go at hgo
-  dsimp at hgo
+  dsimp only at hgo
   split at hgo
   . rw [← hgo]
     intros
@@ -227,7 +227,7 @@ instance : AIG.LawfulVecOperator α AIG.ArbitraryShiftTarget blastShiftRight whe
   le_size := by
     intros
     unfold blastShiftRight
-    dsimp
+    dsimp only
     split
     . simp
     . refine Nat.le_trans ?_ (by apply blastShiftRight.go_le_size)
@@ -235,7 +235,7 @@ instance : AIG.LawfulVecOperator α AIG.ArbitraryShiftTarget blastShiftRight whe
   decl_eq := by
     intros
     unfold blastShiftRight
-    dsimp
+    dsimp only
     split
     . simp
     . rw [blastShiftRight.go_decl_eq]

@@ -96,7 +96,7 @@ theorem mkFullAdder_denote_mem_prefix (aig : AIG α) (input : FullAdderInput aig
       =
     ⟦aig, ⟨start, hstart⟩, assign⟧ := by
   unfold mkFullAdder
-  dsimp
+  dsimp only
   rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderCarry)]
   rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderOut)]
 
@@ -126,7 +126,7 @@ theorem go_get_aux (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref a
   intro idx hidx
   generalize hgo : go aig curr hcurr cin s lhs rhs = res
   unfold go at hgo
-  dsimp at hgo
+  dsimp only at hgo
   split at hgo
   . rw [← hgo]
     intro hfoo
@@ -179,7 +179,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin 
   intro idx hidx1 hidx2
   generalize hgo : go aig curr hcurr cin s lhs rhs = res
   unfold go at hgo
-  dsimp at hgo
+  dsimp only at hgo
   split at hgo
   . next hlt =>
     cases Nat.eq_or_lt_of_le hidx2 with
@@ -239,7 +239,7 @@ theorem blastAdd_eq_eval_getLsb (aig : AIG α) (lhs rhs : BitVec w) (assign : α
   . rw [← hleft idx hidx]
     rw [← hright idx hidx]
     unfold blastAdd
-    dsimp
+    dsimp only
     rw [blastAdd.go_eq_eval_getLsb _ 0 (by omega) _ _ _ _ assign lhs rhs _ _]
     . simp only [BinaryRefVec.lhs_get_cast, Ref_cast', BinaryRefVec.rhs_get_cast]
       rw [LawfulOperator.denote_mem_prefix (f := mkConstCached)]

@@ -48,7 +48,7 @@ where
         res,
         by
           apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastZeroExtend)
-          dsimp at heaig
+          dsimp only at heaig
           assumption
       ⟩
     | .signExtend (w := w) v inner =>
@@ -58,14 +58,14 @@ where
         res,
         by
           apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastSignExtend)
-          dsimp at heaig
+          dsimp only at heaig
           assumption
       ⟩
     | .bin lhs op rhs =>
       let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
       let ⟨⟨aig, rhs⟩, hraig⟩ := go aig rhs
       let lhs := lhs.cast <| by
-        dsimp at hlaig hraig
+        dsimp only at hlaig hraig
         omega
       match op with
       | .and =>
@@ -74,7 +74,7 @@ where
            res,
            by
              apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.zip)
-             dsimp at hlaig hraig
+             dsimp only at hlaig hraig
              omega
          ⟩
       | .or =>
@@ -83,7 +83,7 @@ where
            res,
            by
              apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.zip)
-             dsimp at hlaig hraig
+             dsimp only at hlaig hraig
              omega
          ⟩
 
@@ -93,7 +93,7 @@ where
            res,
            by
              apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.zip)
-             dsimp at hlaig hraig
+             dsimp only at hlaig hraig
              omega
          ⟩
       | .add =>
@@ -102,7 +102,7 @@ where
           res,
           by
             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastAdd)
-            dsimp at hlaig hraig
+            dsimp only at hlaig hraig
             omega
         ⟩
       | .mul =>
@@ -111,7 +111,7 @@ where
           res,
           by
             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastMul)
-            dsimp at hlaig hraig
+            dsimp only at hlaig hraig
             omega
         ⟩
     | .un op expr =>
@@ -123,7 +123,7 @@ where
             res,
             by
               apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.map)
-              dsimp at heaig
+              dsimp only at heaig
               omega
           ⟩
       | .shiftLeftConst distance =>
@@ -132,7 +132,7 @@ where
           res,
           by
             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeftConst)
-            dsimp at heaig
+            dsimp only at heaig
             assumption
         ⟩
       | .shiftRightConst distance =>
@@ -141,7 +141,7 @@ where
           res,
           by
             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRightConst)
-            dsimp at heaig
+            dsimp only at heaig
             assumption
         ⟩
       | .rotateLeft distance =>
@@ -150,7 +150,7 @@ where
           res,
           by
             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastRotateLeft)
-            dsimp at heaig
+            dsimp only at heaig
             assumption
         ⟩
       | .rotateRight distance =>
@@ -159,7 +159,7 @@ where
           res,
           by
             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastRotateRight)
-            dsimp at heaig
+            dsimp only at heaig
             assumption
         ⟩
       | .arithShiftRightConst distance =>
@@ -168,21 +168,21 @@ where
           res,
           by
             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastArithShiftRightConst)
-            dsimp at heaig
+            dsimp only at heaig
             assumption
         ⟩
     | .append lhs rhs =>
       let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
       let ⟨⟨aig, rhs⟩, hraig⟩ := go aig rhs
       let lhs := lhs.cast <| by
-        dsimp at hlaig hraig
+        dsimp only at hlaig hraig
         omega
       let res := bitblast.blastAppend aig ⟨lhs, rhs, by ac_rfl⟩
       ⟨
         res,
         by
           apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastAppend)
-          dsimp at hlaig hraig
+          dsimp only at hlaig hraig
           omega
       ⟩
     | .replicate n expr =>
@@ -192,7 +192,7 @@ where
         res,
         by
           apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastReplicate)
-          dsimp at haig
+          dsimp only at haig
           assumption
       ⟩
     | .extract hi lo expr =>
@@ -202,35 +202,35 @@ where
         res,
         by
           apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastExtract)
-          dsimp at heaig
+          dsimp only at heaig
           exact heaig
       ⟩
     | .shiftLeft lhs rhs =>
       let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
       let ⟨⟨aig, rhs⟩, hraig⟩ := go aig rhs
       let lhs := lhs.cast <| by
-        dsimp at hlaig hraig
+        dsimp only at hlaig hraig
         omega
       let res := bitblast.blastShiftLeft aig ⟨_, lhs, rhs⟩
       ⟨
         res,
         by
           apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeft)
-          dsimp at hlaig hraig
+          dsimp only at hlaig hraig
           omega
       ⟩
     | .shiftRight lhs rhs =>
       let ⟨⟨aig, lhs⟩, hlaig⟩ := go aig lhs
       let ⟨⟨aig, rhs⟩, hraig⟩ := go aig rhs
       let lhs := lhs.cast <| by
-        dsimp at hlaig hraig
+        dsimp only at hlaig hraig
         omega
       let res := bitblast.blastShiftRight aig ⟨_, lhs, rhs⟩
       ⟨
         res,
         by
           apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRight)
-          dsimp at hlaig hraig
+          dsimp only at hlaig hraig
           omega
       ⟩
 
@@ -245,15 +245,15 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w) :
   intros idx h1 h2
   induction expr generalizing aig with
   | var =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastVar)]
   | const =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastConst)]
   | bin lhs op rhs lih rih =>
     match op with
     | .and | .or | .xor | .add | .mul =>
-      dsimp [go]
+      dsimp only [go]
       rw [AIG.LawfulVecOperator.decl_eq]
       rw [rih, lih]
       . apply Nat.lt_of_lt_of_le
@@ -268,28 +268,28 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w) :
     match op with
     | .not | .shiftLeftConst .. | .shiftRightConst .. | .rotateLeft .. | .rotateRight ..
     | .arithShiftRightConst .. =>
-      dsimp [go]
+      dsimp only [go]
       rw [AIG.LawfulVecOperator.decl_eq]
       rw [ih]
       apply Nat.lt_of_lt_of_le
       . exact h1
       . exact (go aig expr).property
   | zeroExtend w inner ih =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastZeroExtend)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | signExtend w inner ih =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastSignExtend)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | append lhs rhs lih rih =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastAppend)]
     rw [rih, lih]
     . apply Nat.lt_of_lt_of_le
@@ -301,21 +301,21 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w) :
         . exact (bitblast.go aig lhs).property
         . exact (go (go aig lhs).1.aig rhs).property
   | replicate n inner ih =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastReplicate)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | extract hi lo inner ih =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastExtract)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | shiftLeft lhs rhs lih rih =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastShiftLeft)]
     rw [rih, lih]
     . apply Nat.lt_of_lt_of_le
@@ -327,7 +327,7 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w) :
         . exact (bitblast.go aig lhs).property
         . exact (go (go aig lhs).1.aig rhs).property
   | shiftRight lhs rhs lih rih =>
-    dsimp [go]
+    dsimp only [go]
     rw [AIG.LawfulVecOperator.decl_eq (f := blastShiftRight)]
     rw [rih, lih]
     . apply Nat.lt_of_lt_of_le

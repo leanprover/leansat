@@ -41,14 +41,14 @@ instance : AIG.LawfulVecOperator α AIG.ExtendTarget blastSignExtend where
   le_size := by
     intros
     unfold blastSignExtend
-    dsimp
+    dsimp only
     split
     . apply AIG.LawfulVecOperator.le_size (f := blastZeroExtend)
     . simp
   decl_eq := by
     intros
     unfold blastSignExtend
-    dsimp
+    dsimp only
     split
     . rw [AIG.LawfulVecOperator.decl_eq (f := blastZeroExtend)]
     . simp

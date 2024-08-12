@@ -38,12 +38,12 @@ where
       let ⟨⟨aig, exprRef⟩, _⟩ := go expr aig atomHandler
       let ret := aig.mkNotCached exprRef
       have := LawfulOperator.le_size (f := mkNotCached) aig exprRef
-      ⟨ret, by dsimp [ret] at *; omega⟩
+      ⟨ret, by dsimp only [ret] at *; omega⟩
     | .gate g lhs rhs =>
       let ⟨⟨aig, lhsRef⟩, lextend⟩ := go lhs aig atomHandler
       let ⟨⟨aig, rhsRef⟩, rextend⟩ := go rhs aig atomHandler
       let lhsRef := lhsRef.cast <| by
-        dsimp at rextend ⊢
+        dsimp only at rextend ⊢
         omega
       let input := ⟨lhsRef, rhsRef⟩
       match g with

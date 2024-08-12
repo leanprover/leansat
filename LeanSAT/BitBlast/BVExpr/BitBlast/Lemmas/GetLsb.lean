@@ -24,7 +24,7 @@ theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget 
       false := by
   rcases target with ⟨expr, idx⟩
   unfold blastGetLsb
-  dsimp
+  dsimp only
   split <;> simp
 
 end BVPred

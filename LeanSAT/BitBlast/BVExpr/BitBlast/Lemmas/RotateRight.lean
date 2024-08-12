@@ -25,13 +25,13 @@ theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
   intro idx hidx
   unfold go
   split
-  . dsimp
+  . dsimp only
     split
     . rw [go_get_aux]
       rw [AIG.RefVec.get_push_ref_lt]
     . rw [go_get_aux]
       rw [AIG.RefVec.get_push_ref_lt]
-  . dsimp
+  . dsimp only
     simp only [RefVec.get, Ref.mk.injEq]
     have : curr = w := by omega
     subst this
@@ -53,7 +53,7 @@ theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
   intro idx hidx1 hidx2
   unfold go
   split
-  . dsimp
+  . dsimp only
     cases Nat.eq_or_lt_of_le hidx2 with
     | inl heq =>
       split
@@ -97,7 +97,7 @@ theorem blastRotateRight_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig
       := by
   intros
   unfold blastRotateRight
-  dsimp
+  dsimp only
   rw [blastRotateRight.go_get]
   . split
     . rfl

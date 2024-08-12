@@ -52,7 +52,7 @@ instance : AIG.LawfulVecOperator α ExtractTarget blastExtract where
   le_size := by
     intros
     unfold blastExtract
-    dsimp
+    dsimp only
     split
     all_goals
       simp only
@@ -60,7 +60,7 @@ instance : AIG.LawfulVecOperator α ExtractTarget blastExtract where
   decl_eq := by
     intros
     unfold blastExtract
-    dsimp
+    dsimp only
     split
     all_goals
       simp only

@@ -33,7 +33,7 @@ theorem blastAppend_eq_eval_getLsb (aig : AIG α) (target : AppendTarget aig new
   intros
   unfold blastAppend
   rcases target with ⟨lw, rw, lhs, rhs, ht⟩
-  dsimp
+  dsimp only
   rw [AIG.RefVec.get_append]
   split <;> rfl
 

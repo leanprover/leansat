@@ -26,7 +26,7 @@ theorem go_eq_carry (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref 
       =
     BitVec.carry w lhsExpr rhsExpr ⟦aig, origCin, assign⟧ := by
   unfold go
-  dsimp
+  dsimp only
   split
   . rw [go_eq_carry]
     . congr 1
@@ -58,7 +58,7 @@ theorem mkOverflowBit_eq_carry (aig : AIG α) (input : OverflowInput aig) (lhs r
       =
     BitVec.carry input.w lhs rhs ⟦aig, input.cin, assign⟧ := by
   unfold mkOverflowBit
-  dsimp
+  dsimp only
   apply mkOverflowBit.go_eq_carry
   . assumption
   . assumption

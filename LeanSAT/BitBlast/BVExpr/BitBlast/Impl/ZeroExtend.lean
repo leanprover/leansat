@@ -30,7 +30,7 @@ where
         let aig := res.aig
         let zeroRef := res.ref
         have hcast := by
-          dsimp [aig, res]
+          dsimp only [aig, res]
           apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
         let input := input.cast hcast
         let s := s.cast hcast
@@ -48,7 +48,7 @@ theorem go_le_size (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth
     aig.decls.size ≤ (go aig w input newWidth curr hcurr s).aig.decls.size := by
   unfold go
   split
-  . dsimp
+  . dsimp only
     split
     . refine Nat.le_trans ?_ (by apply go_le_size)
       omega
@@ -64,7 +64,7 @@ theorem go_decl_eq (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth
   generalize hgo : go aig w input newWidth curr hcurr s = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     split at hgo
     . rw [← hgo]
       intro idx h1 h2

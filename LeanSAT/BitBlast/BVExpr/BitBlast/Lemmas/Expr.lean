@@ -78,7 +78,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     rename_i originalWidth
     generalize hgo : (go aig (signExtend v inner)).val = res
     unfold go at hgo
-    dsimp at hgo
+    dsimp only at hgo
     have : 0 ≤ originalWidth := by omega
     cases Nat.eq_or_lt_of_le this with
     | inl heq =>
@@ -103,7 +103,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
         . rw [ih]
         . rw [BitVec.msb_eq_getLsb_last]
           rw [ih]
-      . dsimp; omega
+      . dsimp only; omega
   | extract hi lo inner ih =>
     simp only [go, blastExtract_eq_eval_getLsb, Bool.if_false_right, eval_extract,
       BitVec.getLsb_extract]
@@ -119,7 +119,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     simp only [go, eval_shiftLeft]
     apply blastShiftLeft_eq_eval_getLsb
     . intros
-      dsimp
+      dsimp only
       rw [go_denote_mem_prefix]
       rw [← lih (aig := aig)]
       . simp
@@ -131,7 +131,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     simp only [go, eval_shiftRight]
     apply blastShiftRight_eq_eval_getLsb
     . intros
-      dsimp
+      dsimp only
       rw [go_denote_mem_prefix]
       rw [← lih (aig := aig)]
       . simp
@@ -166,7 +166,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       simp only [go, eval_bin, BVBinOp.eval_add]
       apply blastAdd_eq_eval_getLsb
       . intros
-        dsimp
+        dsimp only
         rw [go_denote_mem_prefix]
         rw [← lih (aig := aig)]
         . simp
@@ -178,7 +178,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
       simp only [go, eval_bin, BVBinOp.eval_mul]
       apply blastMul_eq_eval_getLsb
       . intros
-        dsimp
+        dsimp only
         rw [go_denote_mem_prefix]
         rw [← lih (aig := aig)]
         . simp

@@ -26,7 +26,7 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth
   generalize hgo : go aig w input newWidth curr hcurr s = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     split at hgo
     . rw [← hgo]
       intros
@@ -41,7 +41,7 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth
         . simp
         . assumption
       . apply go_le_size
-  . dsimp at hgo
+  . dsimp only at hgo
     rw [← hgo]
     simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
     have : curr = newWidth := by omega
@@ -94,7 +94,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (n
   generalize hgo : go aig w input newWidth curr hcurr s = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     cases Nat.eq_or_lt_of_le hidx2 with
     | inl heq =>
       split at hgo

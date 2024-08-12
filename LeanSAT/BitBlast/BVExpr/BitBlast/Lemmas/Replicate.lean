@@ -47,12 +47,12 @@ theorem go_get_aux (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
   intro idx hidx
   unfold go
   split
-  . dsimp
+  . dsimp only
     rw [go_get_aux]
     rw [AIG.RefVec.get_append]
     simp only [hidx, ↓reduceDIte]
     omega
-  . dsimp
+  . dsimp only
     simp only [RefVec.get, Ref.mk.injEq]
     have : curr = n := by omega
     subst this
@@ -69,7 +69,7 @@ theorem go_get (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
         input.get (idx % w) (aux2 hidx1) := by
   intro idx hidx1 hidx2
   unfold go
-  dsimp
+  dsimp only
   split
   . cases Nat.lt_or_ge idx (w * (curr + 1)) with
     | inl h =>
@@ -111,7 +111,7 @@ theorem blastReplicate_eq_eval_getLsb (aig : AIG α) (target : ReplicateTarget a
   intro idx hidx
   rcases target with ⟨n, input, h⟩
   unfold blastReplicate
-  dsimp
+  dsimp only
   subst h
   rw [blastReplicate.go_get]
   omega

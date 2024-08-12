@@ -34,7 +34,7 @@ instance {w : Nat} : AIG.LawfulOperator α (AIG.BinaryRefVec · w) mkUlt where
   le_size := by
     intros
     unfold mkUlt
-    dsimp
+    dsimp only
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkNotCached)
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := BVExpr.bitblast.mkOverflowBit)
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkConstCached)
@@ -42,7 +42,7 @@ instance {w : Nat} : AIG.LawfulOperator α (AIG.BinaryRefVec · w) mkUlt where
   decl_eq := by
     intros
     unfold mkUlt
-    dsimp
+    dsimp only
     rw [AIG.LawfulOperator.decl_eq (f := AIG.mkNotCached)]
     rw [AIG.LawfulOperator.decl_eq (f := BVExpr.bitblast.mkOverflowBit)]
     rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]

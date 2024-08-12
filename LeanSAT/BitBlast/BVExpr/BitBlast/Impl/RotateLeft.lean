@@ -40,12 +40,12 @@ instance : AIG.LawfulVecOperator α AIG.ShiftTarget blastRotateLeft where
   le_size := by
     intros
     unfold blastRotateLeft
-    dsimp
+    dsimp only
     omega
   decl_eq := by
     intros
     unfold blastRotateLeft
-    dsimp
+    dsimp only
 
 end bitblast
 end BVExpr

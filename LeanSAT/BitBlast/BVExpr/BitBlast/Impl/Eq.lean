@@ -23,13 +23,13 @@ instance {w : Nat} : AIG.LawfulOperator α (AIG.BinaryRefVec · w) mkEq where
   le_size := by
     intros
     unfold mkEq
-    dsimp
+    dsimp only
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.RefVec.fold)
     apply AIG.LawfulVecOperator.le_size (f := AIG.RefVec.zip)
   decl_eq := by
     intros
     unfold mkEq
-    dsimp
+    dsimp only
     rw [AIG.LawfulOperator.decl_eq (f := AIG.RefVec.fold)]
     rw [AIG.LawfulVecOperator.decl_eq (f := AIG.RefVec.zip)]
     apply AIG.LawfulVecOperator.lt_size_of_lt_aig_size (f := AIG.RefVec.zip)

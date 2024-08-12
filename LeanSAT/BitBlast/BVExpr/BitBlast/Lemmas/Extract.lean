@@ -26,11 +26,11 @@ theorem go_get_aux (aig : AIG α) (input : RefVec aig w) (lo : Nat) (curr : Nat)
   generalize hgo : go input lo curr hcurr falseRef s = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     rw [← hgo]
     rw [go_get_aux]
     rw [AIG.RefVec.get_push_ref_lt]
-  . dsimp at hgo
+  . dsimp only at hgo
     rw [← hgo]
     simp only [RefVec.get, Ref.mk.injEq]
     have : curr = newWidth := by omega
@@ -50,7 +50,7 @@ theorem go_get (aig : AIG α) (input : RefVec aig w) (lo : Nat) (curr : Nat)
   intro idx hidx1 hidx2
   generalize hgo : go input lo curr hcurr falseRef s = res
   unfold go at hgo
-  dsimp at hgo
+  dsimp only at hgo
   split at hgo
   . rw [← hgo]
     cases Nat.eq_or_lt_of_le hidx2 with
@@ -89,13 +89,13 @@ theorem blastExtract_eq_eval_getLsb (aig : AIG α) (target : ExtractTarget aig n
   intro idx hidx
   generalize hextract : blastExtract aig target = res
   rcases target with ⟨input, hi, lo, hnew⟩
-  dsimp
+  dsimp only
   unfold blastExtract at hextract
-  dsimp at hextract
+  dsimp only at hextract
   split at hextract
   . rw [← hextract]
     rw [blastExtract.go_get]
-    . dsimp
+    . dsimp only
       split
       . rw [RefVec.get_in_bound]
         rw [LawfulOperator.denote_mem_prefix (f := mkConstCached)]
@@ -112,7 +112,7 @@ theorem blastExtract_eq_eval_getLsb (aig : AIG α) (target : ExtractTarget aig n
     rw [← hextract]
     split
     . rw [RefVec.get_in_bound]
-      dsimp
+      dsimp only
       rw [LawfulOperator.denote_mem_prefix (f := mkConstCached)]
       . congr 2
       . omega

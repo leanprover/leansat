@@ -63,13 +63,13 @@ instance : AIG.LawfulOperator α FullAdderInput mkFullAdderOut where
   le_size := by
     intros
     unfold mkFullAdderOut
-    dsimp
+    dsimp only
     apply AIG.LawfulOperator.le_size_of_le_aig_size
     apply AIG.LawfulOperator.le_size
   decl_eq := by
     intros
     unfold mkFullAdderOut
-    dsimp
+    dsimp only
     rw [AIG.LawfulOperator.decl_eq]
     rw [AIG.LawfulOperator.decl_eq]
     apply AIG.LawfulOperator.lt_size_of_lt_aig_size
@@ -105,7 +105,7 @@ instance : AIG.LawfulOperator α FullAdderInput mkFullAdderCarry where
   le_size := by
     intros
     unfold mkFullAdderCarry
-    dsimp
+    dsimp only
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkOrCached)
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkAndCached)
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkAndCached)
@@ -114,7 +114,7 @@ instance : AIG.LawfulOperator α FullAdderInput mkFullAdderCarry where
   decl_eq := by
     intros
     unfold mkFullAdderCarry
-    dsimp
+    dsimp only
     rw [AIG.LawfulOperator.decl_eq]
     rw [AIG.LawfulOperator.decl_eq]
     rw [AIG.LawfulOperator.decl_eq]
@@ -186,7 +186,7 @@ theorem go_le_size (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.R
     (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
     aig.decls.size ≤ (go aig curr hcurr cin s lhs rhs).aig.decls.size := by
   unfold go
-  dsimp
+  dsimp only
   split
   . refine Nat.le_trans ?_ (by apply go_le_size)
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := mkFullAdderCarry)
@@ -200,7 +200,7 @@ theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.R
         (go aig curr hcurr cin s lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig curr hcurr cin s lhs rhs = res
   unfold go at hgo
-  dsimp at hgo
+  dsimp only at hgo
   split at hgo
   . rw [← hgo]
     intros
@@ -220,13 +220,13 @@ instance : AIG.LawfulVecOperator α AIG.BinaryRefVec blastAdd where
   le_size := by
     intros
     unfold blastAdd
-    dsimp
+    dsimp only
     refine Nat.le_trans ?_ (by apply go_le_size)
     apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
   decl_eq := by
     intros
     unfold blastAdd
-    dsimp
+    dsimp only
     rw [go_decl_eq]
     rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
     apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)

@@ -26,12 +26,12 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) 
   intro idx hidx
   unfold go
   split
-  . dsimp
+  . dsimp only
     split
     all_goals
       rw [go_get_aux]
       rw [AIG.RefVec.get_push_ref_lt]
-  . dsimp
+  . dsimp only
     simp only [RefVec.get, Ref.mk.injEq]
     have : curr = newWidth := by omega
     subst this
@@ -92,11 +92,11 @@ theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
   intro idx hidx
   generalize hg : blastSignExtend aig target = res
   unfold blastSignExtend at hg
-  dsimp at hg
+  dsimp only at hg
   have : ¬ (target.w = 0) := by omega
   simp only [this, ↓reduceDIte] at hg
   rw [← hg]
-  dsimp
+  dsimp only
   rw [blastSignExtend.go_get]
   . split <;> simp only
   . omega

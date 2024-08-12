@@ -32,7 +32,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
   generalize hgo: go aig (curr + 1) hcurr acc lhs rhs = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     rw [← hgo]
     rw [go_eq_eval_getLsb]
     . intro idx hidx
@@ -109,7 +109,7 @@ theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign :
   rw [BitVec.getLsb_mul]
   generalize hb : blastMul aig input = res
   unfold blastMul at hb
-  dsimp at hb
+  dsimp only at hb
   split at hb
   . omega
   . next hne =>

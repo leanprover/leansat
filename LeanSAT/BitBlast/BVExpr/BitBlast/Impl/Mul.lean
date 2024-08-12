@@ -72,7 +72,7 @@ theorem go_le_size {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w)
     aig.decls.size ≤ (go aig curr hcurr acc lhs rhs).aig.decls.size := by
   unfold go
   split
-  . dsimp
+  . dsimp only
     refine Nat.le_trans ?_ (by apply go_le_size)
     apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.ite)
     apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := blastAdd)
@@ -86,7 +86,7 @@ theorem go_decl_eq {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w)
   generalize hgo : go aig curr hcurr acc lhs rhs = res
   unfold go at hgo
   split at hgo
-  . dsimp at hgo
+  . dsimp only at hgo
     rw [← hgo]
     intro idx h1 h2
     rw [go_decl_eq]
@@ -112,7 +112,7 @@ instance : AIG.LawfulVecOperator BVBit AIG.BinaryRefVec blastMul where
     unfold blastMul
     split
     . simp
-    . dsimp
+    . dsimp only
       refine Nat.le_trans ?_ (by apply blastMul.go_le_size)
       apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.ite)
       apply AIG.LawfulVecOperator.le_size (f := blastConst)
@@ -121,7 +121,7 @@ instance : AIG.LawfulVecOperator BVBit AIG.BinaryRefVec blastMul where
     unfold blastMul
     split
     . simp
-    . dsimp
+    . dsimp only
       rw [blastMul.go_decl_eq]
       rw [AIG.LawfulVecOperator.decl_eq (f := AIG.RefVec.ite)]
       rw [AIG.LawfulVecOperator.decl_eq (f := blastConst)]
