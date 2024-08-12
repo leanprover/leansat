@@ -13,10 +13,10 @@ namespace BVExpr
 namespace bitblast
 namespace blastVar
 
-theorem go_get_aux (aig : AIG BVBit) (a : Nat)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
+theorem go_get_aux (aig : AIG BVBit) (a : Nat) (curr : Nat) (hcurr : curr ≤ w)
+    (s : AIG.RefVec aig curr) :
     -- The hfoo here is a trick to make the dependent type gods happy
-    : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
+    ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
         (go w aig curr s a hcurr).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
@@ -42,18 +42,18 @@ theorem go_get_aux (aig : AIG BVBit) (a : Nat)
     simp
 termination_by w - curr
 
-theorem go_get (aig : AIG BVBit) (a : Nat)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx : idx < curr),
+theorem go_get (aig : AIG BVBit) (a : Nat) (curr : Nat) (hcurr : curr ≤ w)
+    (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx : idx < curr),
         (go w aig curr s a hcurr).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
   intros
   apply go_get_aux
 
-theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx)
-    (s : AIG.RefVec aig idx) (a : Nat) (start : Nat) (hstart)
-  : ⟦
+theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx) (s : AIG.RefVec aig idx)
+    (a : Nat) (start : Nat) (hstart) :
+    ⟦
       (go w aig idx s a hidx).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
       assign
@@ -67,9 +67,9 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx)
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG BVBit) (a : Nat) (assign : Assignment)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx1 : idx < w),
+theorem go_eq_eval_getLsb (aig : AIG BVBit) (a : Nat) (assign : Assignment) (curr : Nat)
+    (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
         ⟦
@@ -107,8 +107,8 @@ termination_by w - curr
 end blastVar
 
 @[simp]
-theorem blastVar_eq_eval_getLsb (aig : AIG BVBit) (var : BVVar w) (assign : Assignment)
-    : ∀ (idx : Nat) (hidx : idx < w),
+theorem blastVar_eq_eval_getLsb (aig : AIG BVBit) (var : BVVar w) (assign : Assignment) :
+    ∀ (idx : Nat) (hidx : idx < w),
         ⟦(blastVar aig var).aig, (blastVar aig var).vec.get idx hidx, assign.toAIGAssignment⟧
           =
         ((BVExpr.var (w := w) var.ident).eval assign).getLsb idx := by

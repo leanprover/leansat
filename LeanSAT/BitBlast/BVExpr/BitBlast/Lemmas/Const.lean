@@ -17,9 +17,9 @@ variable [Hashable α] [DecidableEq α]
 namespace blastConst
 
 theorem go_get_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ w)
-    (s : AIG.RefVec aig curr)
+    (s : AIG.RefVec aig curr) :
     -- The hfoo here is a trick to make the dependent type gods happy
-    : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
+    ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
         (go aig curr s c hcurr).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
@@ -46,8 +46,8 @@ theorem go_get_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ 
 termination_by w - curr
 
 theorem go_get (aig : AIG α) (c : BitVec w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx : idx < curr),
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx : idx < curr),
         (go aig curr s c hcurr).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
@@ -55,8 +55,8 @@ theorem go_get (aig : AIG α) (c : BitVec w)
   apply go_get_aux
 
 theorem go_denote_mem_prefix (aig : AIG α) (idx : Nat) (hidx)
-    (s : AIG.RefVec aig idx) (c : BitVec w) (start : Nat) (hstart)
-  : ⟦
+    (s : AIG.RefVec aig idx) (c : BitVec w) (start : Nat) (hstart) :
+    ⟦
       (go aig idx s c hidx).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
       assign
@@ -71,8 +71,8 @@ theorem go_denote_mem_prefix (aig : AIG α) (idx : Nat) (hidx)
     apply go_le_size
 
 theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx1 : idx < w),
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
         ⟦
@@ -107,8 +107,8 @@ termination_by w - curr
 end blastConst
 
 @[simp]
-theorem blastConst_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
-    : ∀ (idx : Nat) (hidx : idx < w),
+theorem blastConst_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool) :
+    ∀ (idx : Nat) (hidx : idx < w),
         ⟦(blastConst aig c).aig, (blastConst aig c).vec.get idx hidx, assign⟧
           =
         c.getLsb idx := by

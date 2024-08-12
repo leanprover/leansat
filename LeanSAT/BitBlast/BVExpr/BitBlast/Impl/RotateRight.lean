@@ -14,14 +14,14 @@ namespace bitblast
 
 variable [Hashable α] [DecidableEq α]
 
-def blastRotateRight (aig : AIG α) (target : AIG.ShiftTarget aig w)
-    : AIG.RefVecEntry α w :=
+def blastRotateRight (aig : AIG α) (target : AIG.ShiftTarget aig w) :
+    AIG.RefVecEntry α w :=
   let ⟨input, distance⟩ := target
   ⟨aig, go input distance 0 (by omega) .empty⟩
 where
   go {aig : AIG α} (input : AIG.RefVec aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
-      (s : AIG.RefVec aig curr)
-    : AIG.RefVec aig w :=
+      (s : AIG.RefVec aig curr) :
+      AIG.RefVec aig w :=
   if hcurr1:curr < w then
     if hcurr2:curr < w - distance % w then
       let ref := input.get ((distance % w) + curr) (by omega)

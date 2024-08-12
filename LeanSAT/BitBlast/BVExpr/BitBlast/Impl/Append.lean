@@ -20,8 +20,8 @@ structure AppendTarget (aig : AIG α) (combined : Nat) where
   rhs : AIG.RefVec aig rw
   h : combined = rw + lw
 
-def blastAppend (aig : AIG α) (target : AppendTarget aig newWidth)
-    : AIG.RefVecEntry α newWidth :=
+def blastAppend (aig : AIG α) (target : AppendTarget aig newWidth) :
+    AIG.RefVecEntry α newWidth :=
   let ⟨lhs, rhs, h⟩ := target
   let combined := rhs.append lhs
   ⟨aig, h ▸ combined⟩

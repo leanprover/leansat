@@ -17,8 +17,8 @@ variable [Hashable α] [DecidableEq α]
 namespace blastRotateLeft
 
 theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx : idx < curr),
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx : idx < curr),
         (go input distance curr hcurr s).get idx (by omega)
           =
         s.get idx hidx := by
@@ -39,8 +39,8 @@ theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
 termination_by w - curr
 
 theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx1 : idx < w),
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
         (go input distance curr hcurr s).get idx hidx1
@@ -82,18 +82,18 @@ end blastRotateLeft
 
 @[simp]
 theorem blastRotateLeft_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w)
-  (assign : α → Bool)
-  : ∀ (idx : Nat) (hidx : idx < w),
-      ⟦
-        (blastRotateLeft aig target).aig,
-        (blastRotateLeft aig target).vec.get idx hidx,
-        assign
-      ⟧
-        =
-      if hidx2:idx < target.distance % w then
-        ⟦aig, target.vec.get (w - (target.distance % w) + idx) (by omega), assign⟧
-      else
-        ⟦aig, target.vec.get (idx - (target.distance % w)) (by omega), assign⟧
+    (assign : α → Bool) :
+    ∀ (idx : Nat) (hidx : idx < w),
+        ⟦
+          (blastRotateLeft aig target).aig,
+          (blastRotateLeft aig target).vec.get idx hidx,
+          assign
+        ⟧
+          =
+        if hidx2:idx < target.distance % w then
+          ⟦aig, target.vec.get (w - (target.distance % w) + idx) (by omega), assign⟧
+        else
+          ⟦aig, target.vec.get (idx - (target.distance % w)) (by omega), assign⟧
       := by
   intros
   unfold blastRotateLeft

@@ -17,8 +17,8 @@ variable [Hashable α] [DecidableEq α]
 namespace blastZeroExtend
 
 theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
         (go aig w input newWidth curr hcurr s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
@@ -50,8 +50,8 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth
 termination_by newWidth - curr
 
 theorem go_get (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (hidx : idx < curr),
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (hidx : idx < curr),
         (go aig w input newWidth curr hcurr s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
@@ -59,8 +59,8 @@ theorem go_get (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth cur
   apply go_get_aux
 
 theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) (start : Nat) (hstart)
-  : ⟦
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) (start : Nat) (hstart) :
+    ⟦
       (go aig w input newWidth curr hcurr s).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
       assign
@@ -75,8 +75,8 @@ theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w)
     apply go_le_size
 
 theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) (assign : α → Bool)
-    : ∀ (idx : Nat) (hidx1 : idx < newWidth),
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) (assign : α → Bool) :
+    ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
           →
         ⟦
@@ -136,18 +136,18 @@ end blastZeroExtend
 
 @[simp]
 theorem blastZeroExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig newWidth)
-  (assign : α → Bool)
-  : ∀ (idx : Nat) (hidx : idx < newWidth),
-      ⟦
-        (blastZeroExtend aig target).aig,
-        (blastZeroExtend aig target).vec.get idx hidx,
-        assign
-      ⟧
-        =
-      if hidx:idx < target.w then
-         ⟦aig, target.vec.get idx hidx, assign⟧
-      else
-         false
+    (assign : α → Bool) :
+    ∀ (idx : Nat) (hidx : idx < newWidth),
+        ⟦
+          (blastZeroExtend aig target).aig,
+          (blastZeroExtend aig target).vec.get idx hidx,
+          assign
+        ⟧
+          =
+        if hidx:idx < target.w then
+           ⟦aig, target.vec.get idx hidx, assign⟧
+        else
+           false
     := by
   intro idx hidx
   unfold blastZeroExtend

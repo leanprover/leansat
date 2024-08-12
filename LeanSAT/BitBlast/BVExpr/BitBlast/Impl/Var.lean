@@ -12,7 +12,6 @@ open Std.Sat
 namespace BVExpr
 namespace bitblast
 
--- TODO: Probably a more general thing that we should put somewhere else
 structure BVVar (width : Nat) where
   ident : Nat
 
@@ -20,8 +19,8 @@ def blastVar (aig : AIG BVBit) (var : BVVar w) : AIG.RefVecEntry BVBit w :=
   go w aig 0 .empty var.ident (by omega)
 where
   go (w : Nat) (aig : AIG BVBit) (idx : Nat) (s : AIG.RefVec aig idx) (a : Nat)
-    (hidx : idx ≤ w)
-    : AIG.RefVecEntry BVBit w :=
+    (hidx : idx ≤ w) :
+    AIG.RefVecEntry BVBit w :=
   if hidx:idx < w then
     let res := aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩
     let aig := res.aig
@@ -38,8 +37,8 @@ where
   termination_by w - idx
 
 theorem blastVar.go_le_size {aig : AIG BVBit} (idx : Nat) (s : AIG.RefVec aig idx) (a : Nat)
-    (hidx : idx ≤ w)
-    : aig.decls.size ≤ (go w aig idx s a hidx).aig.decls.size := by
+    (hidx : idx ≤ w) :
+    aig.decls.size ≤ (go w aig idx s a hidx).aig.decls.size := by
   unfold go
   split
   . dsimp
@@ -48,14 +47,14 @@ theorem blastVar.go_le_size {aig : AIG BVBit} (idx : Nat) (s : AIG.RefVec aig id
   . simp
 termination_by w - idx
 
-theorem blastVar_le_size {aig : AIG BVBit} (var : BVVar w)
-    : aig.decls.size ≤ (blastVar aig var).aig.decls.size := by
+theorem blastVar_le_size {aig : AIG BVBit} (var : BVVar w) :
+    aig.decls.size ≤ (blastVar aig var).aig.decls.size := by
   unfold blastVar
   apply blastVar.go_le_size
 
 theorem blastVar.go_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefVec aig i) (a : Nat)
-    (hi : i ≤ w)
-    : ∀ (idx : Nat) (h1) (h2), (go w aig i s a hi).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+    (hi : i ≤ w) :
+    ∀ (idx : Nat) (h1) (h2), (go w aig i s a hi).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go w aig i s a hi = res
   unfold go at hgo
   split at hgo
@@ -72,8 +71,8 @@ theorem blastVar.go_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefVec aig i) (
     simp
 termination_by w - i
 
-theorem blastVar_decl_eq {aig : AIG BVBit} (var : BVVar w)
-    : ∀ (idx : Nat) (h1) (h2), (blastVar aig var).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+theorem blastVar_decl_eq {aig : AIG BVBit} (var : BVVar w) :
+    ∀ (idx : Nat) (h1) (h2), (blastVar aig var).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   unfold blastVar
   apply blastVar.go_decl_eq
 

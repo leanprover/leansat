@@ -14,13 +14,14 @@ namespace BVPred
 variable [Hashable α] [DecidableEq α]
 
 @[simp]
-theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget aig) (assign : α → Bool)
-    : ⟦blastGetLsb aig target, assign⟧
-        =
-      if h:target.idx < target.w then
-        ⟦aig, target.vec.get target.idx h, assign⟧
-      else
-        false := by
+theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget aig)
+    (assign : α → Bool) :
+    ⟦blastGetLsb aig target, assign⟧
+      =
+    if h:target.idx < target.w then
+      ⟦aig, target.vec.get target.idx h, assign⟧
+    else
+      false := by
   rcases target with ⟨expr, idx⟩
   unfold blastGetLsb
   dsimp

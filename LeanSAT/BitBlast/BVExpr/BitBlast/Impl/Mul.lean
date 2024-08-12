@@ -1,5 +1,4 @@
 import LeanSAT.BitBlast.BVExpr.Basic
-import Std.Sat.AIG
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Add
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.ShiftLeft
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Const
@@ -35,8 +34,8 @@ def blastMul (aig : AIG BVBit) (input : AIG.BinaryRefVec aig w) : AIG.RefVecEntr
     go aig 1 (by omega) acc lhs rhs
 where
   go {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefVec aig w)
-      (lhs rhs : AIG.RefVec aig w)
-      : AIG.RefVecEntry BVBit w :=
+      (lhs rhs : AIG.RefVec aig w) :
+      AIG.RefVecEntry BVBit w :=
     if h:curr < w then
       /-
       theorem mulRec_succ_eq (l r : BitVec w) (s : Nat) :
@@ -69,8 +68,8 @@ where
 namespace blastMul
 
 theorem go_le_size {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefVec aig w)
-      (lhs rhs : AIG.RefVec aig w)
-    : aig.decls.size ≤ (go aig curr hcurr acc lhs rhs).aig.decls.size := by
+    (lhs rhs : AIG.RefVec aig w) :
+    aig.decls.size ≤ (go aig curr hcurr acc lhs rhs).aig.decls.size := by
   unfold go
   split
   . dsimp
@@ -81,8 +80,8 @@ theorem go_le_size {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w)
   . simp
 
 theorem go_decl_eq {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefVec aig w)
-      (lhs rhs : AIG.RefVec aig w)
-    : ∀ (idx : Nat) (h1) (h2),
+    (lhs rhs : AIG.RefVec aig w) :
+    ∀ (idx : Nat) (h1) (h2),
        (go aig curr hcurr acc lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig curr hcurr acc lhs rhs = res
   unfold go at hgo

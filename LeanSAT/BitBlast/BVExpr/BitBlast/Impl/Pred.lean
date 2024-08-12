@@ -38,8 +38,8 @@ def bitblast (aig : AIG BVBit) (pred : BVPred) : AIG.Entrypoint BVBit :=
     let refs := res.vec
     blastGetLsb aig ⟨refs, idx⟩
 
-theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred)
-    : aig.decls.size ≤ (bitblast aig pred).aig.decls.size := by
+theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred) :
+    aig.decls.size ≤ (bitblast aig pred).aig.decls.size := by
   cases pred with
   | bin lhs op rhs =>
     cases op with

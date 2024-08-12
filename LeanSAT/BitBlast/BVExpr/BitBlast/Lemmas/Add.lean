@@ -17,32 +17,32 @@ variable [Hashable α] [DecidableEq α]
 namespace blastAdd
 
 @[simp]
-theorem denote_mkFullAdderOut (assign : α → Bool) (aig : AIG α) (input : FullAdderInput aig)
-    : ⟦mkFullAdderOut aig input, assign⟧
-        =
-      xor
-        (xor
-           ⟦aig, input.lhs, assign⟧
-           ⟦aig, input.rhs, assign⟧)
-        ⟦aig, input.cin, assign⟧
+theorem denote_mkFullAdderOut (assign : α → Bool) (aig : AIG α) (input : FullAdderInput aig) :
+    ⟦mkFullAdderOut aig input, assign⟧
+      =
+    xor
+      (xor
+         ⟦aig, input.lhs, assign⟧
+         ⟦aig, input.rhs, assign⟧)
+      ⟦aig, input.cin, assign⟧
     := by
   simp only [mkFullAdderOut, Ref_cast', denote_mkXorCached, denote_projected_entry, Bool.bne_assoc,
     Bool.bne_left_inj]
   rw [LawfulOperator.denote_mem_prefix (f := mkXorCached)]
 
 @[simp]
-theorem denote_mkFullAdderCarry (assign : α → Bool) (aig : AIG α) (input : FullAdderInput aig)
-    : ⟦mkFullAdderCarry aig input, assign⟧
-        =
-       or
-         (and
-           (xor
-             ⟦aig, input.lhs, assign⟧
-             ⟦aig, input.rhs, assign⟧)
-           ⟦aig, input.cin, assign⟧)
-         (and
-           ⟦aig, input.lhs, assign⟧
-           ⟦aig, input.rhs, assign⟧)
+theorem denote_mkFullAdderCarry (assign : α → Bool) (aig : AIG α) (input : FullAdderInput aig) :
+    ⟦mkFullAdderCarry aig input, assign⟧
+      =
+    or
+      (and
+        (xor
+          ⟦aig, input.lhs, assign⟧
+          ⟦aig, input.rhs, assign⟧)
+        ⟦aig, input.cin, assign⟧)
+      (and
+        ⟦aig, input.lhs, assign⟧
+        ⟦aig, input.rhs, assign⟧)
     := by
   simp only [mkFullAdderCarry, Ref_cast', Int.reduceNeg, denote_mkOrCached,
     LawfulOperator.denote_input_entry, denote_mkAndCached, denote_projected_entry',
@@ -87,8 +87,8 @@ theorem denote_mkFullAdderCarry (assign : α → Bool) (aig : AIG α) (input : F
     rw [LawfulOperator.denote_mem_prefix (f := mkXorCached) (h := input.rhs.hgate)]
 
 theorem mkFullAdder_denote_mem_prefix (aig : AIG α) (input : FullAdderInput aig) (start : Nat)
-    (hstart)
-  : ⟦
+    (hstart) :
+    ⟦
       (mkFullAdder aig input).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply FullAdderOutput.hle⟩,
       assign
@@ -101,8 +101,8 @@ theorem mkFullAdder_denote_mem_prefix (aig : AIG α) (input : FullAdderInput aig
   rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderOut)]
 
 theorem go_denote_mem_prefix (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
-    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) (start : Nat) (hstart)
-  : ⟦
+    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) (start : Nat) (hstart) :
+    ⟦
       (go aig curr hcurr cin s lhs rhs).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
       assign
@@ -117,9 +117,9 @@ theorem go_denote_mem_prefix (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (c
     apply go_le_size
 
 theorem go_get_aux (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
-    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w)
+    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
     -- The hfoo here is a trick to make the dependent type gods happy
-    : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
+    ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
         (go aig curr hcurr cin s lhs rhs).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
@@ -145,16 +145,15 @@ theorem go_get_aux (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref a
 termination_by w - curr
 
 theorem go_get (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
-    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w)
-    : ∀ (idx : Nat) (hidx : idx < curr),
+    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
+    ∀ (idx : Nat) (hidx : idx < curr),
         (go aig curr hcurr cin s lhs rhs).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
   intros
   apply go_get_aux
 
-theorem _root_.Bool.atLeastTwo_eq_halfAdder (lhsBit rhsBit carry : Bool)
-  : Bool.atLeastTwo lhsBit rhsBit carry
+theorem atLeastTwo_eq_halfAdder (lhsBit rhsBit carry : Bool) : Bool.atLeastTwo lhsBit rhsBit carry
       =
     (((xor lhsBit rhsBit) && carry) || (lhsBit && rhsBit)) := by
   cases lhsBit <;> cases rhsBit <;> cases carry <;> decide
@@ -164,23 +163,19 @@ theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin 
     (lhsExpr rhsExpr : BitVec w)
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.get idx hidx, assign⟧ = lhsExpr.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.get idx hidx, assign⟧ = rhsExpr.getLsb idx)
-    (hcin :
-      ⟦aig, cin, assign⟧
-        =
-      BitVec.carry curr lhsExpr rhsExpr false
-    )
-  : ∀ (idx : Nat) (hidx1 : idx < w),
-      curr ≤ idx
-        →
-      ⟦
-        (go aig curr hcurr cin s lhs rhs).aig,
-        (go aig curr hcurr cin s lhs rhs).vec.get idx hidx1,
-        assign
-      ⟧
-        =
-      ⟦aig, lhs.get idx hidx1, assign⟧.xor
-        (⟦aig, rhs.get idx hidx1, assign⟧.xor
-          (BitVec.carry idx lhsExpr rhsExpr false)) := by
+    (hcin : ⟦aig, cin, assign⟧ = BitVec.carry curr lhsExpr rhsExpr false) :
+    ∀ (idx : Nat) (hidx1 : idx < w),
+        curr ≤ idx
+          →
+        ⟦
+          (go aig curr hcurr cin s lhs rhs).aig,
+          (go aig curr hcurr cin s lhs rhs).vec.get idx hidx1,
+          assign
+        ⟧
+          =
+        ⟦aig, lhs.get idx hidx1, assign⟧.xor
+          (⟦aig, rhs.get idx hidx1, assign⟧.xor
+            (BitVec.carry idx lhsExpr rhsExpr false)) := by
   intro idx hidx1 hidx2
   generalize hgo : go aig curr hcurr cin s lhs rhs = res
   unfold go at hgo
@@ -224,7 +219,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin 
         rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderOut)]
         rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderOut)]
         rw [hleft, hright, hcin]
-        simp [_root_.Bool.atLeastTwo_eq_halfAdder]
+        simp [atLeastTwo_eq_halfAdder]
       . omega
   . omega
 termination_by w - curr
@@ -234,11 +229,11 @@ end blastAdd
 theorem blastAdd_eq_eval_getLsb (aig : AIG α) (lhs rhs : BitVec w) (assign : α → Bool)
       (input : BinaryRefVec aig w)
       (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
-      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
-    : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(blastAdd aig input).aig, (blastAdd aig input).vec.get idx hidx, assign⟧
-          =
-        (lhs + rhs).getLsb idx := by
+      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign⟧ = rhs.getLsb idx) :
+      ∀ (idx : Nat) (hidx : idx < w),
+          ⟦(blastAdd aig input).aig, (blastAdd aig input).vec.get idx hidx, assign⟧
+            =
+          (lhs + rhs).getLsb idx := by
   intro idx hidx
   rw [BitVec.getLsb_add]
   . rw [← hleft idx hidx]

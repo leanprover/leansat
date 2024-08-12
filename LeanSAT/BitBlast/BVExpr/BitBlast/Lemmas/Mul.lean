@@ -19,8 +19,8 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
     (hacc : ∀ (idx : Nat) (hidx : idx < w),
                 ⟦aig, acc.get idx hidx, assign.toAIGAssignment⟧
                   =
-                (BitVec.mulRec lexpr rexpr curr).getLsb idx)
-    : ∀ (idx : Nat) (hidx : idx < w),
+                (BitVec.mulRec lexpr rexpr curr).getLsb idx) :
+    ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (go aig (curr + 1) hcurr acc lhs rhs).aig,
           (go aig (curr + 1) hcurr acc lhs rhs).vec.get idx hidx,
@@ -91,7 +91,6 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
     simp [this]
 termination_by w - curr
 decreasing_by
-  -- XXX: simp_wf sets unfoldPartialApp to true, this causes large performance issues here
   simp only [InvImage, WellFoundedRelation.rel, Nat.lt_wfRel, sizeOf_nat, Nat.lt_eq, gt_iff_lt]
   omega
 
@@ -101,8 +100,8 @@ end blastMul
 theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign : Assignment)
       (input : BinaryRefVec aig w)
       (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign.toAIGAssignment⟧ = lhs.getLsb idx)
-      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign.toAIGAssignment⟧ = rhs.getLsb idx)
-    : ∀ (idx : Nat) (hidx : idx < w),
+      (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign.toAIGAssignment⟧ = rhs.getLsb idx) :
+      ∀ (idx : Nat) (hidx : idx < w),
         ⟦(blastMul aig input).aig, (blastMul aig input).vec.get idx hidx, assign.toAIGAssignment⟧
           =
         (lhs * rhs).getLsb idx := by

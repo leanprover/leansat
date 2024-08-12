@@ -19,8 +19,8 @@ structure ReplicateTarget (aig : AIG α) (combined : Nat) where
   inner : AIG.RefVec aig w
   h : combined = w * n
 
-def blastReplicate (aig : AIG α) (target : ReplicateTarget aig newWidth)
-    : AIG.RefVecEntry α newWidth :=
+def blastReplicate (aig : AIG α) (target : ReplicateTarget aig newWidth) :
+    AIG.RefVecEntry α newWidth :=
   let ⟨n, inner, h⟩ := target
   let ref := go n 0 (by omega) inner .empty
   ⟨aig, h ▸ ref⟩

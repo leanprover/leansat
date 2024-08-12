@@ -15,8 +15,8 @@ namespace bitblast
 
 variable [Hashable α] [DecidableEq α]
 
-def blastSignExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth)
-    : AIG.RefVecEntry α newWidth :=
+def blastSignExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth) :
+    AIG.RefVecEntry α newWidth :=
   let ⟨width, input⟩ := target
   if hw:width = 0 then
     blastZeroExtend aig ⟨width, input⟩

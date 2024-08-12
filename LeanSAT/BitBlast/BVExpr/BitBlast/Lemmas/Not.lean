@@ -16,8 +16,8 @@ variable [Hashable α] [DecidableEq α]
 
 @[simp]
 theorem blastNot_eq_eval_getLsb (aig : AIG α) (target : RefVec aig w)
-    (assign : α → Bool)
-    : ∀ (idx : Nat) (hidx : idx < w),
+    (assign : α → Bool) :
+    ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (blastNot aig target).aig,
           (blastNot aig target).vec.get idx hidx,

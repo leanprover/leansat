@@ -15,10 +15,10 @@ open Std.Sat.AIG
 namespace BVPred
 
 @[simp]
-theorem bitblast_denote_eq_eval (aig : AIG BVBit) (pred : BVPred) (assign : BVExpr.Assignment)
-    : ⟦bitblast aig pred, assign.toAIGAssignment⟧
-        =
-      pred.eval assign := by
+theorem bitblast_denote_eq_eval (aig : AIG BVBit) (pred : BVPred) (assign : BVExpr.Assignment) :
+    ⟦bitblast aig pred, assign.toAIGAssignment⟧
+      =
+    pred.eval assign := by
   cases pred with
   | bin lhs op rhs =>
     cases op with

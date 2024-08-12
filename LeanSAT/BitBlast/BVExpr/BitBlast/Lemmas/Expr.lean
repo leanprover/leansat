@@ -26,13 +26,13 @@ open Std.Sat.AIG
 namespace BVExpr
 namespace bitblast
 
-theorem go_val_eq_bitblast (aig : AIG BVBit) (expr : BVExpr w)
-    : (go aig expr).val = bitblast aig expr := by
+theorem go_val_eq_bitblast (aig : AIG BVBit) (expr : BVExpr w) :
+    (go aig expr).val = bitblast aig expr := by
   rfl
 
 theorem go_denote_mem_prefix (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment) (start : Nat)
-    (hstart)
-  : ⟦
+    (hstart) :
+    ⟦
       (go aig expr).val.aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply (go aig expr).property⟩,
       assign.toAIGAssignment
@@ -46,8 +46,8 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (expr : BVExpr w) (assign : Assig
   . intros
     apply (go aig expr).property
 
-theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
-    : ∀ (idx : Nat) (hidx : idx < w),
+theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment) :
+    ∀ (idx : Nat) (hidx : idx < w),
         ⟦(go aig expr).val.aig, (go aig expr).val.vec.get idx hidx, assign.toAIGAssignment⟧
           =
         (expr.eval assign).getLsb idx := by
@@ -206,8 +206,8 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
 
 end bitblast
 @[simp]
-theorem bitblast_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
-    : ∀ (idx : Nat) (hidx : idx < w),
+theorem bitblast_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment) :
+    ∀ (idx : Nat) (hidx : idx < w),
         ⟦(bitblast aig expr).aig, (bitblast aig expr).vec.get idx hidx, assign.toAIGAssignment⟧
           =
         (expr.eval assign).getLsb idx

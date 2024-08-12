@@ -18,8 +18,8 @@ def blastConst (aig : AIG α) (val : BitVec w) : AIG.RefVecEntry α w :=
   go aig 0 .empty val (by omega)
 where
   go {w : Nat} (aig : AIG α) (idx : Nat) (s : AIG.RefVec aig idx) (val : BitVec w)
-      (hidx : idx ≤ w)
-      : AIG.RefVecEntry α w :=
+      (hidx : idx ≤ w) :
+      AIG.RefVecEntry α w :=
     if hidx:idx < w then
       let res := aig.mkConstCached (val.getLsb idx)
       let aig := res.aig
@@ -36,8 +36,8 @@ where
   termination_by w - idx
 
 theorem blastConst.go_le_size {aig : AIG α} (idx : Nat) (s : AIG.RefVec aig idx) (val : BitVec w)
-    (hidx : idx ≤ w)
-    : aig.decls.size ≤ (go aig idx s val hidx).aig.decls.size := by
+    (hidx : idx ≤ w) :
+    aig.decls.size ≤ (go aig idx s val hidx).aig.decls.size := by
   unfold go
   split
   . dsimp
@@ -46,14 +46,14 @@ theorem blastConst.go_le_size {aig : AIG α} (idx : Nat) (s : AIG.RefVec aig idx
   . simp
 termination_by w - idx
 
-theorem blastConst_le_size {aig : AIG α} (val : BitVec w)
-    : aig.decls.size ≤ (blastConst aig val).aig.decls.size := by
+theorem blastConst_le_size {aig : AIG α} (val : BitVec w) :
+    aig.decls.size ≤ (blastConst aig val).aig.decls.size := by
   unfold blastConst
   apply blastConst.go_le_size
 
 theorem blastConst.go_decl_eq {aig : AIG α} (i : Nat) (s : AIG.RefVec aig i) (val : BitVec w)
-    (hi : i ≤ w)
-    : ∀ (idx : Nat) (h1) (h2),
+    (hi : i ≤ w) :
+    ∀ (idx : Nat) (h1) (h2),
         (go aig i s val hi).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig i s val hi = res
   unfold go at hgo
@@ -71,9 +71,8 @@ theorem blastConst.go_decl_eq {aig : AIG α} (i : Nat) (s : AIG.RefVec aig i) (v
     simp
 termination_by w - i
 
-theorem blastConst_decl_eq {aig : AIG α} (val : BitVec w)
-    : ∀ (idx : Nat) (h1) (h2),
-        (blastConst aig val).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+theorem blastConst_decl_eq {aig : AIG α} (val : BitVec w) :
+    ∀ (idx : Nat) (h1) (h2), (blastConst aig val).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   intros
   unfold blastConst
   apply blastConst.go_decl_eq

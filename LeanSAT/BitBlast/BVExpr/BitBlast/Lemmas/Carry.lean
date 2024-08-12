@@ -21,12 +21,8 @@ theorem go_eq_carry (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref 
     (lhs rhs : RefVec aig w) (lhsExpr rhsExpr : BitVec w) (assign : α → Bool)
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.get idx hidx, assign⟧ = lhsExpr.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.get idx hidx, assign⟧ = rhsExpr.getLsb idx)
-    (hcin :
-      ⟦aig, cin, assign⟧
-        =
-      BitVec.carry curr lhsExpr rhsExpr ⟦aig, origCin, assign⟧
-    )
-  : ⟦go aig curr hcurr cin lhs rhs, assign⟧
+    (hcin : ⟦aig, cin, assign⟧ = BitVec.carry curr lhsExpr rhsExpr ⟦aig, origCin, assign⟧) :
+    ⟦go aig curr hcurr cin lhs rhs, assign⟧
       =
     BitVec.carry w lhsExpr rhsExpr ⟦aig, origCin, assign⟧ := by
   unfold go
@@ -46,7 +42,7 @@ theorem go_eq_carry (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref 
     . simp [BitVec.carry_succ]
       rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderCarry)]
       rw [hleft, hright, hcin]
-      rw [Bool.atLeastTwo_eq_halfAdder]
+      rw [blastAdd.atLeastTwo_eq_halfAdder]
   . have : w = curr := by omega
     rw [hcin]
     simp [this]
@@ -57,8 +53,8 @@ end mkOverflowBit
 theorem mkOverflowBit_eq_carry (aig : AIG α) (input : OverflowInput aig) (lhs rhs : BitVec input.w)
     (assign : α → Bool)
     (hleft : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.vec.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.vec.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
-  : ⟦mkOverflowBit aig input, assign⟧
+    (hright : ∀ (idx : Nat) (hidx : idx < input.w), ⟦aig, input.vec.rhs.get idx hidx, assign⟧ = rhs.getLsb idx) :
+    ⟦mkOverflowBit aig input, assign⟧
       =
     BitVec.carry input.w lhs rhs ⟦aig, input.cin, assign⟧ := by
   unfold mkOverflowBit

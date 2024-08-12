@@ -20,8 +20,8 @@ structure ExtractTarget (aig : AIG α) (newWidth : Nat) where
   lo : Nat
   hnew : newWidth = hi - lo + 1
 
-def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth)
-    : AIG.RefVecEntry α newWidth :=
+def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth) :
+    AIG.RefVecEntry α newWidth :=
   let ⟨input, hi, lo, hnew⟩ := target
   let res := aig.mkConstCached false
   let aig := res.aig
@@ -37,8 +37,8 @@ def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth)
     ⟨aig, this ▸ base⟩
 where
   go {aig : AIG α} {w : Nat} (input : AIG.RefVec aig w) (lo : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
-      (falseRef : AIG.Ref aig) (s : AIG.RefVec aig curr)
-    : AIG.RefVec aig newWidth :=
+      (falseRef : AIG.Ref aig) (s : AIG.RefVec aig curr) :
+      AIG.RefVec aig newWidth :=
   if h : curr < newWidth then
     let nextRef := input.getD (lo + curr) falseRef
     let s := s.push nextRef

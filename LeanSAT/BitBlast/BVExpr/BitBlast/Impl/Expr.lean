@@ -235,14 +235,13 @@ where
       ⟩
 
 
-theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w)
-    : aig.decls.size ≤ (bitblast aig expr).aig.decls.size := by
+theorem bitblast_le_size {aig : AIG BVBit} (expr : BVExpr w) :
+    aig.decls.size ≤ (bitblast aig expr).aig.decls.size := by
   unfold bitblast
   exact (bitblast.go aig expr).property
 
-theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
-    : ∀ (idx : Nat) (h1) (h2),
-        (go aig expr).val.aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w) :
+    ∀ (idx : Nat) (h1) (h2), (go aig expr).val.aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   intros idx h1 h2
   induction expr generalizing aig with
   | var =>
@@ -341,9 +340,8 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
         . exact (go (go aig lhs).1.aig rhs).property
 
 
-theorem bitblast_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
-    : ∀ (idx : Nat) (h1) (h2),
-        (bitblast aig expr).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+theorem bitblast_decl_eq (aig : AIG BVBit) (expr : BVExpr w) :
+    ∀ (idx : Nat) (h1) (h2), (bitblast aig expr).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   intros
   unfold bitblast
   apply bitblast.go_decl_eq

@@ -18,8 +18,8 @@ variable [Hashable α] [DecidableEq α]
 namespace blastSignExtend
 
 theorem go_get_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) (newWidth : Nat)
-    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefVec aig curr)
-    : ∀ (idx : Nat) (hidx1 : idx < curr),
+    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefVec aig curr) :
+    ∀ (idx : Nat) (hidx1 : idx < curr),
         (go w hw input newWidth curr hcurr s).get idx (by omega)
           =
         s.get idx hidx1 := by
@@ -38,8 +38,8 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) 
     simp
 
 theorem go_get (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) (newWidth : Nat)
-    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefVec aig curr)
-    : ∀ (idx : Nat) (hidx1 : idx < newWidth),
+    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefVec aig curr) :
+    ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
           →
         (go w hw input newWidth curr hcurr s).get idx hidx1
@@ -70,24 +70,24 @@ theorem go_get (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) (new
 end blastSignExtend
 
 theorem blastSignExtend_empty_eq_zeroExtend (aig : AIG α) (target : ExtendTarget aig newWidth)
-      (htarget : target.w = 0)
-  : blastSignExtend aig target = blastZeroExtend aig target := by
+    (htarget : target.w = 0) :
+    blastSignExtend aig target = blastZeroExtend aig target := by
   unfold blastSignExtend
   simp [htarget]
 
 theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig newWidth)
-  (assign : α → Bool) (htarget : 0 < target.w)
-  : ∀ (idx : Nat) (hidx : idx < newWidth),
-      ⟦
-        (blastSignExtend aig target).aig,
-        (blastSignExtend aig target).vec.get idx hidx,
-        assign
-      ⟧
-        =
-      if hidx:idx < target.w then
-         ⟦aig, target.vec.get idx hidx, assign⟧
-      else
-         ⟦aig, target.vec.get (target.w - 1) (by omega), assign⟧
+    (assign : α → Bool) (htarget : 0 < target.w) :
+    ∀ (idx : Nat) (hidx : idx < newWidth),
+        ⟦
+          (blastSignExtend aig target).aig,
+          (blastSignExtend aig target).vec.get idx hidx,
+          assign
+        ⟧
+          =
+        if hidx:idx < target.w then
+           ⟦aig, target.vec.get idx hidx, assign⟧
+        else
+           ⟦aig, target.vec.get (target.w - 1) (by omega), assign⟧
     := by
   intro idx hidx
   generalize hg : blastSignExtend aig target = res

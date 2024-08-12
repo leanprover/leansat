@@ -15,14 +15,14 @@ namespace bitblast
 
 variable [Hashable α] [DecidableEq α]
 
-def blastShiftLeftConst (aig : AIG α) (target : AIG.ShiftTarget aig w)
-    : AIG.RefVecEntry α w :=
+def blastShiftLeftConst (aig : AIG α) (target : AIG.ShiftTarget aig w) :
+    AIG.RefVecEntry α w :=
   let ⟨input, distance⟩ := target
   go aig input distance 0 (by omega) .empty
 where
   go (aig : AIG α) (input : AIG.RefVec aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
-      (s : AIG.RefVec aig curr)
-    : AIG.RefVecEntry α w :=
+      (s : AIG.RefVec aig curr) :
+      AIG.RefVecEntry α w :=
   if hidx:curr < w then
     if hdist:curr < distance then
       let res := aig.mkConstCached false
@@ -43,8 +43,8 @@ where
   termination_by w - curr
 
 theorem blastShiftLeftConst.go_le_size (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : aig.decls.size ≤ (go aig input distance curr hcurr s).aig.decls.size := by
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
+    aig.decls.size ≤ (go aig input distance curr hcurr s).aig.decls.size := by
   unfold go
   split
   . dsimp
@@ -57,8 +57,8 @@ theorem blastShiftLeftConst.go_le_size (aig : AIG α) (distance : Nat) (input : 
 termination_by w - curr
 
 theorem blastShiftLeftConst.go_decl_eq (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
-    : ∀ (idx : Nat) (h1) (h2),
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
+    ∀ (idx : Nat) (h1) (h2),
         (go aig input distance curr hcurr s).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig input distance curr hcurr s = res
   unfold go at hgo
@@ -133,8 +133,8 @@ instance : AIG.LawfulVecOperator α TwoPowShiftTarget twoPowShift where
 
 end blastShiftLeft
 
-def blastShiftLeft (aig : AIG α) (target : AIG.ArbitraryShiftTarget aig w)
-    : AIG.RefVecEntry α w :=
+def blastShiftLeft (aig : AIG α) (target : AIG.ArbitraryShiftTarget aig w) :
+    AIG.RefVecEntry α w :=
   let ⟨n, input, distance⟩ := target
   if n = 0 then
     ⟨aig, input⟩
@@ -150,8 +150,8 @@ def blastShiftLeft (aig : AIG α) (target : AIG.ArbitraryShiftTarget aig w)
     go aig distance 0 (by omega) acc
 where
   go {n : Nat} (aig : AIG α) (distance : AIG.RefVec aig n) (curr : Nat) (hcurr : curr ≤ n - 1)
-      (acc : AIG.RefVec aig w)
-      : AIG.RefVecEntry α w :=
+      (acc : AIG.RefVec aig w) :
+      AIG.RefVecEntry α w :=
     if h:curr < n - 1 then
       let res := blastShiftLeft.twoPowShift aig ⟨_, acc, distance, curr + 1⟩
       let aig := res.aig
@@ -167,8 +167,8 @@ where
 
 
 theorem blastShiftLeft.go_le_size (aig : AIG α) (distance : AIG.RefVec aig n) (curr : Nat)
-    (hcurr : curr ≤ n - 1) (acc : AIG.RefVec aig w)
-    : aig.decls.size ≤ (go aig distance curr hcurr acc).aig.decls.size := by
+    (hcurr : curr ≤ n - 1) (acc : AIG.RefVec aig w) :
+    aig.decls.size ≤ (go aig distance curr hcurr acc).aig.decls.size := by
   unfold go
   dsimp
   split
@@ -178,8 +178,8 @@ theorem blastShiftLeft.go_le_size (aig : AIG α) (distance : AIG.RefVec aig n) (
 termination_by n - 1 - curr
 
 theorem blastShiftLeft.go_decl_eq (aig : AIG α) (distance : AIG.RefVec aig n) (curr : Nat)
-    (hcurr : curr ≤ n - 1) (acc : AIG.RefVec aig w)
-    : ∀ (idx : Nat) (h1) (h2),
+    (hcurr : curr ≤ n - 1) (acc : AIG.RefVec aig w) :
+    ∀ (idx : Nat) (h1) (h2),
         (go aig distance curr hcurr acc).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig distance curr hcurr acc = res
   unfold go at hgo

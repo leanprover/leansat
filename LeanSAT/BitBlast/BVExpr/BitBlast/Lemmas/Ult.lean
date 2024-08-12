@@ -18,8 +18,8 @@ variable [Hashable α] [DecidableEq α]
 theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : BinaryRefVec aig w)
     (assign : α → Bool)
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
-    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
-  : ⟦
+    (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign⟧ = rhs.getLsb idx) :
+    ⟦
       (mkUlt aig input).aig,
       (mkUlt aig input).ref,
       assign

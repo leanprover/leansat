@@ -39,8 +39,8 @@ private theorem aux4 {a b c : Nat} (hidx : a < b * c) (h : c ≤ n) : a < b * n 
   | inr h => simp_all
 
 theorem go_get_aux (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
-    (input : AIG.RefVec aig w) (s : AIG.RefVec aig (w * curr))
-    : ∀ (idx : Nat) (hidx : idx < w * curr),
+    (input : AIG.RefVec aig w) (s : AIG.RefVec aig (w * curr)) :
+    ∀ (idx : Nat) (hidx : idx < w * curr),
         (go n curr hcurr input s).get idx (aux4 hidx hcurr)
           =
         s.get idx hidx := by
@@ -60,13 +60,13 @@ theorem go_get_aux (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
 termination_by n - curr
 
 theorem go_get (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
-    (input : AIG.RefVec aig w) (s : AIG.RefVec aig (w * curr))
-  : ∀ (idx : Nat) (hidx1 : idx < w * n),
-      w * curr ≤ idx
-        →
-      (go n curr hcurr input s).get idx hidx1
-        =
-      input.get (idx % w) (aux2 hidx1) := by
+    (input : AIG.RefVec aig w) (s : AIG.RefVec aig (w * curr)) :
+    ∀ (idx : Nat) (hidx1 : idx < w * n),
+        w * curr ≤ idx
+          →
+        (go n curr hcurr input s).get idx hidx1
+          =
+        input.get (idx % w) (aux2 hidx1) := by
   intro idx hidx1 hidx2
   unfold go
   dsimp
@@ -95,19 +95,19 @@ end blastReplicate
 
 @[simp]
 theorem blastReplicate_eq_eval_getLsb (aig : AIG α) (target : ReplicateTarget aig newWidth)
-    (assign : α → Bool)
-  : ∀ (idx : Nat) (hidx : idx < newWidth),
-      ⟦
-        (blastReplicate aig target).aig,
-        (blastReplicate aig target).vec.get idx hidx,
-        assign
-      ⟧
-        =
-      ⟦
-        aig,
-        target.inner.get (idx % target.w) (blastReplicate.aux2 (target.h ▸ hidx)),
-        assign
-      ⟧ := by
+    (assign : α → Bool) :
+    ∀ (idx : Nat) (hidx : idx < newWidth),
+        ⟦
+          (blastReplicate aig target).aig,
+          (blastReplicate aig target).vec.get idx hidx,
+          assign
+        ⟧
+          =
+        ⟦
+          aig,
+          target.inner.get (idx % target.w) (blastReplicate.aux2 (target.h ▸ hidx)),
+          assign
+        ⟧ := by
   intro idx hidx
   rcases target with ⟨n, input, h⟩
   unfold blastReplicate
