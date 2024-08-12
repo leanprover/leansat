@@ -19,24 +19,24 @@ theorem bitblast.go_eval_eq_eval (expr : BVLogicalExpr) (aig : AIG BVBit) (assig
   | not expr ih => simp [ofBoolExprCached.go, ih]
   | gate g lhs rhs lih rih => cases g <;> simp [ofBoolExprCached.go, Gate.eval, lih, rih]
 
-theorem eval_eq_bitblast_denote (expr : BVLogicalExpr) (assign : BVExpr.Assignment)
-    : expr.eval assign
-        =
-      ⟦bitblast expr, assign.toAIGAssignment⟧ := by
+theorem eval_eq_bitblast_denote (expr : BVLogicalExpr) (assign : BVExpr.Assignment) :
+    expr.eval assign
+      =
+    ⟦bitblast expr, assign.toAIGAssignment⟧ := by
   unfold bitblast
   unfold ofBoolExprCached
   rw [bitblast.go_eval_eq_eval]
 
-theorem bitblast_denote_eq_eval (expr : BVLogicalExpr) (assign : BVExpr.Assignment)
-    : ⟦bitblast expr, assign.toAIGAssignment⟧
-        =
-      expr.eval assign := by
+theorem bitblast_denote_eq_eval (expr : BVLogicalExpr) (assign : BVExpr.Assignment) :
+    ⟦bitblast expr, assign.toAIGAssignment⟧
+      =
+    expr.eval assign := by
   unfold bitblast
   unfold ofBoolExprCached
   rw [bitblast.go_eval_eq_eval]
 
-theorem unsat_of_bitblast (expr : BVLogicalExpr)
-    : expr.bitblast.Unsat → expr.Unsat :=  by
+theorem unsat_of_bitblast (expr : BVLogicalExpr) :
+    expr.bitblast.Unsat → expr.Unsat :=  by
   intro h assign
   rw [← bitblast_denote_eq_eval]
   apply h
