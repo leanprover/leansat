@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Append
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -19,7 +20,7 @@ theorem blastAppend_eq_eval_getLsb (aig : AIG α) (target : AppendTarget aig new
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastAppend aig target).aig,
-        (blastAppend aig target).stream.get idx hidx,
+        (blastAppend aig target).vec.get idx hidx,
         assign
       ⟧
         =
@@ -33,7 +34,7 @@ theorem blastAppend_eq_eval_getLsb (aig : AIG α) (target : AppendTarget aig new
   unfold blastAppend
   rcases target with ⟨lw, rw, lhs, rhs, ht⟩
   dsimp
-  rw [AIG.RefStream.get_append]
+  rw [AIG.RefVec.get_append]
   split <;> rfl
 
 

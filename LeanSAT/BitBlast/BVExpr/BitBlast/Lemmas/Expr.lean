@@ -20,7 +20,8 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.SignExtend
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Expr
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Mul
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -47,7 +48,7 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (expr : BVExpr w) (assign : Assig
 
 theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(go aig expr).val.aig, (go aig expr).val.stream.get idx hidx, assign.toAIGAssignment⟧
+        ⟦(go aig expr).val.aig, (go aig expr).val.vec.get idx hidx, assign.toAIGAssignment⟧
           =
         (expr.eval assign).getLsb idx := by
   intro idx hidx
@@ -63,7 +64,7 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
     apply BitVec.lt_of_getLsb
   | append lhs rhs lih rih =>
     rename_i lw rw
-    simp only [go, blastAppend_eq_eval_getLsb, RefStream.get_cast, Ref_cast', eval_append,
+    simp only [go, blastAppend_eq_eval_getLsb, RefVec.get_cast, Ref_cast', eval_append,
       BitVec.getLsb_append]
     split
     . next hsplit =>
@@ -141,24 +142,24 @@ theorem go_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : A
   | bin lhs op rhs lih rih =>
     cases op with
     | and =>
-      simp only [go, RefStream.denote_zip, denote_mkAndCached, rih, eval_bin, BVBinOp.eval_and,
+      simp only [go, RefVec.denote_zip, denote_mkAndCached, rih, eval_bin, BVBinOp.eval_and,
         BitVec.getLsb_and]
-      simp only [go_val_eq_bitblast, RefStream.get_cast]
-      rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
+      simp only [go_val_eq_bitblast, RefVec.get_cast]
+      rw [AIG.LawfulVecOperator.denote_input_vec (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
     | or =>
-      simp only [go, RefStream.denote_zip, denote_mkOrCached, rih, eval_bin, BVBinOp.eval_or,
+      simp only [go, RefVec.denote_zip, denote_mkOrCached, rih, eval_bin, BVBinOp.eval_or,
         BitVec.getLsb_or]
-      simp only [go_val_eq_bitblast, RefStream.get_cast]
-      rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
+      simp only [go_val_eq_bitblast, RefVec.get_cast]
+      rw [AIG.LawfulVecOperator.denote_input_vec (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
     | xor =>
-      simp only [go, RefStream.denote_zip, denote_mkXorCached, rih, eval_bin, BVBinOp.eval_xor,
+      simp only [go, RefVec.denote_zip, denote_mkXorCached, rih, eval_bin, BVBinOp.eval_xor,
         BitVec.getLsb_xor]
-      simp only [go_val_eq_bitblast, RefStream.get_cast]
-      rw [AIG.LawfulStreamOperator.denote_input_stream (f := bitblast)]
+      simp only [go_val_eq_bitblast, RefVec.get_cast]
+      rw [AIG.LawfulVecOperator.denote_input_vec (f := bitblast)]
       rw [← go_val_eq_bitblast]
       rw [lih]
     | add =>
@@ -207,7 +208,7 @@ end bitblast
 @[simp]
 theorem bitblast_denote_eq_eval_getLsb (aig : AIG BVBit) (expr : BVExpr w) (assign : Assignment)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(bitblast aig expr).aig, (bitblast aig expr).stream.get idx hidx, assign.toAIGAssignment⟧
+        ⟦(bitblast aig expr).aig, (bitblast aig expr).vec.get idx hidx, assign.toAIGAssignment⟧
           =
         (expr.eval assign).getLsb idx
     := by

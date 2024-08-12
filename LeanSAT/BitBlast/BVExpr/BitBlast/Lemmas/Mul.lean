@@ -4,7 +4,8 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.ShiftLeft
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Const
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Mul
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 
@@ -12,7 +13,7 @@ namespace bitblast
 namespace blastMul
 
 theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr + 1 ≤ w)
-    (acc : AIG.RefStream aig w) (lhs rhs : AIG.RefStream aig w) (lexpr rexpr : BitVec w) (assign : Assignment)
+    (acc : AIG.RefVec aig w) (lhs rhs : AIG.RefVec aig w) (lexpr rexpr : BitVec w) (assign : Assignment)
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.get idx hidx, assign.toAIGAssignment⟧ = lexpr.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.get idx hidx, assign.toAIGAssignment⟧ = rexpr.getLsb idx)
     (hacc : ∀ (idx : Nat) (hidx : idx < w),
@@ -22,7 +23,7 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (go aig (curr + 1) hcurr acc lhs rhs).aig,
-          (go aig (curr + 1) hcurr acc lhs rhs).stream.get idx hidx,
+          (go aig (curr + 1) hcurr acc lhs rhs).vec.get idx hidx,
           assign.toAIGAssignment
         ⟧
           =
@@ -35,32 +36,32 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
     rw [← hgo]
     rw [go_eq_eval_getLsb]
     . intro idx hidx
-      simp only [RefStream.get_cast, Ref_cast']
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := RefStream.ite)]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastAdd)]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
+      simp only [RefVec.get_cast, Ref_cast']
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := RefVec.ite)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastAdd)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hleft]
     . intro idx hidx
-      simp only [RefStream.get_cast, Ref_cast']
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := RefStream.ite)]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastAdd)]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
+      simp only [RefVec.get_cast, Ref_cast']
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := RefVec.ite)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastAdd)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hright]
     . intro idx hidx
       rw [BitVec.mulRec_succ_eq]
-      simp only [RefStream.denote_ite, RefStream.get_cast, Ref_cast', BitVec.ofNat_eq_ofNat]
+      simp only [RefVec.denote_ite, RefVec.get_cast, Ref_cast', BitVec.ofNat_eq_ofNat]
       split
       . next hdiscr =>
         have : rexpr.getLsb (curr + 1) = true := by
-          rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastAdd)] at hdiscr
-          rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)] at hdiscr
+          rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastAdd)] at hdiscr
+          rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)] at hdiscr
           rw [hright] at hdiscr
           exact hdiscr
         simp only [this, ↓reduceIte]
         rw [blastAdd_eq_eval_getLsb]
         . intros
-          simp only [RefStream.get_cast, Ref_cast']
-          rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
+          simp only [RefVec.get_cast, Ref_cast']
+          rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
           rw [hacc]
         . intros
           simp only [blastShiftLeftConst_eq_eval_getLsb, BitVec.getLsb_shiftLeft]
@@ -71,13 +72,13 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
             simp [hdiscr, hidx]
       . next hdiscr =>
         have : rexpr.getLsb (curr + 1) = false := by
-          rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastAdd)] at hdiscr
-          rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)] at hdiscr
+          rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastAdd)] at hdiscr
+          rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)] at hdiscr
           rw [hright] at hdiscr
           simp [hdiscr]
         simp only [this, Bool.false_eq_true, ↓reduceIte, BitVec.add_zero]
-        rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastAdd)]
-        rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
+        rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastAdd)]
+        rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
         rw [hacc]
   . have : curr + 1 = w := by omega
     subst this
@@ -98,11 +99,11 @@ decreasing_by
 end blastMul
 
 theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign : Assignment)
-      (input : BinaryRefStream aig w)
+      (input : BinaryRefVec aig w)
       (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign.toAIGAssignment⟧ = lhs.getLsb idx)
       (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign.toAIGAssignment⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(blastMul aig input).aig, (blastMul aig input).stream.get idx hidx, assign.toAIGAssignment⟧
+        ⟦(blastMul aig input).aig, (blastMul aig input).vec.get idx hidx, assign.toAIGAssignment⟧
           =
         (lhs * rhs).getLsb idx := by
   intro idx hidx
@@ -119,26 +120,26 @@ theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign :
     rw [← hb]
     rw [blastMul.go_eq_eval_getLsb]
     . intro idx hidx
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := RefStream.ite)]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastConst)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := RefVec.ite)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastConst)]
       . simp [hleft]
       . simp [Ref.hgate]
     . intro idx hidx
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := RefStream.ite)]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastConst)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := RefVec.ite)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastConst)]
       . simp [hright]
       . simp [Ref.hgate]
     . intro idx hidx
       rw [BitVec.mulRec_zero_eq]
-      simp only [Nat.succ_eq_add_one, RefStream.denote_ite, BinaryRefStream.rhs_get_cast,
-        Ref_cast', BinaryRefStream.lhs_get_cast, blastConst_eq_eval_getLsb,
+      simp only [Nat.succ_eq_add_one, RefVec.denote_ite, BinaryRefVec.rhs_get_cast,
+        Ref_cast', BinaryRefVec.lhs_get_cast, blastConst_eq_eval_getLsb,
         BitVec.ofNat_eq_ofNat, eval_const, BitVec.getLsb_zero, Bool.if_false_right,
         Bool.decide_eq_true]
       split
       . next heq =>
         rw [← hright] at heq
-        . rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastConst)]
-          rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastConst)]
+        . rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastConst)]
+          rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastConst)]
           . simp [heq, hleft]
           . simp [Ref.hgate]
           . simp [Ref.hgate]
@@ -146,7 +147,7 @@ theorem blastMul_eq_eval_getLsb (aig : AIG BVBit) (lhs rhs : BitVec w) (assign :
       . next heq =>
         simp only [Bool.not_eq_true] at heq
         rw [← hright] at heq
-        . rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastConst)]
+        . rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastConst)]
           . simp [heq]
           . simp [Ref.hgate]
         . omega

@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Not
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -14,12 +15,12 @@ namespace bitblast
 variable [Hashable α] [DecidableEq α]
 
 @[simp]
-theorem blastNot_eq_eval_getLsb (aig : AIG α) (target : RefStream aig w)
+theorem blastNot_eq_eval_getLsb (aig : AIG α) (target : RefVec aig w)
     (assign : α → Bool)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (blastNot aig target).aig,
-          (blastNot aig target).stream.get idx hidx,
+          (blastNot aig target).vec.get idx hidx,
           assign
         ⟧
           =

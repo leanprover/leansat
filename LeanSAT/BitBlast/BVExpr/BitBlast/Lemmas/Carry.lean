@@ -7,7 +7,8 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Add
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Carry
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -17,7 +18,7 @@ variable [Hashable α] [DecidableEq α]
 namespace mkOverflowBit
 
 theorem go_eq_carry (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig) (origCin : Ref aig)
-    (lhs rhs : RefStream aig w) (lhsExpr rhsExpr : BitVec w) (assign : α → Bool)
+    (lhs rhs : RefVec aig w) (lhsExpr rhsExpr : BitVec w) (assign : α → Bool)
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.get idx hidx, assign⟧ = lhsExpr.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.get idx hidx, assign⟧ = rhsExpr.getLsb idx)
     (hcin :

@@ -6,10 +6,11 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr
 import LeanSAT.Tactics.Normalize
 import LeanSAT.Tactics.LRAT
-import LeanSAT.AIG.CNF
-import LeanSAT.AIG.RelabelNat
+import Std.Sat.AIG.CNF
+import Std.Sat.AIG.RelabelNat
 
 open Lean Meta
+open Std.Sat
 
 namespace BVDecide
 

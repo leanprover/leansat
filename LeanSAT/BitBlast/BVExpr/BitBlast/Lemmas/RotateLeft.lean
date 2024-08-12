@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.RotateLeft
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -15,8 +16,8 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastRotateLeft
 
-theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
         (go input distance curr hcurr s).get idx (by omega)
           =
@@ -27,18 +28,18 @@ theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
   . dsimp
     split
     . rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_lt]
+      rw [AIG.RefVec.get_push_ref_lt]
     . rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_lt]
+      rw [AIG.RefVec.get_push_ref_lt]
   . dsimp
-    simp only [RefStream.get, Ref.mk.injEq]
+    simp only [RefVec.get, Ref.mk.injEq]
     have : curr = w := by omega
     subst this
     simp
 termination_by w - curr
 
-theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
@@ -58,14 +59,14 @@ theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
       split
       . split
         . rw [go_get_aux]
-          rw [AIG.RefStream.get_push_ref_eq']
+          rw [AIG.RefVec.get_push_ref_eq']
           . simp [heq]
           . omega
         . omega
       . split
         . omega
         . rw [go_get_aux]
-          rw [AIG.RefStream.get_push_ref_eq']
+          rw [AIG.RefVec.get_push_ref_eq']
           . simp [heq]
           . omega
     | inr heq =>
@@ -85,14 +86,14 @@ theorem blastRotateLeft_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig 
   : ∀ (idx : Nat) (hidx : idx < w),
       ⟦
         (blastRotateLeft aig target).aig,
-        (blastRotateLeft aig target).stream.get idx hidx,
+        (blastRotateLeft aig target).vec.get idx hidx,
         assign
       ⟧
         =
       if hidx2:idx < target.distance % w then
-        ⟦aig, target.stream.get (w - (target.distance % w) + idx) (by omega), assign⟧
+        ⟦aig, target.vec.get (w - (target.distance % w) + idx) (by omega), assign⟧
       else
-        ⟦aig, target.stream.get (idx - (target.distance % w)) (by omega), assign⟧
+        ⟦aig, target.vec.get (idx - (target.distance % w)) (by omega), assign⟧
       := by
   intros
   unfold blastRotateLeft

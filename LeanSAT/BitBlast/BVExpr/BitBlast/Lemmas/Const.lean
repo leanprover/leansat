@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Const
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -16,10 +17,10 @@ variable [Hashable α] [DecidableEq α]
 namespace blastConst
 
 theorem go_get_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ w)
-    (s : AIG.RefStream aig curr)
+    (s : AIG.RefVec aig curr)
     -- The hfoo here is a trick to make the dependent type gods happy
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig curr s c hcurr).stream.get idx (by omega)
+        (go aig curr s c hcurr).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
   intro idx hidx
@@ -30,9 +31,9 @@ theorem go_get_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ 
     rw [← hgo]
     intro hfoo
     rw [go_get_aux]
-    rw [AIG.RefStream.get_push_ref_lt]
+    rw [AIG.RefVec.get_push_ref_lt]
     . simp only [Ref.cast, Ref.mk.injEq]
-      rw [AIG.RefStream.get_cast]
+      rw [AIG.RefVec.get_cast]
       . simp
       . assumption
     . apply go_le_size
@@ -45,16 +46,16 @@ theorem go_get_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ 
 termination_by w - curr
 
 theorem go_get (aig : AIG α) (c : BitVec w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig curr s c hcurr).stream.get idx (by omega)
+        (go aig curr s c hcurr).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
   intros
   apply go_get_aux
 
 theorem go_denote_mem_prefix (aig : AIG α) (idx : Nat) (hidx)
-    (s : AIG.RefStream aig idx) (c : BitVec w) (start : Nat) (hstart)
+    (s : AIG.RefVec aig idx) (c : BitVec w) (start : Nat) (hstart)
   : ⟦
       (go aig idx s c hidx).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
@@ -70,13 +71,13 @@ theorem go_denote_mem_prefix (aig : AIG α) (idx : Nat) (hidx)
     apply go_le_size
 
 theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
         ⟦
           (go aig curr s c hcurr).aig,
-          (go aig curr s c hcurr).stream.get idx hidx1,
+          (go aig curr s c hcurr).vec.get idx hidx1,
           assign
         ⟧
           =
@@ -90,7 +91,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
     | inl heq =>
       rw [← hgo]
       rw [go_get]
-      rw [AIG.RefStream.get_push_ref_eq']
+      rw [AIG.RefVec.get_push_ref_eq']
       . rw [← heq]
         rw [go_denote_mem_prefix]
         . simp
@@ -108,7 +109,7 @@ end blastConst
 @[simp]
 theorem blastConst_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
     : ∀ (idx : Nat) (hidx : idx < w),
-        ⟦(blastConst aig c).aig, (blastConst aig c).stream.get idx hidx, assign⟧
+        ⟦(blastConst aig c).aig, (blastConst aig c).vec.get idx hidx, assign⟧
           =
         c.getLsb idx := by
   intros

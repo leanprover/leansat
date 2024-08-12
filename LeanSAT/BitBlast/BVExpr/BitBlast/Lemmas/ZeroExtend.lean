@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.ZeroExtend
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -15,10 +16,10 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastZeroExtend
 
-theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
+theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig w input newWidth curr hcurr s).stream.get idx (by omega)
+        (go aig w input newWidth curr hcurr s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
   intro idx hidx
@@ -30,13 +31,13 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWi
     . rw [← hgo]
       intros
       rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_lt]
+      rw [AIG.RefVec.get_push_ref_lt]
     . rw [← hgo]
       intros
       rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_lt]
+      rw [AIG.RefVec.get_push_ref_lt]
       . simp only [Ref.cast, Ref.mk.injEq]
-        rw [AIG.RefStream.get_cast]
+        rw [AIG.RefVec.get_cast]
         . simp
         . assumption
       . apply go_le_size
@@ -48,17 +49,17 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWi
     simp
 termination_by newWidth - curr
 
-theorem go_get (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr)
+theorem go_get (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig w input newWidth curr hcurr s).stream.get idx (by omega)
+        (go aig w input newWidth curr hcurr s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
   intros
   apply go_get_aux
 
-theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) (start : Nat) (hstart)
+theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) (start : Nat) (hstart)
   : ⟦
       (go aig w input newWidth curr hcurr s).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
@@ -73,14 +74,14 @@ theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefStream aig
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w) (newWidth curr : Nat)
-    (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) (assign : α → Bool)
+theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
+    (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) (assign : α → Bool)
     : ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
           →
         ⟦
           (go aig w input newWidth curr hcurr s).aig,
-          (go aig w input newWidth curr hcurr s).stream.get idx hidx1,
+          (go aig w input newWidth curr hcurr s).vec.get idx hidx1,
           assign
         ⟧
           =
@@ -102,7 +103,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w)
         simp only [hsplit, ↓reduceDIte]
         rw [← hgo]
         rw [go_get]
-        rw [AIG.RefStream.get_push_ref_eq']
+        rw [AIG.RefVec.get_push_ref_eq']
         . rw [go_denote_mem_prefix]
           . simp [heq]
           . simp [Ref.hgate]
@@ -112,7 +113,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefStream aig w)
         simp only [hsplit, ↓reduceDIte]
         rw [← hgo]
         rw [go_get]
-        rw [AIG.RefStream.get_push_ref_eq']
+        rw [AIG.RefVec.get_push_ref_eq']
         . rw [go_denote_mem_prefix]
           . simp [heq]
           . simp [Ref.hgate]
@@ -139,12 +140,12 @@ theorem blastZeroExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastZeroExtend aig target).aig,
-        (blastZeroExtend aig target).stream.get idx hidx,
+        (blastZeroExtend aig target).vec.get idx hidx,
         assign
       ⟧
         =
       if hidx:idx < target.w then
-         ⟦aig, target.stream.get idx hidx, assign⟧
+         ⟦aig, target.vec.get idx hidx, assign⟧
       else
          false
     := by

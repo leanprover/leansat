@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.Basic
-import LeanSAT.AIG.CachedGatesLemmas
-import LeanSAT.AIG.LawfulStreamOperator
+import Std.Sat.AIG.CachedGatesLemmas
+import Std.Sat.AIG.LawfulVecOperator
+
+open Std.Sat
 
 namespace BVExpr
 namespace bitblast
@@ -163,7 +165,7 @@ def mkFullAdder (aig : AIG α) (input : FullAdderInput aig) : FullAdderOutput ai
     apply AIG.LawfulOperator.le_size (f := mkFullAdderOut)
   ⟨aig, outRef, carryRef, hle⟩
 
-def blastAdd (aig : AIG α) (input : AIG.BinaryRefStream aig w) : AIG.RefStreamEntry α w :=
+def blastAdd (aig : AIG α) (input : AIG.BinaryRefVec aig w) : AIG.RefVecEntry α w :=
   let res := aig.mkConstCached false
   let aig := res.aig
   let cin := res.ref
@@ -173,8 +175,8 @@ def blastAdd (aig : AIG α) (input : AIG.BinaryRefStream aig w) : AIG.RefStreamE
   go aig 0 (by omega) cin .empty lhs rhs
 where
   go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
-      (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
-      : AIG.RefStreamEntry α w :=
+      (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w)
+      : AIG.RefVecEntry α w :=
     if hidx:curr < w then
       let lin := lhs.get curr hidx
       let rin := rhs.get curr hidx
@@ -195,7 +197,7 @@ where
 namespace blastAdd
 
 theorem go_le_size (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
-    (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
+    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w)
     : aig.decls.size ≤ (go aig curr hcurr cin s lhs rhs).aig.decls.size := by
   unfold go
   dsimp
@@ -207,7 +209,7 @@ theorem go_le_size (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.R
 termination_by w - curr
 
 theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
-    (s : AIG.RefStream aig curr) (lhs rhs : AIG.RefStream aig w)
+    (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w)
     : ∀ (idx : Nat) (h1) (h2),
         (go aig curr hcurr cin s lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig curr hcurr cin s lhs rhs = res
@@ -228,7 +230,7 @@ theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.R
   . simp [← hgo]
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator α AIG.BinaryRefStream blastAdd where
+instance : AIG.LawfulVecOperator α AIG.BinaryRefVec blastAdd where
   le_size := by
     intros
     unfold blastAdd

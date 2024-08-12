@@ -682,7 +682,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
 theorem clear_insertRup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
   (units : CNF.Clause (PosFin n)) : clearRupUnits (f.insertRupUnits units).1 = f := by
   simp only [clearRupUnits]
-  ext
+  ext : 1
   . simp only [insertRupUnits]
   . rw [f_readyForRupAdd.1]
   . simp only [insertRupUnits]

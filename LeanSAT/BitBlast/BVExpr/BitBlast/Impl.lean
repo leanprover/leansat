@@ -6,6 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Pred
 import LeanSAT.BitBlast.BoolExpr.BitBlast
 
+open Std.Sat
+
 namespace BVLogicalExpr
 
 def bitblast (expr : BVLogicalExpr) : AIG.Entrypoint BVBit :=

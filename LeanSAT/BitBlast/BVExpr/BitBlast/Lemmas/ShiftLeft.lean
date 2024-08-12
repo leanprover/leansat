@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.ShiftLeft
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -15,10 +16,10 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastShiftLeftConst
 
-theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig input distance curr hcurr s).stream.get idx (by omega)
+        (go aig input distance curr hcurr s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
   intro idx hidx
@@ -30,16 +31,16 @@ theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     . rw [← hgo]
       intros
       rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_lt]
+      rw [AIG.RefVec.get_push_ref_lt]
       . simp only [Ref.cast, Ref.mk.injEq]
-        rw [AIG.RefStream.get_cast]
+        rw [AIG.RefVec.get_cast]
         . simp
         . assumption
       . apply go_le_size
     . rw [← hgo]
       intros
       rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_lt]
+      rw [AIG.RefVec.get_push_ref_lt]
   . dsimp at hgo
     rw [← hgo]
     simp only [Nat.le_refl, get, Ref_cast', Ref.mk.injEq, true_implies]
@@ -48,17 +49,17 @@ theorem go_get_aux (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
     simp
 termination_by w - curr
 
-theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig input distance curr hcurr s).stream.get idx (by omega)
+        (go aig input distance curr hcurr s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
   intros
   apply go_get_aux
 
-theorem go_denote_mem_prefix (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
-    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr) (start : Nat) (hstart)
+theorem go_denote_mem_prefix (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
+    (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) (start : Nat) (hstart)
   : ⟦
       (go aig input distance curr hcurr s).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
@@ -73,14 +74,14 @@ theorem go_denote_mem_prefix (aig : AIG α) (distance : Nat) (input : AIG.RefStr
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream aig w)
-    (assign : α → Bool) (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefStream aig curr)
+theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
+    (assign : α → Bool) (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
           →
         ⟦
           (go aig input distance curr hcurr s).aig,
-          (go aig input distance curr hcurr s).stream.get idx hidx1,
+          (go aig input distance curr hcurr s).vec.get idx hidx1,
           assign
         ⟧
           =
@@ -100,7 +101,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
       . split
         . rw [← hgo]
           rw [go_get]
-          rw [AIG.RefStream.get_push_ref_eq']
+          rw [AIG.RefVec.get_push_ref_eq']
           . rw [go_denote_mem_prefix]
             . simp
             . simp [Ref.hgate]
@@ -110,7 +111,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
         . omega
         . rw [← hgo]
           rw [go_get]
-          rw [AIG.RefStream.get_push_ref_eq']
+          rw [AIG.RefVec.get_push_ref_eq']
           . rw [go_denote_mem_prefix]
             . simp [heq]
             . simp [Ref.hgate]
@@ -126,7 +127,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefStream
         . next hidx =>
           rw [← hgo]
           rw [go_eq_eval_getLsb]
-          . simp only [hidx, ↓reduceDIte, RefStream.get_cast, Ref_cast']
+          . simp only [hidx, ↓reduceDIte, RefVec.get_cast, Ref_cast']
             rw [AIG.LawfulOperator.denote_mem_prefix (f := AIG.mkConstCached)]
           . omega
       . split
@@ -147,14 +148,14 @@ theorem blastShiftLeftConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget 
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (blastShiftLeftConst aig target).aig,
-          (blastShiftLeftConst aig target).stream.get idx hidx,
+          (blastShiftLeftConst aig target).vec.get idx hidx,
           assign
         ⟧
           =
         if hidx:idx < target.distance then
           false
         else
-          ⟦aig, target.stream.get (idx - target.distance) (by omega), assign⟧
+          ⟦aig, target.vec.get (idx - target.distance) (by omega), assign⟧
         := by
   intros
   unfold blastShiftLeftConst
@@ -170,14 +171,14 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (twoPowShift aig target).aig,
-          (twoPowShift aig target).stream.get idx hidx,
+          (twoPowShift aig target).vec.get idx hidx,
           assign
         ⟧
           =
         (lhs <<< (rhs &&& BitVec.twoPow target.n target.pow)).getLsb idx := by
   intro idx hidx
   generalize hg : twoPowShift aig target = res
-  rcases target with ⟨n, lstream, rstream, pow⟩
+  rcases target with ⟨n, lvec, rvec, pow⟩
   simp only [BitVec.and_twoPow]
   unfold twoPowShift at hg
   dsimp at hg
@@ -185,9 +186,9 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
   . split
     . next hif1 =>
       rw [← hg]
-      simp only [RefStream.denote_ite, RefStream.get_cast, Ref_cast',
+      simp only [RefVec.denote_ite, RefVec.get_cast, Ref_cast',
         blastShiftLeftConst_eq_eval_getLsb]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hright]
       simp only [hif1, ↓reduceIte]
       split
@@ -207,12 +208,12 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
     . next hif1 =>
       simp only [Bool.not_eq_true] at hif1
       rw [← hg]
-      simp only [RefStream.denote_ite, RefStream.get_cast, Ref_cast',
+      simp only [RefVec.denote_ite, RefVec.get_cast, Ref_cast',
         blastShiftLeftConst_eq_eval_getLsb]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hright]
       simp only [hif1, Bool.false_eq_true, ↓reduceIte]
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeftConst)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hleft]
       simp
   . have : rhs.getLsb pow = false := by
@@ -224,15 +225,15 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
     rw [hleft]
     simp
 
-theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr : Nat)
-      (hcurr : curr ≤ n - 1) (acc : AIG.RefStream aig w)
+theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefVec aig n) (curr : Nat)
+      (hcurr : curr ≤ n - 1) (acc : AIG.RefVec aig w)
     (lhs : BitVec w) (rhs : BitVec n) (assign : α → Bool)
     (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.get idx hidx, assign⟧ = (BitVec.shiftLeftRec lhs rhs curr).getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < n), ⟦aig, distance.get idx hidx, assign⟧ = rhs.getLsb idx)
     : ∀ (idx : Nat) (hidx : idx < w),
         ⟦
           (go aig distance curr hcurr acc).aig,
-          (go aig distance curr hcurr acc).stream.get idx hidx,
+          (go aig distance curr hcurr acc).vec.get idx hidx,
           assign
         ⟧
           =
@@ -250,7 +251,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefStream aig n) (curr 
       . simp [hacc]
       . simp [hright]
     . intro idx hidx
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := twoPowShift)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := twoPowShift)]
       . simp [hright]
       . simp [Ref.hgate]
   . have : curr = n - 1 := by omega
@@ -267,7 +268,7 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTar
     : ∀ (idx : Nat) (hidx : idx < w0),
         ⟦
           (blastShiftLeft aig target).aig,
-          (blastShiftLeft aig target).stream.get idx hidx,
+          (blastShiftLeft aig target).vec.get idx hidx,
           assign
         ⟧
           =
@@ -296,7 +297,7 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTar
       . simp [hleft]
       . simp [hright]
     . intros
-      rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := blastShiftLeft.twoPowShift)]
+      rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeft.twoPowShift)]
       . simp [hright]
       . simp [Ref.hgate]
 

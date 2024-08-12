@@ -5,8 +5,10 @@ Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.ZeroExtend
-import LeanSAT.AIG.CachedGatesLemmas
-import LeanSAT.AIG.LawfulStreamOperator
+import Std.Sat.AIG.CachedGatesLemmas
+import Std.Sat.AIG.LawfulVecOperator
+
+open Std.Sat
 
 namespace BVExpr
 namespace bitblast
@@ -14,15 +16,15 @@ namespace bitblast
 variable [Hashable α] [DecidableEq α]
 
 def blastSignExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth)
-    : AIG.RefStreamEntry α newWidth :=
+    : AIG.RefVecEntry α newWidth :=
   let ⟨width, input⟩ := target
   if hw:width = 0 then
     blastZeroExtend aig ⟨width, input⟩
   else
     ⟨aig, go width (by omega) input newWidth 0 (by omega) .empty⟩
 where
-  go {aig : AIG α} (w : Nat) (hw : 0 < w) (input : AIG.RefStream aig w) (newWidth : Nat)
-      (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefStream aig curr) : AIG.RefStream aig newWidth :=
+  go {aig : AIG α} (w : Nat) (hw : 0 < w) (input : AIG.RefVec aig w) (newWidth : Nat)
+      (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) : AIG.RefVec aig newWidth :=
     if hcurr1:curr < newWidth then
       if hcurr2:curr < w then
         let s := s.push (input.get curr hcurr2)
@@ -35,20 +37,20 @@ where
       hcurr ▸ s
 termination_by newWidth - curr
 
-instance : AIG.LawfulStreamOperator α AIG.ExtendTarget blastSignExtend where
+instance : AIG.LawfulVecOperator α AIG.ExtendTarget blastSignExtend where
   le_size := by
     intros
     unfold blastSignExtend
     dsimp
     split
-    . apply AIG.LawfulStreamOperator.le_size (f := blastZeroExtend)
+    . apply AIG.LawfulVecOperator.le_size (f := blastZeroExtend)
     . simp
   decl_eq := by
     intros
     unfold blastSignExtend
     dsimp
     split
-    . rw [AIG.LawfulStreamOperator.decl_eq (f := blastZeroExtend)]
+    . rw [AIG.LawfulVecOperator.decl_eq (f := blastZeroExtend)]
     . simp
 
 end bitblast

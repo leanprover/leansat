@@ -9,7 +9,8 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.GetLsb
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Expr
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Pred
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVPred
 
@@ -25,7 +26,7 @@ theorem bitblast_denote_eq_eval (aig : AIG BVBit) (pred : BVPred) (assign : BVEx
       simp only [bitblast, eval_bin, BVBinPred.eval_eq]
       rw [mkEq_denote_eq_eval_beq]
       . intros
-        rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := BVExpr.bitblast)]
+        rw [AIG.LawfulVecOperator.denote_mem_prefix (f := BVExpr.bitblast)]
         . simp
           rw [BVExpr.bitblast_denote_eq_eval_getLsb]
         . simp [Ref.hgate]
@@ -35,7 +36,7 @@ theorem bitblast_denote_eq_eval (aig : AIG BVBit) (pred : BVPred) (assign : BVEx
       simp only [bitblast, eval_bin, BVBinPred.eval_ult]
       rw [mkUlt_denote_eq_eval_ult]
       . intros
-        rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := BVExpr.bitblast)]
+        rw [AIG.LawfulVecOperator.denote_mem_prefix (f := BVExpr.bitblast)]
         . simp
           rw [BVExpr.bitblast_denote_eq_eval_getLsb]
         . simp [Ref.hgate]

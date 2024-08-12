@@ -8,6 +8,8 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Ult
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.GetLsb
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Expr
 
+open Std.Sat
+
 namespace BVPred
 
 def bitblast (aig : AIG BVBit) (pred : BVPred) : AIG.Entrypoint BVBit :=
@@ -15,13 +17,13 @@ def bitblast (aig : AIG BVBit) (pred : BVPred) : AIG.Entrypoint BVBit :=
   | .bin lhs op rhs =>
     let res := lhs.bitblast aig
     let aig := res.aig
-    let lhsRefs := res.stream
+    let lhsRefs := res.vec
     let res := rhs.bitblast aig
     let aig := res.aig
-    let rhsRefs := res.stream
+    let rhsRefs := res.vec
     let lhsRefs := lhsRefs.cast <| by
       simp (config := { zetaDelta := true }) only
-      apply AIG.LawfulStreamOperator.le_size (f := BVExpr.bitblast)
+      apply AIG.LawfulVecOperator.le_size (f := BVExpr.bitblast)
     match op with
     | .eq => mkEq aig ⟨lhsRefs, rhsRefs⟩
     | .ult => mkUlt aig ⟨lhsRefs, rhsRefs⟩
@@ -33,7 +35,7 @@ def bitblast (aig : AIG BVBit) (pred : BVPred) : AIG.Entrypoint BVBit :=
     -/
     let res := expr.bitblast aig
     let aig := res.aig
-    let refs := res.stream
+    let refs := res.vec
     blastGetLsb aig ⟨refs, idx⟩
 
 theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred)
@@ -44,17 +46,17 @@ theorem bitblast_le_size (aig : AIG BVBit) (pred : BVPred)
     | eq =>
       simp [bitblast]
       apply AIG.LawfulOperator.le_size_of_le_aig_size (f := mkEq)
-      apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
-      apply AIG.LawfulStreamOperator.le_size (f := BVExpr.bitblast)
+      apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
+      apply AIG.LawfulVecOperator.le_size (f := BVExpr.bitblast)
     | ult =>
       simp [bitblast]
       apply AIG.LawfulOperator.le_size_of_le_aig_size (f := mkUlt)
-      apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
-      apply AIG.LawfulStreamOperator.le_size (f := BVExpr.bitblast)
+      apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
+      apply AIG.LawfulVecOperator.le_size (f := BVExpr.bitblast)
   | getLsb expr idx =>
     simp only [bitblast]
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := blastGetLsb)
-    apply AIG.LawfulStreamOperator.le_size (f := BVExpr.bitblast)
+    apply AIG.LawfulVecOperator.le_size (f := BVExpr.bitblast)
 
 theorem bitblast_decl_eq (aig : AIG BVBit) (pred : BVPred) {h : idx < aig.decls.size} :
     have := bitblast_le_size aig pred
@@ -65,28 +67,28 @@ theorem bitblast_decl_eq (aig : AIG BVBit) (pred : BVPred) {h : idx < aig.decls.
     | eq =>
       simp only [bitblast]
       rw [AIG.LawfulOperator.decl_eq (f := mkEq)]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := BVExpr.bitblast)]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := BVExpr.bitblast)]
-      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
+      rw [AIG.LawfulVecOperator.decl_eq (f := BVExpr.bitblast)]
+      rw [AIG.LawfulVecOperator.decl_eq (f := BVExpr.bitblast)]
+      . apply AIG.LawfulVecOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
         assumption
-      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
-        apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
+      . apply AIG.LawfulVecOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
+        apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
         assumption
     | ult =>
       simp only [bitblast]
       rw [AIG.LawfulOperator.decl_eq (f := mkUlt)]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := BVExpr.bitblast)]
-      rw [AIG.LawfulStreamOperator.decl_eq (f := BVExpr.bitblast)]
-      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
+      rw [AIG.LawfulVecOperator.decl_eq (f := BVExpr.bitblast)]
+      rw [AIG.LawfulVecOperator.decl_eq (f := BVExpr.bitblast)]
+      . apply AIG.LawfulVecOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
         assumption
-      . apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
-        apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
+      . apply AIG.LawfulVecOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
+        apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := BVExpr.bitblast)
         assumption
   | getLsb expr idx =>
     simp only [bitblast]
     rw [AIG.LawfulOperator.decl_eq (f := blastGetLsb)]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := BVExpr.bitblast)]
-    apply AIG.LawfulStreamOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
+    rw [AIG.LawfulVecOperator.decl_eq (f := BVExpr.bitblast)]
+    apply AIG.LawfulVecOperator.lt_size_of_lt_aig_size (f := BVExpr.bitblast)
     assumption
 
 instance : AIG.LawfulOperator BVBit (fun _ => BVPred) bitblast where

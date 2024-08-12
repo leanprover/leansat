@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.Basic
-import LeanSAT.AIG.CachedGatesLemmas
-import LeanSAT.AIG.LawfulStreamOperator
+import Std.Sat.AIG.CachedGatesLemmas
+import Std.Sat.AIG.LawfulVecOperator
+
+open Std.Sat
 
 namespace BVExpr
 namespace bitblast
@@ -14,12 +16,12 @@ namespace bitblast
 structure BVVar (width : Nat) where
   ident : Nat
 
-def blastVar (aig : AIG BVBit) (var : BVVar w) : AIG.RefStreamEntry BVBit w :=
+def blastVar (aig : AIG BVBit) (var : BVVar w) : AIG.RefVecEntry BVBit w :=
   go w aig 0 .empty var.ident (by omega)
 where
-  go (w : Nat) (aig : AIG BVBit) (idx : Nat) (s : AIG.RefStream aig idx) (a : Nat)
+  go (w : Nat) (aig : AIG BVBit) (idx : Nat) (s : AIG.RefVec aig idx) (a : Nat)
     (hidx : idx ≤ w)
-    : AIG.RefStreamEntry BVBit w :=
+    : AIG.RefVecEntry BVBit w :=
   if hidx:idx < w then
     let res := aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩
     let aig := res.aig
@@ -35,7 +37,7 @@ where
     ⟨aig, hidx ▸ s⟩
   termination_by w - idx
 
-theorem blastVar.go_le_size {aig : AIG BVBit} (idx : Nat) (s : AIG.RefStream aig idx) (a : Nat)
+theorem blastVar.go_le_size {aig : AIG BVBit} (idx : Nat) (s : AIG.RefVec aig idx) (a : Nat)
     (hidx : idx ≤ w)
     : aig.decls.size ≤ (go w aig idx s a hidx).aig.decls.size := by
   unfold go
@@ -51,7 +53,7 @@ theorem blastVar_le_size {aig : AIG BVBit} (var : BVVar w)
   unfold blastVar
   apply blastVar.go_le_size
 
-theorem blastVar.go_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefStream aig i) (a : Nat)
+theorem blastVar.go_decl_eq {aig : AIG BVBit} (i : Nat) (s : AIG.RefVec aig i) (a : Nat)
     (hi : i ≤ w)
     : ∀ (idx : Nat) (h1) (h2), (go w aig i s a hi).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go w aig i s a hi = res
@@ -75,7 +77,7 @@ theorem blastVar_decl_eq {aig : AIG BVBit} (var : BVVar w)
   unfold blastVar
   apply blastVar.go_decl_eq
 
-instance : AIG.LawfulStreamOperator BVBit (fun _ w => BVVar w) blastVar where
+instance : AIG.LawfulVecOperator BVBit (fun _ w => BVVar w) blastVar where
   le_size := by intros; apply blastVar_le_size
   decl_eq := by intros; apply blastVar_decl_eq
 

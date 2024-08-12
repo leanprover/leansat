@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.GetLsb
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVPred
 

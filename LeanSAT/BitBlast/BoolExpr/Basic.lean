@@ -71,15 +71,13 @@ def eval (f : α → Bool) : BoolExpr α → Bool
 @[simp] theorem eval_gate : eval f (.gate g x y) = g.eval (eval f x) (eval f y) := rfl
 
 def sat (f : α → Bool) (x : BoolExpr α) : Prop := eval f x = true
+def Unsat (x : BoolExpr α) : Prop := ∀ f, eval f x = false
 
-instance : HSat α (BoolExpr α) where
-  eval := sat
-
-theorem sat_and {x y : BoolExpr α} {f : α → Bool} (hx : f ⊨ x) (hy : f ⊨ y)
-    : f ⊨ (BoolExpr.gate .and x y) := by
-  simp only [(· ⊨ ·), sat] at *
+theorem sat_and {x y : BoolExpr α} {f : α → Bool} (hx : sat f x) (hy : sat f y)
+    : sat f (BoolExpr.gate .and x y) := by
+  simp only [sat] at *
   simp [hx, hy, Gate.eval]
 
-theorem sat_true {f : α → Bool} : f ⊨ (BoolExpr.const true : BoolExpr α) := rfl
+theorem sat_true {f : α → Bool} : sat f (BoolExpr.const true : BoolExpr α) := rfl
 
 end BoolExpr

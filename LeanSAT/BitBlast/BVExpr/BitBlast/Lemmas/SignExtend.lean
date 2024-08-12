@@ -7,7 +7,8 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.ZeroExtend
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.SignExtend
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -16,8 +17,8 @@ variable [Hashable α] [DecidableEq α]
 
 namespace blastSignExtend
 
-theorem go_get_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
-    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefStream aig curr)
+theorem go_get_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) (newWidth : Nat)
+    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefVec aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < curr),
         (go w hw input newWidth curr hcurr s).get idx (by omega)
           =
@@ -29,15 +30,15 @@ theorem go_get_aux (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig 
     split
     all_goals
       rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_lt]
+      rw [AIG.RefVec.get_push_ref_lt]
   . dsimp
-    simp only [RefStream.get, Ref.mk.injEq]
+    simp only [RefVec.get, Ref.mk.injEq]
     have : curr = newWidth := by omega
     subst this
     simp
 
-theorem go_get (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (newWidth : Nat)
-    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefStream aig curr)
+theorem go_get (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) (newWidth : Nat)
+    (curr : Nat) (hcurr : curr ≤ newWidth) (s : RefVec aig curr)
     : ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
           →
@@ -58,7 +59,7 @@ theorem go_get (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefStream aig w) (
     split
     all_goals
       rw [go_get_aux]
-      rw [AIG.RefStream.get_push_ref_eq']
+      rw [AIG.RefVec.get_push_ref_eq']
       rw [heq]
   | inr heq =>
     split
@@ -79,14 +80,14 @@ theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastSignExtend aig target).aig,
-        (blastSignExtend aig target).stream.get idx hidx,
+        (blastSignExtend aig target).vec.get idx hidx,
         assign
       ⟧
         =
       if hidx:idx < target.w then
-         ⟦aig, target.stream.get idx hidx, assign⟧
+         ⟦aig, target.vec.get idx hidx, assign⟧
       else
-         ⟦aig, target.stream.get (target.w - 1) (by omega), assign⟧
+         ⟦aig, target.vec.get (target.w - 1) (by omega), assign⟧
     := by
   intro idx hidx
   generalize hg : blastSignExtend aig target = res

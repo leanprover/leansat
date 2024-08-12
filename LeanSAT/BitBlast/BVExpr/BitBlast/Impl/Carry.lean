@@ -5,6 +5,8 @@ Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Add
 
+open Std.Sat
+
 namespace BVExpr
 namespace bitblast
 
@@ -12,7 +14,7 @@ variable [Hashable α] [DecidableEq α]
 
 structure OverflowInput (aig : AIG α) where
   (w : Nat)
-  stream : AIG.BinaryRefStream aig w
+  stream : AIG.BinaryRefVec aig w
   cin : AIG.Ref aig
 
 def mkOverflowBit (aig : AIG α) (input : OverflowInput aig) : AIG.Entrypoint α :=
@@ -20,7 +22,7 @@ def mkOverflowBit (aig : AIG α) (input : OverflowInput aig) : AIG.Entrypoint α
   go aig 0 (by omega) cin lhs rhs
 where
   go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
-      (lhs rhs : AIG.RefStream aig w)
+      (lhs rhs : AIG.RefVec aig w)
       : AIG.Entrypoint α :=
     if hidx:curr < w then
       let lin := lhs.get curr hidx
@@ -39,7 +41,7 @@ where
 
 namespace mkOverflowBit
 
-theorem go_le_size {aig : AIG α} {cin} {lhs rhs : AIG.RefStream aig w}
+theorem go_le_size {aig : AIG α} {cin} {lhs rhs : AIG.RefVec aig w}
     : aig.decls.size ≤ (go aig curr hcurr cin lhs rhs).aig.decls.size := by
   unfold go
   dsimp
@@ -50,7 +52,7 @@ theorem go_le_size {aig : AIG α} {cin} {lhs rhs : AIG.RefStream aig w}
     omega
 termination_by w - curr
 
-theorem go_decl_eq {aig : AIG α} {cin} {lhs rhs : AIG.RefStream aig w}
+theorem go_decl_eq {aig : AIG α} {cin} {lhs rhs : AIG.RefVec aig w}
     : ∀ (idx : Nat) (h1) (h2),
         (go aig curr hcurr cin lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
   generalize hgo : go aig curr hcurr cin lhs rhs = res

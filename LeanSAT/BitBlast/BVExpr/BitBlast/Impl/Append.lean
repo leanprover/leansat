@@ -4,7 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.Basic
-import LeanSAT.AIG.LawfulStreamOperator
+import Std.Sat.AIG.LawfulVecOperator
+
+open Std.Sat
 
 namespace BVExpr
 namespace bitblast
@@ -14,17 +16,17 @@ variable [Hashable α] [DecidableEq α]
 structure AppendTarget (aig : AIG α) (combined : Nat) where
   {lw : Nat}
   {rw : Nat}
-  lhs : AIG.RefStream aig lw
-  rhs : AIG.RefStream aig rw
+  lhs : AIG.RefVec aig lw
+  rhs : AIG.RefVec aig rw
   h : combined = rw + lw
 
 def blastAppend (aig : AIG α) (target : AppendTarget aig newWidth)
-    : AIG.RefStreamEntry α newWidth :=
+    : AIG.RefVecEntry α newWidth :=
   let ⟨lhs, rhs, h⟩ := target
   let combined := rhs.append lhs
   ⟨aig, h ▸ combined⟩
 
-instance : AIG.LawfulStreamOperator α AppendTarget blastAppend where
+instance : AIG.LawfulVecOperator α AppendTarget blastAppend where
   le_size := by simp [blastAppend]
   decl_eq := by simp [blastAppend]
 

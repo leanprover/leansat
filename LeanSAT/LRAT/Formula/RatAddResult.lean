@@ -112,7 +112,7 @@ theorem clear_insertRat_base_case {n : Nat} (f : DefaultFormula n) (hf : f.ratUn
 theorem clear_insertRat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
     (units : CNF.Clause (PosFin n)) : clearRatUnits (f.insertRatUnits units).1 = f := by
   simp only [clearRatUnits]
-  ext
+  ext : 1
   . simp only [insertRatUnits]
   . simp only [insertRatUnits]
   . rw [hf.1]

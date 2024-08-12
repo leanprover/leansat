@@ -18,26 +18,28 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.RotateRight
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.SignExtend
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Mul
 
+open Std.Sat
+
 namespace BVExpr
 
-def bitblast (aig : AIG BVBit) (expr : BVExpr w) : AIG.RefStreamEntry BVBit w :=
+def bitblast (aig : AIG BVBit) (expr : BVExpr w) : AIG.RefVecEntry BVBit w :=
   go aig expr |>.val
 where
-  go {w : Nat} (aig : AIG BVBit) (expr : BVExpr w) : AIG.ExtendingRefStreamEntry aig w :=
+  go {w : Nat} (aig : AIG BVBit) (expr : BVExpr w) : AIG.ExtendingRefVecEntry aig w :=
     match expr with
     | .var a =>
       let res := bitblast.blastVar aig ⟨a⟩
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size (f := bitblast.blastVar)
+          apply AIG.LawfulVecOperator.le_size (f := bitblast.blastVar)
       ⟩
     | .const val =>
       let res := bitblast.blastConst aig val
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size (f := bitblast.blastConst)
+          apply AIG.LawfulVecOperator.le_size (f := bitblast.blastConst)
       ⟩
     | .zeroExtend (w := w) v inner =>
       let ⟨⟨eaig, estream⟩, heaig⟩ := go aig inner
@@ -45,7 +47,7 @@ where
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastZeroExtend)
+          apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastZeroExtend)
           dsimp at heaig
           assumption
       ⟩
@@ -55,7 +57,7 @@ where
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastSignExtend)
+          apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastSignExtend)
           dsimp at heaig
           assumption
       ⟩
@@ -67,30 +69,30 @@ where
         omega
       match op with
       | .and =>
-         let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkAndCached⟩
+         let res := AIG.RefVec.zip aig ⟨⟨lhs, rhs⟩, AIG.mkAndCached⟩
          ⟨
            res,
            by
-             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
+             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.zip)
              dsimp at hlaig hraig
              omega
          ⟩
       | .or =>
-         let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkOrCached⟩
+         let res := AIG.RefVec.zip aig ⟨⟨lhs, rhs⟩, AIG.mkOrCached⟩
          ⟨
            res,
            by
-             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
+             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.zip)
              dsimp at hlaig hraig
              omega
          ⟩
 
       | .xor =>
-         let res := AIG.RefStream.zip aig ⟨⟨lhs, rhs⟩, AIG.mkXorCached⟩
+         let res := AIG.RefVec.zip aig ⟨⟨lhs, rhs⟩, AIG.mkXorCached⟩
          ⟨
            res,
            by
-             apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.zip)
+             apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.zip)
              dsimp at hlaig hraig
              omega
          ⟩
@@ -99,7 +101,7 @@ where
         ⟨
           res,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastAdd)
+            apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastAdd)
             dsimp at hlaig hraig
             omega
         ⟩
@@ -108,7 +110,7 @@ where
         ⟨
           res,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastMul)
+            apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastMul)
             dsimp at hlaig hraig
             omega
         ⟩
@@ -120,7 +122,7 @@ where
           ⟨
             res,
             by
-              apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := AIG.RefStream.map)
+              apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := AIG.RefVec.map)
               dsimp at heaig
               omega
           ⟩
@@ -129,7 +131,7 @@ where
         ⟨
           res,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeftConst)
+            apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeftConst)
             dsimp at heaig
             assumption
         ⟩
@@ -138,7 +140,7 @@ where
         ⟨
           res,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRightConst)
+            apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRightConst)
             dsimp at heaig
             assumption
         ⟩
@@ -147,7 +149,7 @@ where
         ⟨
           res,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastRotateLeft)
+            apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastRotateLeft)
             dsimp at heaig
             assumption
         ⟩
@@ -156,7 +158,7 @@ where
         ⟨
           res,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastRotateRight)
+            apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastRotateRight)
             dsimp at heaig
             assumption
         ⟩
@@ -165,7 +167,7 @@ where
         ⟨
           res,
           by
-            apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastArithShiftRightConst)
+            apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastArithShiftRightConst)
             dsimp at heaig
             assumption
         ⟩
@@ -179,7 +181,7 @@ where
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastAppend)
+          apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastAppend)
           dsimp at hlaig hraig
           omega
       ⟩
@@ -189,7 +191,7 @@ where
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastReplicate)
+          apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastReplicate)
           dsimp at haig
           assumption
       ⟩
@@ -199,7 +201,7 @@ where
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastExtract)
+          apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastExtract)
           dsimp at heaig
           exact heaig
       ⟩
@@ -213,7 +215,7 @@ where
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeft)
+          apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftLeft)
           dsimp at hlaig hraig
           omega
       ⟩
@@ -227,7 +229,7 @@ where
       ⟨
         res,
         by
-          apply AIG.LawfulStreamOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRight)
+          apply AIG.LawfulVecOperator.le_size_of_le_aig_size (f := bitblast.blastShiftRight)
           dsimp at hlaig hraig
           omega
       ⟩
@@ -245,15 +247,15 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
   induction expr generalizing aig with
   | var =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastVar)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastVar)]
   | const =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastConst)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastConst)]
   | bin lhs op rhs lih rih =>
     match op with
     | .and | .or | .xor | .add | .mul =>
       dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq]
+      rw [AIG.LawfulVecOperator.decl_eq]
       rw [rih, lih]
       . apply Nat.lt_of_lt_of_le
         . exact h1
@@ -268,28 +270,28 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
     | .not | .shiftLeftConst .. | .shiftRightConst .. | .rotateLeft .. | .rotateRight ..
     | .arithShiftRightConst .. =>
       dsimp [go]
-      rw [AIG.LawfulStreamOperator.decl_eq]
+      rw [AIG.LawfulVecOperator.decl_eq]
       rw [ih]
       apply Nat.lt_of_lt_of_le
       . exact h1
       . exact (go aig expr).property
   | zeroExtend w inner ih =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastZeroExtend)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastZeroExtend)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | signExtend w inner ih =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastSignExtend)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastSignExtend)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | append lhs rhs lih rih =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastAppend)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastAppend)]
     rw [rih, lih]
     . apply Nat.lt_of_lt_of_le
       . exact h1
@@ -301,21 +303,21 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
         . exact (go (go aig lhs).1.aig rhs).property
   | replicate n inner ih =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastReplicate)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastReplicate)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | extract hi lo inner ih =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastExtract)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastExtract)]
     rw [ih]
     apply Nat.lt_of_lt_of_le
     . exact h1
     . exact (go aig inner).property
   | shiftLeft lhs rhs lih rih =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftLeft)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastShiftLeft)]
     rw [rih, lih]
     . apply Nat.lt_of_lt_of_le
       . exact h1
@@ -327,7 +329,7 @@ theorem bitblast.go_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
         . exact (go (go aig lhs).1.aig rhs).property
   | shiftRight lhs rhs lih rih =>
     dsimp [go]
-    rw [AIG.LawfulStreamOperator.decl_eq (f := blastShiftRight)]
+    rw [AIG.LawfulVecOperator.decl_eq (f := blastShiftRight)]
     rw [rih, lih]
     . apply Nat.lt_of_lt_of_le
       . exact h1
@@ -346,7 +348,7 @@ theorem bitblast_decl_eq (aig : AIG BVBit) (expr : BVExpr w)
   unfold bitblast
   apply bitblast.go_decl_eq
 
-instance : AIG.LawfulStreamOperator BVBit (fun _ w => BVExpr w) bitblast where
+instance : AIG.LawfulVecOperator BVBit (fun _ w => BVExpr w) bitblast where
   le_size := by intros; apply bitblast_le_size
   decl_eq := by intros; apply bitblast_decl_eq
 

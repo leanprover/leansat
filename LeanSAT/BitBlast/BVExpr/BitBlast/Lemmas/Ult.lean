@@ -8,13 +8,14 @@ import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Carry
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Not
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Ult
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVPred
 
 variable [Hashable α] [DecidableEq α]
 
-theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : BinaryRefStream aig w)
+theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : BinaryRefVec aig w)
     (assign : α → Bool)
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, input.rhs.get idx hidx, assign⟧ = rhs.getLsb idx)
@@ -34,13 +35,13 @@ theorem mkUlt_denote_eq_eval_ult (aig : AIG α) (lhs rhs : BitVec w) (input : Bi
   . dsimp
     intro idx hidx
     rw [AIG.LawfulOperator.denote_mem_prefix (f := AIG.mkConstCached)]
-    rw [AIG.LawfulStreamOperator.denote_mem_prefix (f := BVExpr.bitblast.blastNot)]
+    rw [AIG.LawfulVecOperator.denote_mem_prefix (f := BVExpr.bitblast.blastNot)]
     apply hleft
     assumption
   . dsimp
     intro idx hidx
     rw [AIG.LawfulOperator.denote_mem_prefix (f := AIG.mkConstCached)]
-    . simp only [RefStream.get_cast, Ref_cast', BitVec.getLsb_not, hidx, decide_True,
+    . simp only [RefVec.get_cast, Ref_cast', BitVec.getLsb_not, hidx, decide_True,
         Bool.true_and]
       rw [BVExpr.bitblast.blastNot_eq_eval_getLsb]
       congr 1

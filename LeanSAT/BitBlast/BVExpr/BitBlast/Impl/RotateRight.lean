@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.Basic
-import LeanSAT.AIG.CachedGatesLemmas
-import LeanSAT.AIG.LawfulStreamOperator
+import Std.Sat.AIG.CachedGatesLemmas
+import Std.Sat.AIG.LawfulVecOperator
+
+open Std.Sat
 
 namespace BVExpr
 namespace bitblast
@@ -13,13 +15,13 @@ namespace bitblast
 variable [Hashable α] [DecidableEq α]
 
 def blastRotateRight (aig : AIG α) (target : AIG.ShiftTarget aig w)
-    : AIG.RefStreamEntry α w :=
+    : AIG.RefVecEntry α w :=
   let ⟨input, distance⟩ := target
   ⟨aig, go input distance 0 (by omega) .empty⟩
 where
-  go {aig : AIG α} (input : AIG.RefStream aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
-      (s : AIG.RefStream aig curr)
-    : AIG.RefStream aig w :=
+  go {aig : AIG α} (input : AIG.RefVec aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
+      (s : AIG.RefVec aig curr)
+    : AIG.RefVec aig w :=
   if hcurr1:curr < w then
     if hcurr2:curr < w - distance % w then
       let ref := input.get ((distance % w) + curr) (by omega)
@@ -34,7 +36,7 @@ where
     hcurr ▸ s
 termination_by w - curr
 
-instance : AIG.LawfulStreamOperator α AIG.ShiftTarget blastRotateRight where
+instance : AIG.LawfulVecOperator α AIG.ShiftTarget blastRotateRight where
   le_size := by
     intros
     unfold blastRotateRight

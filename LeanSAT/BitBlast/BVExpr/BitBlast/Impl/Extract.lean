@@ -4,7 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.BitBlast.BVExpr.Basic
-import LeanSAT.AIG.LawfulStreamOperator
+import Std.Sat.AIG.LawfulVecOperator
+
+open Std.Sat
 
 namespace BVExpr
 namespace bitblast
@@ -13,13 +15,13 @@ variable [Hashable α] [DecidableEq α]
 
 structure ExtractTarget (aig : AIG α) (newWidth : Nat) where
   {w : Nat}
-  stream : AIG.RefStream aig w
+  vec : AIG.RefVec aig w
   hi : Nat
   lo : Nat
   hnew : newWidth = hi - lo + 1
 
 def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth)
-    : AIG.RefStreamEntry α newWidth :=
+    : AIG.RefVecEntry α newWidth :=
   let ⟨input, hi, lo, hnew⟩ := target
   let res := aig.mkConstCached false
   let aig := res.aig
@@ -30,13 +32,13 @@ def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth)
     ⟨aig, go input lo 0 (by omega) falseRef .empty⟩
   else
     have : 1 = newWidth  := by omega
-    let base := AIG.RefStream.empty
+    let base := AIG.RefVec.empty
     let base := base.push (input.getD lo falseRef)
     ⟨aig, this ▸ base⟩
 where
-  go {aig : AIG α} {w : Nat} (input : AIG.RefStream aig w) (lo : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
-      (falseRef : AIG.Ref aig) (s : AIG.RefStream aig curr)
-    : AIG.RefStream aig newWidth :=
+  go {aig : AIG α} {w : Nat} (input : AIG.RefVec aig w) (lo : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
+      (falseRef : AIG.Ref aig) (s : AIG.RefVec aig curr)
+    : AIG.RefVec aig newWidth :=
   if h : curr < newWidth then
     let nextRef := input.getD (lo + curr) falseRef
     let s := s.push nextRef
@@ -46,7 +48,7 @@ where
     this ▸ s
 termination_by newWidth - curr
 
-instance : AIG.LawfulStreamOperator α ExtractTarget blastExtract where
+instance : AIG.LawfulVecOperator α ExtractTarget blastExtract where
   le_size := by
     intros
     unfold blastExtract

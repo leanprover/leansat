@@ -3,8 +3,8 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.AIG.CachedGates
-import LeanSAT.AIG.CachedGatesLemmas
+import Std.Sat.AIG.CachedGates
+import Std.Sat.AIG.CachedGatesLemmas
 import LeanSAT.BitBlast.BoolExpr.Basic
 
 /-!
@@ -12,9 +12,12 @@ This module contains the logic to turn a `BoolExpr Nat` into an `AIG` with maxim
 through the use of a cache that re-uses sub-circuits if possible.
 -/
 
+namespace Std
+namespace Sat
+
 namespace AIG
 
-open Sat
+open Std.Sat
 
 variable {β : Type} [Hashable β] [DecidableEq β]
 
@@ -151,8 +154,7 @@ theorem ofBoolExprCachedDirect_eval_eq_eval (expr : BoolExpr α) (assign) :
   apply ofBoolExprCached.go_eval_eq_eval
 
 theorem ofBoolExprCachedDirect_unsat_iff {expr : BoolExpr α}
-    : (ofBoolExprCachedDirect expr).Unsat ↔ unsatisfiable α expr := by
-  simp [unsatisfiable, (· ⊨ ·), BoolExpr.sat]
+    : (ofBoolExprCachedDirect expr).Unsat ↔ expr.Unsat := by
   constructor
   all_goals
     intro h assign

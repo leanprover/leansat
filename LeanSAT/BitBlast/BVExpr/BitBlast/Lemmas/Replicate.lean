@@ -6,7 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.BitBlast.BVExpr.BitBlast.Lemmas.Basic
 import LeanSAT.BitBlast.BVExpr.BitBlast.Impl.Replicate
 
-open AIG
+open Std.Sat
+open Std.Sat.AIG
 
 namespace BVExpr
 namespace bitblast
@@ -38,7 +39,7 @@ private theorem aux4 {a b c : Nat} (hidx : a < b * c) (h : c ≤ n) : a < b * n 
   | inr h => simp_all
 
 theorem go_get_aux (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
-    (input : AIG.RefStream aig w) (s : AIG.RefStream aig (w * curr))
+    (input : AIG.RefVec aig w) (s : AIG.RefVec aig (w * curr))
     : ∀ (idx : Nat) (hidx : idx < w * curr),
         (go n curr hcurr input s).get idx (aux4 hidx hcurr)
           =
@@ -48,18 +49,18 @@ theorem go_get_aux (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
   split
   . dsimp
     rw [go_get_aux]
-    rw [AIG.RefStream.get_append]
+    rw [AIG.RefVec.get_append]
     simp only [hidx, ↓reduceDIte]
     omega
   . dsimp
-    simp only [RefStream.get, Ref.mk.injEq]
+    simp only [RefVec.get, Ref.mk.injEq]
     have : curr = n := by omega
     subst this
     simp
 termination_by n - curr
 
 theorem go_get (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
-    (input : AIG.RefStream aig w) (s : AIG.RefStream aig (w * curr))
+    (input : AIG.RefVec aig w) (s : AIG.RefVec aig (w * curr))
   : ∀ (idx : Nat) (hidx1 : idx < w * n),
       w * curr ≤ idx
         →
@@ -73,7 +74,7 @@ theorem go_get (aig : AIG α) (n : Nat) (curr : Nat) (hcurr : curr ≤ n)
   . cases Nat.lt_or_ge idx (w * (curr + 1)) with
     | inl h =>
       rw [go_get_aux]
-      rw [AIG.RefStream.get_append]
+      rw [AIG.RefVec.get_append]
       . have : ¬ (idx < w * curr) := by omega
         simp only [this, ↓reduceDIte]
         congr 1
@@ -98,7 +99,7 @@ theorem blastReplicate_eq_eval_getLsb (aig : AIG α) (target : ReplicateTarget a
   : ∀ (idx : Nat) (hidx : idx < newWidth),
       ⟦
         (blastReplicate aig target).aig,
-        (blastReplicate aig target).stream.get idx hidx,
+        (blastReplicate aig target).vec.get idx hidx,
         assign
       ⟧
         =
