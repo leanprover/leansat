@@ -85,7 +85,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefVec ai
           assign
         ⟧
           =
-        if hidx:idx < distance then
+        if hidx : idx < distance then
           false
         else
           ⟦aig, input.get (idx - distance) (by omega), assign⟧
@@ -152,7 +152,7 @@ theorem blastShiftLeftConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget 
           assign
         ⟧
           =
-        if hidx:idx < target.distance then
+        if hidx : idx < target.distance then
           false
         else
           ⟦aig, target.vec.get (idx - target.distance) (by omega), assign⟧

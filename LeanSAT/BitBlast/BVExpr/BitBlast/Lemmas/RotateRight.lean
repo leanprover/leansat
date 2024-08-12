@@ -45,7 +45,7 @@ theorem go_get (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
           →
         (go input distance curr hcurr s).get idx hidx1
           =
-        if hidx3:idx < w - distance % w then
+        if hidx3 : idx < w - distance % w then
           input.get ((distance % w) + idx) (by omega)
         else
           input.get (idx - (w - (distance % w))) (by omega)
@@ -90,7 +90,7 @@ theorem blastRotateRight_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig
         assign
       ⟧
         =
-      if hidx2:idx < w - target.distance % w then
+      if hidx2 : idx < w - target.distance % w then
         ⟦aig, target.vec.get ((target.distance % w) + idx) (by omega), assign⟧
       else
         ⟦aig, target.vec.get (idx - (w - (target.distance % w))) (by omega), assign⟧

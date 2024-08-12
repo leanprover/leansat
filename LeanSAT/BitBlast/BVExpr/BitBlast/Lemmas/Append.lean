@@ -24,7 +24,7 @@ theorem blastAppend_eq_eval_getLsb (aig : AIG α) (target : AppendTarget aig new
         assign
       ⟧
         =
-      if hr:idx < target.rw then
+      if hr : idx < target.rw then
          ⟦aig, target.rhs.get idx hr, assign⟧
       else
          have := target.h

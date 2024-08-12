@@ -36,7 +36,7 @@ where
   go {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefVec aig w)
       (lhs rhs : AIG.RefVec aig w) :
       AIG.RefVecEntry BVBit w :=
-    if h:curr < w then
+    if h : curr < w then
       /-
       theorem mulRec_succ_eq (l r : BitVec w) (s : Nat) :
           mulRec l r (s + 1) = mulRec l r s + if r.getLsb (s + 1) then (l <<< (s + 1)) else 0

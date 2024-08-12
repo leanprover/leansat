@@ -20,7 +20,7 @@ where
   go {w : Nat} (aig : AIG α) (idx : Nat) (s : AIG.RefVec aig idx) (val : BitVec w)
       (hidx : idx ≤ w) :
       AIG.RefVecEntry α w :=
-    if hidx:idx < w then
+    if hidx : idx < w then
       let res := aig.mkConstCached (val.getLsb idx)
       let aig := res.aig
       let bitRef := res.ref

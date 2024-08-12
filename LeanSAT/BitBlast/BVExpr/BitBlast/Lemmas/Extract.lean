@@ -77,7 +77,7 @@ theorem blastExtract_eq_eval_getLsb (aig : AIG α) (target : ExtractTarget aig n
           assign
         ⟧
           =
-        if h:(target.lo + idx) < target.w then
+        if h : (target.lo + idx) < target.w then
           ⟦
             aig,
             target.vec.get (target.lo + idx) h,

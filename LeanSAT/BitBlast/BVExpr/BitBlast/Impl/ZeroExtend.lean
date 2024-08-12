@@ -21,8 +21,8 @@ def blastZeroExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth) :
 where
   go (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
       (s : AIG.RefVec aig curr) : AIG.RefVecEntry α newWidth :=
-    if hcurr1:curr < newWidth then
-      if hcurr2:curr < w then
+    if hcurr1 : curr < newWidth then
+      if hcurr2 : curr < w then
         let s := s.push (input.get curr hcurr2)
         go aig w input newWidth (curr + 1) (by omega) s
       else

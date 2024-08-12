@@ -24,7 +24,7 @@ where
   go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
       (lhs rhs : AIG.RefVec aig w) :
       AIG.Entrypoint α :=
-    if hidx:curr < w then
+    if hidx : curr < w then
       let lin := lhs.get curr hidx
       let rin := rhs.get curr hidx
       let res := mkFullAdderCarry aig ⟨lin, rin, cin⟩

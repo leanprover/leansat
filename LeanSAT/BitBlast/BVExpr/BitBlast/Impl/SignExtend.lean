@@ -18,15 +18,15 @@ variable [Hashable α] [DecidableEq α]
 def blastSignExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth) :
     AIG.RefVecEntry α newWidth :=
   let ⟨width, input⟩ := target
-  if hw:width = 0 then
+  if hw : width = 0 then
     blastZeroExtend aig ⟨width, input⟩
   else
     ⟨aig, go width (by omega) input newWidth 0 (by omega) .empty⟩
 where
   go {aig : AIG α} (w : Nat) (hw : 0 < w) (input : AIG.RefVec aig w) (newWidth : Nat)
       (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) : AIG.RefVec aig newWidth :=
-    if hcurr1:curr < newWidth then
-      if hcurr2:curr < w then
+    if hcurr1 : curr < newWidth then
+      if hcurr2 : curr < w then
         let s := s.push (input.get curr hcurr2)
         go w hw input newWidth (curr + 1) (by omega) s
       else

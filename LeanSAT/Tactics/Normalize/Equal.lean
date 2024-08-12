@@ -21,7 +21,7 @@ theorem Bool.not_beq_not : ∀ (a b : Bool), ((!a) == (!b)) = (a == b) := by
 
 @[bv_normalize]
 theorem BitVec.xor_beq_xor (a b : BitVec w) : (~~~a == ~~~b) = (a == b) := by
-  match h:a == b with
+  match h : a == b with
   | true => simp_all
   | false =>
     simp only [beq_eq_false_iff_ne, ne_eq] at *

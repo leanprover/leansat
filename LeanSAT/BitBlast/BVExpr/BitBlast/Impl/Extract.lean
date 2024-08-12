@@ -28,7 +28,7 @@ def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth) :
   let falseRef := res.ref
   let input := input.cast <| by
     apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
-  if h:lo ≤ hi then
+  if h : lo ≤ hi then
     ⟨aig, go input lo 0 (by omega) falseRef .empty⟩
   else
     have : 1 = newWidth  := by omega

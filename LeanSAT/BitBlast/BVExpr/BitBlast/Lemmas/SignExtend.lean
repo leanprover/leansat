@@ -44,7 +44,7 @@ theorem go_get (aig : AIG α) (w : Nat) (hw : 0 < w) (input : RefVec aig w) (new
           →
         (go w hw input newWidth curr hcurr s).get idx hidx1
           =
-        if hidx2:idx < w then
+        if hidx2 : idx < w then
           input.get idx (by omega)
         else
           input.get (w - 1) (by omega)
@@ -84,7 +84,7 @@ theorem blastSignExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
           assign
         ⟧
           =
-        if hidx:idx < target.w then
+        if hidx : idx < target.w then
            ⟦aig, target.vec.get idx hidx, assign⟧
         else
            ⟦aig, target.vec.get (target.w - 1) (by omega), assign⟧

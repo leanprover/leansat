@@ -23,8 +23,8 @@ where
   go (aig : AIG α) (input : AIG.RefVec aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
       (s : AIG.RefVec aig curr) :
       AIG.RefVecEntry α w :=
-  if hidx:curr < w then
-    if hdist:(distance + curr) < w then
+  if hidx : curr < w then
+    if hdist : (distance + curr) < w then
       let s := s.push (input.get (distance + curr) (by omega))
       go aig input distance (curr + 1) (by omega) s
     else
@@ -95,8 +95,8 @@ where
   go {aig : AIG α} (input : AIG.RefVec aig w) (distance : Nat) (curr : Nat) (hcurr : curr ≤ w)
       (s : AIG.RefVec aig curr) :
       AIG.RefVec aig w :=
-  if hidx:curr < w then
-    if hdist:(distance + curr) < w then
+  if hidx : curr < w then
+    if hdist : (distance + curr) < w then
       let s := s.push (input.get (distance + curr) (by omega))
       go input distance (curr + 1) (by omega) s
     else
@@ -127,7 +127,7 @@ structure TwoPowShiftTarget (aig : AIG α) (w : Nat) where
 
 def twoPowShift (aig : AIG α) (target : TwoPowShiftTarget aig w) : AIG.RefVecEntry α w :=
   let ⟨n, lhs, rhs, pow⟩ := target
-  if h:pow < n then
+  if h : pow < n then
     let res := blastShiftRightConst aig ⟨lhs, (2 ^ pow) % 2^n⟩
     let aig := res.aig
     let shifted := res.vec
@@ -181,7 +181,7 @@ where
   go {n : Nat} (aig : AIG α) (distance : AIG.RefVec aig n) (curr : Nat) (hcurr : curr ≤ n - 1)
       (acc : AIG.RefVec aig w) :
       AIG.RefVecEntry α w :=
-    if h:curr < n - 1 then
+    if h : curr < n - 1 then
       let res := blastShiftRight.twoPowShift aig ⟨_, acc, distance, curr + 1⟩
       let aig := res.aig
       let acc := res.vec

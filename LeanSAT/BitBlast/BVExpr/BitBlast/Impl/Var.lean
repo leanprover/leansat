@@ -21,7 +21,7 @@ where
   go (w : Nat) (aig : AIG BVBit) (idx : Nat) (s : AIG.RefVec aig idx) (a : Nat)
     (hidx : idx ≤ w) :
     AIG.RefVecEntry BVBit w :=
-  if hidx:idx < w then
+  if hidx : idx < w then
     let res := aig.mkAtomCached ⟨a, ⟨idx, hidx⟩⟩
     let aig := res.aig
     let bitRef := res.ref

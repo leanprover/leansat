@@ -18,7 +18,7 @@ theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget 
     (assign : α → Bool) :
     ⟦blastGetLsb aig target, assign⟧
       =
-    if h:target.idx < target.w then
+    if h : target.idx < target.w then
       ⟦aig, target.vec.get target.idx h, assign⟧
     else
       false := by

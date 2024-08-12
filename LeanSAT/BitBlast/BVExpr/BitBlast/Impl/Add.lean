@@ -163,7 +163,7 @@ where
   go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
       (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
       AIG.RefVecEntry α w :=
-    if hidx:curr < w then
+    if hidx : curr < w then
       let lin := lhs.get curr hidx
       let rin := rhs.get curr hidx
       let res := mkFullAdder aig ⟨lin, rin, cin⟩

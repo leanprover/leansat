@@ -85,7 +85,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (n
           assign
         ⟧
           =
-        if hidx:idx < w then
+        if hidx : idx < w then
            ⟦aig, input.get idx hidx, assign⟧
         else
            false
@@ -144,7 +144,7 @@ theorem blastZeroExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
           assign
         ⟧
           =
-        if hidx:idx < target.w then
+        if hidx : idx < target.w then
            ⟦aig, target.vec.get idx hidx, assign⟧
         else
            false
