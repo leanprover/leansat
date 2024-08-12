@@ -36,7 +36,7 @@ theorem bitblast_denote_eq_eval (expr : BVLogicalExpr) (assign : BVExpr.Assignme
   rw [bitblast.go_eval_eq_eval]
 
 theorem unsat_of_bitblast (expr : BVLogicalExpr)
-    : expr.bitblast.Unsat → expr.unsat :=  by
+    : expr.bitblast.Unsat → expr.Unsat :=  by
   intro h assign
   rw [← bitblast_denote_eq_eval]
   apply h

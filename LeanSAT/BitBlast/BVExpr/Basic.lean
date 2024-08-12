@@ -27,37 +27,32 @@ instance : ToString BVBit where
   toString b := s!"x{b.var}[{b.idx.val}]"
 
 instance : Inhabited BVBit where
-  default :=
-    {
-        w := 1
-        var := 0
-        idx := 0
-    }
+  default := { w := 1, var := 0, idx := 0 }
 
 /--
 All supported binary operations on `BVExpr`.
 -/
 inductive BVBinOp where
-/--
-Bitwise and.
--/
-| and
-/--
-Bitwise or.
--/
-| or
-/--
-Bitwise xor.
--/
-| xor
-/--
-Addition.
--/
-| add
-/--
-Multiplication.
--/
-| mul
+  /--
+  Bitwise and.
+  -/
+  | and
+  /--
+  Bitwise or.
+  -/
+  | or
+  /--
+  Bitwise xor.
+  -/
+  | xor
+  /--
+  Addition.
+  -/
+  | add
+  /--
+  Multiplication.
+  -/
+  | mul
 
 namespace BVBinOp
 
@@ -92,42 +87,42 @@ end BVBinOp
 All supported unary operators on `BVExpr`.
 -/
 inductive BVUnOp where
-/--
-Bitwise not.
--/
-| not
-/--
-Shifting left by a constant value.
+  /--
+  Bitwise not.
+  -/
+  | not
+  /--
+  Shifting left by a constant value.
 
-This operation has a dedicated constant representation as shiftLeft can take `Nat` as a shift amount.
-We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
-constant `Nat` value.
--/
-| shiftLeftConst (n : Nat)
-/--
-Shifting right by a constant value.
+  This operation has a dedicated constant representation as shiftLeft can take `Nat` as a shift amount.
+  We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
+  constant `Nat` value.
+  -/
+  | shiftLeftConst (n : Nat)
+  /--
+  Shifting right by a constant value.
 
-This operation has a dedicated constant representation as shiftRight can take `Nat` as a shift amount.
-We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
-constant `Nat` value.
--/
-| shiftRightConst (n : Nat)
-/--
-Rotating left by a constant value.
--/
-| rotateLeft (n : Nat)
-/--
-Rotating right by a constant value.
--/
-| rotateRight (n : Nat)
-/--
-Arithmetic shift right by a constant value.
+  This operation has a dedicated constant representation as shiftRight can take `Nat` as a shift amount.
+  We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
+  constant `Nat` value.
+  -/
+  | shiftRightConst (n : Nat)
+  /--
+  Rotating left by a constant value.
+  -/
+  | rotateLeft (n : Nat)
+  /--
+  Rotating right by a constant value.
+  -/
+  | rotateRight (n : Nat)
+  /--
+  Arithmetic shift right by a constant value.
 
-This operation has a dedicated constant representation as shiftRight can take `Nat` as a shift amount.
-We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
-constant `Nat` value.
--/
-| arithShiftRightConst (n : Nat)
+  This operation has a dedicated constant representation as shiftRight can take `Nat` as a shift amount.
+  We can obviously not bitblast a `Nat` but still want to support the case where the user shifts by a
+  constant `Nat` value.
+  -/
+  | arithShiftRightConst (n : Nat)
 
 namespace BVUnOp
 
@@ -180,47 +175,50 @@ end BVUnOp
 All supported expressions involving `BitVec` and operations on them.
 -/
 inductive BVExpr : Nat → Type where
-/--
-A `BitVec` variable, referred to through an index.
--/
-| var (idx : Nat) : BVExpr w
-/--
-A constant `BitVec` value.
--/
-| const (val : BitVec w) : BVExpr w
-/--
-zero extend a `BitVec` by some constant amount.
--/
-| zeroExtend (v : Nat) (expr : BVExpr w) : BVExpr v
-/--
-Extract a slice from a `BitVec`.
--/
-| extract (hi lo : Nat) (expr : BVExpr w) : BVExpr (hi - lo + 1)
-/--
-A binary operation on two `BVExpr`.
--/
-| bin (lhs : BVExpr w) (op : BVBinOp) (rhs : BVExpr w) : BVExpr w
-/--
-A unary operation on two `BVExpr`.
--/
-| un (op : BVUnOp) (operand : BVExpr w) : BVExpr w
-/--
-Concatenate two bit vectors
--/
-| append (lhs : BVExpr l) (rhs : BVExpr r) : BVExpr (l + r)
-| replicate (n : Nat) (expr : BVExpr w) : BVExpr (w * n)
-/--
-sign extend a `BitVec` by some constant amount.
--/
-| signExtend (v : Nat) (expr : BVExpr w) : BVExpr v
-/--
-shift left by another BitVec expression. For constant shifts there exists a `BVUnop`.
--/
-| shiftLeft (lhs : BVExpr m) (rhs : BVExpr n) : BVExpr m
-/--
-shift right by another BitVec expression. For constant shifts there exists a `BVUnop`.
--/
-| shiftRight (lhs : BVExpr m) (rhs : BVExpr n) : BVExpr m
+  /--
+  A `BitVec` variable, referred to through an index.
+  -/
+  | var (idx : Nat) : BVExpr w
+  /--
+  A constant `BitVec` value.
+  -/
+  | const (val : BitVec w) : BVExpr w
+  /--
+  zero extend a `BitVec` by some constant amount.
+  -/
+  | zeroExtend (v : Nat) (expr : BVExpr w) : BVExpr v
+  /--
+  Extract a slice from a `BitVec`.
+  -/
+  | extract (hi lo : Nat) (expr : BVExpr w) : BVExpr (hi - lo + 1)
+  /--
+  A binary operation on two `BVExpr`.
+  -/
+  | bin (lhs : BVExpr w) (op : BVBinOp) (rhs : BVExpr w) : BVExpr w
+  /--
+  A unary operation on two `BVExpr`.
+  -/
+  | un (op : BVUnOp) (operand : BVExpr w) : BVExpr w
+  /--
+  Concatenate two bit vectors.
+  -/
+  | append (lhs : BVExpr l) (rhs : BVExpr r) : BVExpr (l + r)
+  /--
+  Concatenate a bit vector with itself `n` times.
+  -/
+  | replicate (n : Nat) (expr : BVExpr w) : BVExpr (w * n)
+  /--
+  sign extend a `BitVec` by some constant amount.
+  -/
+  | signExtend (v : Nat) (expr : BVExpr w) : BVExpr v
+  /--
+  shift left by another BitVec expression. For constant shifts there exists a `BVUnop`.
+  -/
+  | shiftLeft (lhs : BVExpr m) (rhs : BVExpr n) : BVExpr m
+  /--
+  shift right by another BitVec expression. For constant shifts there exists a `BVUnop`.
+  -/
+  | shiftRight (lhs : BVExpr m) (rhs : BVExpr n) : BVExpr m
 
 namespace BVExpr
 
@@ -325,14 +323,14 @@ end BVExpr
 Supported binary predicates on `BVExpr`.
 -/
 inductive BVBinPred where
-/--
-Equality.
--/
-| eq
-/--
-Unsigned Less Than
--/
-| ult
+  /--
+  Equality.
+  -/
+  | eq
+  /--
+  Unsigned Less Than
+  -/
+  | ult
 
 namespace BVBinPred
 
@@ -358,14 +356,14 @@ end BVBinPred
 Supported predicates on `BVExpr`.
 -/
 inductive BVPred where
-/--
-A binary predicate on `BVExpr`.
--/
-| bin (lhs : BVExpr w) (op : BVBinPred) (rhs : BVExpr w)
-/--
-Getting a constant LSB from a `BitVec`.
--/
-| getLsb (expr : BVExpr w) (idx : Nat)
+  /--
+  A binary predicate on `BVExpr`.
+  -/
+  | bin (lhs : BVExpr w) (op : BVBinPred) (rhs : BVExpr w)
+  /--
+  Getting a constant LSB from a `BitVec`.
+  -/
+  | getLsb (expr : BVExpr w) (idx : Nat)
 
 namespace BVPred
 
@@ -418,21 +416,15 @@ def eval (assign : BVExpr.Assignment) (expr : BVLogicalExpr) : Bool :=
 @[simp] theorem eval_not : eval assign (.not x) = !eval assign x := rfl
 @[simp] theorem eval_gate : eval assign (.gate g x y) = g.eval (eval assign x) (eval assign y) := rfl
 
-/--
-Definitions of satisfiability on `BVLogicalExpr`.
--/
-def sat (x : BVLogicalExpr) (assign : BVExpr.Assignment) : Prop := eval assign x = true
+def Sat (x : BVLogicalExpr) (assign : BVExpr.Assignment) : Prop := eval assign x = true
 
-/--
-Definitions of unsatisfiability on `BVLogicalExpr`.
--/
-def unsat (x : BVLogicalExpr) : Prop := ∀ f, eval f x = false
+def Unsat (x : BVLogicalExpr) : Prop := ∀ f, eval f x = false
 
-theorem sat_and {x y : BVLogicalExpr} {assign} (hx : sat x assign) (hy : sat y assign)
-    : sat (.gate .and x y) assign := by
-  simp only [sat] at *
+theorem sat_and {x y : BVLogicalExpr} {assign} (hx : Sat x assign) (hy : Sat y assign) :
+    Sat (.gate .and x y) assign := by
+  simp only [Sat] at *
   simp [hx, hy, Gate.eval]
 
-theorem sat_true : sat (.const true) assign := rfl
+theorem sat_true : Sat (.const true) assign := rfl
 
 end BVLogicalExpr

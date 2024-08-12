@@ -861,7 +861,7 @@ def and (x y : SatAtBVLogical) : SatAtBVLogical where
 theorem false_of_eq_true_of_eq_false (h₁ : x = true) (h₂ : x = false) : False := by
   cases h₁; cases h₂
 
-/-- Given a proof that `x.expr.unsat`, produce a proof of `False`. -/
+/-- Given a proof that `x.expr.Unsat`, produce a proof of `False`. -/
 def proveFalse (x : SatAtBVLogical) (h : Expr) : M Expr := do
   let atomsList ← M.atomsAssignment
   let evalExpr := mkApp2 (mkConst ``BVLogicalExpr.eval) atomsList x.expr
@@ -877,14 +877,14 @@ end SatAtBVLogical
 /--
 Given a goal `g`, which should be `False`, returns
 * a `e : BVLogicalExpr` (representing the conjunction of all bitvec predicates in hypotheses of `g`)
-* a function which takes an expression representing a proof of `e.unsat`,
+* a function which takes an expression representing a proof of `e.Unsat`,
   and returns a proof of `False` valid in the context of `g`.
 -/
 def verifyBVExpr (bv : BVLogicalExpr) (cert : LratCert) : Bool :=
   verifyCert (LratFormula.ofCnf (AIG.toCNF bv.bitblast.relabelNat)) cert
 
 theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : LratCert)
-    (h : verifyBVExpr bv c = true) : bv.unsat := by
+    (h : verifyBVExpr bv c = true) : bv.Unsat := by
   apply BVLogicalExpr.unsat_of_bitblast
   rw [← AIG.Entrypoint.relabelNat_unsat_iff]
   rw [← AIG.toCNF_equisat]
