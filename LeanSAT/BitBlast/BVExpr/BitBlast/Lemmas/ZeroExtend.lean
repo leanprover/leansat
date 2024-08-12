@@ -67,7 +67,7 @@ theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w)
     ⟧
       =
     ⟦aig, ⟨start, hstart⟩, assign⟧ := by
-  apply denote.eq_of_IsPrefix (entry := ⟨aig, start,hstart⟩)
+  apply denote.eq_of_isPrefix (entry := ⟨aig, start,hstart⟩)
   apply IsPrefix.of
   . intros
     apply go_decl_eq
