@@ -74,7 +74,7 @@ theorem go_denote_mem_prefix (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w)
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
+theorem go_denote_eq (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth curr : Nat)
     (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) (assign : α → Bool) :
     ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
@@ -121,10 +121,10 @@ theorem go_eq_eval_getLsb (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (n
     | inr =>
       split at hgo
       . rw [← hgo]
-        rw [go_eq_eval_getLsb]
+        rw [go_denote_eq]
         omega
       . rw [← hgo]
-        rw [go_eq_eval_getLsb]
+        rw [go_denote_eq]
         . split
           . omega
           . rfl
@@ -135,14 +135,10 @@ termination_by newWidth - curr
 end blastZeroExtend
 
 @[simp]
-theorem blastZeroExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig newWidth)
+theorem blastZeroExtend_denote_eq (aig : AIG α) (target : ExtendTarget aig newWidth)
     (assign : α → Bool) :
     ∀ (idx : Nat) (hidx : idx < newWidth),
-        ⟦
-          (blastZeroExtend aig target).aig,
-          (blastZeroExtend aig target).vec.get idx hidx,
-          assign
-        ⟧
+        ⟦(blastZeroExtend aig target).aig, (blastZeroExtend aig target).vec.get idx hidx, assign⟧
           =
         if hidx : idx < target.w then
            ⟦aig, target.vec.get idx hidx, assign⟧
@@ -151,7 +147,7 @@ theorem blastZeroExtend_eq_eval_getLsb (aig : AIG α) (target : ExtendTarget aig
     := by
   intro idx hidx
   unfold blastZeroExtend
-  apply blastZeroExtend.go_eq_eval_getLsb
+  apply blastZeroExtend.go_denote_eq
   omega
 
 end bitblast

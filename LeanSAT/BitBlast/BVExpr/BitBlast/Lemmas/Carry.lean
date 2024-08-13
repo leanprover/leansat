@@ -39,7 +39,7 @@ theorem go_eq_carry (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref 
       rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderCarry)]
       . simp [hright]
       . simp [Ref.hgate]
-    . simp [BitVec.carry_succ]
+    . simp only [denote_projected_entry, blastAdd.denote_mkFullAdderCarry, BitVec.carry_succ]
       rw [AIG.LawfulOperator.denote_mem_prefix (f := mkFullAdderCarry)]
       rw [hleft, hright, hcin]
       rw [blastAdd.atLeastTwo_eq_halfAdder]

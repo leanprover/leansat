@@ -13,14 +13,14 @@ namespace BVPred
 
 variable [Hashable α] [DecidableEq α]
 
-theorem mkEq_denote_eq_eval_beq (aig : AIG α) (pair : AIG.BinaryRefVec aig w) (assign : α → Bool)
+theorem mkEq_denote_eq (aig : AIG α) (pair : AIG.BinaryRefVec aig w) (assign : α → Bool)
     (lhs rhs : BitVec w)
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, pair.lhs.get idx hidx, assign⟧ = lhs.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, pair.rhs.get idx hidx, assign⟧ = rhs.getLsb idx) :
     ⟦mkEq aig pair, assign⟧ = (lhs == rhs) := by
   unfold mkEq
   rw [Bool.eq_iff_iff]
-  simp
+  simp only [RefVec.denote_fold_and, RefVec.denote_zip, denote_mkBEqCached, beq_iff_eq]
   constructor
   . intro h
     ext

@@ -14,7 +14,7 @@ namespace BVPred
 variable [Hashable α] [DecidableEq α]
 
 @[simp]
-theorem blastGetLsb_denote_eq_eval_getLsb (aig : AIG α) (target : GetLsbTarget aig)
+theorem blastGetLsb_denote_eq (aig : AIG α) (target : GetLsbTarget aig)
     (assign : α → Bool) :
     ⟦blastGetLsb aig target, assign⟧
       =

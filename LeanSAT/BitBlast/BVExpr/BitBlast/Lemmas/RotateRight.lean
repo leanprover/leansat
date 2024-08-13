@@ -81,7 +81,7 @@ termination_by w - curr
 end blastRotateRight
 
 @[simp]
-theorem blastRotateRight_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w)
+theorem blastRotateRight_denote_eq (aig : AIG α) (target : ShiftTarget aig w)
   (assign : α → Bool) :
   ∀ (idx : Nat) (hidx : idx < w),
       ⟦
@@ -99,9 +99,7 @@ theorem blastRotateRight_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig
   unfold blastRotateRight
   dsimp only
   rw [blastRotateRight.go_get]
-  . split
-    . rfl
-    . rfl
+  . split <;> simp
   . omega
 
 end bitblast

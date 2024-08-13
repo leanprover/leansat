@@ -74,7 +74,7 @@ theorem go_denote_mem_prefix (aig : AIG α) (distance : Nat) (input : AIG.RefVec
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
+theorem go_denote_eq (aig : AIG α) (distance : Nat) (input : AIG.RefVec aig w)
     (assign : α → Bool) (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
     ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
@@ -121,12 +121,12 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefVec ai
       . split
         . next hidx =>
           rw [← hgo]
-          rw [go_eq_eval_getLsb]
+          rw [go_denote_eq]
           . simp [hidx]
           . omega
         . next hidx =>
           rw [← hgo]
-          rw [go_eq_eval_getLsb]
+          rw [go_denote_eq]
           . simp only [hidx, ↓reduceDIte, RefVec.get_cast, Ref_cast']
             rw [AIG.LawfulOperator.denote_mem_prefix (f := AIG.mkConstCached)]
           . omega
@@ -134,7 +134,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : Nat) (input : AIG.RefVec ai
         . omega
         . next hidx =>
           rw [← hgo]
-          rw [go_eq_eval_getLsb]
+          rw [go_denote_eq]
           . simp [hidx]
           . omega
   . omega
@@ -143,7 +143,7 @@ termination_by w - curr
 end blastShiftLeftConst
 
 @[simp]
-theorem blastShiftLeftConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget aig w)
+theorem blastShiftLeftConst_denote_eq (aig : AIG α) (target : ShiftTarget aig w)
     (assign : α → Bool) :
     ∀ (idx : Nat) (hidx : idx < w),
         ⟦
@@ -159,7 +159,7 @@ theorem blastShiftLeftConst_eq_eval_getLsb (aig : AIG α) (target : ShiftTarget 
         := by
   intros
   unfold blastShiftLeftConst
-  apply blastShiftLeftConst.go_eq_eval_getLsb
+  apply blastShiftLeftConst.go_denote_eq
   omega
 
 namespace blastShiftLeft
@@ -187,7 +187,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
     . next hif1 =>
       rw [← hg]
       simp only [RefVec.denote_ite, RefVec.get_cast, Ref_cast',
-        blastShiftLeftConst_eq_eval_getLsb]
+        blastShiftLeftConst_denote_eq]
       rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hright]
       simp only [hif1, ↓reduceIte]
@@ -209,7 +209,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
       simp only [Bool.not_eq_true] at hif1
       rw [← hg]
       simp only [RefVec.denote_ite, RefVec.get_cast, Ref_cast',
-        blastShiftLeftConst_eq_eval_getLsb]
+        blastShiftLeftConst_denote_eq]
       rw [AIG.LawfulVecOperator.denote_mem_prefix (f := blastShiftLeftConst)]
       rw [hright]
       simp only [hif1, Bool.false_eq_true, ↓reduceIte]
@@ -225,7 +225,7 @@ theorem twoPowShift_eq (aig : AIG α) (target : TwoPowShiftTarget aig w) (lhs : 
     rw [hleft]
     simp
 
-theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefVec aig n) (curr : Nat)
+theorem go_denote_eq (aig : AIG α) (distance : AIG.RefVec aig n) (curr : Nat)
       (hcurr : curr ≤ n - 1) (acc : AIG.RefVec aig w)
     (lhs : BitVec w) (rhs : BitVec n) (assign : α → Bool)
     (hacc : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, acc.get idx hidx, assign⟧ = (BitVec.shiftLeftRec lhs rhs curr).getLsb idx)
@@ -244,7 +244,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (distance : AIG.RefVec aig n) (curr : N
   dsimp only at hgo
   split at hgo
   . rw [← hgo]
-    rw [go_eq_eval_getLsb]
+    rw [go_denote_eq]
     . intro idx hidx
       simp only [BitVec.shiftLeftRec_succ]
       rw [twoPowShift_eq (lhs := BitVec.shiftLeftRec lhs rhs curr)]
@@ -261,7 +261,7 @@ termination_by n - 1 - curr
 
 end blastShiftLeft
 
-theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTarget aig w0)
+theorem blastShiftLeft_denote_eq (aig : AIG α) (target : ArbitraryShiftTarget aig w0)
     (lhs : BitVec w0) (rhs : BitVec target.n) (assign : α → Bool)
     (hleft : ∀ (idx : Nat) (hidx : idx < w0), ⟦aig, target.target.get idx hidx, assign⟧ = lhs.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < target.n), ⟦aig, target.distance.get idx hidx, assign⟧ = rhs.getLsb idx) :
@@ -290,7 +290,7 @@ theorem blastShiftLeft_eq_eval_getLsb (aig : AIG α) (target : ArbitraryShiftTar
       Bool.not_eq_true', decide_eq_false_iff_not, Nat.not_lt, Nat.zero_le, and_true]
     apply BitVec.lt_of_getLsb
   . rw [← hg]
-    rw [blastShiftLeft.go_eq_eval_getLsb]
+    rw [blastShiftLeft.go_denote_eq]
     . intro idx hidx
       simp only [BitVec.shiftLeftRec_zero]
       rw [blastShiftLeft.twoPowShift_eq]

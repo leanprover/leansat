@@ -20,9 +20,7 @@ theorem go_get_aux (aig : AIG α) (c : BitVec w) (curr : Nat) (hcurr : curr ≤ 
     (s : AIG.RefVec aig curr) :
     -- The hfoo here is a trick to make the dependent type gods happy
     ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig c curr s hcurr).vec.get idx (by omega)
-          =
-        (s.get idx hidx).cast hfoo := by
+        (go aig c curr s hcurr).vec.get idx (by omega) = (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig c curr s hcurr = res
   unfold go at hgo
@@ -70,7 +68,7 @@ theorem go_denote_mem_prefix (aig : AIG α) (idx : Nat) (hidx)
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
+theorem go_denote_eq (aig : AIG α) (c : BitVec w) (assign : α → Bool)
     (curr : Nat) (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
     ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
@@ -99,7 +97,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool)
       . rw [heq]
     | inr =>
       rw [← hgo]
-      rw [go_eq_eval_getLsb]
+      rw [go_denote_eq]
       omega
   . omega
 termination_by w - curr
@@ -107,13 +105,13 @@ termination_by w - curr
 end blastConst
 
 @[simp]
-theorem blastConst_eq_eval_getLsb (aig : AIG α) (c : BitVec w) (assign : α → Bool) :
+theorem blastConst_denote_eq (aig : AIG α) (c : BitVec w) (assign : α → Bool) :
     ∀ (idx : Nat) (hidx : idx < w),
         ⟦(blastConst aig c).aig, (blastConst aig c).vec.get idx hidx, assign⟧
           =
         c.getLsb idx := by
   intros
-  apply blastConst.go_eq_eval_getLsb
+  apply blastConst.go_denote_eq
   omega
 
 end bitblast

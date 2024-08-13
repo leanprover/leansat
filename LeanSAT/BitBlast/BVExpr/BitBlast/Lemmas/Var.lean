@@ -17,9 +17,7 @@ theorem go_get_aux (aig : AIG BVBit) (a : Nat) (curr : Nat) (hcurr : curr ≤ w)
     (s : AIG.RefVec aig curr) :
     -- The hfoo here is a trick to make the dependent type gods happy
     ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig w a curr s hcurr).vec.get idx (by omega)
-          =
-        (s.get idx hidx).cast hfoo := by
+        (go aig w a curr s hcurr).vec.get idx (by omega) = (s.get idx hidx).cast hfoo := by
   intro idx hidx
   generalize hgo : go aig w a curr s hcurr = res
   unfold go at hgo
@@ -67,7 +65,7 @@ theorem go_denote_mem_prefix (aig : AIG BVBit) (idx : Nat) (hidx) (s : AIG.RefVe
   . intros
     apply go_le_size
 
-theorem go_eq_eval_getLsb (aig : AIG BVBit) (a : Nat) (assign : Assignment) (curr : Nat)
+theorem go_denote_eq (aig : AIG BVBit) (a : Nat) (assign : Assignment) (curr : Nat)
     (hcurr : curr ≤ w) (s : AIG.RefVec aig curr) :
     ∀ (idx : Nat) (hidx1 : idx < w),
         curr ≤ idx
@@ -98,7 +96,7 @@ theorem go_eq_eval_getLsb (aig : AIG BVBit) (a : Nat) (assign : Assignment) (cur
     | inr =>
       rw [← hgo]
       simp only [eval_var]
-      rw [go_eq_eval_getLsb]
+      rw [go_denote_eq]
       . simp
       . omega
   . omega
@@ -107,13 +105,13 @@ termination_by w - curr
 end blastVar
 
 @[simp]
-theorem blastVar_eq_eval_getLsb (aig : AIG BVBit) (var : BVVar w) (assign : Assignment) :
+theorem blastVar_denote_eq (aig : AIG BVBit) (var : BVVar w) (assign : Assignment) :
     ∀ (idx : Nat) (hidx : idx < w),
         ⟦(blastVar aig var).aig, (blastVar aig var).vec.get idx hidx, assign.toAIGAssignment⟧
           =
         ((BVExpr.var (w := w) var.ident).eval assign).getLsb idx := by
   intros
-  apply blastVar.go_eq_eval_getLsb
+  apply blastVar.go_denote_eq
   omega
 
 end bitblast

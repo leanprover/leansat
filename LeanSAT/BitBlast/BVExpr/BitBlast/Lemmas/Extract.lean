@@ -19,9 +19,7 @@ namespace blastExtract
 theorem go_get_aux (aig : AIG α) (input : RefVec aig w) (lo : Nat) (curr : Nat)
     (hcurr : curr ≤ newWidth) (falseRef : Ref aig) (s : RefVec aig curr) :
     ∀ (idx : Nat) (hidx1 : idx < curr),
-        (go input lo falseRef curr hcurr s).get idx (by omega)
-          =
-        s.get idx hidx1 := by
+        (go input lo falseRef curr hcurr s).get idx (by omega) = s.get idx hidx1 := by
   intro idx hidx
   generalize hgo : go input lo falseRef curr hcurr s = res
   unfold go at hgo
@@ -41,11 +39,7 @@ termination_by newWidth - curr
 theorem go_get (aig : AIG α) (input : RefVec aig w) (lo : Nat) (curr : Nat)
     (hcurr : curr ≤ newWidth) (falseRef : Ref aig) (s : RefVec aig curr) :
     ∀ (idx : Nat) (hidx1 : idx < newWidth),
-        curr ≤ idx
-          →
-        (go input lo falseRef curr hcurr s).get idx hidx1
-          =
-        input.getD (lo + idx) falseRef
+        curr ≤ idx → (go input lo falseRef curr hcurr s).get idx hidx1 = input.getD (lo + idx) falseRef
     := by
   intro idx hidx1 hidx2
   generalize hgo : go input lo falseRef curr hcurr s = res
@@ -68,21 +62,13 @@ termination_by newWidth - curr
 end blastExtract
 
 @[simp]
-theorem blastExtract_eq_eval_getLsb (aig : AIG α) (target : ExtractTarget aig newWidth)
+theorem blastExtract_denote_eq (aig : AIG α) (target : ExtractTarget aig newWidth)
     (assign : α → Bool) :
     ∀ (idx : Nat) (hidx : idx < newWidth),
-        ⟦
-          (blastExtract aig target).aig,
-          (blastExtract aig target).vec.get idx hidx,
-          assign
-        ⟧
+        ⟦(blastExtract aig target).aig, (blastExtract aig target).vec.get idx hidx, assign⟧
           =
         if h : (target.lo + idx) < target.w then
-          ⟦
-            aig,
-            target.vec.get (target.lo + idx) h,
-            assign
-          ⟧
+          ⟦aig, target.vec.get (target.lo + idx) h, assign⟧
         else
           false
     := by
