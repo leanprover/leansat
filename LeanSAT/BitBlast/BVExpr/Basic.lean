@@ -406,7 +406,7 @@ abbrev BVLogicalExpr := BoolExpr BVPred
 namespace BVLogicalExpr
 
 /--
-The denotational semantics of boolean problems involving BitVec predicates as toms.
+The denotational semantics of boolean problems involving BitVec predicates as atoms.
 -/
 def eval (assign : BVExpr.Assignment) (expr : BVLogicalExpr) : Bool :=
   BoolExpr.eval (·.eval assign) expr

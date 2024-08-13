@@ -28,8 +28,7 @@ where
       let res := aig.mkConstCached false
       let aig := res.aig
       let zeroRef := res.ref
-      have hfinal := by
-        apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
+      have hfinal := AIG.LawfulOperator.le_size (f := AIG.mkConstCached) ..
       let s := s.cast hfinal
       let input := input.cast hfinal
       let s := s.push zeroRef
@@ -103,8 +102,7 @@ def twoPowShift (aig : AIG α) (target : TwoPowShiftTarget aig w) : AIG.RefVecEn
     let aig := res.aig
     let shifted := res.vec
 
-    have := by
-      apply AIG.LawfulVecOperator.le_size (f := blastShiftLeftConst)
+    have := AIG.LawfulVecOperator.le_size (f := blastShiftLeftConst) ..
     let rhs := rhs.cast this
     let lhs := lhs.cast this
     AIG.RefVec.ite aig ⟨rhs.get pow h, shifted, lhs⟩
@@ -142,10 +140,7 @@ def blastShiftLeft (aig : AIG α) (target : AIG.ArbitraryShiftTarget aig w) :
     let res := blastShiftLeft.twoPowShift aig ⟨_, input, distance, 0⟩
     let aig := res.aig
     let acc := res.vec
-
-    have := by
-      apply AIG.LawfulVecOperator.le_size (f := blastShiftLeft.twoPowShift)
-
+    have := AIG.LawfulVecOperator.le_size (f := blastShiftLeft.twoPowShift) ..
     let distance := distance.cast this
     go aig distance 0 (by omega) acc
 where
@@ -156,8 +151,7 @@ where
       let res := blastShiftLeft.twoPowShift aig ⟨_, acc, distance, curr + 1⟩
       let aig := res.aig
       let acc := res.vec
-      have := by
-        apply AIG.LawfulVecOperator.le_size (f := blastShiftLeft.twoPowShift)
+      have := AIG.LawfulVecOperator.le_size (f := blastShiftLeft.twoPowShift) ..
       let distance := distance.cast this
 
       go aig distance (curr + 1) (by omega) acc

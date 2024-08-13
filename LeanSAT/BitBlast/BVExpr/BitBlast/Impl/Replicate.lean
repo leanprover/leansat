@@ -22,14 +22,14 @@ structure ReplicateTarget (aig : AIG α) (combined : Nat) where
 def blastReplicate (aig : AIG α) (target : ReplicateTarget aig newWidth) :
     AIG.RefVecEntry α newWidth :=
   let ⟨n, inner, h⟩ := target
-  let ref := go n 0 (by omega) inner .empty
+  let ref := go n inner 0 (by omega) .empty
   ⟨aig, h ▸ ref⟩
 where
-  go {aig : AIG α} {w : Nat} (n : Nat) (curr : Nat) (hcurr : curr ≤ n) (input : AIG.RefVec aig w)
+  go {aig : AIG α} {w : Nat} (n : Nat) (input : AIG.RefVec aig w) (curr : Nat) (hcurr : curr ≤ n)
       (s : AIG.RefVec aig (w * curr)) : AIG.RefVec aig (w * n) :=
     if h : curr < n then
       let s := s.append input
-      go n (curr + 1) (by omega) input s
+      go n input (curr + 1) (by omega) s
     else
       have : curr = n := by omega
       this ▸ s

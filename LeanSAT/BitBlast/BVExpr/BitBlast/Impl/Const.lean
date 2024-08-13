@@ -15,52 +15,43 @@ namespace bitblast
 variable [Hashable α] [DecidableEq α]
 
 def blastConst (aig : AIG α) (val : BitVec w) : AIG.RefVecEntry α w :=
-  go aig 0 .empty val (by omega)
+  go aig val 0 .empty (by omega)
 where
-  go {w : Nat} (aig : AIG α) (idx : Nat) (s : AIG.RefVec aig idx) (val : BitVec w)
-      (hidx : idx ≤ w) :
+  go (aig : AIG α) (val : BitVec w) (curr : Nat) (s : AIG.RefVec aig curr) (hcurr : curr ≤ w) :
       AIG.RefVecEntry α w :=
-    if hidx : idx < w then
-      let res := aig.mkConstCached (val.getLsb idx)
+    if hcurr : curr < w then
+      let res := aig.mkConstCached (val.getLsb curr)
       let aig := res.aig
       let bitRef := res.ref
-      let s := s.cast <| by
-        intros
-        apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkConstCached)
-        omega
+      let s := s.cast <| AIG.LawfulOperator.le_size (f := AIG.mkConstCached) ..
       let s := s.push bitRef
-      go aig (idx + 1) s val (by omega)
+      go aig val (curr + 1) s (by omega)
     else
-      have hidx : idx = w := by omega
-      ⟨aig, hidx ▸ s⟩
-  termination_by w - idx
+      have hcurr : curr = w := by omega
+      ⟨aig, hcurr ▸ s⟩
+  termination_by w - curr
 
-theorem blastConst.go_le_size {aig : AIG α} (idx : Nat) (s : AIG.RefVec aig idx) (val : BitVec w)
-    (hidx : idx ≤ w) :
-    aig.decls.size ≤ (go aig idx s val hidx).aig.decls.size := by
+theorem blastConst.go_le_size {aig : AIG α} (curr : Nat) (s : AIG.RefVec aig curr) (val : BitVec w)
+    (hcurr : curr ≤ w) :
+    aig.decls.size ≤ (go aig val curr s hcurr).aig.decls.size := by
   unfold go
   split
   . dsimp only
     refine Nat.le_trans ?_ (by apply go_le_size)
     apply AIG.LawfulOperator.le_size
   . simp
-termination_by w - idx
-
-theorem blastConst_le_size {aig : AIG α} (val : BitVec w) :
-    aig.decls.size ≤ (blastConst aig val).aig.decls.size := by
-  unfold blastConst
-  apply blastConst.go_le_size
+termination_by w - curr
 
 theorem blastConst.go_decl_eq {aig : AIG α} (i : Nat) (s : AIG.RefVec aig i) (val : BitVec w)
     (hi : i ≤ w) :
-    ∀ (idx : Nat) (h1) (h2),
-        (go aig i s val hi).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  generalize hgo : go aig i s val hi = res
+    ∀ (curr : Nat) (h1) (h2),
+        (go aig val i s hi).aig.decls[curr]'h2 = aig.decls[curr]'h1 := by
+  generalize hgo : go aig val i s hi = res
   unfold go at hgo
   split at hgo
   . dsimp only at hgo
     rw [← hgo]
-    intro idx h1 h2
+    intro curr h1 h2
     rw [blastConst.go_decl_eq]
     rw [AIG.LawfulOperator.decl_eq (f := AIG.mkConstCached)]
     apply AIG.LawfulOperator.lt_size_of_lt_aig_size (f := AIG.mkConstCached)
@@ -71,16 +62,15 @@ theorem blastConst.go_decl_eq {aig : AIG α} (i : Nat) (s : AIG.RefVec aig i) (v
     simp
 termination_by w - i
 
-theorem blastConst_decl_eq {aig : AIG α} (val : BitVec w) :
-    ∀ (idx : Nat) (h1) (h2), (blastConst aig val).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  intros
-  unfold blastConst
-  apply blastConst.go_decl_eq
-
 instance : AIG.LawfulVecOperator α (fun _ w => BitVec w) blastConst where
-  le_size := by intros; apply blastConst_le_size
-  decl_eq := by intros; apply blastConst_decl_eq
-
+  le_size := by
+    intros
+    unfold blastConst
+    apply blastConst.go_le_size
+  decl_eq := by
+    intros
+    unfold blastConst
+    apply blastConst.go_decl_eq
 
 end bitblast
 end BVExpr

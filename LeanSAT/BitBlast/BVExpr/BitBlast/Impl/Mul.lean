@@ -20,21 +20,19 @@ def blastMul (aig : AIG BVBit) (input : AIG.BinaryRefVec aig w) : AIG.RefVecEntr
     let res := blastConst aig 0
     let aig := res.aig
     let zero := res.vec
-    have := by
-      apply AIG.LawfulVecOperator.le_size (f := blastConst)
+    have := AIG.LawfulVecOperator.le_size (f := blastConst) ..
     let input := input.cast this
     let ⟨lhs, rhs⟩ := input
     let res := AIG.RefVec.ite aig ⟨rhs.get 0 (by assumption), lhs, zero⟩
     let aig := res.aig
     let acc := res.vec
-    have := by
-      apply AIG.LawfulVecOperator.le_size (f := AIG.RefVec.ite)
+    have := AIG.LawfulVecOperator.le_size (f := AIG.RefVec.ite) ..
     let lhs := lhs.cast this
     let rhs := rhs.cast this
-    go aig 1 (by omega) acc lhs rhs
+    go aig lhs rhs 1 (by omega) acc
 where
-  go {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefVec aig w)
-      (lhs rhs : AIG.RefVec aig w) :
+  go (aig : AIG BVBit) (lhs rhs : AIG.RefVec aig w) (curr : Nat) (hcurr : curr ≤ w)
+      (acc : AIG.RefVec aig w) :
       AIG.RefVecEntry BVBit w :=
     if h : curr < w then
       /-
@@ -61,7 +59,7 @@ where
       have := by apply AIG.LawfulVecOperator.le_size (f := AIG.RefVec.ite)
       let lhs := lhs.cast this
       let rhs := rhs.cast this
-      go aig (curr + 1) (by omega) acc lhs rhs
+      go aig lhs rhs (curr + 1) (by omega) acc
     else
       ⟨aig, acc⟩
 
@@ -69,7 +67,7 @@ namespace blastMul
 
 theorem go_le_size {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefVec aig w)
     (lhs rhs : AIG.RefVec aig w) :
-    aig.decls.size ≤ (go aig curr hcurr acc lhs rhs).aig.decls.size := by
+    aig.decls.size ≤ (go aig lhs rhs curr hcurr acc).aig.decls.size := by
   unfold go
   split
   . dsimp only
@@ -82,8 +80,8 @@ theorem go_le_size {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w)
 theorem go_decl_eq {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr ≤ w) (acc : AIG.RefVec aig w)
     (lhs rhs : AIG.RefVec aig w) :
     ∀ (idx : Nat) (h1) (h2),
-       (go aig curr hcurr acc lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  generalize hgo : go aig curr hcurr acc lhs rhs = res
+       (go aig lhs rhs curr hcurr acc).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+  generalize hgo : go aig lhs rhs curr hcurr acc = res
   unfold go at hgo
   split at hgo
   . dsimp only at hgo

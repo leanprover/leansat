@@ -24,24 +24,26 @@ variable {β : Type} [Hashable β] [DecidableEq β]
 /--
 Turn a `BoolExpr` into an `Entrypoint`.
 -/
+@[specialize]
 def ofBoolExprCached (expr : BoolExpr α) (atomHandler : AIG β → α → Entrypoint β)
     [LawfulOperator β (fun _ => α) atomHandler] : Entrypoint β :=
-  go expr AIG.empty atomHandler |>.val
+  go AIG.empty expr atomHandler |>.val
 where
-  go (expr : BoolExpr α) (aig : AIG β) (atomHandler : AIG β → α → Entrypoint β)
+  @[specialize]
+  go (aig : AIG β) (expr : BoolExpr α) (atomHandler : AIG β → α → Entrypoint β)
       [LawfulOperator β (fun _ => α) atomHandler] :
       ExtendingEntrypoint aig :=
     match expr with
     | .literal var => ⟨atomHandler aig var, by apply LawfulOperator.le_size⟩
     | .const val => ⟨aig.mkConstCached val, (by apply LawfulOperator.le_size)⟩
     | .not expr =>
-      let ⟨⟨aig, exprRef⟩, _⟩ := go expr aig atomHandler
+      let ⟨⟨aig, exprRef⟩, _⟩ := go aig expr atomHandler
       let ret := aig.mkNotCached exprRef
       have := LawfulOperator.le_size (f := mkNotCached) aig exprRef
       ⟨ret, by dsimp only [ret] at *; omega⟩
     | .gate g lhs rhs =>
-      let ⟨⟨aig, lhsRef⟩, lextend⟩ := go lhs aig atomHandler
-      let ⟨⟨aig, rhsRef⟩, rextend⟩ := go rhs aig atomHandler
+      let ⟨⟨aig, lhsRef⟩, lextend⟩ := go aig lhs atomHandler
+      let ⟨⟨aig, rhsRef⟩, rextend⟩ := go aig rhs atomHandler
       let lhsRef := lhsRef.cast <| by
         dsimp only at rextend ⊢
         omega
@@ -72,11 +74,11 @@ where
 variable (atomHandler : AIG β → α → Entrypoint β) [LawfulOperator β (fun _ => α) atomHandler]
 
 theorem ofBoolExprCached.go_decls_size_le (expr : BoolExpr α) (aig : AIG β) :
-    aig.decls.size ≤ (ofBoolExprCached.go expr aig atomHandler).val.aig.decls.size :=
-  (ofBoolExprCached.go expr aig atomHandler).property
+    aig.decls.size ≤ (ofBoolExprCached.go aig expr atomHandler).val.aig.decls.size :=
+  (ofBoolExprCached.go aig expr atomHandler).property
 
 theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.size) (hbounds) :
-    (ofBoolExprCached.go expr aig atomHandler).val.aig.decls[idx]'hbounds = aig.decls[idx] := by
+    (ofBoolExprCached.go aig expr atomHandler).val.aig.decls[idx]'hbounds = aig.decls[idx] := by
   induction expr generalizing aig with
   | const =>
     simp only [go]
@@ -92,9 +94,9 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
     assumption
   | gate g lhs rhs lih rih =>
     have := go_decls_size_le atomHandler lhs aig
-    have := go_decls_size_le atomHandler rhs (go lhs aig atomHandler).val.aig
+    have := go_decls_size_le atomHandler rhs (go aig lhs atomHandler).val.aig
     specialize lih aig (by omega) (by omega)
-    specialize rih (go lhs aig atomHandler).val.aig (by omega) (by omega)
+    specialize rih (go aig lhs atomHandler).val.aig (by omega) (by omega)
     cases g with
     | and =>
       simp only [go]
@@ -113,45 +115,16 @@ theorem ofBoolExprCached.go_decl_eq (idx) (aig : AIG β) (h : idx < aig.decls.si
       rw [AIG.LawfulOperator.decl_eq (f := mkImpCached), rih, lih]
 
 theorem ofBoolExprCached.go_isPrefix_aig {aig : AIG β} :
-    IsPrefix aig.decls (go expr aig atomHandler).val.aig.decls := by
+    IsPrefix aig.decls (go aig expr atomHandler).val.aig.decls := by
   apply IsPrefix.of
   . intro idx h
     apply ofBoolExprCached.go_decl_eq
   . apply ofBoolExprCached.go_decls_size_le
 
-
 @[simp]
 theorem ofBoolExprCached.go_denote_entry (entry : Entrypoint β) {h} :
-    ⟦(go expr entry.aig atomHandler).val.aig, ⟨entry.ref.gate, h⟩, assign ⟧
-      =
-    ⟦entry, assign⟧ := by
+    ⟦(go entry.aig expr atomHandler).val.aig, ⟨entry.ref.gate, h⟩, assign⟧ = ⟦entry, assign⟧ := by
   apply denote.eq_of_isPrefix
   apply ofBoolExprCached.go_isPrefix_aig
-
-variable {α : Type} [Hashable α] [DecidableEq α]
-def ofBoolExprCachedDirect (expr : BoolExpr α) : Entrypoint α :=
-  ofBoolExprCached expr mkAtomCached
-
-@[simp]
-theorem ofBoolExprCached.go_eval_eq_eval (expr : BoolExpr α) (aig : AIG α) (assign) :
-    ⟦go expr aig mkAtomCached, assign⟧ = expr.eval assign := by
-  induction expr generalizing aig with
-  | const => simp [go]
-  | literal => simp [go]
-  | not expr ih => simp [go, ih]
-  | gate g lhs rhs lih rih => cases g <;> simp [go, Gate.eval, lih, rih]
-
-@[simp]
-theorem ofBoolExprCachedDirect_eval_eq_eval (expr : BoolExpr α) (assign) :
-    ⟦ofBoolExprCachedDirect expr, assign⟧ = expr.eval assign := by
-  apply ofBoolExprCached.go_eval_eq_eval
-
-theorem ofBoolExprCachedDirect_unsat_iff {expr : BoolExpr α} :
-    (ofBoolExprCachedDirect expr).Unsat ↔ expr.Unsat := by
-  constructor
-  all_goals
-    intro h assign
-    specialize h assign
-    simpa using h
 
 end AIG

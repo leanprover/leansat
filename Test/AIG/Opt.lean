@@ -11,11 +11,11 @@ def mkFalseCollapsible (n : Nat) : BoolExpr Nat :=
 
 /-- info: #[Std.Sat.AIG.Decl.const false] -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkFalseCollapsible 1) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkFalseCollapsible 1) AIG.mkAtomCached |>.aig.decls
 
 /-- info: #[Std.Sat.AIG.Decl.const false] -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkFalseCollapsible 16) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkFalseCollapsible 16) AIG.mkAtomCached |>.aig.decls
 
 def mkTrueCollapsible (n : Nat) : BoolExpr Nat :=
   match n with
@@ -26,11 +26,11 @@ def mkTrueCollapsible (n : Nat) : BoolExpr Nat :=
 
 /-- info: #[Std.Sat.AIG.Decl.const true] -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkTrueCollapsible 1) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkTrueCollapsible 1) AIG.mkAtomCached |>.aig.decls
 
 /-- info: #[Std.Sat.AIG.Decl.const true] -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkTrueCollapsible 16) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkTrueCollapsible 16) AIG.mkAtomCached |>.aig.decls
 
 def mkConstantCollapsible (n : Nat) : BoolExpr Nat :=
   match n with
@@ -42,11 +42,11 @@ def mkConstantCollapsible (n : Nat) : BoolExpr Nat :=
 /-- info: (2, Std.Sat.AIG.Decl.const false) -/
 #guard_msgs in
 #eval
-  let entry := AIG.ofBoolExprCachedDirect (mkConstantCollapsible 1)
+  let entry := AIG.ofBoolExprCached (mkConstantCollapsible 1) AIG.mkAtomCached
   (entry.aig.decls.size, entry.aig.decls[entry.ref.gate]!)
 
 /-- info: (2, Std.Sat.AIG.Decl.const false) -/
 #guard_msgs in
 #eval
-  let entry := AIG.ofBoolExprCachedDirect (mkConstantCollapsible 16)
+  let entry := AIG.ofBoolExprCached (mkConstantCollapsible 16) AIG.mkAtomCached
   (entry.aig.decls.size, entry.aig.decls[entry.ref.gate]!)

@@ -19,8 +19,9 @@ def blastZeroExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth) :
   let ⟨width, input⟩ := target
   go aig width input newWidth 0 (by omega) .empty
 where
-  go (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
-      (s : AIG.RefVec aig curr) : AIG.RefVecEntry α newWidth :=
+  go (aig : AIG α) (w : Nat) (input : AIG.RefVec aig w) (newWidth : Nat) (curr : Nat)
+      (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) :
+      AIG.RefVecEntry α newWidth :=
     if hcurr1 : curr < newWidth then
       if hcurr2 : curr < w then
         let s := s.push (input.get curr hcurr2)
@@ -29,9 +30,7 @@ where
         let res := aig.mkConstCached false
         let aig := res.aig
         let zeroRef := res.ref
-        have hcast := by
-          dsimp only [aig, res]
-          apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
+        have hcast := AIG.LawfulOperator.le_size (f := AIG.mkConstCached) ..
         let input := input.cast hcast
         let s := s.cast hcast
         let s := s.push zeroRef

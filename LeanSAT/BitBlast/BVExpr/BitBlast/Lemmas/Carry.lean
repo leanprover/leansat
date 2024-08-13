@@ -22,7 +22,7 @@ theorem go_eq_carry (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref 
     (hleft : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, lhs.get idx hidx, assign⟧ = lhsExpr.getLsb idx)
     (hright : ∀ (idx : Nat) (hidx : idx < w), ⟦aig, rhs.get idx hidx, assign⟧ = rhsExpr.getLsb idx)
     (hcin : ⟦aig, cin, assign⟧ = BitVec.carry curr lhsExpr rhsExpr ⟦aig, origCin, assign⟧) :
-    ⟦go aig curr hcurr cin lhs rhs, assign⟧
+    ⟦go aig lhs rhs curr hcurr cin, assign⟧
       =
     BitVec.carry w lhsExpr rhsExpr ⟦aig, origCin, assign⟧ := by
   unfold go

@@ -24,7 +24,8 @@ def blastSignExtend (aig : AIG α) (target : AIG.ExtendTarget aig newWidth) :
     ⟨aig, go width (by omega) input newWidth 0 (by omega) .empty⟩
 where
   go {aig : AIG α} (w : Nat) (hw : 0 < w) (input : AIG.RefVec aig w) (newWidth : Nat)
-      (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) : AIG.RefVec aig newWidth :=
+      (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) :
+      AIG.RefVec aig newWidth :=
     if hcurr1 : curr < newWidth then
       if hcurr2 : curr < w then
         let s := s.push (input.get curr hcurr2)

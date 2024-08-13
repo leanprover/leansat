@@ -22,14 +22,14 @@ theorem go_eq_eval_getLsb {w : Nat} (aig : AIG BVBit) (curr : Nat) (hcurr : curr
                 (BitVec.mulRec lexpr rexpr curr).getLsb idx) :
     ∀ (idx : Nat) (hidx : idx < w),
         ⟦
-          (go aig (curr + 1) hcurr acc lhs rhs).aig,
-          (go aig (curr + 1) hcurr acc lhs rhs).vec.get idx hidx,
+          (go aig lhs rhs (curr + 1) hcurr acc).aig,
+          (go aig lhs rhs (curr + 1) hcurr acc).vec.get idx hidx,
           assign.toAIGAssignment
         ⟧
           =
         (BitVec.mulRec lexpr rexpr w).getLsb idx := by
   intro idx hidx
-  generalize hgo: go aig (curr + 1) hcurr acc lhs rhs = res
+  generalize hgo: go aig lhs rhs (curr + 1) hcurr acc = res
   unfold go at hgo
   split at hgo
   . dsimp only at hgo

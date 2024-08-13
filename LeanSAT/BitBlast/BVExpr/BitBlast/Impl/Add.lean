@@ -158,10 +158,10 @@ def blastAdd (aig : AIG α) (input : AIG.BinaryRefVec aig w) : AIG.RefVecEntry �
   let cin := res.ref
   let input := input.cast <| AIG.LawfulOperator.le_size (f := AIG.mkConstCached) ..
   let ⟨lhs, rhs⟩ := input
-  go aig 0 (by omega) cin .empty lhs rhs
+  go aig lhs rhs 0 (by omega) cin .empty
 where
-  go {w : Nat} (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
-      (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
+  go (aig : AIG α) (lhs rhs : AIG.RefVec aig w) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
+      (s : AIG.RefVec aig curr) :
       AIG.RefVecEntry α w :=
     if hidx : curr < w then
       let lin := lhs.get curr hidx
@@ -174,7 +174,7 @@ where
       let lhs := lhs.cast res.hle
       let rhs := rhs.cast res.hle
       let s := s.push outRef
-      go aig (curr + 1) (by omega) carryRef s lhs rhs
+      go aig lhs rhs (curr + 1) (by omega) carryRef s
     else
       have hcurr : curr = w := by omega
       ⟨aig, hcurr ▸ s⟩
@@ -184,7 +184,7 @@ namespace blastAdd
 
 theorem go_le_size (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
     (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
-    aig.decls.size ≤ (go aig curr hcurr cin s lhs rhs).aig.decls.size := by
+    aig.decls.size ≤ (go aig lhs rhs curr hcurr cin s).aig.decls.size := by
   unfold go
   dsimp only
   split
@@ -197,8 +197,8 @@ termination_by w - curr
 theorem go_decl_eq (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : AIG.Ref aig)
     (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
     ∀ (idx : Nat) (h1) (h2),
-        (go aig curr hcurr cin s lhs rhs).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
-  generalize hgo : go aig curr hcurr cin s lhs rhs = res
+        (go aig lhs rhs curr hcurr cin s).aig.decls[idx]'h2 = aig.decls[idx]'h1 := by
+  generalize hgo : go aig lhs rhs curr hcurr cin s = res
   unfold go at hgo
   dsimp only at hgo
   split at hgo

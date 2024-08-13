@@ -26,23 +26,22 @@ def blastExtract (aig : AIG α) (target : ExtractTarget aig newWidth) :
   let res := aig.mkConstCached false
   let aig := res.aig
   let falseRef := res.ref
-  let input := input.cast <| by
-    apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
+  let input := input.cast <| AIG.LawfulOperator.le_size (f := AIG.mkConstCached) ..
   if h : lo ≤ hi then
-    ⟨aig, go input lo 0 (by omega) falseRef .empty⟩
+    ⟨aig, go input lo falseRef 0 (by omega) .empty⟩
   else
     have : 1 = newWidth  := by omega
     let base := AIG.RefVec.empty
     let base := base.push (input.getD lo falseRef)
     ⟨aig, this ▸ base⟩
 where
-  go {aig : AIG α} {w : Nat} (input : AIG.RefVec aig w) (lo : Nat) (curr : Nat) (hcurr : curr ≤ newWidth)
-      (falseRef : AIG.Ref aig) (s : AIG.RefVec aig curr) :
+  go {aig : AIG α} {w : Nat} (input : AIG.RefVec aig w) (lo : Nat) (falseRef : AIG.Ref aig)
+      (curr : Nat) (hcurr : curr ≤ newWidth) (s : AIG.RefVec aig curr) :
       AIG.RefVec aig newWidth :=
   if h : curr < newWidth then
     let nextRef := input.getD (lo + curr) falseRef
     let s := s.push nextRef
-    go input lo (curr + 1) (by omega) falseRef s
+    go input lo falseRef (curr + 1) (by omega) s
   else
     have : curr = newWidth := by omega
     this ▸ s

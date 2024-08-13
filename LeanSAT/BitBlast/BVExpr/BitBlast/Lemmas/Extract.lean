@@ -19,11 +19,11 @@ namespace blastExtract
 theorem go_get_aux (aig : AIG α) (input : RefVec aig w) (lo : Nat) (curr : Nat)
     (hcurr : curr ≤ newWidth) (falseRef : Ref aig) (s : RefVec aig curr) :
     ∀ (idx : Nat) (hidx1 : idx < curr),
-        (go input lo curr hcurr falseRef s).get idx (by omega)
+        (go input lo falseRef curr hcurr s).get idx (by omega)
           =
         s.get idx hidx1 := by
   intro idx hidx
-  generalize hgo : go input lo curr hcurr falseRef s = res
+  generalize hgo : go input lo falseRef curr hcurr s = res
   unfold go at hgo
   split at hgo
   . dsimp only at hgo
@@ -43,12 +43,12 @@ theorem go_get (aig : AIG α) (input : RefVec aig w) (lo : Nat) (curr : Nat)
     ∀ (idx : Nat) (hidx1 : idx < newWidth),
         curr ≤ idx
           →
-        (go input lo curr hcurr falseRef s).get idx hidx1
+        (go input lo falseRef curr hcurr s).get idx hidx1
           =
         input.getD (lo + idx) falseRef
     := by
   intro idx hidx1 hidx2
-  generalize hgo : go input lo curr hcurr falseRef s = res
+  generalize hgo : go input lo falseRef curr hcurr s = res
   unfold go at hgo
   dsimp only at hgo
   split at hgo

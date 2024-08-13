@@ -16,16 +16,15 @@ def mkUlt (aig : AIG α) (pair : AIG.BinaryRefVec aig w) : AIG.Entrypoint α :=
   let ⟨lhsRefs, rhsRefs⟩ := pair
   let res := BVExpr.bitblast.blastNot aig rhsRefs
   let aig := res.aig
-  let rhsRefs := res.vec
+  let rhsNotRefs := res.vec
   let res := aig.mkConstCached true
   let aig := res.aig
   let trueRef := res.ref
   let lhsRefs := lhsRefs.cast <| by
     apply AIG.LawfulOperator.le_size_of_le_aig_size (f := AIG.mkConstCached)
     apply AIG.LawfulVecOperator.le_size (f := BVExpr.bitblast.blastNot)
-  let rhsRefs := rhsRefs.cast <| by
-    apply AIG.LawfulOperator.le_size (f := AIG.mkConstCached)
-  let res := BVExpr.bitblast.mkOverflowBit aig ⟨_, ⟨lhsRefs, rhsRefs⟩, trueRef⟩
+  let rhsNotRefs := rhsNotRefs.cast <| AIG.LawfulOperator.le_size (f := AIG.mkConstCached) ..
+  let res := BVExpr.bitblast.mkOverflowBit aig ⟨_, ⟨lhsRefs, rhsNotRefs⟩, trueRef⟩
   let aig := res.aig
   let overflowRef := res.ref
   aig.mkNotCached overflowRef

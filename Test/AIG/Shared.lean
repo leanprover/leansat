@@ -14,14 +14,14 @@ info: #[Std.Sat.AIG.Decl.atom 0, Std.Sat.AIG.Decl.gate 0 0 true true, Std.Sat.AI
   Std.Sat.AIG.Decl.gate 1 2 true false]
 -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkSharedTree 1) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkSharedTree 1) AIG.mkAtomCached |>.aig.decls
 
 /--
 info: #[Std.Sat.AIG.Decl.atom 0, Std.Sat.AIG.Decl.gate 0 0 true true, Std.Sat.AIG.Decl.const true,
   Std.Sat.AIG.Decl.gate 1 2 true false, Std.Sat.AIG.Decl.gate 3 3 true true, Std.Sat.AIG.Decl.gate 2 4 false true]
 -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkSharedTree 2) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkSharedTree 2) AIG.mkAtomCached |>.aig.decls
 
 /--
 info: #[Std.Sat.AIG.Decl.atom 0, Std.Sat.AIG.Decl.gate 0 0 true true, Std.Sat.AIG.Decl.const true,
@@ -30,7 +30,7 @@ info: #[Std.Sat.AIG.Decl.atom 0, Std.Sat.AIG.Decl.gate 0 0 true true, Std.Sat.AI
   Std.Sat.AIG.Decl.gate 2 8 false true]
 -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkSharedTree 4) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkSharedTree 4) AIG.mkAtomCached |>.aig.decls
 
 /--
 info: #[Std.Sat.AIG.Decl.atom 0, Std.Sat.AIG.Decl.gate 0 0 true true, Std.Sat.AIG.Decl.const true,
@@ -47,4 +47,4 @@ info: #[Std.Sat.AIG.Decl.atom 0, Std.Sat.AIG.Decl.gate 0 0 true true, Std.Sat.AI
   Std.Sat.AIG.Decl.gate 2 32 false true]
 -/
 #guard_msgs in
-#eval AIG.ofBoolExprCachedDirect (mkSharedTree 16) |>.aig.decls
+#eval AIG.ofBoolExprCached (mkSharedTree 16) AIG.mkAtomCached |>.aig.decls

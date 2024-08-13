@@ -103,7 +103,7 @@ theorem mkFullAdder_denote_mem_prefix (aig : AIG α) (input : FullAdderInput aig
 theorem go_denote_mem_prefix (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
     (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) (start : Nat) (hstart) :
     ⟦
-      (go aig curr hcurr cin s lhs rhs).aig,
+      (go aig lhs rhs curr hcurr cin s).aig,
       ⟨start, by apply Nat.lt_of_lt_of_le; exact hstart; apply go_le_size⟩,
       assign
     ⟧
@@ -120,11 +120,11 @@ theorem go_get_aux (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref a
     (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
     -- The hfoo here is a trick to make the dependent type gods happy
     ∀ (idx : Nat) (hidx : idx < curr) (hfoo),
-        (go aig curr hcurr cin s lhs rhs).vec.get idx (by omega)
+        (go aig lhs rhs curr hcurr cin s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast hfoo := by
   intro idx hidx
-  generalize hgo : go aig curr hcurr cin s lhs rhs = res
+  generalize hgo : go aig lhs rhs curr hcurr cin s = res
   unfold go at hgo
   dsimp only at hgo
   split at hgo
@@ -147,7 +147,7 @@ termination_by w - curr
 theorem go_get (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin : Ref aig)
     (s : AIG.RefVec aig curr) (lhs rhs : AIG.RefVec aig w) :
     ∀ (idx : Nat) (hidx : idx < curr),
-        (go aig curr hcurr cin s lhs rhs).vec.get idx (by omega)
+        (go aig lhs rhs curr hcurr cin s).vec.get idx (by omega)
           =
         (s.get idx hidx).cast (by apply go_le_size) := by
   intros
@@ -168,8 +168,8 @@ theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin 
         curr ≤ idx
           →
         ⟦
-          (go aig curr hcurr cin s lhs rhs).aig,
-          (go aig curr hcurr cin s lhs rhs).vec.get idx hidx1,
+          (go aig lhs rhs curr hcurr cin s).aig,
+          (go aig lhs rhs curr hcurr cin s).vec.get idx hidx1,
           assign
         ⟧
           =
@@ -177,7 +177,7 @@ theorem go_eq_eval_getLsb (aig : AIG α) (curr : Nat) (hcurr : curr ≤ w) (cin 
           (⟦aig, rhs.get idx hidx1, assign⟧.xor
             (BitVec.carry idx lhsExpr rhsExpr false)) := by
   intro idx hidx1 hidx2
-  generalize hgo : go aig curr hcurr cin s lhs rhs = res
+  generalize hgo : go aig lhs rhs curr hcurr cin s = res
   unfold go at hgo
   dsimp only at hgo
   split at hgo
