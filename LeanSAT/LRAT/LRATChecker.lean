@@ -12,15 +12,15 @@ namespace LRAT
 
 inductive Result
   | success
-  | out_of_proof
-  | rup_failure
+  | outOfProof
+  | rupFailure
 deriving Inhabited, DecidableEq, BEq
 
 instance : ToString Result where
   toString := fun
-    | Result.success => "success"
-    | Result.out_of_proof => "out of proof"
-    | Result.rup_failure => "rup failure"
+    | .success => "success"
+    | .outOfProof => "out of proof"
+    | .rupFailure => "rup failure"
 
 instance : LawfulBEq Result where
   eq_of_beq := by
@@ -30,37 +30,41 @@ instance : LawfulBEq Result where
     intro a
     cases a <;> decide
 
-open List Clause Formula Result Action Formula
+open Formula
 
-def incrementalLRATChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (action : Action β α) : σ × Result :=
+def incrementalLRATChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+    (action : Action β α) :
+    σ × Result :=
   match action with
-  | addEmpty _ rupHints =>
-    let (f, checkSuccess) := performRupAdd f empty rupHints
-    if checkSuccess then (f, success)
-    else (f, rup_failure)
-  | addRup _ c rupHints =>
+  | .addEmpty _ rupHints =>
+    let (f, checkSuccess) := performRupAdd f Clause.empty rupHints
+    if checkSuccess then (f, .success)
+    else (f, .rupFailure)
+  | .addRup _ c rupHints =>
     let (f, checkSuccess) := performRupAdd f c rupHints
-    if checkSuccess then (f, out_of_proof)
-    else (f, rup_failure)
-  | addRat _ c pivot rupHints ratHints =>
+    if checkSuccess then (f, .outOfProof)
+    else (f, .rupFailure)
+  | .addRat _ c pivot rupHints ratHints =>
     let (f, checkSuccess) := performRatAdd f c pivot rupHints ratHints
-    if checkSuccess then (f, out_of_proof)
-    else (f, rup_failure)
-  | del ids => (delete f ids, out_of_proof)
+    if checkSuccess then (f, .outOfProof)
+    else (f, .rupFailure)
+  | .del ids => (delete f ids, .outOfProof)
 
-def lratChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (prf : List (Action β α)) : Result :=
+def lratChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+    (prf : List (Action β α)) :
+    Result :=
   match prf with
-  | nil => out_of_proof
-  | addEmpty _ rupHints :: _ =>
-    let (_, checkSuccess) := performRupAdd f empty rupHints
-    if checkSuccess then success
-    else rup_failure
-  | addRup _ c rupHints :: restPrf =>
+  | [] => .outOfProof
+  | .addEmpty _ rupHints :: _ =>
+    let (_, checkSuccess) := performRupAdd f Clause.empty rupHints
+    if checkSuccess then .success
+    else .rupFailure
+  | .addRup _ c rupHints :: restPrf =>
     let (f, checkSuccess) := performRupAdd f c rupHints
     if checkSuccess then lratChecker f restPrf
-    else rup_failure
-  | addRat _ c pivot rupHints ratHints :: restPrf =>
+    else .rupFailure
+  | .addRat _ c pivot rupHints ratHints :: restPrf =>
     let (f, checkSuccess) := performRatAdd f c pivot rupHints ratHints
     if checkSuccess then lratChecker f restPrf
-    else rup_failure
-  | del ids :: restPrf => lratChecker (delete f ids) restPrf
+    else .rupFailure
+  | .del ids :: restPrf => lratChecker (delete f ids) restPrf

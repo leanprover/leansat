@@ -170,22 +170,22 @@ def verifyCert (formula : LratFormula) (cert : LratCert) : Bool :=
     -- XXX
     let lratProof := lratProof.toList
     let lratProof := lratProof.map (LRAT.intActionToDefaultClauseAction formula.numVars.succ)
-    let lratProof : List { act // LRAT.wellFormedAction act } :=
+    let lratProof : List { act // LRAT.WellFormedAction act } :=
       lratProof.filterMap
         (fun actOpt =>
           match actOpt with
           | none => none
           | some (LRAT.Action.addEmpty id rupHints) =>
-            some ⟨LRAT.Action.addEmpty id rupHints, by simp only [LRAT.wellFormedAction]⟩
+            some ⟨LRAT.Action.addEmpty id rupHints, by simp only [LRAT.WellFormedAction]⟩
           | some (LRAT.Action.addRup id c rupHints) =>
-            some ⟨LRAT.Action.addRup id c rupHints, by simp only [LRAT.wellFormedAction]⟩
+            some ⟨LRAT.Action.addRup id c rupHints, by simp only [LRAT.WellFormedAction]⟩
           | some (LRAT.Action.del ids) =>
-            some ⟨LRAT.Action.del ids, by simp only [LRAT.wellFormedAction]⟩
+            some ⟨LRAT.Action.del ids, by simp only [LRAT.WellFormedAction]⟩
           | some (LRAT.Action.addRat id c pivot rupHints ratHints) =>
             if h : pivot ∈ LRAT.Clause.toList c then
               some ⟨
                 LRAT.Action.addRat id c pivot rupHints ratHints,
-                by simp [LRAT.wellFormedAction, LRAT.Clause.limplies_iff_mem, h]
+                by simp [LRAT.WellFormedAction, LRAT.Clause.limplies_iff_mem, h]
               ⟩
             else
               -- TODO: report this
@@ -211,9 +211,9 @@ theorem verifyCert_correct
         (by
           intro action h
           simp only [List.mem_map, List.mem_filterMap] at h
-          rcases h with ⟨wellFormedActions, _, h2⟩
+          rcases h with ⟨WellFormedActions, _, h2⟩
           rw [← h2]
-          exact wellFormedActions.property)
+          exact WellFormedActions.property)
         h1
     apply CNF.unsat_of_lift_unsat c
     intro assignment

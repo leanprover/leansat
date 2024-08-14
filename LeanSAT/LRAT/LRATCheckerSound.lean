@@ -30,9 +30,9 @@ theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula 
 
 theorem addRupCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (c : β) (f' : σ) (rupHints : Array Nat) (heq : performRupAdd f c rupHints = (f', true))
-    (restPrf : List (Action β α)) (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → wellFormedAction a)
+    (restPrf : List (Action β α)) (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → WellFormedAction a)
     (ih : ∀ (f : σ),
-      readyForRupAdd f → readyForRatAdd f → (∀ (a : Action β α), a ∈ restPrf → wellFormedAction a) →
+      readyForRupAdd f → readyForRatAdd f → (∀ (a : Action β α), a ∈ restPrf → WellFormedAction a) →
       lratChecker f restPrf = success → unsatisfiable α f)
     (f'_success : lratChecker f' restPrf = success) : unsatisfiable α f := by
   have f'_def := rupAdd_result f c rupHints f' f_readyForRupAdd heq
@@ -52,9 +52,9 @@ theorem addRatCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α
     (f_readyForRatAdd : readyForRatAdd f) (c : β) (pivot : Literal α) (f' : σ) (rupHints : Array Nat)
     (ratHints : Array (Nat × Array Nat)) (pivot_limplies_c : limplies α pivot c)
     (heq : performRatAdd f c pivot rupHints ratHints = (f', true))
-    (restPrf : List (Action β α)) (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → wellFormedAction a)
+    (restPrf : List (Action β α)) (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → WellFormedAction a)
     (ih : ∀ (f : σ),
-      readyForRupAdd f → readyForRatAdd f → (∀ (a : Action β α), a ∈ restPrf → wellFormedAction a) →
+      readyForRupAdd f → readyForRatAdd f → (∀ (a : Action β α), a ∈ restPrf → WellFormedAction a) →
       lratChecker f restPrf = success → unsatisfiable α f)
     (f'_success : lratChecker f' restPrf = success) : unsatisfiable α f := by
   rw [limplies_iff_mem] at pivot_limplies_c
@@ -74,9 +74,9 @@ theorem addRatCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α
 
 theorem delCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (ids : Array Nat) (restPrf : List (Action β α))
-    (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → wellFormedAction a)
+    (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → WellFormedAction a)
     (ih : ∀ (f : σ),
-      readyForRupAdd f → readyForRatAdd f → (∀ (a : Action β α), a ∈ restPrf → wellFormedAction a) →
+      readyForRupAdd f → readyForRatAdd f → (∀ (a : Action β α), a ∈ restPrf → WellFormedAction a) →
       lratChecker f restPrf = success → unsatisfiable α f)
     (h : lratChecker (Formula.delete f ids) restPrf = success) : unsatisfiable α f := by
   intro p pf
@@ -85,7 +85,7 @@ theorem delCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β
   exact ih (delete f ids) f_del_readyForRupAdd f_del_readyForRatAdd restPrfWellFormed h p (limplies_delete p pf)
 
 theorem lratCheckerSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
-    (f_readyForRatAdd : readyForRatAdd f) (prf : List (Action β α)) (prfWellFormed : ∀ a : Action β α, a ∈ prf → wellFormedAction a) :
+    (f_readyForRatAdd : readyForRatAdd f) (prf : List (Action β α)) (prfWellFormed : ∀ a : Action β α, a ∈ prf → WellFormedAction a) :
       lratChecker f prf = success → unsatisfiable α f := by
   induction prf generalizing f
   . unfold lratChecker
@@ -123,7 +123,7 @@ theorem lratCheckerSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula �
         simp only [List.cons.injEq] at hprf
         rw [← hprf.2] at f'_success
         rw [hCheckSuccess] at heq
-        simp only [wellFormedAction, hprf.1] at actionWellFormed
+        simp only [WellFormedAction, hprf.1] at actionWellFormed
         exact addRatCaseSound f f_readyForRupAdd f_readyForRatAdd c pivot f' rupHints ratHints actionWellFormed heq restPrf
           restPrfWellFormed ih f'_success
       . simp only [false_implies]
@@ -134,9 +134,9 @@ theorem lratCheckerSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula �
       exact delCaseSound f f_readyForRupAdd f_readyForRatAdd ids restPrf restPrfWellFormed ih h
 
 theorem incrementalLRATCheckerSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ) (f_readyForRupAdd : readyForRupAdd f)
-    (f_readyForRatAdd : readyForRatAdd f) (a : Action β α) (aWellFormed : wellFormedAction a) :
+    (f_readyForRatAdd : readyForRatAdd f) (a : Action β α) (aWellFormed : WellFormedAction a) :
       ((incrementalLRATChecker f a).2 = success → unsatisfiable α f) ∧
-      ((incrementalLRATChecker f a).2 = out_of_proof → unsatisfiable α (incrementalLRATChecker f a).1 → unsatisfiable α f) := by
+      ((incrementalLRATChecker f a).2 = outOfProof → unsatisfiable α (incrementalLRATChecker f a).1 → unsatisfiable α f) := by
   constructor
   . intro incrementalChecker_success p pf
     unfold incrementalLRATChecker at incrementalChecker_success
@@ -179,7 +179,7 @@ theorem incrementalLRATCheckerSound [DecidableEq α] [Clause α β] [HSat α σ]
       by_cases performRatAdd_success : (performRatAdd f c pivot rupHints ratHints).2
       . let f' := (performRatAdd f c pivot rupHints ratHints).1
         have heq : performRatAdd f c pivot rupHints ratHints = (f', true) := by rw [← performRatAdd_success]
-        simp only [wellFormedAction, limplies_iff_mem] at aWellFormed
+        simp only [WellFormedAction, limplies_iff_mem] at aWellFormed
         unfold incrementalLRATChecker at incrementalChecker_res_unsat
         simp only [performRatAdd_success, ite_true] at incrementalChecker_res_unsat
         have h := ratAdd_sound f c pivot rupHints ratHints f' f_readyForRatAdd aWellFormed heq
