@@ -7,7 +7,7 @@ import LeanSAT.LRAT.Internal.Formula.Class
 
 namespace LRAT
 
-open Clause Formula Misc Std Sat
+open Clause Formula Std Sat
 
 namespace Literal
 
