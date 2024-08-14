@@ -41,8 +41,7 @@ theorem assignments_invariant_of_strong_assignments_invariant {n : Nat} (f : Def
   simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool,
     Bool.decide_coe, List.all_eq_true] at pf
   specialize pf (unit (i, b)) h
-  simp [Clause.instHSat, unit_eq, Clause.toList] at pf
-  exact pf
+  simpa [(· ⊨ ·), Clause.eval, unit_eq, Clause.toList] using pf
 
 theorem assignments_invariant_entails_limplies {n : Nat} (f : DefaultFormula n)
   (f_assignments_invariant : assignments_invariant f) : limplies (PosFin n) f f.assignments := by

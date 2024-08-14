@@ -38,7 +38,7 @@ end Literal
 namespace Clause
 
 theorem sat_iff_exists [Clause α β] (p : α → Bool) (c : β) : p ⊨ c ↔ ∃ l ∈ toList c, p ⊨ l := by
-  simp only [(· ⊨ ·)]
+  simp only [(· ⊨ ·), eval]
   simp only [List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
 
 theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : β) : limplies α l c ↔ l ∈ toList c := by
@@ -85,8 +85,8 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
 theorem entails_of_entails_delete [DecidableEq α] [Clause α β] {p : α → Bool} {c : β} {l : Literal α} :
     p ⊨ delete c l → p ⊨ c := by
   intro h
-  simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
-  simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
+  simp only [(· ⊨ ·), eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
+  simp only [(· ⊨ ·), eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
   rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
   . simp only [delete_iff, ne_eq] at h1
     exact Exists.intro v $ Or.inl ⟨h1.2, h2⟩

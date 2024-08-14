@@ -87,7 +87,7 @@ theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n)) (h : 
     clause.eval assign → assign ⊨ lratClause := by
   intro h2
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
-  simp only [HSat.eval, List.any_eq_true, decide_eq_true_eq]
+  simp only [(· ⊨ ·), LRAT.Clause.eval, List.any_eq_true, decide_eq_true_eq]
   rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
   apply Exists.intro (lit.fst, lit.snd)
   constructor

@@ -137,7 +137,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
     have p_entails_i_false := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i false hneg p pf
     simp only [HSat.eval] at p_entails_i_true p_entails_i_false
     simp only [p_entails_i_true] at p_entails_i_false
-  . simp only [HSat.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe]
+  . simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe]
     apply Exists.intro i
     have ib_in_insertUnit_fold : (i, b) ∈ (List.foldl insertUnit (f.rupUnits, f.assignments, false) (negate c)).1.data := by
       have i_rw : i = ⟨i.1, i.2⟩ := rfl
@@ -226,12 +226,12 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
   have hsize : (insertRupUnits f units).1.assignments.size = n := by rw [insertRupUnits_preserves_assignments_size, f_readyForRupAdd.2.1]
   apply Exists.intro hsize
   intro i b hb p hp
-  simp only [(· ⊨ ·)] at hp
+  simp only [(· ⊨ ·), Clause.eval] at hp
   simp only [toList, Array.toList_eq, List.append_assoc, List.any_eq_true, Prod.exists,
     Bool.exists_bool, Bool.decide_coe, List.all_eq_true, List.mem_append, List.mem_filterMap, id_eq,
     exists_eq_right, List.mem_map] at hp
   have pf : p ⊨ f := by
-    simp only [(· ⊨ ·)]
+    simp only [(· ⊨ ·), Clause.eval]
     simp only [toList, Array.toList_eq, List.append_assoc, List.any_eq_true, Prod.exists, Bool.exists_bool,
       Bool.decide_coe, List.all_eq_true, List.mem_append, List.mem_filterMap, id_eq, exists_eq_right, List.mem_map]
     intro c cf
@@ -547,7 +547,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
     rcases h1 with h1 | h1
     . apply Or.inl
       intro pc
-      simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
+      simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
       rcases pc with ⟨i, ⟨pc1, pc2⟩ | ⟨pc1, pc2⟩⟩
       . simp only [Clause.toList, DefaultClause.toList] at pc1
         rw [c_clause_rw] at pc1
@@ -572,7 +572,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
     . exact Or.inr h1
   . intro l hl p hp pc
     apply h2 l hl p hp
-    simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
+    simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool] at pc
     rcases pc with ⟨i, ⟨pc1, pc2⟩ | ⟨pc1, pc2⟩⟩
     . simp only [Clause.toList, DefaultClause.toList] at pc1
       rw [c_clause_rw] at pc1
@@ -717,8 +717,8 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
   by_cases pc : p ⊨ c
   . exact pc
   . exfalso -- Derive contradiction from pc, pf, and fc_unsat
-    simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists, not_or,
-      not_and, Bool.not_eq_true] at pc
+    simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists,
+      not_or, not_and, Bool.not_eq_true] at pc
     simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
       not_imp] at fc_unsat
     rcases fc_unsat with ⟨unsat_c, unsat_c_in_fc, p_unsat_c⟩
@@ -729,8 +729,8 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
       rcases v_in_neg_c with ⟨v', ⟨_, v'_eq_v⟩ | ⟨v'_in_c, v'_eq_v⟩⟩
       . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_false] at v'_eq_v
       . simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_true] at v'_eq_v
-        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool, ←
-          unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
+        simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq, Prod.exists,
+          Bool.exists_bool, ← unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
         rw [Clause.unit_eq] at p_unsat_c
         simp only [List.mem_singleton, forall_const, Prod.mk.injEq, and_false, false_implies, and_true] at p_unsat_c
@@ -744,8 +744,8 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
     . simp only [negate_iff, List.mem_map, Prod.exists, Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨v'_in_c, v'_eq_v⟩ | ⟨_, v'_eq_v⟩⟩
       . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_true] at v'_eq_v
-        simp only [(· ⊨ ·), List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool, ←
-          unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
+        simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq, Prod.exists,
+          Bool.exists_bool, ← unsat_c_eq, not_exists, not_or, not_and] at p_unsat_c
         specialize p_unsat_c v
         rw [Clause.unit_eq] at p_unsat_c
         simp only [List.mem_singleton, forall_const, Prod.mk.injEq, and_false, false_implies, and_true] at p_unsat_c

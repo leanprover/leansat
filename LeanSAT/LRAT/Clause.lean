@@ -5,29 +5,32 @@ Authors: Josh Clune
 -/
 import Std.Sat.CNF.Basic
 import LeanSAT.LRAT.PosFin
-import LeanSAT.Util.Misc
 import LeanSAT.LRAT.Assignment
 
-open Std Sat
+open Std.Sat
+open Sat
 
 namespace LRAT
 
-/-- ReduceResult is an inductive datatype used specifically for the output of the `reduce` function. The intended
-    meaning of each constructor is explained in the docstring of the `reduce` function. -/
+/--
+An inductive datatype used specifically for the output of the `reduce` function. The intended
+meaning of each constructor is explained in the docstring of the `reduce` function.
+-/
 inductive ReduceResult (α : Type u)
   | encounteredBoth
   | reducedToEmpty
   | reducedToUnit (l : Literal α)
   | reducedToNonunit
 
-open Misc Assignment ReduceResult
-
-/-- Typeclass for clauses. An instance [Clause α β] indicates that β is
-    the type of a clause with variables of type α. -/
+/--
+Typeclass for clauses. An instance `[Clause α β]` indicates that `β` is the type of a clause with
+variables of type `α`.
+-/
 class Clause (α : outParam (Type u)) (β : Type v) where
   toList : β → CNF.Clause α
   not_tautology : ∀ c : β, ∀ l : Literal α, l ∉ toList c ∨ Literal.negate l ∉ toList c
-  ofArray : Array (Literal α) → Option β -- Returns none if the given array contains complementary literals
+  /-- Returns none if the given array contains complementary literals -/
+  ofArray : Array (Literal α) → Option β
   ofArray_eq :
     ∀ arr : Array (Literal α), (∀ i : Fin arr.size, ∀ j : Fin arr.size, i.1 ≠ j.1 → arr[i] ≠ arr[j]) →
       ∀ c : β, ofArray arr = some c → toList c = arr.toList
@@ -39,13 +42,15 @@ class Clause (α : outParam (Type u)) (β : Type v) where
   isUnit_iff : ∀ c : β, ∀ l : Literal α, isUnit c = some l ↔ toList c = [l]
   negate : β → CNF.Clause α
   negate_iff : ∀ c : β, negate c = (toList c).map Literal.negate
-  insert : β → Literal α → Option β -- Returns none if the result is a tautology
+  /-- Returns none if the result is a tautology. -/
+  insert : β → Literal α → Option β
   delete : β → Literal α → β
   delete_iff : ∀ c : β, ∀ l : Literal α, ∀ l' : Literal α,
     l' ∈ toList (delete c l) ↔ l' ≠ l ∧ l' ∈ toList c
   contains : β → Literal α → Bool
   contains_iff : ∀ c : β, ∀ l : Literal α, contains c l ↔ l ∈ toList c
-  reduce : β → Array Assignment → ReduceResult α -- Reduces the clause with respect to the given assignment
+  /-- Reduces the clause with respect to the given assignment -/
+  reduce : β → Array Assignment → ReduceResult α
   dimacs : β → String
 
 namespace Clause
@@ -56,45 +61,50 @@ instance : HSat α (Literal α) where
 instance (p : α → Bool) (l : Literal α) : Decidable (p ⊨ l) :=
   inferInstanceAs (Decidable (p l.1 = l.2))
 
-instance [Clause α β] : HSat α β :=
-  { eval := fun p c => (toList c).any fun (l : Literal α) => p ⊨ l }
+def eval [Clause α β] (a : α → Bool) (c : β) : Bool :=
+  (toList c).any fun (l : Literal α) => a ⊨ l
 
-instance [Clause α β] (p : α → Bool) (c : β) : Decidable (p ⊨ c) := by
-  rw [HSat.eval, instHSat]
-  simp only [decide_eq_true_eq, Prod.exists, Bool.exists_bool]
-  exact Bool.decEq _ _
+instance [Clause α β] : HSat α β where
+  eval a c := Clause.eval a c
+
+instance [Clause α β] (p : α → Bool) (c : β) : Decidable (p ⊨ c) :=
+  inferInstanceAs (Decidable (Clause.eval p c = true))
 
 instance [Clause α β] : Inhabited β where
   default := empty
 
 end Clause
 
-/-- The `DefaultClause` structure is primarily a list of literals. The additional field `nodupkey` is included to ensure that `not_tautology`
-    is provable (which is needed to prove `insertRup_entails_hsat` and `insertRat_entails_hsat` in `LRAT.Formula.RupAddSound.lean` and
-    `LRAT.Formula.RatAddSound.lean`). The additional field `nodup` is included to ensure that `delete` can be implemented by simply calling `erase`
-    on the `clause` field. Without `nodup`, it would be necessary to iterate through the entire `clause` field and erase all instances of the literal
-    to be deleted, since there would potentially be more than one.
+/--
+The `DefaultClause` structure is primarily a list of literals. The additional field `nodupkey` is
+included to ensure that `not_tautology` is provable (which is needed to prove `insertRup_entails_hsat`
+and `insertRat_entails_hsat` in `LRAT.Formula.RupAddSound.lean` and `LRAT.Formula.RatAddSound.lean`).
+The additional field `nodup` is included to ensure that `delete` can be implemented by simply calling
+`erase` on the `clause` field. Without `nodup`, it would be necessary to iterate through the entire
+`clause` field and erase all instances of the literal to be deleted, since there would potentially
+be more than one.
 
-    In principle, one could combine `nodupkey` and `nodup` to instead have one additional field that stipulates that
-    `∀ l1 : PosFin numVarsSucc, ∀ l2 : PosFin numVarsSucc, l1.1 ≠ l2.1`. This would work just as well, and the only reason that `DefaultClause`
-    is structured in this manner is that the `nodup` field was only included in a later stage of the verification process when it became clear that
-    it was needed. -/
+In principle, one could combine `nodupkey` and `nodup` to instead have one additional field that
+stipulates that `∀ l1 : PosFin numVarsSucc, ∀ l2 : PosFin numVarsSucc, l1.1 ≠ l2.1`. This would work
+just as well, and the only reason that `DefaultClause` is structured in this manner is that the
+`nodup` field was only included in a later stage of the verification process when it became clear
+that it was needed.
+-/
 @[ext] structure DefaultClause (numVarsSucc : Nat) where
   clause : CNF.Clause (PosFin numVarsSucc)
   nodupkey : ∀ l : PosFin numVarsSucc, (l, true) ∉ clause ∨ (l, false) ∉ clause
   nodup : List.Nodup clause
+  deriving BEq
 
-instance {n : Nat} : BEq (DefaultClause n) where
-  beq := fun a1 a2 => a1.clause == a2.clause
-
-instance {n : Nat} : ToString (DefaultClause n) where
-  toString := fun c => s!"{c.clause.reverse}"
+instance : ToString (DefaultClause n) where
+  toString c := s!"{c.clause.reverse}"
 
 namespace DefaultClause
 
-def toList {n : Nat} (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause
+def toList (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause
 
-theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : ¬ l ∈ toList c ∨ ¬Literal.negate l ∈ toList c := by
+theorem not_tautology (c : DefaultClause n) (l : Literal (PosFin n)) :
+    ¬ l ∈ toList c ∨ ¬Literal.negate l ∈ toList c := by
   simp only [toList, Literal.negate]
   have h := c.nodupkey l.1
   by_cases hl : l.2
@@ -105,15 +115,17 @@ theorem not_tautology {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
     apply Or.symm
     rwa [← hl] at h
 
-def empty {n : Nat} : DefaultClause n :=
+def empty : DefaultClause n :=
   let clause := []
-  have nodupkey := by simp only [clause, List.find?, List.not_mem_nil, not_false_eq_true, or_self, implies_true]
-  have nodup := by simp only [clause, List.nodup_nil]
+  have nodupkey := by
+    simp only [clause, List.find?, List.not_mem_nil, not_false_eq_true, or_self, implies_true]
+  have nodup := by
+    simp only [clause, List.nodup_nil]
   ⟨clause, nodupkey, nodup⟩
 
-theorem empty_eq {n : Nat} : toList (empty : DefaultClause n) = [] := rfl
+theorem empty_eq : toList (empty : DefaultClause n) = [] := rfl
 
-def unit {n : Nat} (l : Literal (PosFin n)) : DefaultClause n :=
+def unit (l : Literal (PosFin n)) : DefaultClause n :=
   let clause := [l]
   have nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
     intro l'
@@ -127,15 +139,15 @@ def unit {n : Nat} (l : Literal (PosFin n)) : DefaultClause n :=
   have nodup : List.Nodup clause:= by simp [clause]
   ⟨clause, nodupkey, nodup⟩
 
-theorem unit_eq {n : Nat} (l : Literal (PosFin n)) : toList (unit l) = [l] := rfl
+theorem unit_eq (l : Literal (PosFin n)) : toList (unit l) = [l] := rfl
 
-def isUnit {n : Nat} (c : DefaultClause n) : Option (Literal (PosFin n)) :=
+def isUnit (c : DefaultClause n) : Option (Literal (PosFin n)) :=
   match c.clause with
   | [l] => some l
   | _ => none
 
-theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
-  isUnit c = some l ↔ toList c = [l] := by
+theorem isUnit_iff (c : DefaultClause n) (l : Literal (PosFin n)) :
+    isUnit c = some l ↔ toList c = [l] := by
   simp only [isUnit, toList]
   split
   . next l' heq => simp [heq]
@@ -143,12 +155,12 @@ theorem isUnit_iff {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) :
     simp only [false_iff]
     apply hne
 
-def negate {n : Nat} (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause.map Literal.negate
+def negate (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause.map Literal.negate
 
-theorem negate_iff {n : Nat} (c : DefaultClause n) : negate c = (toList c).map Literal.negate := rfl
+theorem negate_iff (c : DefaultClause n) : negate c = (toList c).map Literal.negate := rfl
 
 /-- Attempts to add the literal (idx, b) to clause c. Returns none if doing so would make c a tautology -/
-def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClause n) :=
+def insert (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClause n) :=
   if heq1 : c.clause.contains (l.1, not l.2) then none -- Adding l would make c a tautology
   else if heq2 : c.clause.contains l then some c
   else
@@ -189,15 +201,17 @@ def insert {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Option (De
       simp [c.nodup, heq2, clause]
     some ⟨clause, nodupkey, nodup⟩
 
-def ofArray {n : Nat} (ls : Array (Literal (PosFin n))) : Option (DefaultClause n) :=
+def ofArray (ls : Array (Literal (PosFin n))) : Option (DefaultClause n) :=
   let fold_fn (l : Literal (PosFin n)) (acc : Option (DefaultClause n)) : Option (DefaultClause n) :=
     match acc with
     | none => none
     | some acc => acc.insert l
   ls.foldr fold_fn (some empty)
 
-theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin arr.size, ∀ j : Fin arr.size, i.1 ≠ j.1 → arr[i] ≠ arr[j])
-  (c : DefaultClause n) : ofArray arr = some c → toList c = Array.toList arr := by
+theorem ofArray_eq (arr : Array (Literal (PosFin n)))
+    (arrNodup : ∀ i : Fin arr.size, ∀ j : Fin arr.size, i.1 ≠ j.1 → arr[i] ≠ arr[j])
+    (c : DefaultClause n) :
+    ofArray arr = some c → toList c = Array.toList arr := by
   intro h
   simp only [ofArray] at h
   rw [toList, Array.toList_eq]
@@ -281,7 +295,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n))) (arrNodup : ∀ i : Fin ar
     simp only [Nat.not_lt, ← List.getElem?_eq_none_iff] at i_in_bounds arr_data_length_le_i
     rw [i_in_bounds, arr_data_length_le_i]
 
-def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultClause n :=
+def delete (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultClause n :=
   let clause := c.clause.erase l
   let nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
     intro l'
@@ -298,7 +312,8 @@ def delete {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultCla
     exact List.Nodup.erase l c.nodup
   ⟨clause, nodupkey, nodup⟩
 
-theorem delete_iff (c : DefaultClause n) (l l' : Literal (PosFin n)) : l' ∈ toList (delete c l) ↔ l' ≠ l ∧ l' ∈ toList c := by
+theorem delete_iff (c : DefaultClause n) (l l' : Literal (PosFin n)) :
+    l' ∈ toList (delete c l) ↔ l' ≠ l ∧ l' ∈ toList c := by
   simp only [toList, delete, ne_eq]
   by_cases hl : l' = l
   . simp only [hl, not_true, false_and, iff_false]
@@ -306,56 +321,65 @@ theorem delete_iff (c : DefaultClause n) (l l' : Literal (PosFin n)) : l' ∈ to
   . simp only [hl, not_false_eq_true, true_and]
     exact List.mem_erase_of_ne hl
 
-def contains {n : Nat} (c : DefaultClause n) (l : Literal (PosFin n)) : Bool := c.clause.contains l
+def contains (c : DefaultClause n) (l : Literal (PosFin n)) : Bool := c.clause.contains l
 
-theorem contains_iff : ∀ (c : DefaultClause n) (l : Literal (PosFin n)), contains c l = true ↔ l ∈ toList c := by
+theorem contains_iff :
+    ∀ (c : DefaultClause n) (l : Literal (PosFin n)), contains c l = true ↔ l ∈ toList c := by
   intro c l
   simp only [contains, List.contains]
   constructor
   . exact List.mem_of_elem_eq_true
   . exact List.elem_eq_true_of_mem
 
-def reduce_fold_fn (assignments : Array Assignment) (acc : ReduceResult (PosFin n)) (l : Literal (PosFin n)) : ReduceResult (PosFin n) :=
+def reduce_fold_fn (assignments : Array Assignment) (acc : ReduceResult (PosFin n))
+    (l : Literal (PosFin n)) :
+    ReduceResult (PosFin n) :=
   match acc with
-    | encounteredBoth => encounteredBoth
-    | reducedToEmpty =>
+    | .encounteredBoth => .encounteredBoth
+    | .reducedToEmpty =>
       match assignments[l.1.1]! with
-      | pos =>
-        if l.2 then reducedToUnit l
-        else reducedToEmpty
-      | neg =>
-        if not l.2 then reducedToUnit l
-        else reducedToEmpty
-      | both => encounteredBoth
-      | unassigned => reducedToUnit l
-    | reducedToUnit l' =>
+      | .pos =>
+        if l.2 then .reducedToUnit l
+        else .reducedToEmpty
+      | .neg =>
+        if not l.2 then .reducedToUnit l
+        else .reducedToEmpty
+      | .both => .encounteredBoth
+      | .unassigned => .reducedToUnit l
+    | .reducedToUnit l' =>
       match assignments[l.1.1]! with
-      | pos =>
-        if l.2 then reducedToNonunit -- Assignment fails to refute both l and l'
-        else reducedToUnit l'
-      | neg =>
-        if not l.2 then reducedToNonunit -- Assignment fails to refute both l and l'
-        else reducedToUnit l'
-      | both => encounteredBoth
-      | unassigned => reducedToNonunit -- Assignments fails to refute both l and l'
-    | reducedToNonunit => reducedToNonunit
+      | .pos =>
+        if l.2 then .reducedToNonunit -- Assignment fails to refute both l and l'
+        else .reducedToUnit l'
+      | .neg =>
+        if not l.2 then .reducedToNonunit -- Assignment fails to refute both l and l'
+        else .reducedToUnit l'
+      | .both => .encounteredBoth
+      | .unassigned => .reducedToNonunit -- Assignments fails to refute both l and l'
+    | .reducedToNonunit => .reducedToNonunit
 
-/-- The `reduce` function takes in a clause `c` and takes in an array of assignments and attempts to eliminate every literal
-    in the clause that is not compatible with the `assignments` argument.
-    - If `reduce` returns `encounteredBoth`, then this means that the `assignments` array has a `both` Assignment and is therefore fundamentally unsatisfiable.
-    - If `reduce` returns `reducedToEmpty`, then this means that every literal in `c` is incompatible with `assignments`. In other words, this means that
-      the conjunction of `assignments` and `c` is unsatisfiable.
-    - If `reduce` returns `reducedToUnit l`, then this means that every literal in `c` is incompatible with `assignments` except for `l`. In other words,
-      this means that the conjunction of `assignments` and `c` entail `l`.
-    - If `reduce` returns `reducedToNonunit`, then this means that there are multiple literals in `c` that are compatible with `assignments`. This is a failure
-      condition for `confirmRupHint` (in `LRAT.Formula.Implementation.lean`) which calls `reduce`. -/
-def reduce {n : Nat} (c : DefaultClause n) (assignments : Array Assignment) : ReduceResult (PosFin n) :=
-  c.clause.foldl (reduce_fold_fn assignments) reducedToEmpty
+/--
+The `reduce` function takes in a clause `c` and takes in an array of assignments and attempts to
+eliminate every literal in the clause that is not compatible with the `assignments` argument.
+- If `reduce` returns `encounteredBoth`, then this means that the `assignments` array has a `both`
+  Assignment and is therefore fundamentally unsatisfiable.
+- If `reduce` returns `reducedToEmpty`, then this means that every literal in `c` is incompatible
+  with `assignments`. In other words, this means that the conjunction of `assignments` and `c` is
+  unsatisfiable.
+- If `reduce` returns `reducedToUnit l`, then this means that every literal in `c` is incompatible
+  with `assignments` except for `l`. In other words, this means that the conjunction of
+  `assignments` and `c` entail `l`.
+- If `reduce` returns `reducedToNonunit`, then this means that there are multiple literals in `c`
+  that are compatible with `assignments`. This is a failure condition for `confirmRupHint`
+  (in `LRAT.Formula.Implementation.lean`) which calls `reduce`. -/
+def reduce (c : DefaultClause n) (assignments : Array Assignment) :
+    ReduceResult (PosFin n) :=
+  c.clause.foldl (reduce_fold_fn assignments) .reducedToEmpty
 
-def dimacs {n : Nat} (c : DefaultClause n) : String :=
+def dimacs (c : DefaultClause n) : String :=
   String.join ((toList c).map (fun l => Literal.dimacs l ++ " ")) ++ "0"
 
-instance {n : Nat} : Clause (PosFin n) (DefaultClause n) where
+instance : Clause (PosFin n) (DefaultClause n) where
   toList := toList
   not_tautology := not_tautology
   ofArray := ofArray
