@@ -41,7 +41,7 @@ class Clause (α : outParam (Type u)) (β : Type v) where
   isUnit : β → Option (Literal α)
   isUnit_iff : ∀ c : β, ∀ l : Literal α, isUnit c = some l ↔ toList c = [l]
   negate : β → CNF.Clause α
-  negate_iff : ∀ c : β, negate c = (toList c).map Literal.negate
+  negate_eq : ∀ c : β, negate c = (toList c).map Literal.negate
   /-- Returns none if the result is a tautology. -/
   insert : β → Literal α → Option β
   delete : β → Literal α → β
@@ -157,7 +157,7 @@ theorem isUnit_iff (c : DefaultClause n) (l : Literal (PosFin n)) :
 
 def negate (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause.map Literal.negate
 
-theorem negate_iff (c : DefaultClause n) : negate c = (toList c).map Literal.negate := rfl
+theorem negate_eq (c : DefaultClause n) : negate c = (toList c).map Literal.negate := rfl
 
 /-- Attempts to add the literal (idx, b) to clause c. Returns none if doing so would make c a tautology -/
 def insert (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClause n) :=
@@ -391,7 +391,7 @@ instance : Clause (PosFin n) (DefaultClause n) where
   isUnit := isUnit
   isUnit_iff := isUnit_iff
   negate := negate
-  negate_iff := negate_iff
+  negate_eq := negate_eq
   insert := insert
   delete := delete
   delete_iff := delete_iff

@@ -209,7 +209,7 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
     have unsat_c_in_fc := mem_of_insertRatUnits f (negate c) unsat_c unsat_c_in_fc
     simp only [Array.toList_eq, List.mem_map, Prod.exists, Bool.exists_bool] at unsat_c_in_fc
     rcases unsat_c_in_fc with ⟨v, ⟨v_in_neg_c, unsat_c_eq⟩ | ⟨v_in_neg_c, unsat_c_eq⟩⟩ | unsat_c_in_f
-    . simp only [negate_iff, List.mem_map, Prod.exists, Bool.exists_bool] at v_in_neg_c
+    . simp only [negate_eq, List.mem_map, Prod.exists, Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨_, v'_eq_v⟩ | ⟨v'_in_c, v'_eq_v⟩⟩
       . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_false] at v'_eq_v
       . simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_true] at v'_eq_v
@@ -225,7 +225,7 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
         simp only [(· ⊨ ·), Bool.not_eq_true] at pv
         simp only [p_unsat_c] at pv
         cases pv
-    . simp only [negate_iff, List.mem_map, Prod.exists, Bool.exists_bool] at v_in_neg_c
+    . simp only [negate_eq, List.mem_map, Prod.exists, Bool.exists_bool] at v_in_neg_c
       rcases v_in_neg_c with ⟨v', ⟨v'_in_c, v'_eq_v⟩ | ⟨_, v'_eq_v⟩⟩
       . simp only [Literal.negate, Bool.not_false, Prod.mk.injEq, and_true] at v'_eq_v
         simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq, Prod.exists,
