@@ -5,7 +5,7 @@ Authors: Josh Clune
 -/
 import Std.Sat.CNF.Basic
 import LeanSAT.LRAT.PosFin
-import LeanSAT.LRAT.Assignment
+import LeanSAT.LRAT.Internal.Assignment
 
 open Std.Sat
 open Sat

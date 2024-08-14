@@ -3,8 +3,8 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.LRAT.Formula.Class
-import LeanSAT.LRAT.Assignment
+import LeanSAT.LRAT.Internal.Formula.Class
+import LeanSAT.LRAT.Internal.Assignment
 import Std.Sat.CNF.Basic
 
 namespace LRAT

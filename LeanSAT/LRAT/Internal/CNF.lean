@@ -3,7 +3,7 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.LRAT.Formula.Class
+import LeanSAT.LRAT.Internal.Formula.Class
 
 namespace LRAT
 
@@ -41,7 +41,8 @@ theorem sat_iff_exists [Clause α β] (p : α → Bool) (c : β) : p ⊨ c ↔ �
   simp only [(· ⊨ ·), eval]
   simp only [List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
 
-theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : β) : limplies α l c ↔ l ∈ toList c := by
+theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : β) :
+    limplies α l c ↔ l ∈ toList c := by
   simp only [limplies, sat_iff_exists, Prod.exists, Bool.exists_bool]
   constructor
   . intro h
@@ -82,7 +83,8 @@ theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : �
       rw [← hl]
       exact ⟨h, pl⟩
 
-theorem entails_of_entails_delete [DecidableEq α] [Clause α β] {p : α → Bool} {c : β} {l : Literal α} :
+theorem entails_of_entails_delete [DecidableEq α] [Clause α β] {p : α → Bool} {c : β}
+    {l : Literal α} :
     p ⊨ delete c l → p ⊨ c := by
   intro h
   simp only [(· ⊨ ·), eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
@@ -102,7 +104,8 @@ theorem sat_iff_forall [Clause α β] [HSat α σ] [Formula α β σ] (p : α �
   simp only [(· ⊨ ·), formulaHSat_def p f]
   simp only [List.all_eq_true, decide_eq_true_eq]
 
-theorem limplies_of_insert [Clause α β] [HSat α σ] [Formula α β σ] {c : β} {f : σ} : limplies α (insert f c) f := by
+theorem limplies_of_insert [Clause α β] [HSat α σ] [Formula α β σ] {c : β} {f : σ} :
+    limplies α (insert f c) f := by
   intro p
   simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
   intro h c' c'_in_f
@@ -111,7 +114,8 @@ theorem limplies_of_insert [Clause α β] [HSat α σ] [Formula α β σ] {c : �
     exact Or.inr c'_in_f
   exact h c' c'_in_fc
 
-theorem limplies_delete [Clause α β] [HSat α σ] [Formula α β σ] {f : σ} {arr : Array Nat} : limplies α f (delete f arr) := by
+theorem limplies_delete [Clause α β] [HSat α σ] [Formula α β σ] {f : σ} {arr : Array Nat} :
+    limplies α f (delete f arr) := by
   intro p
   simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
   intro h c c_in_f_del
