@@ -32,24 +32,6 @@ instance : LawfulBEq Result where
 
 open Formula
 
-def incrementalLRATChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
-    (action : Action β α) :
-    σ × Result :=
-  match action with
-  | .addEmpty _ rupHints =>
-    let (f, checkSuccess) := performRupAdd f Clause.empty rupHints
-    if checkSuccess then (f, .success)
-    else (f, .rupFailure)
-  | .addRup _ c rupHints =>
-    let (f, checkSuccess) := performRupAdd f c rupHints
-    if checkSuccess then (f, .outOfProof)
-    else (f, .rupFailure)
-  | .addRat _ c pivot rupHints ratHints =>
-    let (f, checkSuccess) := performRatAdd f c pivot rupHints ratHints
-    if checkSuccess then (f, .outOfProof)
-    else (f, .rupFailure)
-  | .del ids => (delete f ids, .outOfProof)
-
 def lratChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
     (prf : List (Action β α)) :
     Result :=
