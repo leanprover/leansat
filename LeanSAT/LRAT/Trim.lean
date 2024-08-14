@@ -3,7 +3,7 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.External.LRAT
+import LeanSAT.LRAT.Actions
 import Lean.Data.RBMap
 import Std.Data.HashMap
 
@@ -189,14 +189,5 @@ end trim
 
 def trim (proof : Array IntAction) : IO (Array IntAction) :=
   trim.go.run proof
-
-/--
-Trim an LRAT proof stored in one file and output it to the other.
--/
-def trimFile (input : System.FilePath) (output : System.FilePath) (binaryProofs : Bool)
-    : IO Unit := do
-  let proof ← loadLRATProof input
-  let trimmed ← trim proof
-  dumpLRATProof output trimmed binaryProofs
 
 end LRAT

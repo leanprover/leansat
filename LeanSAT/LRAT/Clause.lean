@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import Std.Sat.CNF.Basic
-import LeanSAT.Util.PosFin
+import LeanSAT.LRAT.PosFin
 import LeanSAT.Util.Misc
 import LeanSAT.LRAT.Assignment
 

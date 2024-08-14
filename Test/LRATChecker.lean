@@ -1,4 +1,5 @@
 import LeanSAT.LRAT.LRATChecker
+import LeanSAT.External.LRAT
 
 open LRAT Lean Parser Elab Command Dimacs Std Sat
 

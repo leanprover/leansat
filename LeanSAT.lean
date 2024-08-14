@@ -5,6 +5,5 @@ Authors: Henrik Böving
 -/
 import LeanSAT.External
 import LeanSAT.LRAT
-import LeanSAT.Sat
 import LeanSAT.Tactics
 import LeanSAT.Util
