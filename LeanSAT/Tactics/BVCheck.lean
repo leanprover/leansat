@@ -7,6 +7,8 @@ import LeanSAT.Tactics.BVDecide
 
 open Lean Elab Meta
 
+open Lean.Elab.Tactic.BVDecide
+
 namespace BVCheck
 
 /--
