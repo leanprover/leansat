@@ -42,7 +42,9 @@ Turn a `CNF PosFin` into the representation used by the LRAT checker.
 def CNF.convertLRAT' (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
   clauses.filterMap (fun clause =>
     match CNF.Clause.convertLRAT' clause with
-    | some foo => some foo
+    | some clause => some clause
+    -- This might look stupid but we are in an Option (Option x) here so explicitly returning none
+    -- is different from not doing this pattern match.
     | none => none
   )
 
@@ -89,10 +91,10 @@ theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n)) (h : 
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
   simp only [(· ⊨ ·), LRAT.Clause.eval, List.any_eq_true, decide_eq_true_eq]
   rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
-  apply Exists.intro (lit.fst, lit.snd)
+  apply Exists.intro lit
   constructor
-  . simp[LRAT.Clause.toList, LRAT.DefaultClause.toList]
-    simp[CNF.Clause.convertLRAT'] at h
+  . simp only [LRAT.Clause.toList, LRAT.DefaultClause.toList]
+    simp only [convertLRAT'] at h
     exact CNF.Clause.mem_lrat_of_mem clause hlit1 h
   . simp_all
 
