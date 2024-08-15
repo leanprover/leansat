@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import Lean.Elab.Command
-import LeanSAT.LRAT.Clause
+import LeanSAT.LRAT.Internal.Clause
 
 open LRAT Lean Parser Elab Command DefaultClause Std.Sat
 

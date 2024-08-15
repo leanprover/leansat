@@ -7,3 +7,8 @@ import LeanSAT.LRAT.Internal.Assignment
 import LeanSAT.LRAT.Internal.CNF
 import LeanSAT.LRAT.Internal.Formula
 import LeanSAT.LRAT.Internal.Entails
+import LeanSAT.LRAT.Internal.Assignment
+import LeanSAT.LRAT.Internal.Clause
+import LeanSAT.LRAT.Internal.LRATChecker
+import LeanSAT.LRAT.Internal.LRATCheckerSound
+import LeanSAT.LRAT.Internal.PosFin

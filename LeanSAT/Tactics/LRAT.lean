@@ -215,26 +215,8 @@ theorem verifyCert_correct
           rw [← h2]
           exact WellFormedActions.property)
         h1
-    apply CNF.unsat_of_lift_unsat c
-    intro assignment
-    unfold CNF.convertLRAT at h2
-    have h2 := (LRAT.unsat_of_cons_none_unsat _ h2) assignment
-    apply eq_false_of_ne_true
-    intro h3
-    apply h2
-    simp only [LRAT.Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
-    intro lratClause hlclause
-    simp only [LRAT.Formula.toList, LRAT.DefaultFormula.toList, LRAT.DefaultFormula.ofArray,
-      CNF.convertLRAT', Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
-      List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
-    rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
-    simp only [CNF.eval, List.all_eq_true] at h3
-    split at hrclause2
-    . next heq =>
-      rw [← heq] at hrclause2
-      simp only [Option.some.injEq] at hrclause2
-      simp [CNF.Clause.convertLRAT_sat_of_sat reflectClause hrclause2, h3 reflectClause hrclause1]
-    . contradiction
+    apply CNF.unsat_of_convertLRAT_unsat
+    assumption
   . contradiction
 
 /--
