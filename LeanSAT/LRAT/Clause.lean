@@ -55,7 +55,7 @@ class Clause (α : outParam (Type u)) (β : Type v) where
 
 namespace Clause
 
-instance : HSat α (Literal α) where
+instance : Entails α (Literal α) where
   eval := fun p l => p l.1 = l.2
 
 instance (p : α → Bool) (l : Literal α) : Decidable (p ⊨ l) :=
@@ -64,7 +64,7 @@ instance (p : α → Bool) (l : Literal α) : Decidable (p ⊨ l) :=
 def eval [Clause α β] (a : α → Bool) (c : β) : Bool :=
   (toList c).any fun (l : Literal α) => a ⊨ l
 
-instance [Clause α β] : HSat α β where
+instance [Clause α β] : Entails α β where
   eval a c := Clause.eval a c
 
 instance [Clause α β] (p : α → Bool) (c : β) : Decidable (p ⊨ c) :=

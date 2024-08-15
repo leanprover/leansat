@@ -6,4 +6,4 @@ Authors: Henrik Böving
 import LeanSAT.LRAT.Internal.Assignment
 import LeanSAT.LRAT.Internal.CNF
 import LeanSAT.LRAT.Internal.Formula
-import LeanSAT.LRAT.Internal.Sat
+import LeanSAT.LRAT.Internal.Entails

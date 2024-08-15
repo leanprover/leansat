@@ -135,7 +135,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
     have hneg : hasAssignment false (f.assignments[i.1]'i_in_bounds) = true := by simp only [hboth]; decide
     have p_entails_i_true := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i true hpos p pf
     have p_entails_i_false := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i false hneg p pf
-    simp only [HSat.eval] at p_entails_i_true p_entails_i_false
+    simp only [Entails.eval] at p_entails_i_true p_entails_i_false
     simp only [p_entails_i_true] at p_entails_i_false
   . simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe]
     apply Exists.intro i
@@ -211,13 +211,13 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
 theorem insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
     (c : DefaultClause n) : (insertRupUnits f (negate c)).2 = true → limplies (PosFin n) f (f.insert c) := by
   intro h p pf
-  simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+  simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro c' c'_in_fc
   rw [insert_iff] at c'_in_fc
   rcases c'_in_fc with c'_eq_c | c'_in_f
   . rw [c'_eq_c]
     exact insertRup_entails_hsat f f_readyForRupAdd c p pf h
-  . simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at pf
+  . simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
     exact pf c' c'_in_f
 
 theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
@@ -286,10 +286,10 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       simp only [h1, Clause.toList, unit_eq, List.mem_singleton,
         Prod.mk.injEq] at hp
       rcases hp with ⟨hp1, hp2⟩ | ⟨hp1, hp2⟩
-      . simp only [b_eq_b', ← hp1.2, HSat.eval]
+      . simp only [b_eq_b', ← hp1.2, Entails.eval]
         rw [hp1.1] at hp2
         exact of_decide_eq_true hp2
-      . simp only [b_eq_b', ← hp1.2, HSat.eval]
+      . simp only [b_eq_b', ← hp1.2, Entails.eval]
         rw [hp1.1] at hp2
         exact hp2
     . next b_ne_b' =>
@@ -719,7 +719,7 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
   . exfalso -- Derive contradiction from pc, pf, and fc_unsat
     simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists,
       not_or, not_and, Bool.not_eq_true] at pc
-    simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
+    simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
       not_imp] at fc_unsat
     rcases fc_unsat with ⟨unsat_c, unsat_c_in_fc, p_unsat_c⟩
     have unsat_c_in_fc := mem_of_insertRupUnits f (negate c) unsat_c unsat_c_in_fc
@@ -756,7 +756,7 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
         simp only [p_unsat_c] at pv
         cases pv
       . simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
-    . simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at pf
+    . simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
       exact p_unsat_c $ pf unsat_c unsat_c_in_f
 
 theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
@@ -764,13 +764,13 @@ theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultF
       (performRupCheck (insertRupUnits f (negate c)).1 rupHints).2.2.1 = true → limplies (PosFin n) f (f.insert c) := by
   intro performRupCheck_success p pf
   simp only [performRupCheck] at performRupCheck_success
-  simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+  simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro c' c'_in_fc
   rw [insert_iff] at c'_in_fc
   rcases c'_in_fc with c'_eq_c | c'_in_f
   . rw [c'_eq_c]
     exact confirmRupHint_of_insertRup_fold_entails_hsat f f_readyForRupAdd c rupHints p pf performRupCheck_success
-  . simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at pf
+  . simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
     exact pf c' c'_in_f
 
 theorem rupAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHints : Array Nat) (f' : DefaultFormula n)

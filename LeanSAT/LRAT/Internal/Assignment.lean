@@ -3,7 +3,7 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.LRAT.Internal.Sat
+import LeanSAT.LRAT.Internal.Entails
 import LeanSAT.LRAT.PosFin
 
 open Sat
@@ -185,7 +185,7 @@ theorem addNeg_of_addPos_eq_both (assignment : Assignment) : addNegAssignment (a
   rw [addNegAssignment, addPosAssignment]
   cases assignment <;> simp
 
-instance {n : Nat} : HSat (PosFin n) (Array Assignment) where
+instance {n : Nat} : Entails (PosFin n) (Array Assignment) where
   eval := fun p arr => ∀ i : PosFin n, ¬(hasAssignment (¬p i) arr[i.1]!)
 
 end Assignment

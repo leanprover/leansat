@@ -12,7 +12,7 @@ open Clause Formula Std Sat
 namespace Literal
 
 theorem sat_iff (p : α → Bool) (a : α) (b : Bool) : p ⊨ (a, b) ↔ (p a) = b := by
-  simp only [HSat.eval]
+  simp only [Entails.eval]
 
 theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ Literal.negate l ↔ p ⊭ l := by
   simp only [Literal.negate, sat_iff]
@@ -25,7 +25,7 @@ theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ Litera
     rw [not]
     split <;> simp_all
 
-theorem unsat_of_limplies_complement [HSat α t] (x : t) (l : Literal α) :
+theorem unsat_of_limplies_complement [Entails α t] (x : t) (l : Literal α) :
     limplies α x l → limplies α x (Literal.negate l) → unsatisfiable α x := by
   intro h1 h2 p px
   specialize h1 p px
@@ -99,25 +99,25 @@ end Clause
 
 namespace Formula
 
-theorem sat_iff_forall [Clause α β] [HSat α σ] [Formula α β σ] (p : α → Bool) (f : σ) :
+theorem sat_iff_forall [Clause α β] [Entails α σ] [Formula α β σ] (p : α → Bool) (f : σ) :
     p ⊨ f ↔ ∀ c : β, c ∈ toList f → p ⊨ c := by
-  simp only [(· ⊨ ·), formulaHSat_def p f]
+  simp only [(· ⊨ ·), formulaEntails_def p f]
   simp only [List.all_eq_true, decide_eq_true_eq]
 
-theorem limplies_of_insert [Clause α β] [HSat α σ] [Formula α β σ] {c : β} {f : σ} :
+theorem limplies_of_insert [Clause α β] [Entails α σ] [Formula α β σ] {c : β} {f : σ} :
     limplies α (insert f c) f := by
   intro p
-  simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+  simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro h c' c'_in_f
   have c'_in_fc : c' ∈ toList (insert f c) := by
     simp only [insert_iff, Array.toList_eq, Array.data_toArray, List.mem_singleton]
     exact Or.inr c'_in_f
   exact h c' c'_in_fc
 
-theorem limplies_delete [Clause α β] [HSat α σ] [Formula α β σ] {f : σ} {arr : Array Nat} :
+theorem limplies_delete [Clause α β] [Entails α σ] [Formula α β σ] {f : σ} {arr : Array Nat} :
     limplies α f (delete f arr) := by
   intro p
-  simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+  simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro h c c_in_f_del
   have del_f_subset := delete_subset f arr
   specialize del_f_subset c c_in_f_del

@@ -18,7 +18,7 @@ theorem mem_of_necessary_assignment {n : Nat} {p : (PosFin n) → Bool} {c : Def
   rcases p_entails_c with ⟨v, ⟨v_in_c, pv⟩ | ⟨v_in_c, pv⟩⟩
   . specialize p'_not_entails_c v
     have h := p'_not_entails_c.1 v_in_c
-    simp only [HSat.eval, Bool.not_eq_false] at h
+    simp only [Entails.eval, Bool.not_eq_false] at h
     split at h
     . next heq => simp [Literal.negate, ← heq, h, v_in_c]
     . next hne =>
@@ -68,12 +68,12 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
   intro i b hb p hp
   simp only [(· ⊨ ·), Clause.eval] at hp
   simp only [toList, Array.toList_eq, List.append_assoc,
-    HSat.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe,
+    Entails.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe,
     List.all_eq_true, List.mem_append, List.mem_filterMap, id_eq, exists_eq_right, List.mem_map] at hp
   have pf : p ⊨ f := by
     simp only [(· ⊨ ·), Clause.eval]
     simp only [toList, Array.toList_eq, List.append_assoc,
-      HSat.eval, List.any_eq_true, Prod.exists, Bool.exists_bool,
+      Entails.eval, List.any_eq_true, Prod.exists, Bool.exists_bool,
       Bool.decide_coe, List.all_eq_true, List.mem_append, List.mem_filterMap, id_eq, exists_eq_right, List.mem_map]
     intro c cf
     rcases cf with cf | cf | cf
@@ -203,7 +203,7 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
   . exfalso -- Derive contradiction from pc, pf, and fc_unsat
     simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, not_exists,
       not_or, not_and, Bool.not_eq_true] at pc
-    simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
+    simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
       not_imp] at fc_unsat
     rcases fc_unsat with ⟨unsat_c, unsat_c_in_fc, p_unsat_c⟩
     have unsat_c_in_fc := mem_of_insertRatUnits f (negate c) unsat_c unsat_c_in_fc
@@ -240,7 +240,7 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
         simp only [p_unsat_c] at pv
         cases pv
       . simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
-    . simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at pf
+    . simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
       exact p_unsat_c $ pf unsat_c unsat_c_in_f
 
 theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ assignments_invariant f) (c : DefaultClause n)
@@ -267,7 +267,7 @@ theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits
     have hneg : hasAssignment false (f.assignments[i.1]'i_in_bounds) = true := by simp only [hboth]; decide
     have p_entails_i_true := hf.2.2 i true hpos p pf
     have p_entails_i_false := hf.2.2 i false hneg p pf
-    simp only [HSat.eval] at p_entails_i_true p_entails_i_false
+    simp only [Entails.eval] at p_entails_i_true p_entails_i_false
     simp only [p_entails_i_true] at p_entails_i_false
   . simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe]
     apply Exists.intro i
@@ -343,13 +343,13 @@ theorem performRupCheck_of_insertRat_entails_safe_insert {n : Nat} (f : DefaultF
     (performRupCheck (insertRatUnits f (negate c)).1 rupHints).2.2.1 = true → limplies (PosFin n) f (f.insert c) := by
   intro performRupCheck_success p pf
   simp only [performRupCheck] at performRupCheck_success
-  simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+  simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro c' c'_in_fc
   rw [insert_iff] at c'_in_fc
   rcases c'_in_fc with c'_eq_c | c'_in_f
   . rw [c'_eq_c]
     exact confirmRupHint_of_insertRat_fold_entails_hsat f hf c rupHints p pf performRupCheck_success
-  . simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at pf
+  . simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
     exact pf c' c'_in_f
 
 theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFormula n)
@@ -382,7 +382,7 @@ theorem performRupCheck_preserves_assignments_invariant {n : Nat} (f : DefaultFo
     rw [Array.foldl_induction in_bounds_motive in_bounds_base in_bounds_inductive]
     exact i.2.2
   simp only [getElem!, i_in_bounds, dite_true, Array.get_eq_getElem, decidableGetElem?] at h1
-  simp only [( · ⊨ ·), HSat.eval.eq_1]
+  simp only [( · ⊨ ·), Entails.eval.eq_1]
   by_cases hb : b
   . rw [hb]
     rw [hb] at h
@@ -536,7 +536,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
         simp only [(· ⊨ ·), ite_eq_left_iff, not_true, false_implies, forall_const, p'] at pivot_in_c
         exact pivot_in_c
       specialize fc_unsat p'
-      simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
+      simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq, Classical.not_forall,
         not_imp] at fc_unsat
       rcases fc_unsat with ⟨c', c'_in_fc, p'_not_entails_c'⟩
       simp only [insert_iff, Array.toList_eq, Array.data_toArray, List.mem_singleton] at c'_in_fc

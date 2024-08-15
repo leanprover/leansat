@@ -8,7 +8,7 @@ import LeanSAT.LRAT.Internal.CNF
 
 open LRAT Result Formula Clause Std Sat
 
-theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β σ] (f : σ)
     (f_readyForRupAdd : readyForRupAdd f) (rupHints: Array Nat)
     (rupAddSuccess : (Formula.performRupAdd f Clause.empty rupHints).snd = true) :
     unsatisfiable α f := by
@@ -30,7 +30,7 @@ theorem addEmptyCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula 
   simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool,
     empty_eq, List.any_nil] at pf
 
-theorem addRupCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+theorem addRupCaseSound [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β σ] (f : σ)
     (f_readyForRupAdd : readyForRupAdd f)
     (f_readyForRatAdd : readyForRatAdd f) (c : β) (f' : σ) (rupHints : Array Nat)
     (heq : performRupAdd f c rupHints = (f', true))
@@ -53,7 +53,7 @@ theorem addRupCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α
   rw [f_liff_f' p] at pf
   exact ih p pf
 
-theorem addRatCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+theorem addRatCaseSound [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β σ] (f : σ)
     (f_readyForRupAdd : readyForRupAdd f) (f_readyForRatAdd : readyForRatAdd f) (c : β)
     (pivot : Literal α) (f' : σ) (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat))
     (pivot_limplies_c : limplies α pivot c) (heq : performRatAdd f c pivot rupHints ratHints = (f', true))
@@ -77,7 +77,7 @@ theorem addRatCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α
   rw [← f_equisat_f'] at ih
   exact ih p pf
 
-theorem delCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+theorem delCaseSound [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β σ] (f : σ)
     (f_readyForRupAdd : readyForRupAdd f) (f_readyForRatAdd : readyForRatAdd f) (ids : Array Nat)
     (restPrf : List (Action β α))
     (restPrfWellFormed : ∀ (a : Action β α), a ∈ restPrf → WellFormedAction a)
@@ -91,7 +91,7 @@ theorem delCaseSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β
   have f_del_readyForRatAdd : readyForRatAdd (Formula.delete f ids) := delete_readyForRatAdd f ids f_readyForRatAdd
   exact ih (delete f ids) f_del_readyForRupAdd f_del_readyForRatAdd restPrfWellFormed h p (limplies_delete p pf)
 
-theorem lratCheckerSound [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+theorem lratCheckerSound [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β σ] (f : σ)
     (f_readyForRupAdd : readyForRupAdd f) (f_readyForRatAdd : readyForRatAdd f)
     (prf : List (Action β α)) (prfWellFormed : ∀ a : Action β α, a ∈ prf → WellFormedAction a) :
       lratChecker f prf = success → unsatisfiable α f := by

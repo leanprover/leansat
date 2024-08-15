@@ -53,7 +53,7 @@ theorem assignments_invariant_entails_limplies {n : Nat} (f : DefaultFormula n)
   by_cases hasAssignment (decide (p i = false)) (f.assignments[i.1]'(by rw [hsize]; exact i.2.2))
   . next h =>
     specialize f_assignments_invariant h p pf
-    by_cases hpi : p i <;> simp [hpi, HSat.eval] at f_assignments_invariant
+    by_cases hpi : p i <;> simp [hpi, Entails.eval] at f_assignments_invariant
   . next h => simp_all [getElem!, i.2.2, decidableGetElem?]
 
 /-- performRupAdd adds to f.rupUnits and then clears f.rupUnits. If f begins with some units in f.rupUnits,
@@ -224,7 +224,7 @@ theorem insert_iff {n : Nat} (f : DefaultFormula n) (c1 : DefaultClause n) (c2 :
 
 theorem limplies_of_insert {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) : limplies (PosFin n) (insert f c) f := by
   intro p
-  simp only [formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+  simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro h c' c'_in_f
   have c'_in_fc : c' ∈ toList (insert f c) := by
     simp only [insert_iff, Array.toList_eq, Array.data_toArray, List.mem_singleton]

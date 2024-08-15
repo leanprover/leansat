@@ -222,7 +222,7 @@ theorem verifyCert_correct
     apply eq_false_of_ne_true
     intro h3
     apply h2
-    simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq]
+    simp only [LRAT.Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
     intro lratClause hlclause
     simp only [LRAT.Formula.toList, LRAT.DefaultFormula.toList, LRAT.DefaultFormula.ofArray,
       CNF.convertLRAT', Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,

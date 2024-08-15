@@ -125,6 +125,6 @@ theorem LRAT.unsat_of_cons_none_unsat (clauses : List (Option (LRAT.DefaultClaus
     unsatisfiable (PosFin n) (LRAT.DefaultFormula.ofArray clauses.toArray) := by
   intro h assign hassign
   apply h assign
-  simp only [LRAT.Formula.formulaHSat_def, List.all_eq_true, decide_eq_true_eq] at *
+  simp only [LRAT.Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at *
   intro clause hclause
   simp_all[LRAT.DefaultFormula.ofArray, LRAT.Formula.toList, LRAT.DefaultFormula.toList]

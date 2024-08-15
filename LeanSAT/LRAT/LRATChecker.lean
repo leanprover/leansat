@@ -32,7 +32,7 @@ instance : LawfulBEq Result where
 
 open Formula
 
-def lratChecker [DecidableEq α] [Clause α β] [HSat α σ] [Formula α β σ] (f : σ)
+def lratChecker [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β σ] (f : σ)
     (prf : List (Action β α)) :
     Result :=
   match prf with
