@@ -7,6 +7,7 @@ import LeanSAT.LRAT.Internal.Formula.Class
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 open Clause Formula Std Sat
 
@@ -126,6 +127,7 @@ theorem limplies_delete [Clause α β] [Entails α σ] [Formula α β σ] {f : �
 
 end Formula
 
+end Internal
 end LRAT
 end LeanSAT
 

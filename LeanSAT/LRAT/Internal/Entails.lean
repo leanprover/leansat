@@ -6,6 +6,7 @@ Authors: Josh Clune, Henrik Böving
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 /--
 For variables of type `α` and formulas of type `β`, `Entails.eval a f` is meant to determine whether
@@ -135,5 +136,6 @@ protected theorem incompatible.symm {α : Type u} {σ1 : Type v} {σ2 : Type w} 
   . intro h p
     exact Or.symm <| h p
 
+end Internal
 end LRAT
 end LeanSAT

@@ -5,9 +5,11 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.LRATChecker
 import LeanSAT.LRAT.Internal.CNF
+import LeanSAT.LRAT.Internal.Actions
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 open LRAT Result Formula Clause Std Sat
 
@@ -144,5 +146,6 @@ theorem lratCheckerSound [DecidableEq α] [Clause α β] [Entails α σ] [Formul
       rw [← hprf.2] at h
       exact delCaseSound f f_readyForRupAdd f_readyForRatAdd ids restPrf restPrfWellFormed ih h
 
+end Internal
 end LRAT
 end LeanSAT

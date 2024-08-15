@@ -8,6 +8,7 @@ import LeanSAT.LRAT.Internal.CNF
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 namespace DefaultFormula
 
@@ -652,3 +653,9 @@ theorem delete_subset (f : DefaultFormula n) (arr : Array Nat) (c : DefaultClaus
   have hl (f' : DefaultFormula n) (ih : c ∈ toList f' → c ∈ toList f) (id : Nat) (_ : id ∈ arr.data) :
     c ∈ toList (deleteOne f' id) → c ∈ toList f := by intro h; exact ih $ deleteOne_subset f' id c h
   exact List.foldlRecOn arr.data deleteOne f hb hl
+
+end DefaultFormula
+
+end Internal
+end LRAT
+end LeanSAT

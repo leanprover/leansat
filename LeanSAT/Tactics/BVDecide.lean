@@ -948,15 +948,9 @@ def lratBitblaster (cfg : TacticContext) (bv : BVLogicalExpr)
         (cnf, map)
       )
 
-  let encoded ←
-    withTraceNode `sat (fun _ => return "Converting frontend CNF to solver specific CNF") do
-      -- lazyPure to prevent compiler lifting
-      IO.lazyPure (fun _ => LratFormula.ofCnf cnf)
-  trace[sat] s!"CNF has {encoded.formula.clauses.size} clauses"
-
   let res ←
     withTraceNode `sat (fun _ => return "Obtaining external proof certificate") do
-      runExternal encoded cfg.solver cfg.lratPath cfg.trimProofs cfg.timeout cfg.binaryProofs
+      runExternal cnf cfg.solver cfg.lratPath cfg.trimProofs cfg.timeout cfg.binaryProofs
 
   match res with
   | .ok cert =>

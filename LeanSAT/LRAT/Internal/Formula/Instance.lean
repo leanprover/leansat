@@ -7,6 +7,7 @@ import LeanSAT.LRAT.Internal.Formula.RatAddSound
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 namespace DefaultFormula
 
@@ -32,10 +33,9 @@ instance {n : Nat} : Formula (PosFin n) (DefaultClause n) (DefaultFormula n) whe
   performRatAdd := performRatAdd
   ratAdd_result := ratAdd_result
   ratAdd_sound := ratAdd_sound
-  dimacs := dimacs
-  dbg_info := dbg_info
 
 end DefaultFormula
 
+end Internal
 end LRAT
 end LeanSAT

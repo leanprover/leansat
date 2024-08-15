@@ -7,6 +7,7 @@ import LeanSAT.LRAT.Internal.Formula.RupAddSound
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 namespace DefaultFormula
 
@@ -216,5 +217,6 @@ theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p 
 
 end DefaultFormula
 
+end Internal
 end LRAT
 end LeanSAT

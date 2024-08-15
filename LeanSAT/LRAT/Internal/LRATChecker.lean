@@ -8,6 +8,7 @@ import LeanSAT.LRAT.Internal.Formula.Instance
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 inductive Result
   | success
@@ -48,5 +49,6 @@ def lratChecker [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β �
       .rupFailure
   | .del ids :: restPrf => lratChecker (delete f ids) restPrf
 
+end Internal
 end LRAT
 end LeanSAT

@@ -6,7 +6,7 @@ Authors: Josh Clune
 import Lean.Elab.Command
 import LeanSAT.LRAT.Internal.Clause
 
-open LeanSAT LRAT Lean Parser Elab Command DefaultClause Std.Sat
+open LeanSAT LRAT Internal Lean Parser Elab Command DefaultClause Std.Sat
 
 namespace Dimacs
 

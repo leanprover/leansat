@@ -8,6 +8,32 @@ import LeanSAT.LRAT.Checker
 import LeanSAT.LRAT.Trim
 import LeanSAT.External.Solver
 
+namespace Std
+namespace Sat
+
+def Literal.dimacs' (lit : Literal Nat) : String :=
+  let ⟨id, pol⟩ := lit
+  let id := id + 1 -- DIMACS does not allow 0 as identifier
+
+  if pol then
+    s!"{id}"
+  else
+    s!"-{id}"
+
+namespace CNF
+
+def Clause.dimacs (clause : Clause Nat) : String :=
+  clause.foldl (init := "") (· ++ ·.dimacs' ++ " ") ++ "0"
+
+def dimacs (cnf : CNF Nat) : String :=
+  let numClauses := cnf.length
+  let maxIdentifier := (cnf.maxLiteral |>.getD 0) + 1
+  let base := s!"p cnf {maxIdentifier} {numClauses}\n"
+  cnf.foldl (init := base) (· ++ ·.dimacs ++ "\n")
+
+end CNF
+end Sat
+end Std
 
 namespace LeanSAT
 namespace BVDecide
@@ -50,15 +76,6 @@ def TacticContext.new (lratPath : System.FilePath) : Lean.Elab.TermElabM TacticC
     binaryProofs
   }
 
-/--
-A wrapper type for `LRAT.DefaultFormula`. We use it to hide the `numVars` parameter.
--/
-structure LratFormula where
-  /-- Number of variables in `formula`. -/
-  {numVars : Nat}
-  /-- The actual SAT formula in the LeanSAT framework. -/
-  formula : LRAT.DefaultFormula numVars.succ
-
 /-- An LRAT proof read from a file. This will get parsed using ofReduceBool. -/
 abbrev LratCert := String
 
@@ -89,11 +106,6 @@ instance : ToExpr LRAT.IntAction where
       mkApp3 (mkConst ``LRAT.Action.del [.zero, .zero]) beta alpha (toExpr ids)
   toTypeExpr := mkConst ``LRAT.IntAction
 
-
-/--
-Turn a `CNF` from the reflection framework into the correct format for the LRAT framework.
--/
-def LratFormula.ofCnf (cnf : CNF Nat) : LratFormula := ⟨LRAT.CNF.convertLRAT cnf⟩
 
 /--
 Create a temporary file using `mktemp` and return the path to it.
@@ -137,17 +149,17 @@ def LratCert.ofFile (lratPath : System.FilePath) (trimProofs : Bool) : MetaM Lra
   return newProof
 
 /--
-Run an external SAT solver on the `LratFormula` to obtain an LRAT proof.
+Run an external SAT solver on the `CNF` to obtain an LRAT proof.
 
 This will obtain an `LratCert` if the formula is UNSAT and throw errors otherwise.
 -/
-def runExternal (formula : LratFormula) (solver : String) (lratPath : System.FilePath)
+def runExternal (cnf : CNF Nat) (solver : String) (lratPath : System.FilePath)
     (trimProofs : Bool) (timeout : Nat) (binaryProofs : Bool)
     : MetaM (Except (Array (Bool × Nat)) LratCert) := do
   withTempFile fun cnfPath => do
     withTraceNode `sat (fun _ => return "Serializing SAT problem to DIMACS file") do
       -- lazyPure to prevent compiler lifting
-      IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => formula.formula.dimacs))
+      IO.FS.writeFile cnfPath (← IO.lazyPure (fun _ => cnf.dimacs))
 
     let res ←
       withTraceNode `sat (fun _ => return "Running SAT solver") do

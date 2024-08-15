@@ -9,6 +9,7 @@ import Std.Sat.CNF.Basic
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 open Assignment DefaultClause Std ReduceResult Std Sat
 
@@ -271,28 +272,8 @@ def numClausesInFormula {n : Nat} (f : DefaultFormula n) : Nat := Id.run do
     if cOpt != none then numClauses := numClauses + 1
   return numClauses
 
-/-- Note: This function only prints the permanent part of the formula (it ignores rupUnits and ratUnits) -/
-def dimacs {n : Nat} (f : DefaultFormula n) : String :=
-  s!"p cnf {n - 1} {numClausesInFormula f}\n" ++
-  (String.join
-    (List.map (fun s => String.push s '\n')
-      (f.clauses.filterMap
-        (fun o =>
-          match o with
-          | none => none
-          | some c => some c.dimacs
-        )
-      ).toList
-    )
-  )
-
-def dbg_info {n : Nat} (f : DefaultFormula n) : String :=
-  s!"dimacs:\n {f.dimacs}\n" ++
-  s!"rupUnits {f.rupUnits}\n" ++
-  s!"ratUnits: {f.ratUnits}\n" ++
-  s!"assignments: {f.assignments}"
-
 end DefaultFormula
 
+end Internal
 end LRAT
 end LeanSAT

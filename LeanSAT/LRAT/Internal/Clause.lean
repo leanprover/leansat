@@ -10,6 +10,7 @@ import LeanSAT.LRAT.Internal.Assignment
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 open Std.Sat
 
@@ -52,7 +53,6 @@ class Clause (α : outParam (Type u)) (β : Type v) where
   contains_iff : ∀ c : β, ∀ l : Literal α, contains c l ↔ l ∈ toList c
   /-- Reduces the clause with respect to the given assignment -/
   reduce : β → Array Assignment → ReduceResult α
-  dimacs : β → String
 
 namespace Clause
 
@@ -377,9 +377,6 @@ def reduce (c : DefaultClause n) (assignments : Array Assignment) :
     ReduceResult (PosFin n) :=
   c.clause.foldl (reduce_fold_fn assignments) .reducedToEmpty
 
-def dimacs (c : DefaultClause n) : String :=
-  String.join ((toList c).map (fun l => Literal.dimacs l ++ " ")) ++ "0"
-
 instance : Clause (PosFin n) (DefaultClause n) where
   toList := toList
   not_tautology := not_tautology
@@ -399,9 +396,9 @@ instance : Clause (PosFin n) (DefaultClause n) where
   contains := contains
   contains_iff := contains_iff
   reduce := reduce
-  dimacs := dimacs
 
 end DefaultClause
 
+end Internal
 end LRAT
 end LeanSAT

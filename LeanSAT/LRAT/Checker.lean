@@ -14,35 +14,37 @@ open Std.Sat
 namespace LeanSAT
 namespace LRAT
 
+open LeanSAT.LRAT.Internal in
 def verify (lratProof : Array IntAction) (cnf : CNF Nat) : Bool :=
   let internalFormula := CNF.convertLRAT cnf
   let lratProof := lratProof.toList
-  let lratProof := lratProof.map (LRAT.intActionToDefaultClauseAction _)
-  let lratProof : List { act // LRAT.WellFormedAction act } :=
+  let lratProof := lratProof.map (intActionToDefaultClauseAction _)
+  let lratProof : List { act // WellFormedAction act } :=
     lratProof.filterMap
       (fun actOpt =>
         match actOpt with
         | none => none
         | some (LRAT.Action.addEmpty id rupHints) =>
-          some ⟨LRAT.Action.addEmpty id rupHints, by simp only [LRAT.WellFormedAction]⟩
+          some ⟨LRAT.Action.addEmpty id rupHints, by simp only [WellFormedAction]⟩
         | some (LRAT.Action.addRup id c rupHints) =>
-          some ⟨LRAT.Action.addRup id c rupHints, by simp only [LRAT.WellFormedAction]⟩
+          some ⟨LRAT.Action.addRup id c rupHints, by simp only [WellFormedAction]⟩
         | some (LRAT.Action.del ids) =>
-          some ⟨LRAT.Action.del ids, by simp only [LRAT.WellFormedAction]⟩
+          some ⟨LRAT.Action.del ids, by simp only [WellFormedAction]⟩
         | some (LRAT.Action.addRat id c pivot rupHints ratHints) =>
-          if h : pivot ∈ LRAT.Clause.toList c then
+          if h : pivot ∈ Clause.toList c then
             some ⟨
               LRAT.Action.addRat id c pivot rupHints ratHints,
-              by simp [LRAT.WellFormedAction, LRAT.Clause.limplies_iff_mem, h]
+              by simp [WellFormedAction, Clause.limplies_iff_mem, h]
             ⟩
           else
             -- TODO: report this
             none
       )
   let lratProof := lratProof.map Subtype.val
-  let checkerResult := LRAT.lratChecker internalFormula lratProof
+  let checkerResult := lratChecker internalFormula lratProof
   checkerResult = .success
 
+open LeanSAT.LRAT.Internal in
 theorem verify_sound (proof : Array IntAction) (cnf : CNF Nat) : verify proof cnf → cnf.Unsat := by
   intro h1
   unfold verify at h1

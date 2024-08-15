@@ -7,6 +7,7 @@ import LeanSAT.LRAT.Internal.Formula.Basic
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 namespace DefaultFormula
 
@@ -1317,6 +1318,6 @@ theorem rupAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (ru
 
 end DefaultFormula
 
+end Internal
 end LRAT
 end LeanSAT
-

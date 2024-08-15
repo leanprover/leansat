@@ -8,8 +8,9 @@ import LeanSAT.LRAT.Internal.Clause
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
-open Std Sat
+open Std.Sat
 
 /-- Typeclass for formulas. An instance [Formula α β σ] indicates that σ is
     the type of a formula with variables of type α, clauses of type β, and clause ids of type Nat -/
@@ -43,8 +44,7 @@ class Formula (α : outParam (Type u)) (β : outParam (Type v)) [Clause α β] (
   ratAdd_sound :
     ∀ f : σ, ∀ c : β, ∀ p : Literal α, ∀ rupHints : Array Nat, ∀ ratHints : Array (Nat × Array Nat), ∀ f' : σ,
     readyForRatAdd f → p ∈ Clause.toList c → performRatAdd f c p rupHints ratHints = (f', true) → equisat α f f'
-  dimacs : σ → String
-  dbg_info : σ → String
 
+end Internal
 end LRAT
 end LeanSAT

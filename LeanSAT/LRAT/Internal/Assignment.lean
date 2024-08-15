@@ -8,6 +8,7 @@ import LeanSAT.LRAT.Internal.PosFin
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 /-- The `Assignment` inductive datatype is used in the `assignments` field of default formulas (defined in
     Formula.Implementation.lean) to store and quickly access information about whether unit literals are
@@ -191,5 +192,6 @@ instance {n : Nat} : Entails (PosFin n) (Array Assignment) where
 
 end Assignment
 
+end Internal
 end LRAT
 end LeanSAT

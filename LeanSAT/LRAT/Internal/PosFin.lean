@@ -6,6 +6,7 @@ Authors: Josh Clune
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 def PosFin (n : Nat) := {x : Nat // 0 < x ∧ x < n}
 
@@ -18,5 +19,6 @@ instance : CoeOut (PosFin n) Nat where
 instance : ToString (PosFin n) where
   toString p := toString p.val
 
+end Internal
 end LRAT
 end LeanSAT

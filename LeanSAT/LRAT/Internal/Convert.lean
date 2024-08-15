@@ -8,6 +8,7 @@ import LeanSAT.LRAT.Internal.Formula
 
 namespace LeanSAT
 namespace LRAT
+namespace Internal
 
 open Std.Sat
 open Entails
@@ -37,13 +38,13 @@ theorem CNF.unsat_of_lift_unsat (cnf : CNF Nat)
 /--
 Turn a `CNF.Clause PosFin` into the representation used by the LRAT checker.
 -/
-def CNF.Clause.convertLRAT' (clause : CNF.Clause (PosFin n)) : Option (LRAT.DefaultClause n) :=
-  LRAT.DefaultClause.ofArray clause.toArray
+def CNF.Clause.convertLRAT' (clause : CNF.Clause (PosFin n)) : Option (DefaultClause n) :=
+  DefaultClause.ofArray clause.toArray
 
 /--
 Turn a `CNF PosFin` into the representation used by the LRAT checker.
 -/
-def CNF.convertLRAT' (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClause n)) :=
+def CNF.convertLRAT' (clauses : CNF (PosFin n)) : List (Option (DefaultClause n)) :=
   clauses.filterMap (fun clause =>
     match CNF.Clause.convertLRAT' clause with
     | some clause => some clause
@@ -53,16 +54,16 @@ def CNF.convertLRAT' (clauses : CNF (PosFin n)) : List (Option (LRAT.DefaultClau
   )
 
 theorem CNF.Clause.mem_lrat_of_mem (clause : CNF.Clause (PosFin n)) (h1 : l ∈ clause)
-    (h2 : LRAT.DefaultClause.ofArray clause.toArray = some lratClause) : l ∈ lratClause.clause := by
+    (h2 : DefaultClause.ofArray clause.toArray = some lratClause) : l ∈ lratClause.clause := by
   induction clause generalizing lratClause with
   | nil => cases h1
   | cons hd tl ih =>
-    unfold LRAT.DefaultClause.ofArray at h2
+    unfold DefaultClause.ofArray at h2
     rw [Array.foldr_eq_foldr_data,Array.toArray_data] at h2
     dsimp only [List.foldr] at h2
     split at h2
     · cases h2
-    · rw [LRAT.DefaultClause.insert] at h2
+    · rw [DefaultClause.insert] at h2
       split at h2
       · cases h2
       · split at h2
@@ -73,7 +74,7 @@ theorem CNF.Clause.mem_lrat_of_mem (clause : CNF.Clause (PosFin n)) (h1 : l ∈ 
           · apply ih
             · assumption
             · next heq _ _ =>
-              unfold LRAT.DefaultClause.ofArray
+              unfold DefaultClause.ofArray
               rw [Array.foldr_eq_foldr_data,Array.toArray_data]
               exact heq
         · cases h1
@@ -85,7 +86,7 @@ theorem CNF.Clause.mem_lrat_of_mem (clause : CNF.Clause (PosFin n)) (h1 : l ∈ 
             apply List.Mem.tail
             apply ih
             assumption
-            unfold LRAT.DefaultClause.ofArray
+            unfold DefaultClause.ofArray
             rw [Array.foldr_eq_foldr_data,Array.toArray_data]
             exact heq
 
@@ -93,17 +94,17 @@ theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n)) (h : 
     clause.eval assign → assign ⊨ lratClause := by
   intro h2
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
-  simp only [(· ⊨ ·), LRAT.Clause.eval, List.any_eq_true, decide_eq_true_eq]
+  simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq]
   rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
   apply Exists.intro lit
   constructor
-  . simp only [LRAT.Clause.toList, LRAT.DefaultClause.toList]
+  . simp only [Clause.toList, DefaultClause.toList]
     simp only [convertLRAT'] at h
     exact CNF.Clause.mem_lrat_of_mem clause hlit1 h
   . simp_all
 
 /--
-Convert a `CNF Nat` with a certain maximum variable number into the `LRAT.DefaultFormula`
+Convert a `CNF Nat` with a certain maximum variable number into the `DefaultFormula`
 format for usage with LeanSAT.
 
 Notably this:
@@ -112,28 +113,28 @@ Notably this:
    refers to the DIMACS file line by line and the DIMACS file begins with the
   `p cnf x y` meta instruction.
 -/
-def CNF.convertLRAT (cnf : CNF Nat) : LRAT.DefaultFormula (cnf.numLiterals + 1) :=
+def CNF.convertLRAT (cnf : CNF Nat) : DefaultFormula (cnf.numLiterals + 1) :=
   let lifted := CNF.lift cnf
   let lratCnf := CNF.convertLRAT' lifted
-  LRAT.DefaultFormula.ofArray (none :: lratCnf).toArray
+  DefaultFormula.ofArray (none :: lratCnf).toArray
 
-theorem CNF.convertLRAT_readfyForRupAdd (cnf : CNF Nat) : LRAT.DefaultFormula.readyForRupAdd (CNF.convertLRAT cnf) := by
+theorem CNF.convertLRAT_readfyForRupAdd (cnf : CNF Nat) : DefaultFormula.readyForRupAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
-  apply LRAT.DefaultFormula.ofArray_readyForRupAdd
+  apply DefaultFormula.ofArray_readyForRupAdd
 
-theorem CNF.convertLRAT_readfyForRatAdd (cnf : CNF Nat) : LRAT.DefaultFormula.readyForRatAdd (CNF.convertLRAT cnf) := by
+theorem CNF.convertLRAT_readfyForRatAdd (cnf : CNF Nat) : DefaultFormula.readyForRatAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
-  apply LRAT.DefaultFormula.ofArray_readyForRatAdd
+  apply DefaultFormula.ofArray_readyForRatAdd
 
-theorem LRAT.unsat_of_cons_none_unsat (clauses : List (Option (LRAT.DefaultClause n))) :
-    unsatisfiable (PosFin n) (LRAT.DefaultFormula.ofArray (none :: clauses).toArray)
+theorem unsat_of_cons_none_unsat (clauses : List (Option (DefaultClause n))) :
+    unsatisfiable (PosFin n) (DefaultFormula.ofArray (none :: clauses).toArray)
       →
-    unsatisfiable (PosFin n) (LRAT.DefaultFormula.ofArray clauses.toArray) := by
+    unsatisfiable (PosFin n) (DefaultFormula.ofArray clauses.toArray) := by
   intro h assign hassign
   apply h assign
-  simp only [LRAT.Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at *
+  simp only [Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at *
   intro clause hclause
-  simp_all[LRAT.DefaultFormula.ofArray, LRAT.Formula.toList, LRAT.DefaultFormula.toList]
+  simp_all[DefaultFormula.ofArray, Formula.toList, DefaultFormula.toList]
 
 theorem CNF.unsat_of_convertLRAT_unsat (cnf : CNF Nat) :
     unsatisfiable (PosFin (cnf.numLiterals + 1)) (CNF.convertLRAT cnf)
@@ -143,13 +144,13 @@ theorem CNF.unsat_of_convertLRAT_unsat (cnf : CNF Nat) :
   apply CNF.unsat_of_lift_unsat
   intro assignment
   unfold CNF.convertLRAT at h1
-  replace h1 := (LRAT.unsat_of_cons_none_unsat _ h1) assignment
+  replace h1 := (unsat_of_cons_none_unsat _ h1) assignment
   apply eq_false_of_ne_true
   intro h2
   apply h1
-  simp only [LRAT.Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
+  simp only [Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro lratClause hlclause
-  simp only [LRAT.Formula.toList, LRAT.DefaultFormula.toList, LRAT.DefaultFormula.ofArray,
+  simp only [Formula.toList, DefaultFormula.toList, DefaultFormula.ofArray,
     CNF.convertLRAT', Array.size_toArray, List.length_map, Array.toList_eq, Array.data_toArray,
     List.map_nil, List.append_nil, List.mem_filterMap, List.mem_map, id_eq, exists_eq_right] at hlclause
   rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
@@ -161,5 +162,6 @@ theorem CNF.unsat_of_convertLRAT_unsat (cnf : CNF Nat) :
     simp [CNF.Clause.convertLRAT_sat_of_sat reflectClause hrclause2, h2 reflectClause hrclause1]
   . contradiction
 
+end Internal
 end LRAT
 end LeanSAT
