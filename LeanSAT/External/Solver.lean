@@ -7,6 +7,8 @@ import LeanSAT.External.LRAT
 import Lean.CoreM
 import Lean.Data.Parsec
 
+namespace LeanSAT
+
 inductive SolverResult where
 | sat (assignment : Array (Bool × Nat))
 | unsat
@@ -132,3 +134,5 @@ def satQuery (solverPath := "cadical") (problemPath : System.FilePath)
       throwError err
     else
       throwError s!"The external prover produced unexpected output:\n{stdout}"
+
+end LeanSAT

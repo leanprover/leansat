@@ -7,6 +7,7 @@ import LeanSAT.LRAT.Internal.Formula.Class
 import LeanSAT.LRAT.Internal.Assignment
 import Std.Sat.CNF.Basic
 
+namespace LeanSAT
 namespace LRAT
 
 open Assignment DefaultClause Std ReduceResult Std Sat
@@ -290,3 +291,8 @@ def dbg_info {n : Nat} (f : DefaultFormula n) : String :=
   s!"rupUnits {f.rupUnits}\n" ++
   s!"ratUnits: {f.ratUnits}\n" ++
   s!"assignments: {f.assignments}"
+
+end DefaultFormula
+
+end LRAT
+end LeanSAT

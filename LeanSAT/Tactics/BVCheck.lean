@@ -9,6 +9,7 @@ open Lean Elab Meta
 
 open Lean.Elab.Tactic.BVDecide
 
+namespace LeanSAT
 namespace BVCheck
 
 /--
@@ -61,11 +62,12 @@ def _root_.Lean.MVarId.bvCheck (g : MVarId) (cfg : BVDecide.TacticContext) : Met
 syntax (name := bvCheckSyntax) "bv_check " str : tactic
 
 end BVCheck
+end LeanSAT
 
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| bv_check $path:str) => do
-    let cfg ← BVCheck.mkContext path.getString
+    let cfg ← LeanSAT.BVCheck.mkContext path.getString
     liftMetaFinishingTactic fun g => do
       -- We still leave the option open for the normalizer to solve the goal on its own.
       let res ← g.bvNormalize

@@ -6,6 +6,7 @@ Authors: Josh Clune
 import LeanSAT.External.DimacsLRAT
 import LeanSAT.LRAT.Internal.Clause
 
+namespace LeanSAT
 namespace LRAT
 
 open Std.Sat
@@ -51,7 +52,7 @@ clause.
 -/
 def WellFormedAction [Clause α β] : Action β α → Prop
   -- Note that `Sat.limplies α p c` is equivalent to `p ∈ toList c` by `limplies_iff_mem` in CNF.lean
-  | .addRat _ c p _ _ => Sat.limplies α p c
+  | .addRat _ c p _ _ => limplies α p c
   | _ => True
 
 def natLiteralToPosFinLiteral {n : Nat} (x : Literal Nat) (x_ne_zero : x.1 ≠ 0) : Option (Literal (PosFin n)) := do
@@ -99,3 +100,5 @@ def intActionToDefaultClauseAction (n : Nat) : IntAction → Option (DefaultClau
       none
   | .del ids => some <| .del ids
 
+end LRAT
+end LeanSAT

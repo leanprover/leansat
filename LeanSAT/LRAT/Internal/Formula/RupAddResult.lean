@@ -5,7 +5,9 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.Basic
 
+namespace LeanSAT
 namespace LRAT
+
 namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment
@@ -1312,3 +1314,9 @@ theorem rupAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (ru
           rw [rupAddSuccess]
         rw [clear_insertRup f f_readyForRupAdd (negate c)] at rupAddSuccess
         exact rupAddSuccess.symm
+
+end DefaultFormula
+
+end LRAT
+end LeanSAT
+

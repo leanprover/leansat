@@ -3,8 +3,11 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.LRAT.LRATChecker
+import LeanSAT.LRAT.Internal.LRATChecker
 import LeanSAT.LRAT.Internal.CNF
+
+namespace LeanSAT
+namespace LRAT
 
 open LRAT Result Formula Clause Std Sat
 
@@ -140,3 +143,6 @@ theorem lratCheckerSound [DecidableEq α] [Clause α β] [Entails α σ] [Formul
       simp only [List.cons.injEq] at hprf
       rw [← hprf.2] at h
       exact delCaseSound f f_readyForRupAdd f_readyForRatAdd ids restPrf restPrfWellFormed ih h
+
+end LRAT
+end LeanSAT

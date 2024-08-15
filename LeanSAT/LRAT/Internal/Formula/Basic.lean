@@ -6,7 +6,9 @@ Authors: Josh Clune
 import LeanSAT.LRAT.Internal.Formula.Implementation
 import LeanSAT.LRAT.Internal.CNF
 
+namespace LeanSAT
 namespace LRAT
+
 namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment

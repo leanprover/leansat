@@ -10,11 +10,14 @@ import Std.Sat.AIG.CNF
 import Std.Sat.AIG.RelabelNat
 
 open Lean Meta
+
+namespace LeanSAT
+namespace BVDecide
+
 open Std.Sat
 
 open Lean.Elab.Tactic.BVDecide
 
-namespace BVDecide
 
 structure UnsatProver.Result where
   proof : Expr
@@ -883,7 +886,7 @@ Given a goal `g`, which should be `False`, returns
   and returns a proof of `False` valid in the context of `g`.
 -/
 def verifyBVExpr (bv : BVLogicalExpr) (cert : LratCert) : Bool :=
-  verifyCert (LratFormula.ofCnf (AIG.toCNF bv.bitblast.relabelNat)) cert
+  verifyCert (AIG.toCNF bv.bitblast.relabelNat) cert
 
 theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : LratCert)
     (h : verifyBVExpr bv c = true) : bv.Unsat := by
@@ -1020,12 +1023,13 @@ Close a goal by:
 syntax (name := bvDecideSyntax) "bv_decide" : tactic
 
 end BVDecide
+end LeanSAT
 
 open Elab.Tactic
 elab_rules : tactic
   | `(tactic| bv_decide) => do
-    BVDecide.withTempFile fun lratFile => do
-      let cfg ← BVDecide.TacticContext.new lratFile
+    LeanSAT.BVDecide.withTempFile fun lratFile => do
+      let cfg ← LeanSAT.BVDecide.TacticContext.new lratFile
       liftMetaFinishingTactic fun g => do
         let _ ← g.bvDecide cfg
         return ()

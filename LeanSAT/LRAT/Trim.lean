@@ -9,6 +9,7 @@ import Std.Data.HashMap
 
 open Lean
 
+namespace LeanSAT
 namespace LRAT
 
 namespace trim
@@ -191,3 +192,4 @@ def trim (proof : Array IntAction) : IO (Array IntAction) :=
   trim.go.run proof
 
 end LRAT
+end LeanSAT

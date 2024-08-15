@@ -12,3 +12,4 @@ import LeanSAT.LRAT.Internal.Clause
 import LeanSAT.LRAT.Internal.LRATChecker
 import LeanSAT.LRAT.Internal.LRATCheckerSound
 import LeanSAT.LRAT.Internal.PosFin
+import LeanSAT.LRAT.Internal.Convert

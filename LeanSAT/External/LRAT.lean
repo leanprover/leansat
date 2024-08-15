@@ -6,6 +6,7 @@ Authors: Josh Clune
 import LeanSAT.LRAT.Actions
 import Lean.Data.Parsec
 
+namespace LeanSAT
 namespace LRAT
 
 open Std.Sat
@@ -427,3 +428,4 @@ def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) (binaryProo
   IO.FS.writeBinFile path out
 
 end LRAT
+end LeanSAT

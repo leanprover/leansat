@@ -6,6 +6,7 @@ Authors: Josh Clune
 import LeanSAT.LRAT.Internal.Entails
 import LeanSAT.LRAT.Internal.Clause
 
+namespace LeanSAT
 namespace LRAT
 
 open Std Sat
@@ -34,13 +35,16 @@ class Formula (α : outParam (Type u)) (β : outParam (Type v)) [Clause α β] (
   rupAdd_result : ∀ f : σ, ∀ c : β, ∀ rupHints : Array Nat, ∀ f' : σ,
     readyForRupAdd f → performRupAdd f c rupHints = (f', true) → f' = insert f c
   rupAdd_sound : ∀ f : σ, ∀ c : β, ∀ rupHints : Array Nat, ∀ f' : σ,
-    readyForRupAdd f → performRupAdd f c rupHints = (f', true) → Sat.liff α f f'
+    readyForRupAdd f → performRupAdd f c rupHints = (f', true) → liff α f f'
   performRatAdd : σ → β → Literal α → Array Nat → Array (Nat × Array Nat) → σ × Bool
   ratAdd_result :
     ∀ f : σ, ∀ c : β, ∀ p : Literal α, ∀ rupHints : Array Nat, ∀ ratHints : Array (Nat × Array Nat), ∀ f' : σ,
     readyForRatAdd f → p ∈ Clause.toList c → performRatAdd f c p rupHints ratHints = (f', true) → f' = insert f c
   ratAdd_sound :
     ∀ f : σ, ∀ c : β, ∀ p : Literal α, ∀ rupHints : Array Nat, ∀ ratHints : Array (Nat × Array Nat), ∀ f' : σ,
-    readyForRatAdd f → p ∈ Clause.toList c → performRatAdd f c p rupHints ratHints = (f', true) → Sat.equisat α f f'
+    readyForRatAdd f → p ∈ Clause.toList c → performRatAdd f c p rupHints ratHints = (f', true) → equisat α f f'
   dimacs : σ → String
   dbg_info : σ → String
+
+end LRAT
+end LeanSAT

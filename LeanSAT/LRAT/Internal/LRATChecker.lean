@@ -6,8 +6,7 @@ Authors: Josh Clune
 import LeanSAT.LRAT.Actions
 import LeanSAT.LRAT.Internal.Formula.Instance
 
-open Sat
-
+namespace LeanSAT
 namespace LRAT
 
 inductive Result
@@ -48,3 +47,6 @@ def lratChecker [DecidableEq α] [Clause α β] [Entails α σ] [Formula α β �
     else
       .rupFailure
   | .del ids :: restPrf => lratChecker (delete f ids) restPrf
+
+end LRAT
+end LeanSAT

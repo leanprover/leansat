@@ -4,7 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune, Henrik Böving
 -/
 
-namespace Sat
+namespace LeanSAT
+namespace LRAT
 
 /--
 For variables of type `α` and formulas of type `β`, `Entails.eval a f` is meant to determine whether
@@ -133,3 +134,6 @@ protected theorem incompatible.symm {α : Type u} {σ1 : Type v} {σ2 : Type w} 
     exact Or.symm <| h p
   . intro h p
     exact Or.symm <| h p
+
+end LRAT
+end LeanSAT

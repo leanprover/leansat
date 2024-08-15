@@ -5,7 +5,9 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.RupAddResult
 
+namespace LeanSAT
 namespace LRAT
+
 namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment ReduceResult
@@ -797,3 +799,9 @@ theorem rupAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rup
         constructor
         . exact f_limplies_fc
         . exact limplies_of_insert f c
+
+end DefaultFormula
+
+end LRAT
+end LeanSAT
+

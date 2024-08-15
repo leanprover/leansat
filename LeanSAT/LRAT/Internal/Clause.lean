@@ -4,13 +4,14 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import Std.Sat.CNF.Basic
-import LeanSAT.LRAT.PosFin
+import LeanSAT.LRAT.Internal.PosFin
 import LeanSAT.LRAT.Internal.Assignment
 
-open Std.Sat
-open Sat
 
+namespace LeanSAT
 namespace LRAT
+
+open Std.Sat
 
 /--
 An inductive datatype used specifically for the output of the `reduce` function. The intended
@@ -399,3 +400,8 @@ instance : Clause (PosFin n) (DefaultClause n) where
   contains_iff := contains_iff
   reduce := reduce
   dimacs := dimacs
+
+end DefaultClause
+
+end LRAT
+end LeanSAT

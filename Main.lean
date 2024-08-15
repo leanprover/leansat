@@ -1,6 +1,6 @@
 import LeanSAT.Tactics.LRAT
 
-open LRAT
+open LeanSAT.LRAT
 
 def main : List String → IO Unit := fun args => do
   let prfFile := args[0]!

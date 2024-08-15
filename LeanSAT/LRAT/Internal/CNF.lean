@@ -5,6 +5,7 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.Class
 
+namespace LeanSAT
 namespace LRAT
 
 open Clause Formula Std Sat
@@ -124,3 +125,7 @@ theorem limplies_delete [Clause α β] [Entails α σ] [Formula α β σ] {f : �
   exact h c del_f_subset
 
 end Formula
+
+end LRAT
+end LeanSAT
+

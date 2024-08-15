@@ -5,7 +5,9 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.RatAddSound
 
+namespace LeanSAT
 namespace LRAT
+
 namespace DefaultFormula
 
 instance {n : Nat} : Formula (PosFin n) (DefaultClause n) (DefaultFormula n) where
@@ -32,3 +34,8 @@ instance {n : Nat} : Formula (PosFin n) (DefaultClause n) (DefaultFormula n) whe
   ratAdd_sound := ratAdd_sound
   dimacs := dimacs
   dbg_info := dbg_info
+
+end DefaultFormula
+
+end LRAT
+end LeanSAT

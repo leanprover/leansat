@@ -5,7 +5,9 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.RatAddResult
 
+namespace LeanSAT
 namespace LRAT
+
 namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment ReduceResult
@@ -605,7 +607,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
 theorem ratAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (pivot : Literal (PosFin n))
     (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat)) (f' : DefaultFormula n)
     (f_readyForRatAdd : readyForRatAdd f) (pivot_in_c : pivot ∈ Clause.toList c)
-    (ratAddSuccess : performRatAdd f c pivot rupHints ratHints = (f', true)) : Sat.equisat (PosFin n) f f' := by
+    (ratAddSuccess : performRatAdd f c pivot rupHints ratHints = (f', true)) : equisat (PosFin n) f f' := by
   have f'_def := ratAdd_result f c pivot rupHints ratHints f' f_readyForRatAdd pivot_in_c ratAddSuccess
   rw [performRatAdd] at ratAddSuccess
   simp at ratAddSuccess
@@ -625,3 +627,8 @@ theorem ratAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (piv
             exact performRatCheck_fold_success_entails_safe_insert f f_readyForRatAdd c pivot rupHints ratHints pivot_in_c
               ratHintsExhaustive_eq_true performRatCheck_fold_success
   . simp at ratAddSuccess
+
+end DefaultFormula
+
+end LRAT
+end LeanSAT

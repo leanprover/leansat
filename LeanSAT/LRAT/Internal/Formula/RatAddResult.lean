@@ -5,7 +5,9 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.RupAddSound
 
+namespace LeanSAT
 namespace LRAT
+
 namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment
@@ -211,3 +213,8 @@ theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p 
               restoreAssignments_performRupCheck fc fc_assignments_size, ← insertRupUnits_rw,
               clear_insertRup f f_readyForRatAdd.2 (negate c), fc, performRupCheck_res]
   . simp at ratAddSuccess
+
+end DefaultFormula
+
+end LRAT
+end LeanSAT

@@ -4,10 +4,14 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import Std.Sat.CNF.RelabelFin
+import LeanSAT.LRAT.Internal.Formula
 
-import LeanSAT.LRAT.LRATChecker
+namespace LeanSAT
+namespace LRAT
 
-open Lean Elab Meta Std Sat
+open Std.Sat
+open Entails
+
 
 /--
 Turn a `CNF Nat`, that might contain `0` as a variable, to a `CNF PosFin`.
@@ -157,3 +161,5 @@ theorem CNF.unsat_of_convertLRAT_unsat (cnf : CNF Nat) :
     simp [CNF.Clause.convertLRAT_sat_of_sat reflectClause hrclause2, h2 reflectClause hrclause1]
   . contradiction
 
+end LRAT
+end LeanSAT

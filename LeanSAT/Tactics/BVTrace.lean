@@ -10,6 +10,7 @@ import Lean.Meta.Tactic.TryThis
 
 open Lean Elab Meta Tactic
 
+namespace LeanSAT
 namespace BVTrace
 
 -- TODO: think of a more maintainable file pattern for this stuff.
@@ -23,6 +24,9 @@ def getLratFileName : TermElabM System.FilePath := do
   let pos := (← getFileMap).toPosition (← getRefPos)
   return s!"{baseName}-{declName}-{pos.line}-{pos.column}.lrat"
 
+end BVTrace
+end LeanSAT
+
 /--
 Suggest a proof script for a `bv_decide` tactic call.
 Useful for caching LRAT proofs.
@@ -33,8 +37,8 @@ syntax (name := bvTraceSyntax) "bv_decide?" : tactic
 def evalBvTrace : Tactic := fun stx =>
   match stx with
   | `(tactic| bv_decide?%$tk) => do
-    let lratFile : System.FilePath ← getLratFileName
-    let cfg := { (← BVCheck.mkContext lratFile) with trimProofs := false }
+    let lratFile : System.FilePath ← LeanSAT.BVTrace.getLratFileName
+    let cfg := { (← LeanSAT.BVCheck.mkContext lratFile) with trimProofs := false }
     let g ← getMainGoal
     let trace ← g.withContext do
       g.bvDecide cfg
@@ -56,12 +60,10 @@ def evalBvTrace : Tactic := fun stx =>
       TryThis.addSuggestion tk normalizeStx (origSpan? := ← getRef)
     | some .. =>
       if sat.trimProofs.get (← getOptions) then
-        let lratPath := (← BVCheck.getSrcDir) / lratFile
-        let proof ← LRAT.loadLRATProof lratPath
-        let trimmed ← LRAT.trim proof
-        LRAT.dumpLRATProof lratPath trimmed cfg.binaryProofs
+        let lratPath := (← LeanSAT.BVCheck.getSrcDir) / lratFile
+        let proof ← LeanSAT.LRAT.loadLRATProof lratPath
+        let trimmed ← LeanSAT.LRAT.trim proof
+        LeanSAT.LRAT.dumpLRATProof lratPath trimmed cfg.binaryProofs
       let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)
   | _ => throwUnsupportedSyntax
-
-end BVTrace

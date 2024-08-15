@@ -3,16 +3,16 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.Tactics.Glue
 import LeanSAT.Tactics.Attr
-import LeanSAT.LRAT.LRATChecker
-import LeanSAT.LRAT.LRATCheckerSound
+import LeanSAT.LRAT.Checker
 import LeanSAT.LRAT.Trim
 import LeanSAT.External.Solver
 
-open Lean Elab Meta Std Sat
 
+namespace LeanSAT
 namespace BVDecide
+
+open Lean Elab Meta Std Sat
 
 /--
 The context for the `bv_decide` tactic.
@@ -93,7 +93,7 @@ instance : ToExpr LRAT.IntAction where
 /--
 Turn a `CNF` from the reflection framework into the correct format for the LRAT framework.
 -/
-def LratFormula.ofCnf (cnf : CNF Nat) : LratFormula := ⟨CNF.convertLRAT cnf⟩
+def LratFormula.ofCnf (cnf : CNF Nat) : LratFormula := ⟨LRAT.CNF.convertLRAT cnf⟩
 
 /--
 Create a temporary file using `mktemp` and return the path to it.
@@ -164,58 +164,17 @@ def runExternal (formula : LratFormula) (solver : String) (lratPath : System.Fil
 /--
 Verify that a proof certificate is valid for a given formula.
 -/
-def verifyCert (formula : LratFormula) (cert : LratCert) : Bool :=
+def verifyCert (cnf : CNF Nat) (cert : LratCert) : Bool :=
   match LRAT.parseLRATProof cert.toUTF8 with
-  | some lratProof =>
-    -- XXX
-    let lratProof := lratProof.toList
-    let lratProof := lratProof.map (LRAT.intActionToDefaultClauseAction formula.numVars.succ)
-    let lratProof : List { act // LRAT.WellFormedAction act } :=
-      lratProof.filterMap
-        (fun actOpt =>
-          match actOpt with
-          | none => none
-          | some (LRAT.Action.addEmpty id rupHints) =>
-            some ⟨LRAT.Action.addEmpty id rupHints, by simp only [LRAT.WellFormedAction]⟩
-          | some (LRAT.Action.addRup id c rupHints) =>
-            some ⟨LRAT.Action.addRup id c rupHints, by simp only [LRAT.WellFormedAction]⟩
-          | some (LRAT.Action.del ids) =>
-            some ⟨LRAT.Action.del ids, by simp only [LRAT.WellFormedAction]⟩
-          | some (LRAT.Action.addRat id c pivot rupHints ratHints) =>
-            if h : pivot ∈ LRAT.Clause.toList c then
-              some ⟨
-                LRAT.Action.addRat id c pivot rupHints ratHints,
-                by simp [LRAT.WellFormedAction, LRAT.Clause.limplies_iff_mem, h]
-              ⟩
-            else
-              -- TODO: report this
-              none
-        )
-    let lratProof := lratProof.map Subtype.val
-    let checkerResult := LRAT.lratChecker formula.formula lratProof
-    checkerResult = .success
+  | some lratProof => LRAT.verify lratProof cnf
   | none => false
 
 theorem verifyCert_correct
-    : ∀ cnf cert, verifyCert (LratFormula.ofCnf cnf) cert = true → cnf.Unsat := by
+    : ∀ cnf cert, verifyCert cnf cert = true → cnf.Unsat := by
   intro c b h1
-  dsimp [verifyCert] at h1
+  unfold verifyCert at h1
   split at h1
-  . simp only [decide_eq_true_eq] at h1
-    have h2 :=
-      lratCheckerSound
-        _
-        (by apply CNF.convertLRAT_readfyForRupAdd)
-        (by apply CNF.convertLRAT_readfyForRatAdd)
-        _
-        (by
-          intro action h
-          simp only [List.mem_map, List.mem_filterMap] at h
-          rcases h with ⟨WellFormedActions, _, h2⟩
-          rw [← h2]
-          exact WellFormedActions.property)
-        h1
-    apply CNF.unsat_of_convertLRAT_unsat
+  . apply LRAT.verify_sound
     assumption
   . contradiction
 
@@ -268,3 +227,4 @@ def LratCert.toReflectionProof [ToExpr α] (cert : LratCert) (cfg : TacticContex
 
 
 end BVDecide
+end LeanSAT
