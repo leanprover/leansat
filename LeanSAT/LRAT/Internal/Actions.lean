@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Actions
+import LeanSAT.LRAT.Internal.Clause
 
 namespace LeanSAT
 
@@ -40,6 +41,13 @@ def natLiteralToPosFinLiteral {n : Nat} (x : Literal Nat) (x_ne_zero : x.1 ≠ 0
   else
     none
 
+def intToLiteralPure {n : Nat} (x : Int) (x_ne_zero : x ≠ 0) : Option (Literal (PosFin n)) := do
+  if h : x.natAbs < n then
+    if x > 0 then some (⟨x.natAbs, ⟨by omega, h⟩⟩, true)
+    else some (⟨x.natAbs, ⟨by omega, h⟩⟩, false)
+  else
+    none
+
 /--
 Since `IntAction` is a convenient parsing target and `DefaultClauseAction` is a useful Action type
 for working with default clauses, an expected workflow pattern is to parse an external LRAT proof
@@ -54,7 +62,7 @@ def intActionToDefaultClauseAction (n : Nat) : IntAction → Option (DefaultClau
   | .addEmpty cId rupHints => some <| .addEmpty cId rupHints
   | .addRup cId c rupHints => do
     let c : Array (Option (Literal (PosFin n))) :=
-      c.map (fun x => if h : x ≠ 0 then Dimacs.intToLiteralPure x h else none)
+      c.map (fun x => if h : x ≠ 0 then intToLiteralPure x h else none)
     if c.contains none then
       none
     else
@@ -67,7 +75,7 @@ def intActionToDefaultClauseAction (n : Nat) : IntAction → Option (DefaultClau
       let some pivot := natLiteralToPosFinLiteral pivot h
         | none
       let c : Array (Option (Literal (PosFin n))) :=
-        c.map (fun x => if h : x ≠ 0 then Dimacs.intToLiteralPure x h else none)
+        c.map (fun x => if h : x ≠ 0 then intToLiteralPure x h else none)
       if c.contains none then
         none
       else
