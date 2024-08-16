@@ -7,10 +7,16 @@ import LeanSAT.LRAT.Actions
 import Lean.Data.RBMap
 import Std.Data.HashMap
 
-open Lean
+/-!
+This module implements the LRAT trimming algorithm described in section 4 of
+"Faster LRAT Checking Than Solving with CaDiCaL" (https://drops.dagstuhl.de/storage/00lipics/lipics-vol271-sat2023/LIPIcs.SAT.2023.21/LIPIcs.SAT.2023.21.pdf).
+-/
+
 
 namespace LeanSAT
 namespace LRAT
+
+open Lean (RBMap)
 
 namespace trim
 
@@ -46,18 +52,25 @@ abbrev M : Type → Type := ReaderT Context <| StateRefT State IO
 
 namespace M
 
-private partial def findInitialId (proof : Array IntAction) (curr : Nat := 0) : Nat :=
-  match proof[curr]! with
-  | .addEmpty id .. | .addRup id .. | .addRat id .. => id
-  | .del .. => findInitialId proof (curr + 1)
+partial def findInitialId (proof : Array IntAction) (curr : Nat := 0) : IO Nat :=
+  if h : curr < proof.size then
+    match proof[curr] with
+    | .addEmpty id .. | .addRup id .. | .addRat id .. => return id
+    | .del .. => findInitialId proof (curr + 1)
+  else
+    throw <| .userError "LRAT proof doesn't contain a proper first proof step."
 
-def run (proof : Array IntAction) (x : M α) : IO α := do
-  let initialId := findInitialId proof
-
-  let addEmptyId ←
-    match proof[proof.size - 1]! with
+def findEmptyId (proof : Array IntAction) : IO Nat := do
+  if h : 0 < proof.size then
+    match proof[proof.size - 1] with
     | .addEmpty id .. => pure id
     | _ => throw <| .userError "Last proof step is not the empty clause"
+  else
+    throw <| .userError "The LRAT proof contains no steps."
+
+def run (proof : Array IntAction) (x : M α) : IO α := do
+  let initialId ← findInitialId proof
+  let addEmptyId ← findEmptyId proof
 
   let folder acc a :=
     match a with
@@ -176,6 +189,8 @@ def mapping : M (Array IntAction) := do
   let mut newProof := Array.mkEmpty used.size
   for (id, _) in used do
     M.registerIdMap id nextMapped
+    -- This should never panic as the use def analysis has already marked this step as being used
+    -- so it must exist.
     let step := (← M.getProofStep id).get!
     let newStep ← M.mapStep step
     newProof := newProof.push newStep
@@ -188,6 +203,10 @@ def go : M (Array IntAction) := do
 
 end trim
 
+/--
+Trim the LRAT `proof` by removing all steps that are not used in reaching the empty clause
+conclusion.
+-/
 def trim (proof : Array IntAction) : IO (Array IntAction) :=
   trim.go.run proof
 

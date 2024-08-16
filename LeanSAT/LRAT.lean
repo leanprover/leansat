@@ -6,3 +6,8 @@ Authors: Henrik Böving
 import LeanSAT.LRAT.Actions
 import LeanSAT.LRAT.Checker
 import LeanSAT.LRAT.Trim
+
+/-!
+This directory contains the implementation of the LRAT certificate checking and the LRAT trimming
+algorithm.
+-/

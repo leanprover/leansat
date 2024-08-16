@@ -5,6 +5,12 @@ Authors: Josh Clune
 -/
 import Std.Sat.CNF
 
+/-!
+This module contains the definition of the LRAT format as a type `Action`, that is polymorphic over
+the variables used in the CNF. The type `IntAction := Action (Array Int) Nat` is the version that is
+used by the checker as input and should be considered the parsing target for LRAT proofs.
+-/
+
 namespace LeanSAT
 namespace LRAT
 
@@ -28,7 +34,8 @@ instance [ToString β] [ToString α] : ToString (Action β α) := ⟨Action.toSt
 
 /--
 `Action` where variables are (positive) `Nat`, clauses are arrays of `Int`, and ids are `Nat`.
-This Action type is meant to be a convenient target for parsing LRAT proofs. -/
+This Action type is meant to be a convenient target for parsing LRAT proofs.
+-/
 abbrev IntAction : Type := Action (Array Int) Nat
 
 

@@ -14,3 +14,8 @@ import LeanSAT.LRAT.Internal.LRATChecker
 import LeanSAT.LRAT.Internal.LRATCheckerSound
 import LeanSAT.LRAT.Internal.PosFin
 import LeanSAT.LRAT.Internal.Convert
+
+/-!
+This module contains the internals of the current LRAT checker implementation. It should not be
+considered part of the API of `bv_decide` and will be removed or largely refactored in the future.
+-/

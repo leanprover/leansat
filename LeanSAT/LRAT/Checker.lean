@@ -9,12 +9,20 @@ import LeanSAT.LRAT.Internal.LRATChecker
 import LeanSAT.LRAT.Internal.LRATCheckerSound
 import Std.Sat.CNF
 
+/-!
+This module contains the implementation of the LRAT checker as well as a proof that the given
+CNF is unsat if the checker succeeds.
+-/
+
 open Std.Sat
 
 namespace LeanSAT
 namespace LRAT
 
 open LeanSAT.LRAT.Internal in
+/--
+Check whether `lratProof` is a valid LRAT certificate for the unsatisfiability of `cnf`.
+-/
 def check (lratProof : Array IntAction) (cnf : CNF Nat) : Bool :=
   let internalFormula := CNF.convertLRAT cnf
   let lratProof := lratProof.toList
@@ -44,7 +52,11 @@ def check (lratProof : Array IntAction) (cnf : CNF Nat) : Bool :=
   checkerResult = .success
 
 open LeanSAT.LRAT.Internal in
-theorem check_sound (proof : Array IntAction) (cnf : CNF Nat) : check proof cnf → cnf.Unsat := by
+/--
+If the `check` functions succeeds on `lratProof` and `cnf` then the `cnf` is unsatisfiable.
+-/
+theorem check_sound (lratProof : Array IntAction) (cnf : CNF Nat) :
+    check lratProof cnf → cnf.Unsat := by
   intro h1
   unfold check at h1
   simp only [decide_eq_true_eq] at h1
