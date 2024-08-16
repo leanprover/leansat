@@ -11,7 +11,8 @@ namespace Internal
 
 namespace DefaultFormula
 
-open Std Sat DefaultClause DefaultFormula Assignment
+open Std.Sat
+open DefaultClause DefaultFormula Assignment
 
 theorem insertRatUnits_preserves_assignments_size {n : Nat} (f : DefaultFormula n)
     (units : CNF.Clause (PosFin n)) :
@@ -168,8 +169,10 @@ theorem performRatCheck_fold_preserves_formula {n : Nat} (f : DefaultFormula n)
     let performRatCheck_fold_res :=
       ratHints.foldl
         (fun x ratHint =>
-          if x.2 = true then performRatCheck x.1 p ratHint
-          else (x.1, false)) (f, true) 0 ratHints.size
+          if x.2 = true then
+            performRatCheck x.1 p ratHint
+          else
+            (x.1, false)) (f, true) 0 ratHints.size
     performRatCheck_fold_res.1 = f := by
   let motive (_idx : Nat) (acc : DefaultFormula n × Bool) := acc.1 = f
   have h_base : motive 0 (f, true) := rfl

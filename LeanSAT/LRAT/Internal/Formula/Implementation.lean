@@ -11,7 +11,8 @@ namespace LeanSAT
 namespace LRAT
 namespace Internal
 
-open Assignment DefaultClause Std ReduceResult Std Sat
+open Std.Sat
+open Assignment DefaultClause ReduceResult
 
 /--
 The structure `DefaultFormula n` takes in a parameter `n` which is intended to be one greater than the total number of variables that
@@ -161,7 +162,8 @@ def confirmRupHint {n : Nat} (clauses : Array (Option (DefaultClause n))) :
     Array Assignment × CNF.Clause (PosFin n) × Bool × Bool → Nat →
     Array Assignment × CNF.Clause (PosFin n) × Bool × Bool :=
   fun (assignments, derivedLits, derivedEmpty, encounteredError) id =>
-    if (encounteredError || derivedEmpty) then (assignments, derivedLits, derivedEmpty, encounteredError)
+    if (encounteredError || derivedEmpty) then
+      (assignments, derivedLits, derivedEmpty, encounteredError)
     else
       match clauses[id]? with
       | some (some c) =>
@@ -208,8 +210,10 @@ def performRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHin
     (f.insert c, true)
   else
     let (f, derivedLits, derivedEmpty, encounteredError) := performRupCheck f rupHints
-    if encounteredError then (f, false)
-    else if not derivedEmpty then (f, false)
+    if encounteredError then
+      (f, false)
+    else if not derivedEmpty then
+      (f, false)
     else -- derivedEmpty is true and encounteredError is false
       let ⟨clauses, rupUnits, ratUnits, assignments⟩ := f
       let assignments := restoreAssignments assignments derivedLits
@@ -312,7 +316,8 @@ def performRatAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n)
 def numClausesInFormula {n : Nat} (f : DefaultFormula n) : Nat := Id.run do
   let mut numClauses := 0
   for cOpt in f.clauses do
-    if cOpt != none then numClauses := numClauses + 1
+    if cOpt != none then
+      numClauses := numClauses + 1
   return numClauses
 
 end DefaultFormula

@@ -11,7 +11,8 @@ namespace Internal
 
 namespace DefaultFormula
 
-open Std Sat DefaultClause DefaultFormula Assignment
+open Std.Sat
+open DefaultClause DefaultFormula Assignment
 
 theorem insertUnit_preserves_size {n : Nat} (units: Array (Literal (PosFin n)))
     (assignments : Array Assignment) (b : Bool) (l : Literal (PosFin n)) :

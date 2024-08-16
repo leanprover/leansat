@@ -11,7 +11,8 @@ namespace Internal
 
 namespace DefaultFormula
 
-open Std Sat DefaultClause DefaultFormula Assignment ReduceResult
+open Std.Sat
+open DefaultClause DefaultFormula Assignment ReduceResult
 
 theorem mem_of_necessary_assignment {n : Nat} {p : (PosFin n) → Bool} {c : DefaultClause n}
     {l : Literal (PosFin n)} (p_entails_c : p ⊨ c)

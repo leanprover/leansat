@@ -11,7 +11,8 @@ namespace Internal
 
 namespace DefaultFormula
 
-open Std Sat DefaultClause DefaultFormula Assignment ReduceResult
+open Std.Sat
+open DefaultClause DefaultFormula Assignment ReduceResult
 
 theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assignment)
     (assignments_size : assignments.size = n)
