@@ -13,11 +13,12 @@ namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment ReduceResult
 
-theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assignment) (assignments_size : assignments.size = n)
+theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assignment)
+    (assignments_size : assignments.size = n)
     (units : Array (Literal (PosFin n))) (foundContradiction : Bool) (l : Literal (PosFin n)) :
-      let insertUnit_res := insertUnit (units, assignments, foundContradiction) l
-      (foundContradiction → ∃ i : PosFin n, assignments[i.1]'(by rw [assignments_size]; exact i.2.2) = both) → insertUnit_res.2.2 →
-      ∃ j : PosFin n, insertUnit_res.2.1[j.1]'(by rw [insertUnit_preserves_size, assignments_size]; exact j.2.2) = both := by
+    let insertUnit_res := insertUnit (units, assignments, foundContradiction) l
+    (foundContradiction → ∃ i : PosFin n, assignments[i.1]'(by rw [assignments_size]; exact i.2.2) = both) → insertUnit_res.2.2 →
+    ∃ j : PosFin n, insertUnit_res.2.1[j.1]'(by rw [insertUnit_preserves_size, assignments_size]; exact j.2.2) = both := by
   intro insertUnit_res h insertUnit_success
   simp only [insertUnit_res] at *
   simp only [insertUnit] at insertUnit_success
@@ -58,9 +59,9 @@ theorem contradiction_of_insertUnit_success {n : Nat} (assignments : Array Assig
 
 theorem contradiction_of_insertUnit_fold_success {n : Nat} (assignments : Array Assignment) (assignments_size : assignments.size = n)
     (units : Array (Literal (PosFin n))) (foundContradiction : Bool) (l : CNF.Clause (PosFin n)) :
-      let insertUnit_fold_res := List.foldl insertUnit (units, assignments, foundContradiction) l
-      (foundContradiction → ∃ i : PosFin n, assignments[i.1]'(by rw [assignments_size]; exact i.2.2) = both) → insertUnit_fold_res.2.2 →
-      ∃ j : PosFin n, insertUnit_fold_res.2.1[j.1]'(by rw [insertUnit_fold_preserves_size, assignments_size]; exact j.2.2) = both := by
+    let insertUnit_fold_res := List.foldl insertUnit (units, assignments, foundContradiction) l
+    (foundContradiction → ∃ i : PosFin n, assignments[i.1]'(by rw [assignments_size]; exact i.2.2) = both) → insertUnit_fold_res.2.2 →
+    ∃ j : PosFin n, insertUnit_fold_res.2.1[j.1]'(by rw [insertUnit_fold_preserves_size, assignments_size]; exact j.2.2) = both := by
   intro insertUnit_fold_res h0 insertUnit_fold_success
   let acc0 := (units, assignments, foundContradiction)
   have hb : ∃ _hsize : acc0.2.1.size = n, acc0.2.2 → ∃ j : PosFin n, acc0.2.1[j.1]'(by rw [assignments_size]; exact j.2.2) = both := by
@@ -84,8 +85,8 @@ theorem contradiction_of_insertUnit_fold_success {n : Nat} (assignments : Array 
 
 theorem mem_insertUnit_units {n : Nat} (units : Array (Literal (PosFin n))) (assignments : Array Assignment)
     (foundContradiction : Bool) (l : Literal (PosFin n)) :
-      let insertUnit_res := insertUnit (units, assignments, foundContradiction) l
-      ∀ l' : Literal (PosFin n), l' ∈ insertUnit_res.1.data → l' = l ∨ l' ∈ units.data := by
+    let insertUnit_res := insertUnit (units, assignments, foundContradiction) l
+    ∀ l' : Literal (PosFin n), l' ∈ insertUnit_res.1.data → l' = l ∨ l' ∈ units.data := by
   intro insertUnit_res l' l'_in_insertUnit_res
   simp only [insertUnit_res] at *
   simp only [insertUnit] at l'_in_insertUnit_res
@@ -96,8 +97,8 @@ theorem mem_insertUnit_units {n : Nat} (units : Array (Literal (PosFin n))) (ass
 
 theorem mem_insertUnit_fold_units {n : Nat} (units : Array (Literal (PosFin n))) (assignments : Array Assignment)
     (foundContradiction : Bool) (l : CNF.Clause (PosFin n)) :
-      let insertUnit_fold_res := List.foldl insertUnit (units, assignments, foundContradiction) l
-      ∀ l' : Literal (PosFin n), l' ∈ insertUnit_fold_res.1.data → l' ∈ l ∨ l' ∈ units.data := by
+    let insertUnit_fold_res := List.foldl insertUnit (units, assignments, foundContradiction) l
+    ∀ l' : Literal (PosFin n), l' ∈ insertUnit_fold_res.1.data → l' ∈ l ∨ l' ∈ units.data := by
   have hb (l' : Literal (PosFin n)) : l' ∈ (units, assignments, foundContradiction).1.data → l' ∈ l ∨ l' ∈ units.data := by
     intro h
     exact Or.inr h
@@ -112,7 +113,8 @@ theorem mem_insertUnit_fold_units {n : Nat} (units : Array (Literal (PosFin n)))
   exact List.foldlRecOn l insertUnit (units, assignments, foundContradiction) hb hl
 
 theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f) (c : DefaultClause n)
-    (p : PosFin n → Bool) (pf : p ⊨ f) : (insertRupUnits f (negate c)).2 = true → p ⊨ c := by
+    (p : PosFin n → Bool) (pf : p ⊨ f) :
+    (insertRupUnits f (negate c)).2 = true → p ⊨ c := by
   simp only [insertRupUnits]
   intro insertUnit_fold_success
   have false_imp : false → ∃ i : PosFin n, f.assignments[i.1]'(by rw [f_readyForRupAdd.2.1]; exact i.2.2) = both := by
@@ -212,7 +214,8 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
     · exact i_false_not_in_c i_true_in_insertUnit_fold
 
 theorem insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
-    (c : DefaultClause n) : (insertRupUnits f (negate c)).2 = true → Limplies (PosFin n) f (f.insert c) := by
+    (c : DefaultClause n) :
+    (insertRupUnits f (negate c)).2 = true → Limplies (PosFin n) f (f.insert c) := by
   intro h p pf
   simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro c' c'_in_fc
@@ -224,7 +227,8 @@ theorem insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyF
     exact pf c' c'_in_f
 
 theorem insertRupUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
-    (units : CNF.Clause (PosFin n)) : AssignmentsInvariant (insertRupUnits f units).1 := by
+    (units : CNF.Clause (PosFin n)) :
+    AssignmentsInvariant (insertRupUnits f units).1 := by
   have h := insertRupUnits_postcondition f f_readyForRupAdd units
   have hsize : (insertRupUnits f units).1.assignments.size = n := by rw [insertRupUnits_preserves_assignments_size, f_readyForRupAdd.2.1]
   apply Exists.intro hsize
@@ -345,10 +349,12 @@ theorem insertRupUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultForm
     simp only [hp1.2] at hp2
 
 def confirmRupHint_fold_entails_hsat_motive {n : Nat} (f : DefaultFormula n) (_idx : Nat)
-  (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) : Prop :=
+    (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) :
+    Prop :=
   acc.1.size = n ∧ Limplies (PosFin n) f acc.1 ∧ (acc.2.2.1 → Incompatible (PosFin n) acc.1 f)
 
-theorem encounteredBoth_entails_unsat {n : Nat} (c : DefaultClause n) (assignment : Array Assignment) :
+theorem encounteredBoth_entails_unsat {n : Nat} (c : DefaultClause n)
+    (assignment : Array Assignment) :
     reduce c assignment = encounteredBoth → Unsatisfiable (PosFin n) assignment := by
   have hb : (reducedToEmpty : ReduceResult (PosFin n)) = encounteredBoth → Unsatisfiable (PosFin n) assignment := by
     simp only [false_implies]
@@ -380,14 +386,17 @@ theorem encounteredBoth_entails_unsat {n : Nat} (c : DefaultClause n) (assignmen
     · simp at h
   exact List.foldlRecOn c.clause (reduce_fold_fn assignment) reducedToEmpty hb hl
 
-def reduce_postcondition_induction_motive (c_arr : Array (Literal (PosFin n))) (assignment : Array Assignment)
-  (idx : Nat) (res : ReduceResult (PosFin n)) : Prop :=
+def reduce_postcondition_induction_motive (c_arr : Array (Literal (PosFin n)))
+    (assignment : Array Assignment) (idx : Nat) (res : ReduceResult (PosFin n)) :
+    Prop :=
   (res = reducedToEmpty → ∀ (p : (PosFin n) → Bool), (∀ i : Fin c_arr.size, i.1 < idx → p ⊭ c_arr[i]) ∨ (p ⊭ assignment)) ∧
   (∀ l : Literal (PosFin n),
     res = reducedToUnit l → ∀ (p : (PosFin n) → Bool), p ⊨ assignment → (∃ i : Fin c_arr.size, i.1 < idx ∧ (p ⊨ c_arr[i])) → p ⊨ l)
 
-theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFin n))} {assignment : Array Assignment}
-  (idx : Fin c_arr.size) (res : ReduceResult (PosFin n)) (ih : reduce_postcondition_induction_motive c_arr assignment idx.1 res) :
+theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFin n))}
+    {assignment : Array Assignment}
+    (idx : Fin c_arr.size) (res : ReduceResult (PosFin n))
+    (ih : reduce_postcondition_induction_motive c_arr assignment idx.1 res) :
   reduce_postcondition_induction_motive c_arr assignment (idx.1 + 1) (reduce_fold_fn assignment res c_arr[idx]) := by
   simp only [reduce_postcondition_induction_motive, Fin.getElem_fin, forall_exists_index, and_imp, Prod.forall]
   constructor
@@ -600,15 +609,19 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
       simp only [(· ⊨ ·)]
       exact of_decide_eq_true pc2
 
-theorem reducedToEmpty_entails_incompatible {n : Nat} (c : DefaultClause n) (assignment : Array Assignment) :
-  reduce c assignment = reducedToEmpty → Incompatible (PosFin n) c assignment := (reduce_postcondition c assignment).1
+theorem reducedToEmpty_entails_incompatible {n : Nat} (c : DefaultClause n)
+    (assignment : Array Assignment) :
+    reduce c assignment = reducedToEmpty → Incompatible (PosFin n) c assignment :=
+  (reduce_postcondition c assignment).1
 
-theorem reducedToUnit_entails_limplies {n : Nat} (c : DefaultClause n) (assignment : Array Assignment) (l : Literal (PosFin n)) :
-  reduce c assignment = reducedToUnit l → ∀ (p : (PosFin n) → Bool), p ⊨ assignment → p ⊨ c → p ⊨ l :=
+theorem reducedToUnit_entails_limplies {n : Nat} (c : DefaultClause n)
+    (assignment : Array Assignment) (l : Literal (PosFin n)) :
+    reduce c assignment = reducedToUnit l → ∀ (p : (PosFin n) → Bool), p ⊨ assignment → p ⊨ c → p ⊨ l :=
   (reduce_postcondition c assignment).2 l
 
-theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat) (idx : Fin rupHints.size)
-    (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) (ih : confirmRupHint_fold_entails_hsat_motive f idx.1 acc) :
+theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat)
+    (idx : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool)
+    (ih : confirmRupHint_fold_entails_hsat_motive f idx.1 acc) :
     confirmRupHint_fold_entails_hsat_motive f (idx.1 + 1) ((confirmRupHint f.clauses) acc rupHints[idx]) := by
   rcases ih with ⟨hsize, h1, h2⟩
   simp only [confirmRupHint, Bool.or_eq_true, Fin.getElem_fin]
@@ -697,11 +710,12 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
     · apply And.intro hsize ∘ And.intro h1
       simp only [false_implies]
 
-theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
-    (c : DefaultClause n) (rupHints : Array Nat) (p : PosFin n → Bool) (pf : p ⊨ f) :
-      let fc := insertRupUnits f (negate c)
-      let confirmRupHint_fold_res := rupHints.foldl (confirmRupHint fc.1.clauses) (fc.1.assignments, [], false, false) 0 rupHints.size
-      confirmRupHint_fold_res.2.2.1 = true → p ⊨ c := by
+theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultFormula n)
+    (f_readyForRupAdd : readyForRupAdd f) (c : DefaultClause n) (rupHints : Array Nat)
+    (p : PosFin n → Bool) (pf : p ⊨ f) :
+    let fc := insertRupUnits f (negate c)
+    let confirmRupHint_fold_res := rupHints.foldl (confirmRupHint fc.1.clauses) (fc.1.assignments, [], false, false) 0 rupHints.size
+    confirmRupHint_fold_res.2.2.1 = true → p ⊨ c := by
   intro fc confirmRupHint_fold_res confirmRupHint_success
   let motive := confirmRupHint_fold_entails_hsat_motive fc.1
   have h_base : motive 0 (fc.fst.assignments, [], false, false) := by
@@ -762,9 +776,11 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
     · simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
       exact p_unsat_c <| pf unsat_c unsat_c_in_f
 
-theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
-    (c : DefaultClause n) (rupHints : Array Nat) :
-      (performRupCheck (insertRupUnits f (negate c)).1 rupHints).2.2.1 = true → Limplies (PosFin n) f (f.insert c) := by
+theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n)
+    (f_readyForRupAdd : readyForRupAdd f) (c : DefaultClause n) (rupHints : Array Nat) :
+    (performRupCheck (insertRupUnits f (negate c)).1 rupHints).2.2.1 = true
+      →
+    Limplies (PosFin n) f (f.insert c) := by
   intro performRupCheck_success p pf
   simp only [performRupCheck] at performRupCheck_success
   simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
@@ -776,8 +792,10 @@ theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultF
   · simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
     exact pf c' c'_in_f
 
-theorem rupAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHints : Array Nat) (f' : DefaultFormula n)
-    (f_readyForRupAdd : readyForRupAdd f) (rupAddSuccess : performRupAdd f c rupHints = (f', true)) : Liff (PosFin n) f f' := by
+theorem rupAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHints : Array Nat)
+    (f' : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+    (rupAddSuccess : performRupAdd f c rupHints = (f', true)) :
+    Liff (PosFin n) f f' := by
   have f'_def := rupAdd_result f c rupHints f' f_readyForRupAdd rupAddSuccess
   rw [performRupAdd] at rupAddSuccess
   simp only [Bool.not_eq_true'] at rupAddSuccess

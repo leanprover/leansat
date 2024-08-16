@@ -12,7 +12,8 @@ namespace Internal
 
 namespace DefaultFormula
 
-open Std Sat DefaultClause DefaultFormula Assignment
+open Std.Sat
+open DefaultClause DefaultFormula Assignment
 
 /--
 This invariant states that if the `assignments` field of a default formula `f` indicates that `f`
@@ -40,7 +41,7 @@ def AssignmentsInvariant {n : Nat} (f : DefaultFormula n) : Prop :=
     Limplies (PosFin n) f (i, b)
 
 theorem assignmentsInvariant_of_strongAssignmentsInvariant {n : Nat} (f : DefaultFormula n) :
-  StrongAssignmentsInvariant f → AssignmentsInvariant f := by
+    StrongAssignmentsInvariant f → AssignmentsInvariant f := by
   intro ⟨hsize, h⟩
   apply Exists.intro hsize
   intro i b hb p pf
@@ -51,7 +52,8 @@ theorem assignmentsInvariant_of_strongAssignmentsInvariant {n : Nat} (f : Defaul
   simpa [(· ⊨ ·), Clause.eval, unit_eq, Clause.toList] using pf
 
 theorem AssignmentsInvariant_entails_limplies {n : Nat} (f : DefaultFormula n)
-  (f_AssignmentsInvariant : AssignmentsInvariant f) : Limplies (PosFin n) f f.assignments := by
+    (f_AssignmentsInvariant : AssignmentsInvariant f) :
+    Limplies (PosFin n) f f.assignments := by
   intro p pf
   rcases f_AssignmentsInvariant with ⟨hsize, f_AssignmentsInvariant⟩
   simp only [(· ⊨ ·), Bool.not_eq_true]
@@ -63,32 +65,38 @@ theorem AssignmentsInvariant_entails_limplies {n : Nat} (f : DefaultFormula n)
     by_cases hpi : p i <;> simp [hpi, Entails.eval] at f_AssignmentsInvariant
   · next h => simp_all [getElem!, i.2.2, decidableGetElem?]
 
-/-- performRupAdd adds to f.rupUnits and then clears f.rupUnits. If f begins with some units in f.rupUnits,
-    then performRupAdd will clear more than it intended to which will break the correctness of rupAdd_result -/
+/--
+performRupAdd adds to f.rupUnits and then clears f.rupUnits. If f begins with some units in f.rupUnits,
+then performRupAdd will clear more than it intended to which will break the correctness of rupAdd_result.
+-/
 def readyForRupAdd {n : Nat} (f : DefaultFormula n) : Prop := f.rupUnits = #[] ∧ StrongAssignmentsInvariant f
 
-/-- performRatAdd adds to f.rupUnits and f.ratUnits and then clears both. If f begins with some units in either,
-    then performRatAdd will clear more than it intended to which will break the correctness of ratAdd_result -/
+/--
+performRatAdd adds to f.rupUnits and f.ratUnits and then clears both. If f begins with some units in either,
+then performRatAdd will clear more than it intended to which will break the correctness of ratAdd_result
+-/
 def readyForRatAdd {n : Nat} (f : DefaultFormula n) : Prop := f.ratUnits = #[] ∧ readyForRupAdd f
 
 theorem insert_preserves_rupUnits {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
-  (insert f c).rupUnits = f.rupUnits := by
+    (insert f c).rupUnits = f.rupUnits := by
   simp only [insert]
   split <;> simp only
 
 theorem insert_preserves_ratUnits {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
-  (insert f c).ratUnits = f.ratUnits := by
+    (insert f c).ratUnits = f.ratUnits := by
   simp only [insert]
   split <;> simp only
 
-theorem ofArray_fold_fn_preserves_assignments_size {n : Nat} (assignments : Array Assignment) (cOpt : Option (DefaultClause n)) :
-  (ofArray_fold_fn assignments cOpt).size = assignments.size := by
+theorem ofArray_fold_fn_preserves_assignments_size {n : Nat} (assignments : Array Assignment)
+    (cOpt : Option (DefaultClause n)) :
+    (ofArray_fold_fn assignments cOpt).size = assignments.size := by
   rw [ofArray_fold_fn]
   split
   · rfl
   · split <;> simp [Array.size_modify]
 
-theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))) : readyForRupAdd (ofArray arr) := by
+theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))) :
+    readyForRupAdd (ofArray arr) := by
   constructor
   · simp only [ofArray]
   · have hsize : (ofArray arr).assignments.size = n := by
@@ -180,13 +188,14 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
     simp only [ofArray, Array.foldl_eq_foldl_data] at h
     exact h' i b h
 
-theorem ofArray_readyForRatAdd {n : Nat} (arr : Array (Option (DefaultClause n))) : readyForRatAdd (ofArray arr) := by
+theorem ofArray_readyForRatAdd {n : Nat} (arr : Array (Option (DefaultClause n))) :
+    readyForRatAdd (ofArray arr) := by
   constructor
   · simp only [ofArray]
   · exact ofArray_readyForRupAdd arr
 
 theorem insert_iff {n : Nat} (f : DefaultFormula n) (c1 : DefaultClause n) (c2 : DefaultClause n) :
-  c2 ∈ toList (insert f c1) ↔ c2 = c1 ∨ c2 ∈ toList f := by
+    c2 ∈ toList (insert f c1) ↔ c2 = c1 ∨ c2 ∈ toList f := by
   simp only [toList, Array.toList_eq, List.append_assoc, List.mem_append, List.mem_filterMap, id_eq, exists_eq_right,
     List.mem_map, Prod.exists, Bool.exists_bool]
   by_cases c2 = c1
@@ -229,7 +238,8 @@ theorem insert_iff {n : Nat} (f : DefaultFormula n) (c1 : DefaultClause n) (c2 :
       · rw [insert_preserves_ratUnits]
         exact Or.inr <| Or.inr h
 
-theorem limplies_of_insert {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) : Limplies (PosFin n) (insert f c) f := by
+theorem limplies_of_insert {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
+    Limplies (PosFin n) (insert f c) f := by
   intro p
   simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro h c' c'_in_f
@@ -239,12 +249,12 @@ theorem limplies_of_insert {n : Nat} (f : DefaultFormula n) (c : DefaultClause n
   exact h c' c'_in_fc
 
 theorem insert_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
-  (insert f c).assignments.size = f.assignments.size := by
+    (insert f c).assignments.size = f.assignments.size := by
   simp only [insert]
   split <;> simp only [Array.size_modify]
 
 theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
-  readyForRupAdd f → readyForRupAdd (insert f c) := by
+    readyForRupAdd f → readyForRupAdd (insert f c) := by
   intro f_readyForRupAdd
   simp only [insert]
   split
@@ -340,14 +350,15 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
       · exact Or.inr hf
 
 theorem insert_readyForRatAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
-  readyForRatAdd f → readyForRatAdd (insert f c) := by
+    readyForRatAdd f → readyForRatAdd (insert f c) := by
   intro h
   constructor
   · simp only [insert, h.1] <;> split <;> rfl
   · exact insert_readyForRupAdd f c h.2
 
 theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n))
-  (c : DefaultClause n) : c ∈ toList (insertRupUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
+    (c : DefaultClause n) :
+    c ∈ toList (insertRupUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
   simp only [toList, insertRupUnits, Array.toList_eq, List.append_assoc, List.mem_append,
     List.mem_filterMap, id_eq, exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]
   intro h
@@ -384,7 +395,8 @@ theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clau
   · exact (Or.inr ∘ Or.inr ∘ Or.inr) h
 
 theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n))
-  (c : DefaultClause n) : c ∈ toList (insertRatUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
+    (c : DefaultClause n) :
+    c ∈ toList (insertRatUnits f units).1 → c ∈ units.map Clause.unit ∨ c ∈ toList f := by
   simp only [toList, insertRatUnits, Array.toList_eq, List.append_assoc, List.mem_append,
     List.mem_filterMap, id_eq, exists_eq_right, List.mem_map, Prod.exists, Bool.exists_bool]
   intro h
@@ -419,17 +431,18 @@ theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clau
     · apply Or.inl ∘ Exists.intro i ∘ Or.inr
       exact ⟨h_insertUnit_fold, h2⟩
 
-theorem deleteOne_preserves_rupUnits {n : Nat} (f : DefaultFormula n) (id : Nat) : (deleteOne f id).rupUnits = f.rupUnits := by
+theorem deleteOne_preserves_rupUnits {n : Nat} (f : DefaultFormula n) (id : Nat) :
+    (deleteOne f id).rupUnits = f.rupUnits := by
   simp only [deleteOne]
   split <;> simp only
 
 theorem deleteOne_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (id : Nat) :
-  (deleteOne f id).assignments.size = f.assignments.size := by
+    (deleteOne f id).assignments.size = f.assignments.size := by
   simp only [deleteOne]
   split <;> simp only [Array.size_modify]
 
 theorem deleteOne_preserves_strongAssignmentsInvariant {n : Nat} (f : DefaultFormula n) (id : Nat) :
-  StrongAssignmentsInvariant f → StrongAssignmentsInvariant (deleteOne f id) := by
+    StrongAssignmentsInvariant f → StrongAssignmentsInvariant (deleteOne f id) := by
   intro hf
   rcases hf with ⟨hsize, hf⟩
   have hsize' : (deleteOne f id).assignments.size = n := by
@@ -597,7 +610,7 @@ theorem deleteOne_preserves_strongAssignmentsInvariant {n : Nat} (f : DefaultFor
         · exact Or.inr hf
 
 theorem delete_readyForRupAdd {n : Nat} (f : DefaultFormula n) (arr : Array Nat) :
-  readyForRupAdd f → readyForRupAdd (delete f arr) := by
+    readyForRupAdd f → readyForRupAdd (delete f arr) := by
   intro h
   rw [delete, Array.foldl_eq_foldl_data]
   constructor
@@ -610,12 +623,13 @@ theorem delete_readyForRupAdd {n : Nat} (f : DefaultFormula n) (arr : Array Nat)
       StrongAssignmentsInvariant (deleteOne acc id) := deleteOne_preserves_strongAssignmentsInvariant acc id ih
     exact List.foldlRecOn arr.data deleteOne f hb hl
 
-theorem deleteOne_preserves_ratUnits {n : Nat} (f : DefaultFormula n) (id : Nat) : (deleteOne f id).ratUnits = f.ratUnits := by
+theorem deleteOne_preserves_ratUnits {n : Nat} (f : DefaultFormula n) (id : Nat) :
+    (deleteOne f id).ratUnits = f.ratUnits := by
   simp only [deleteOne]
   split <;> simp only
 
 theorem delete_readyForRatAdd {n : Nat} (f : DefaultFormula n) (arr : Array Nat) :
-  readyForRatAdd f → readyForRatAdd (delete f arr) := by
+    readyForRatAdd f → readyForRatAdd (delete f arr) := by
   intro h
   constructor
   · rw [delete, Array.foldl_eq_foldl_data]
@@ -626,7 +640,7 @@ theorem delete_readyForRatAdd {n : Nat} (f : DefaultFormula n) (arr : Array Nat)
   · exact delete_readyForRupAdd f arr h.2
 
 theorem deleteOne_subset (f : DefaultFormula n) (id : Nat) (c : DefaultClause n) :
-  c ∈ toList (deleteOne f id) → c ∈ toList f := by
+    c ∈ toList (deleteOne f id) → c ∈ toList f := by
   simp only [deleteOne]
   intro h1
   split at h1 <;> first
@@ -651,7 +665,7 @@ theorem deleteOne_subset (f : DefaultFormula n) (id : Nat) (c : DefaultClause n)
     · exact (Or.inr ∘ Or.inr) h1
 
 theorem delete_subset (f : DefaultFormula n) (arr : Array Nat) (c : DefaultClause n) :
-  c ∈ toList (delete f arr) → c ∈ toList f := by
+    c ∈ toList (delete f arr) → c ∈ toList f := by
   simp only [delete, Array.foldl_eq_foldl_data]
   have hb : c ∈ toList f → c ∈ toList f := id
   have hl (f' : DefaultFormula n) (ih : c ∈ toList f' → c ∈ toList f) (id : Nat) (_ : id ∈ arr.data) :

@@ -13,9 +13,10 @@ namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment ReduceResult
 
-theorem mem_of_necessary_assignment {n : Nat} {p : (PosFin n) → Bool} {c : DefaultClause n} {l : Literal (PosFin n)}
-  (p_entails_c : p ⊨ c) (p'_not_entails_c : (fun v => if v = l.1 then l.2 else p v) ⊭ c) :
-  Literal.negate l ∈ Clause.toList c := by
+theorem mem_of_necessary_assignment {n : Nat} {p : (PosFin n) → Bool} {c : DefaultClause n}
+    {l : Literal (PosFin n)} (p_entails_c : p ⊨ c)
+    (p'_not_entails_c : (fun v => if v = l.1 then l.2 else p v) ⊭ c) :
+    Literal.negate l ∈ Clause.toList c := by
   simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at p_entails_c p'_not_entails_c
   simp only [not_exists, not_or, not_and] at p'_not_entails_c
   rcases p_entails_c with ⟨v, ⟨v_in_c, pv⟩ | ⟨v_in_c, pv⟩⟩
@@ -36,8 +37,9 @@ theorem mem_of_necessary_assignment {n : Nat} {p : (PosFin n) → Bool} {c : Def
       exfalso
       simp only [(· ⊨ ·), h] at pv
 
-theorem entails_of_irrelevant_assignment {n : Nat} {p : (PosFin n) → Bool} {c : DefaultClause n} {l : Literal (PosFin n)}
-  (p_entails_cl : p ⊨ c.delete (Literal.negate l)) : (fun v => if v = l.1 then l.2 else p v) ⊨ c.delete (Literal.negate l) := by
+theorem entails_of_irrelevant_assignment {n : Nat} {p : (PosFin n) → Bool} {c : DefaultClause n}
+    {l : Literal (PosFin n)} (p_entails_cl : p ⊨ c.delete (Literal.negate l)) :
+    (fun v => if v = l.1 then l.2 else p v) ⊨ c.delete (Literal.negate l) := by
   simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool,
     Clause.toList, delete_iff] at p_entails_cl
   simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
@@ -63,8 +65,9 @@ theorem entails_of_irrelevant_assignment {n : Nat} {p : (PosFin n) → Bool} {c 
       · next hne =>
         exact pv
 
-theorem insertRatUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f)
-    (units : CNF.Clause (PosFin n)) : AssignmentsInvariant (insertRatUnits f units).1 := by
+theorem insertRatUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFormula n)
+    (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f) (units : CNF.Clause (PosFin n)) :
+    AssignmentsInvariant (insertRatUnits f units).1 := by
   have h := insertRatUnits_postcondition f ⟨hf.1, hf.2.1⟩ units
   have hsize : (insertRatUnits f units).1.assignments.size = n := by rw [insertRatUnits_preserves_assignments_size, hf.2.1]
   apply Exists.intro hsize
@@ -181,11 +184,12 @@ theorem insertRatUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultForm
       and_false, false_and, and_true, false_or, or_false]
     simp [hp2.1, ← hp1.1, hp1.2] at hp2
 
-theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f)
-    (c : DefaultClause n) (rupHints : Array Nat) (p : PosFin n → Bool) (pf : p ⊨ f) :
-      let fc := insertRatUnits f (negate c)
-      let confirmRupHint_fold_res := rupHints.foldl (confirmRupHint fc.1.clauses) (fc.1.assignments, [], false, false) 0 rupHints.size
-      confirmRupHint_fold_res.2.2.1 = true → p ⊨ c := by
+theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultFormula n)
+    (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f) (c : DefaultClause n) (rupHints : Array Nat)
+    (p : PosFin n → Bool) (pf : p ⊨ f) :
+    let fc := insertRatUnits f (negate c)
+    let confirmRupHint_fold_res := rupHints.foldl (confirmRupHint fc.1.clauses) (fc.1.assignments, [], false, false) 0 rupHints.size
+    confirmRupHint_fold_res.2.2.1 = true → p ⊨ c := by
   intro fc confirmRupHint_fold_res confirmRupHint_success
   let motive := confirmRupHint_fold_entails_hsat_motive fc.1
   have h_base : motive 0 (fc.fst.assignments, [], false, false) := by
@@ -246,8 +250,10 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
     · simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
       exact p_unsat_c <| pf unsat_c unsat_c_in_f
 
-theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f) (c : DefaultClause n)
-    (p : PosFin n → Bool) (pf : p ⊨ f) : (insertRatUnits f (negate c)).2 = true → p ⊨ c := by
+theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n)
+    (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f) (c : DefaultClause n) (p : PosFin n → Bool)
+    (pf : p ⊨ f) :
+    (insertRatUnits f (negate c)).2 = true → p ⊨ c := by
   simp only [insertRatUnits]
   intro insertUnit_fold_success
   rcases contradiction_of_insertUnit_fold_success f.assignments hf.2.1 f.ratUnits false (negate c) (by intro; contradiction)
@@ -341,9 +347,11 @@ theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits
     · exact i_true_not_in_c i_false_in_insertUnit_fold
     · exact i_false_not_in_c i_true_in_insertUnit_fold
 
-theorem performRupCheck_of_insertRat_entails_safe_insert {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f)
-    (c : DefaultClause n) (rupHints : Array Nat) :
-    (performRupCheck (insertRatUnits f (negate c)).1 rupHints).2.2.1 = true → Limplies (PosFin n) f (f.insert c) := by
+theorem performRupCheck_of_insertRat_entails_safe_insert {n : Nat} (f : DefaultFormula n)
+    (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f) (c : DefaultClause n) (rupHints : Array Nat) :
+    (performRupCheck (insertRatUnits f (negate c)).1 rupHints).2.2.1 = true
+      →
+    Limplies (PosFin n) f (f.insert c) := by
   intro performRupCheck_success p pf
   simp only [performRupCheck] at performRupCheck_success
   simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
@@ -356,7 +364,8 @@ theorem performRupCheck_of_insertRat_entails_safe_insert {n : Nat} (f : DefaultF
     exact pf c' c'_in_f
 
 theorem performRupCheck_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFormula n)
-    (f_AssignmentsInvariant : AssignmentsInvariant f) (rupHints : Array Nat) : AssignmentsInvariant (performRupCheck f rupHints).1 := by
+    (f_AssignmentsInvariant : AssignmentsInvariant f) (rupHints : Array Nat) :
+    AssignmentsInvariant (performRupCheck f rupHints).1 := by
   simp only [performRupCheck]
   let motive := confirmRupHint_fold_entails_hsat_motive f
   have h_base : motive 0 (f.assignments, [], false, false) := by
@@ -401,9 +410,11 @@ theorem performRupCheck_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFor
     · simp only [Bool.not_eq_true] at pi
       exact pi
 
-theorem performRatCheck_success_entails_c_without_negPivot {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f)
-    (negPivot : Literal (PosFin n)) (ratHint : Nat × Array Nat) (performRatCheck_success : (performRatCheck f negPivot ratHint).2)
-    (c : DefaultClause n) : f.clauses[ratHint.1]! = some c → Limplies (PosFin n) f (c.delete negPivot) := by
+theorem performRatCheck_success_entails_c_without_negPivot {n : Nat} (f : DefaultFormula n)
+    (hf : f.ratUnits = #[] ∧ AssignmentsInvariant f) (negPivot : Literal (PosFin n))
+    (ratHint : Nat × Array Nat) (performRatCheck_success : (performRatCheck f negPivot ratHint).2)
+    (c : DefaultClause n) :
+    f.clauses[ratHint.1]! = some c → Limplies (PosFin n) f (c.delete negPivot) := by
   intro hc p pf
   simp only [performRatCheck, hc, Bool.or_eq_true, Bool.not_eq_true'] at performRatCheck_success
   split at performRatCheck_success
@@ -421,11 +432,12 @@ theorem performRatCheck_success_entails_c_without_negPivot {n : Nat} (f : Defaul
         exact Or.inl rfl
       exact of_decide_eq_true <| pfc (DefaultClause.delete c negPivot) c_negPivot_in_fc
 
-theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_readyForRatAdd : readyForRatAdd f)
-    (pivot : Literal (PosFin n)) (ratHints : Array (Nat × Array Nat))
+theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n)
+    (f_readyForRatAdd : readyForRatAdd f) (pivot : Literal (PosFin n))
+    (ratHints : Array (Nat × Array Nat))
     (ratHintsExhaustive_eq_true : ratHintsExhaustive f pivot ratHints = true) (c' : DefaultClause n)
     (c'_in_f : c' ∈ toList f) (negPivot_in_c' : Literal.negate pivot ∈ Clause.toList c') :
-      ∃ i : Fin ratHints.size, f.clauses[ratHints[i].1]! = some c' := by
+    ∃ i : Fin ratHints.size, f.clauses[ratHints[i].1]! = some c' := by
   simp only [toList, Array.toList_eq, f_readyForRatAdd.2.1, Array.data_toArray, List.map, List.append_nil, f_readyForRatAdd.1,
     List.mem_filterMap, id_eq, exists_eq_right] at c'_in_f
   rw [List.mem_iff_getElem] at c'_in_f
@@ -464,11 +476,12 @@ theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n) (f_
   simp [getElem!, h', i_lt_f_clauses_size, dite_true, c'_in_f, decidableGetElem?]
 
 theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : DefaultFormula n)
-    (hf : f.ratUnits = #[] ∧ f.assignments.size = n) (p : Literal (PosFin n)) (ratHints : Array (Nat × Array Nat)) (i : Fin ratHints.size)
+    (hf : f.ratUnits = #[] ∧ f.assignments.size = n) (p : Literal (PosFin n))
+    (ratHints : Array (Nat × Array Nat)) (i : Fin ratHints.size)
     (performRatCheck_fold_success :
-      (ratHints.foldl
-        (fun acc ratHint => if acc.2 = true then performRatCheck acc.1 p ratHint else (acc.1, false))
-        (f, true) 0 ratHints.size).2 = true) : (performRatCheck f p ratHints[i]).2 = true := by
+    (ratHints.foldl
+      (fun acc ratHint => if acc.2 = true then performRatCheck acc.1 p ratHint else (acc.1, false))
+      (f, true) 0 ratHints.size).2 = true) : (performRatCheck f p ratHints[i]).2 = true := by
   let motive (idx : Nat) (acc : DefaultFormula n × Bool) : Prop :=
     acc.1 = f ∧ (acc.2 = true → ∀ i : Fin idx, (performRatCheck f p ratHints[i]!).2)
   have h_base : motive 0 (f, true) := by
@@ -503,14 +516,16 @@ theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : D
   have h := (Array.foldl_induction motive h_base h_inductive).2 performRatCheck_fold_success i
   simpa [getElem!, i.2, dite_true, decidableGetElem?] using h
 
-theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRatAdd : readyForRatAdd f)
-    (c : DefaultClause n) (pivot : Literal (PosFin n)) (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat))
-    (pivot_in_c : pivot ∈ Clause.toList c) (ratHintsExhaustive_eq_true : ratHintsExhaustive f pivot ratHints = true)
+theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultFormula n)
+    (f_readyForRatAdd : readyForRatAdd f) (c : DefaultClause n) (pivot : Literal (PosFin n))
+    (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat))
+    (pivot_in_c : pivot ∈ Clause.toList c)
+    (ratHintsExhaustive_eq_true : ratHintsExhaustive f pivot ratHints = true)
     (performRatCheck_fold_success :
       (Array.foldl
         (fun x ratHint => if x.2 = true then performRatCheck x.1 (Literal.negate pivot) ratHint else (x.1, false))
         ((performRupCheck (insertRupUnits f (negate c)).1 rupHints).1, true) ratHints 0 (Array.size ratHints)).2 = true) :
-      Equisat (PosFin n) f (insert f c) := by
+    Equisat (PosFin n) f (insert f c) := by
   constructor
   · intro h p pfc
     specialize h p
@@ -605,10 +620,11 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
         have p'_entails_c'_del_negPivot : p' ⊨ c'.delete (Literal.negate pivot) := entails_of_irrelevant_assignment h
         exact p'_not_entails_c' <| Clause.entails_of_entails_delete p'_entails_c'_del_negPivot
 
-theorem ratAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (pivot : Literal (PosFin n))
-    (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat)) (f' : DefaultFormula n)
-    (f_readyForRatAdd : readyForRatAdd f) (pivot_in_c : pivot ∈ Clause.toList c)
-    (ratAddSuccess : performRatAdd f c pivot rupHints ratHints = (f', true)) : Equisat (PosFin n) f f' := by
+theorem ratAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n)
+    (pivot : Literal (PosFin n)) (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat))
+    (f' : DefaultFormula n) (f_readyForRatAdd : readyForRatAdd f) (pivot_in_c : pivot ∈ Clause.toList c)
+    (ratAddSuccess : performRatAdd f c pivot rupHints ratHints = (f', true)) :
+    Equisat (PosFin n) f f' := by
   have f'_def := ratAdd_result f c pivot rupHints ratHints f' f_readyForRatAdd pivot_in_c ratAddSuccess
   rw [performRatAdd] at ratAddSuccess
   simp at ratAddSuccess

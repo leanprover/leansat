@@ -13,13 +13,15 @@ namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment
 
-theorem insertUnit_preserves_size {n : Nat} (units: Array (Literal (PosFin n))) (assignments : Array Assignment)
-    (b : Bool) (l : Literal (PosFin n)) : (insertUnit (units, assignments, b) l).2.1.size = assignments.size := by
+theorem insertUnit_preserves_size {n : Nat} (units: Array (Literal (PosFin n)))
+    (assignments : Array Assignment) (b : Bool) (l : Literal (PosFin n)) :
+    (insertUnit (units, assignments, b) l).2.1.size = assignments.size := by
   simp only [insertUnit]
   split <;> simp
 
-theorem insertUnit_fold_preserves_size : ∀ unitsAcc : Array (Literal (PosFin n)), ∀ assignments : Array Assignment,
-    ∀ b : Bool, Array.size (List.foldl insertUnit (unitsAcc, assignments, b) units).2.1 = assignments.size := by
+theorem insertUnit_fold_preserves_size :
+    ∀ unitsAcc : Array (Literal (PosFin n)), ∀ assignments : Array Assignment, ∀ b : Bool,
+      Array.size (List.foldl insertUnit (unitsAcc, assignments, b) units).2.1 = assignments.size := by
   induction units
   · simp only [List.foldl, forall_const]
   · next hd tl ih =>
@@ -29,16 +31,19 @@ theorem insertUnit_fold_preserves_size : ∀ unitsAcc : Array (Literal (PosFin n
     specialize ih hd_res.1 hd_res.2.1 hd_res.2.2
     rw [ih, insertUnit_preserves_size]
 
-theorem insertRupUnits_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n)) :
+theorem insertRupUnits_preserves_assignments_size {n : Nat} (f : DefaultFormula n)
+    (units : CNF.Clause (PosFin n)) :
     (f.insertRupUnits units).1.assignments.size = f.assignments.size := by
   simp only [insertRupUnits]
   exact insertUnit_fold_preserves_size f.rupUnits f.assignments false
 
-theorem insertRupUnits_preserves_clauses {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n)) :
+theorem insertRupUnits_preserves_clauses {n : Nat} (f : DefaultFormula n)
+    (units : CNF.Clause (PosFin n)) :
     (f.insertRupUnits units).1.clauses = f.clauses := by
   rw [insertRupUnits]
 
-theorem insertRupUnits_preserves_ratUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clause (PosFin n)) :
+theorem insertRupUnits_preserves_ratUnits {n : Nat} (f : DefaultFormula n)
+    (units : CNF.Clause (PosFin n)) :
     (f.insertRupUnits units).1.ratUnits = f.ratUnits := by
   rw [insertRupUnits]
 
@@ -60,12 +65,12 @@ def insertUnit_invariant {n : Nat} (original_assignments : Array Assignment)
 
 theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignment)
     (assignments0_size : assignments0.size = n) (units : Array (Literal (PosFin n)))
-    (assignments : Array Assignment) (assignments_size : assignments.size = n) (foundContradiction : Bool)
-    (l : Literal (PosFin n)) :
-      insertUnit_invariant assignments0 assignments0_size units assignments assignments_size →
-      let update_res := insertUnit (units, assignments, foundContradiction) l
-      have update_res_size : update_res.snd.fst.size = n := by rw [insertUnit_preserves_size]; exact assignments_size
-      insertUnit_invariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
+    (assignments : Array Assignment) (assignments_size : assignments.size = n)
+    (foundContradiction : Bool) (l : Literal (PosFin n)) :
+    insertUnit_invariant assignments0 assignments0_size units assignments assignments_size →
+    let update_res := insertUnit (units, assignments, foundContradiction) l
+    have update_res_size : update_res.snd.fst.size = n := by rw [insertUnit_preserves_size]; exact assignments_size
+    insertUnit_invariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
   intro h
   simp only [insertUnit_invariant, Fin.getElem_fin, ne_eq, Bool.not_eq_true] at h
   simp only [insertUnit_invariant, Fin.getElem_fin, ne_eq, Bool.not_eq_true]
@@ -349,12 +354,12 @@ theorem insertUnit_fold_preserves_invariant {n : Nat} (assignments0 : Array Assi
     (assignments0_size : assignments0.size = n) (rupUnits : Array (Literal (PosFin n)))
     (assignments : Array Assignment) (assignments_size : assignments.size = n) (b : Bool)
     (units : CNF.Clause (PosFin n)) :
-      insertUnit_invariant assignments0 assignments0_size rupUnits assignments assignments_size →
-      let update_res := List.foldl insertUnit (rupUnits, assignments, b) units
-      have update_res_size : update_res.snd.fst.size = n := by
-        rw [insertUnit_fold_preserves_size]
-        exact assignments_size
-      insertUnit_invariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
+    insertUnit_invariant assignments0 assignments0_size rupUnits assignments assignments_size →
+    let update_res := List.foldl insertUnit (rupUnits, assignments, b) units
+    have update_res_size : update_res.snd.fst.size = n := by
+      rw [insertUnit_fold_preserves_size]
+      exact assignments_size
+    insertUnit_invariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
   induction units generalizing rupUnits assignments assignments_size b
   · simp only [List.foldl, imp_self]
   · next hd tl ih =>
@@ -367,12 +372,12 @@ theorem insertUnit_fold_preserves_invariant {n : Nat} (assignments0 : Array Assi
 
 theorem insertRupUnits_postcondition {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
     (units : CNF.Clause (PosFin n)) :
-  let assignments := (insertRupUnits f units).fst.assignments
-  have hsize : assignments.size = n := by
-    rw [← f_readyForRupAdd.2.1]
-    exact insertRupUnits_preserves_assignments_size f units
-  let rupUnits := (insertRupUnits f units).1.rupUnits
-  insertUnit_invariant f.assignments f_readyForRupAdd.2.1 rupUnits assignments hsize := by
+    let assignments := (insertRupUnits f units).fst.assignments
+    have hsize : assignments.size = n := by
+      rw [← f_readyForRupAdd.2.1]
+      exact insertRupUnits_preserves_assignments_size f units
+    let rupUnits := (insertRupUnits f units).1.rupUnits
+    insertUnit_invariant f.assignments f_readyForRupAdd.2.1 rupUnits assignments hsize := by
   simp only [insertRupUnits]
   have hsize : f.assignments.size = n := by rw [f_readyForRupAdd.2.1]
   have h0 : insertUnit_invariant f.assignments hsize f.rupUnits f.assignments hsize := by
@@ -456,11 +461,12 @@ theorem insertRupUnits_nodup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd 
           simp only [not_true] at h5
 
 theorem clearUnit_preserves_size (assignments : Array Assignment) (l : Literal (PosFin n)) :
-  (clearUnit assignments l).size = assignments.size := by
-    simp [clearUnit]
+    (clearUnit assignments l).size = assignments.size := by
+  simp [clearUnit]
 
-theorem clearUnit_foldl_preserves_size {α : Type u} (assignments : Array Assignment) (f : Array Assignment → α → Array Assignment)
-  (f_preserves_size : ∀ arr : Array Assignment, ∀ a : α, (f arr a).size = arr.size) (l : List α) :
+theorem clearUnit_foldl_preserves_size {α : Type u} (assignments : Array Assignment)
+    (f : Array Assignment → α → Array Assignment) (f_preserves_size :
+    ∀ arr : Array Assignment, ∀ a : α, (f arr a).size = arr.size) (l : List α) :
   Array.size (List.foldl f assignments l) = Array.size assignments := by
   have hb : assignments.size = assignments.size := rfl
   have hl (assignments' : Array Assignment) (hsize : assignments'.size = assignments.size) (a : α) (_ : a ∈ l) :
@@ -468,7 +474,8 @@ theorem clearUnit_foldl_preserves_size {α : Type u} (assignments : Array Assign
   exact List.foldlRecOn l f assignments hb hl
 
 def clear_insert_induction_motive {n : Nat} (f : DefaultFormula n) (assignments_size : f.assignments.size = n)
-  (units : Array (Literal (PosFin n))) : Nat → Array Assignment → Prop :=
+    (units : Array (Literal (PosFin n))) :
+    Nat → Array Assignment → Prop :=
   fun idx assignments => ∃ hsize : assignments.size = n, ∀ i : Fin n,
     have i_lt_assignments_size : i.1 < assignments.size := hsize ▸ i.2
     have i_lt_f_assignments_size : i.1 < f.assignments.size := by
@@ -498,10 +505,10 @@ theorem clear_insertRup_base_case {n : Nat} (f : DefaultFormula n) (f_readyForRu
   exact insertRupUnits_postcondition f f_readyForRupAdd units i
 
 theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
-  (units : Array (Literal (PosFin n))) (units_nodup : ∀ i : Fin units.size, ∀ j : Fin units.size, i ≠ j → units[i] ≠ units[j])
-  (idx : Fin units.size) (assignments : Array Assignment)
-  (ih : clear_insert_induction_motive f f_assignments_size units idx.1 assignments) :
-  clear_insert_induction_motive f f_assignments_size units (idx.1 + 1) (clearUnit assignments units[idx]) := by
+    (units : Array (Literal (PosFin n))) (units_nodup : ∀ i : Fin units.size, ∀ j : Fin units.size, i ≠ j → units[i] ≠ units[j])
+    (idx : Fin units.size) (assignments : Array Assignment)
+    (ih : clear_insert_induction_motive f f_assignments_size units idx.1 assignments) :
+    clear_insert_induction_motive f f_assignments_size units (idx.1 + 1) (clearUnit assignments units[idx]) := by
   rcases ih with ⟨hsize, ih⟩
   have hsize' : Array.size (clearUnit assignments units[idx]) = n := by
     rw [← clearUnit_preserves_size assignments units[idx]] at hsize
@@ -683,7 +690,8 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                     exact ih5 k <| Nat.le_of_succ_le k_ge_idx_add_one
 
 theorem clear_insertRup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
-  (units : CNF.Clause (PosFin n)) : clearRupUnits (f.insertRupUnits units).1 = f := by
+    (units : CNF.Clause (PosFin n)) :
+    clearRupUnits (f.insertRupUnits units).1 = f := by
   simp only [clearRupUnits]
   ext : 1
   · simp only [insertRupUnits]
@@ -719,8 +727,8 @@ theorem performRupCheck_preserves_ratUnits {n : Nat} (f : DefaultFormula n) (rup
   simp only [performRupCheck]
 
 theorem confirmRupHint_preserves_assignments_size {n : Nat} (clauses : Array (Option (DefaultClause n)))
-  (assignments : Array Assignment) (derivedLits : CNF.Clause (PosFin n)) (b1 b2 : Bool) (id : Nat) :
-  (confirmRupHint clauses (assignments, derivedLits, b1, b2) id).1.size = assignments.size := by
+    (assignments : Array Assignment) (derivedLits : CNF.Clause (PosFin n)) (b1 b2 : Bool) (id : Nat) :
+    (confirmRupHint clauses (assignments, derivedLits, b1, b2) id).1.size = assignments.size := by
   simp only [confirmRupHint]
   repeat first
     | rfl
@@ -738,8 +746,10 @@ theorem performRupCheck_preserves_assignments_size {n : Nat} (f : DefaultFormula
     rw [h, hsize]
   exact List.foldlRecOn rupHints.data (confirmRupHint f.clauses) (f.assignments, [], false, false) hb hl
 
-def derivedLits_invariant {n : Nat} (f : DefaultFormula n) (fassignments_size : f.assignments.size = n)
-  (assignments : Array Assignment) (assignments_size : assignments.size = n) (derivedLits : CNF.Clause (PosFin n)) : Prop :=
+def derivedLits_invariant {n : Nat} (f : DefaultFormula n)
+    (fassignments_size : f.assignments.size = n) (assignments : Array Assignment)
+    (assignments_size : assignments.size = n) (derivedLits : CNF.Clause (PosFin n)) :
+    Prop :=
   ∀ i : Fin n,
     have i_lt_assignments_size : i.1 < assignments.size := assignments_size ▸ i.2
     have i_lt_f_assignments_size : i.1 < f.assignments.size := by
@@ -758,11 +768,13 @@ def derivedLits_invariant {n : Nat} (f : DefaultFormula n) (fassignments_size : 
       (derivedLits.get j1).1.1 = i.1 ∧ (derivedLits.get j2).1.1 = i.1 ∧ (derivedLits.get j1).2 = true ∧ (derivedLits.get j2).2 = false ∧
       assignments_i = both ∧ fassignments_i = unassigned ∧ ∀ k : Fin derivedLits.length, k ≠ j1 → k ≠ j2 → (derivedLits.get k).1.1 ≠ i.1)
 
-theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
-    (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) (hsize : acc.1.size = n) (l : Literal (PosFin n))
-    (ih : derivedLits_invariant f f_assignments_size acc.1 hsize acc.2.1) (h : ¬hasAssignment l.snd acc.fst[l.fst.val]! = true) :
-  have hsize' : (Array.modify acc.1 l.1.1 (addAssignment l.snd)).size = n := by rw [Array.size_modify]; exact hsize
-  derivedLits_invariant f f_assignments_size (Array.modify acc.fst l.1.1 (addAssignment l.snd)) hsize' (l :: acc.2.fst) := by
+theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula n)
+    (f_assignments_size : f.assignments.size = n)
+    (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) (hsize : acc.1.size = n)
+    (l : Literal (PosFin n)) (ih : derivedLits_invariant f f_assignments_size acc.1 hsize acc.2.1)
+    (h : ¬hasAssignment l.snd acc.fst[l.fst.val]! = true) :
+    have hsize' : (Array.modify acc.1 l.1.1 (addAssignment l.snd)).size = n := by rw [Array.size_modify]; exact hsize
+    derivedLits_invariant f f_assignments_size (Array.modify acc.fst l.1.1 (addAssignment l.snd)) hsize' (l :: acc.2.fst) := by
   intro _ i
   have i_in_bounds : i.1 < acc.1.size := by rw [hsize]; exact i.2
   have l_in_bounds : l.1.1 < acc.1.size := by rw [hsize]; exact l.1.2.2
@@ -1020,10 +1032,11 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
           exact h3 ⟨k', k'_in_bounds⟩ k'_ne_j1 k'_ne_j2
 
 theorem confirmRupHint_preserves_invariant {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
-  (rupHints : Array Nat) (i : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool)
-  (ih : ∃ hsize : acc.1.size = n, derivedLits_invariant f f_assignments_size acc.1 hsize acc.2.1) :
-  let rupHint_res := (confirmRupHint f.clauses) acc rupHints[i]
-  ∃ hsize : rupHint_res.1.size = n, derivedLits_invariant f f_assignments_size rupHint_res.1 hsize rupHint_res.2.1 := by
+    (rupHints : Array Nat) (i : Fin rupHints.size)
+    (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool)
+    (ih : ∃ hsize : acc.1.size = n, derivedLits_invariant f f_assignments_size acc.1 hsize acc.2.1) :
+    let rupHint_res := (confirmRupHint f.clauses) acc rupHints[i]
+    ∃ hsize : rupHint_res.1.size = n, derivedLits_invariant f f_assignments_size rupHint_res.1 hsize rupHint_res.2.1 := by
   rcases ih with ⟨hsize, ih⟩
   have hsize' : Array.size ((confirmRupHint f.clauses) acc rupHints[i]).1 = n := by
     rw [confirmRupHint_preserves_assignments_size]
@@ -1066,9 +1079,10 @@ theorem confirmRupHint_preserves_invariant {n : Nat} (f : DefaultFormula n) (f_a
         exact ih
 
 theorem derivedLits_postcondition {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
-  (rupHints : Array Nat) (f'_assignments_size : (performRupCheck f rupHints).1.assignments.size = n) :
-  let rupCheckRes := performRupCheck f rupHints
-  derivedLits_invariant f f_assignments_size rupCheckRes.1.assignments f'_assignments_size rupCheckRes.2.1 := by
+    (rupHints : Array Nat)
+    (f'_assignments_size : (performRupCheck f rupHints).1.assignments.size = n) :
+    let rupCheckRes := performRupCheck f rupHints
+    derivedLits_invariant f f_assignments_size rupCheckRes.1.assignments f'_assignments_size rupCheckRes.2.1 := by
   let motive := fun (_ : Nat) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) =>
     ∃ hsize : acc.1.size = n, derivedLits_invariant f f_assignments_size acc.1 hsize acc.2.1
   have h_base : motive 0 (f.assignments, [], false, false) := by
@@ -1084,12 +1098,15 @@ theorem derivedLits_postcondition {n : Nat} (f : DefaultFormula n) (f_assignment
   rcases Array.foldl_induction motive h_base h_inductive with ⟨_, h⟩
   exact h
 
-theorem derivedLits_nodup {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n) (rupHints : Array Nat)
-  (f'_assignments_size : (performRupCheck f rupHints).1.assignments.size = n) (derivedLits: CNF.Clause (PosFin n))
-  (derivedLits_satisfies_invariant:
-    derivedLits_invariant f f_assignments_size (performRupCheck f rupHints).fst.assignments f'_assignments_size derivedLits)
-  (derivedLits_arr : Array (Literal (PosFin n))) (derivedLits_arr_def: derivedLits_arr = { data := derivedLits })
-  (i j : Fin (Array.size derivedLits_arr)) (i_ne_j : i ≠ j) : derivedLits_arr[i] ≠ derivedLits_arr[j] := by
+theorem derivedLits_nodup {n : Nat} (f : DefaultFormula n)
+    (f_assignments_size : f.assignments.size = n) (rupHints : Array Nat)
+    (f'_assignments_size : (performRupCheck f rupHints).1.assignments.size = n)
+    (derivedLits: CNF.Clause (PosFin n))
+    (derivedLits_satisfies_invariant:
+      derivedLits_invariant f f_assignments_size (performRupCheck f rupHints).fst.assignments f'_assignments_size derivedLits)
+    (derivedLits_arr : Array (Literal (PosFin n))) (derivedLits_arr_def: derivedLits_arr = { data := derivedLits })
+    (i j : Fin (Array.size derivedLits_arr)) (i_ne_j : i ≠ j) :
+    derivedLits_arr[i] ≠ derivedLits_arr[j] := by
   intro li_eq_lj
   let li := derivedLits_arr[i]
   have li_in_derivedLits : li ∈ derivedLits := by
@@ -1177,14 +1194,16 @@ theorem derivedLits_nodup {n : Nat} (f : DefaultFormula n) (f_assignments_size :
         specialize h3 ⟨i.1, i_in_bounds⟩ i_ne_k1 i_ne_k2
         simp (config := { decide := true }) [Array.getElem_eq_data_getElem, derivedLits_arr_def, li] at h3
 
-theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
-  (f' : DefaultFormula n) (_f'_def : f' = (performRupCheck f rupHints).1) (f'_assignments_size : f'.assignments.size = n)
-  (derivedLits : CNF.Clause (PosFin n)) (derivedLits_arr : Array (Literal (PosFin n)))
-  (derivedLits_arr_def : derivedLits_arr = {data := derivedLits})
-  (derivedLits_satisfies_invariant :
-    derivedLits_invariant f f_assignments_size f'.assignments f'_assignments_size derivedLits)
-  (_derivedLits_arr_nodup : ∀ (i j : Fin (Array.size derivedLits_arr)), i ≠ j → derivedLits_arr[i] ≠ derivedLits_arr[j]) :
-  clear_insert_induction_motive f f_assignments_size derivedLits_arr 0 f'.assignments := by
+theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormula n)
+    (f_assignments_size : f.assignments.size = n)
+    (f' : DefaultFormula n) (_f'_def : f' = (performRupCheck f rupHints).1)
+    (f'_assignments_size : f'.assignments.size = n) (derivedLits : CNF.Clause (PosFin n))
+    (derivedLits_arr : Array (Literal (PosFin n)))
+    (derivedLits_arr_def : derivedLits_arr = {data := derivedLits})
+    (derivedLits_satisfies_invariant :
+      derivedLits_invariant f f_assignments_size f'.assignments f'_assignments_size derivedLits)
+    (_derivedLits_arr_nodup : ∀ (i j : Fin (Array.size derivedLits_arr)), i ≠ j → derivedLits_arr[i] ≠ derivedLits_arr[j]) :
+    clear_insert_induction_motive f f_assignments_size derivedLits_arr 0 f'.assignments := by
   apply Exists.intro f'_assignments_size
   intro i
   specialize derivedLits_satisfies_invariant i
@@ -1258,8 +1277,10 @@ theorem restoreAssignments_performRupCheck_base_case {n : Nat} (f : DefaultFormu
         exact h3 ⟨k.1, k_in_bounds⟩ k_ne_j1 k_ne_j2
 
 theorem restoreAssignments_performRupCheck {n : Nat} (f : DefaultFormula n) (f_assignments_size : f.assignments.size = n)
-  (rupHints : Array Nat) :
-  restoreAssignments (performRupCheck f rupHints).1.assignments (performRupCheck f rupHints).2.1 = f.assignments := by
+    (rupHints : Array Nat) :
+    restoreAssignments (performRupCheck f rupHints).1.assignments (performRupCheck f rupHints).2.1
+      =
+    f.assignments := by
   rw [restoreAssignments]
   let f' := (performRupCheck f rupHints).1
   have f'_def : f' = (performRupCheck f rupHints).1 := rfl
@@ -1295,7 +1316,8 @@ theorem restoreAssignments_performRupCheck {n : Nat} (f : DefaultFormula n) (f_a
       exact (Nat.not_lt_of_le j1_ge_derivedLits_size) j1.2
 
 theorem rupAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHints : Array Nat) (f' : DefaultFormula n)
-  (f_readyForRupAdd : readyForRupAdd f) (rupAddSuccess : performRupAdd f c rupHints = (f', true)) : f' = insert f c := by
+    (f_readyForRupAdd : readyForRupAdd f) (rupAddSuccess : performRupAdd f c rupHints = (f', true)) :
+    f' = insert f c := by
   rw [performRupAdd] at rupAddSuccess
   simp only [Bool.not_eq_true'] at rupAddSuccess
   split at rupAddSuccess

@@ -12,12 +12,17 @@ namespace Internal
 
 open Std.Sat
 
-/-- Typeclass for formulas. An instance [Formula α β σ] indicates that σ is
-    the type of a formula with variables of type α, clauses of type β, and clause ids of type Nat -/
+/--
+Typeclass for formulas. An instance `[Formula α β σ]` indicates that `σ` is the type of a formula
+with variables of type `α`, clauses of type `β`, and clause ids of type `Nat`.
+-/
 class Formula (α : outParam (Type u)) (β : outParam (Type v)) [Clause α β] (σ : Type w) [Entails α σ] where
-  toList : σ → List β -- A function used exclusively for defining Formula's satisfiability semantics
-  readyForRupAdd : σ → Prop -- A predicate that indicates whether a formula can soundly be passed into performRupAdd
-  readyForRatAdd : σ → Prop -- A predicate that indicates whether a formula can soundly be passed into performRatAdd
+  /-- A function used exclusively for defining Formula's satisfiability semantics. -/
+  toList : σ → List β
+  /-- A predicate that indicates whether a formula can soundly be passed into performRupAdd. -/
+  readyForRupAdd : σ → Prop
+  /-- A predicate that indicates whether a formula can soundly be passed into performRatAdd. -/
+  readyForRatAdd : σ → Prop
   ofArray : Array (Option β) → σ
   ofArray_readyForRupAdd : ∀ arr : Array (Option β), readyForRupAdd (ofArray arr)
   ofArray_readyForRatAdd : ∀ arr : Array (Option β), readyForRatAdd (ofArray arr)
