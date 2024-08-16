@@ -206,14 +206,14 @@ theorem insert_iff {n : Nat} (f : DefaultFormula n) (c1 : DefaultClause n) (c2 :
           simp only [Array.push_data, List.mem_append, List.mem_singleton, Option.some.injEq] at h
           rcases h with h | h
           · exact h
-          · exact False.elim $ c2_ne_c1 h
+          · exact False.elim <| c2_ne_c1 h
       · rw [insert_preserves_rupUnits] at h
-        exact Or.inr $ Or.inl h
+        exact Or.inr <| Or.inl h
       · rw [insert_preserves_ratUnits] at h
-        exact Or.inr $ Or.inr h
+        exact Or.inr <| Or.inr h
     · intro h
       rcases h with h | h | h | h
-      · exact False.elim $ c2_ne_c1 h
+      · exact False.elim <| c2_ne_c1 h
       · apply Or.inl
         simp only [insert]
         split
@@ -221,9 +221,9 @@ theorem insert_iff {n : Nat} (f : DefaultFormula n) (c1 : DefaultClause n) (c2 :
           simp only [Array.push_data, List.mem_append, List.mem_singleton, Option.some.injEq]
           exact Or.inl h
       · rw [insert_preserves_rupUnits]
-        exact Or.inr $ Or.inl h
+        exact Or.inr <| Or.inl h
       · rw [insert_preserves_ratUnits]
-        exact Or.inr $ Or.inr h
+        exact Or.inr <| Or.inr h
 
 theorem limplies_of_insert {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) : Limplies (PosFin n) (insert f c) f := by
   intro p
@@ -293,7 +293,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
       simp only [toList, Array.toList_eq, Array.push_data, List.append_assoc, List.mem_append, List.mem_filterMap,
         List.mem_singleton, id_eq, exists_eq_right, Option.some.injEq, List.mem_map, Prod.exists, Bool.exists_bool]
       rcases hf with hf | hf
-      · exact Or.inl $ Or.inl hf
+      · exact Or.inl <| Or.inl hf
       · exact Or.inr hf
   · next l hc =>
     have hsize : (Array.modify f.assignments l.1 addNegAssignment).size = n := by
@@ -332,7 +332,7 @@ theorem insert_readyForRupAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClaus
       simp only [toList, Array.toList_eq, Array.push_data, List.append_assoc, List.mem_append, List.mem_filterMap,
         List.mem_singleton, id_eq, exists_eq_right, Option.some.injEq, List.mem_map, Prod.exists, Bool.exists_bool]
       rcases hf with hf | hf
-      · exact Or.inl $ Or.inl hf
+      · exact Or.inl <| Or.inl hf
       · exact Or.inr hf
 
 theorem insert_readyForRatAdd {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) :
@@ -366,7 +366,7 @@ theorem mem_of_insertRupUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clau
         exact Or.inr unit_in_units
   have h_insertUnit_fold := List.foldlRecOn units insertUnit (f.rupUnits, f.assignments, false) hb hl
   rcases h with h | ⟨i, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩ | h
-  · exact Or.inr $ Or.inl h
+  · exact Or.inr <| Or.inl h
   · rcases h_insertUnit_fold (i, false) h1 with h_insertUnit_fold | h_insertUnit_fold
     · apply Or.inr ∘ Or.inr ∘ Or.inl ∘ Exists.intro i ∘ Or.inl
       exact ⟨h_insertUnit_fold, h2⟩
@@ -402,7 +402,7 @@ theorem mem_of_insertRatUnits {n : Nat} (f : DefaultFormula n) (units : CNF.Clau
         exact Or.inr unit_in_units
   have h_insertUnit_fold := List.foldlRecOn units insertUnit (f.ratUnits, f.assignments, false) hb hl
   rcases h with h | h | ⟨i, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
-  · exact Or.inr $ Or.inl h
+  · exact Or.inr <| Or.inl h
   · exact (Or.inr ∘ Or.inr ∘ Or.inl) h
   · rcases h_insertUnit_fold (i, false) h1 with h_insertUnit_fold | h_insertUnit_fold
     · apply Or.inr ∘ Or.inr ∘ Or.inr ∘ Exists.intro i ∘ Or.inl
@@ -651,7 +651,7 @@ theorem delete_subset (f : DefaultFormula n) (arr : Array Nat) (c : DefaultClaus
   simp only [delete, Array.foldl_eq_foldl_data]
   have hb : c ∈ toList f → c ∈ toList f := id
   have hl (f' : DefaultFormula n) (ih : c ∈ toList f' → c ∈ toList f) (id : Nat) (_ : id ∈ arr.data) :
-    c ∈ toList (deleteOne f' id) → c ∈ toList f := by intro h; exact ih $ deleteOne_subset f' id c h
+    c ∈ toList (deleteOne f' id) → c ∈ toList f := by intro h; exact ih <| deleteOne_subset f' id c h
   exact List.foldlRecOn arr.data deleteOne f hb hl
 
 end DefaultFormula

@@ -82,7 +82,7 @@ theorem insertRatUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
     rcases cf with cf | cf | cf
     · specialize hp c (Or.inl cf)
       exact hp
-    · specialize hp c $ (Or.inr ∘ Or.inl) cf
+    · specialize hp c <| (Or.inr ∘ Or.inl) cf
       exact hp
     · simp [hf.1] at cf
   rcases h ⟨i.1, i.2.2⟩ with ⟨h1, h2⟩ | ⟨j, b', i_gt_zero, h1, h2, h3, h4⟩ | ⟨j1, j2, i_gt_zero, h1, h2, _, _, _⟩
@@ -244,7 +244,7 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
         cases pv
       · simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
     · simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
-      exact p_unsat_c $ pf unsat_c unsat_c_in_f
+      exact p_unsat_c <| pf unsat_c unsat_c_in_f
 
 theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ assignments_invariant f) (c : DefaultClause n)
     (p : PosFin n → Bool) (pf : p ⊨ f) : (insertRatUnits f (negate c)).2 = true → p ⊨ c := by
@@ -518,7 +518,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
       exists_prop] at h pfc
     rcases h with ⟨c', c'_in_f, pc'⟩
     have c'_in_fc : c' ∈ toList (insert f c) := by rw [insert_iff]; exact Or.inr c'_in_f
-    exact pc' $ pfc c' c'_in_fc
+    exact pc' <| pfc c' c'_in_fc
   · intro fc_unsat p pf
     by_cases pc : p ⊨ c
     · specialize fc_unsat p
@@ -531,7 +531,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
         exact pc' pc
       · simp only [(· ⊨ ·), List.any_eq_true, Prod.exists, Bool.exists_bool,
           Bool.decide_coe, List.all_eq_true] at pf
-        exact pc' $ pf c' c'_in_f
+        exact pc' <| pf c' c'_in_f
     · rw [← Clause.limplies_iff_mem] at pivot_in_c
       let p' : (PosFin n) → Bool := fun a => if a = pivot.1 then pivot.2 else p a
       have p'_entails_c : p' ⊨ c := by
@@ -603,7 +603,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
             apply pf
             assumption
         have p'_entails_c'_del_negPivot : p' ⊨ c'.delete (Literal.negate pivot) := entails_of_irrelevant_assignment h
-        exact p'_not_entails_c' $ Clause.entails_of_entails_delete p'_entails_c'_del_negPivot
+        exact p'_not_entails_c' <| Clause.entails_of_entails_delete p'_entails_c'_del_negPivot
 
 theorem ratAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (pivot : Literal (PosFin n))
     (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat)) (f' : DefaultFormula n)

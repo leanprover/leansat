@@ -242,7 +242,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
     · specialize hp c (Or.inl cf)
       exact hp
     · simp only [f_readyForRupAdd.1, Array.data_toArray, List.find?, List.not_mem_nil, false_and, or_self, exists_false] at cf
-    · specialize hp c $ (Or.inr ∘ Or.inr) cf
+    · specialize hp c <| (Or.inr ∘ Or.inr) cf
       exact hp
   rcases h ⟨i.1, i.2.2⟩ with ⟨h1, h2⟩ | ⟨j, b', i_gt_zero, h1, h2, h3, h4⟩ | ⟨j1, j2, i_gt_zero, h1, h2, _, _, _⟩
   · rw [h1] at hb
@@ -406,7 +406,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
             · next p_entails_assignment =>
               apply Or.inl
               intro i i_lt_idx_add_one p_entails_c_arr_i
-              rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
+              rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
               · exact ih1 i i_lt_idx p_entails_c_arr_i
               · simp only [(· ⊨ ·), i_eq_idx, c_arr_idx_eq_false] at p_entails_c_arr_i
                 simp only [(· ⊨ ·), Bool.not_eq_true] at p_entails_assignment
@@ -425,7 +425,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
             · next p_entails_assignment =>
               apply Or.inl
               intro i i_lt_idx_add_one p_entails_c_arr_i
-              rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
+              rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ i_lt_idx_add_one with i_lt_idx | i_eq_idx
               · exact ih1 i i_lt_idx p_entails_c_arr_i
               · simp only [(· ⊨ ·), i_eq_idx, c_arr_idx_eq_false] at p_entails_c_arr_i
                 simp only [(· ⊨ ·), Bool.not_eq_true] at p_entails_assignment
@@ -483,7 +483,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
       · simp only at h
       · simp only [reducedToUnit.injEq] at h
         rw [← h]
-        rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ j_lt_idx_add_one with j_lt_idx | j_eq_idx
+        rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ j_lt_idx_add_one with j_lt_idx | j_eq_idx
         · exfalso
           rcases ih.1 rfl p with ih1 | ih1
           · exact ih1 j j_lt_idx p_entails_c_arr_j
@@ -498,7 +498,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
         · next c_arr_idx_eq_false =>
           simp only [Bool.not_eq_true] at c_arr_idx_eq_false
           simp only [reducedToUnit.injEq] at h
-          rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ j_lt_idx_add_one with j_lt_idx | j_eq_idx
+          rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ j_lt_idx_add_one with j_lt_idx | j_eq_idx
           · rw [← h]
             have ih2_precondition : ∃ i : Fin c_arr.size, i.val < idx.val ∧ (p ⊨ c_arr[i]) :=
               (Exists.intro j ∘ And.intro j_lt_idx) p_entails_c_arr_j
@@ -513,7 +513,7 @@ theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFi
         · next c_arr_idx_eq_true =>
           simp only [Bool.not_eq_true', Bool.not_eq_false] at c_arr_idx_eq_true
           simp only [reducedToUnit.injEq] at h
-          rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ j_lt_idx_add_one with j_lt_idx | j_eq_idx
+          rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ j_lt_idx_add_one with j_lt_idx | j_eq_idx
           · rw [← h]
             have ih2_precondition : ∃ i : Fin c_arr.size, i.val < idx.val ∧ (p ⊨ c_arr[i]) :=
               (Exists.intro j ∘ And.intro j_lt_idx) p_entails_c_arr_j
@@ -561,7 +561,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
         rcases idx_exists with ⟨idx, hidx⟩
         specialize h1 idx idx.2
         rw [hidx] at h1
-        exact h1 $ of_decide_eq_true pc2
+        exact h1 <| of_decide_eq_true pc2
       · simp only [Clause.toList, DefaultClause.toList] at pc1
         rw [c_clause_rw] at pc1
         have idx_exists : ∃ idx : Fin c_arr.size, c_arr[idx] = (i, true) := by
@@ -571,7 +571,7 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
         rcases idx_exists with ⟨idx, hidx⟩
         specialize h1 idx idx.2
         rw [hidx] at h1
-        exact h1 $ of_decide_eq_true pc2
+        exact h1 <| of_decide_eq_true pc2
     · exact Or.inr h1
   · intro l hl p hp pc
     apply h2 l hl p hp
@@ -641,7 +641,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           simp only [(· ⊨ ·), List.all_eq_true] at pf
           specialize pf c c_in_f
           simp only [(· ⊨ ·)] at pc
-          exact pc $ of_decide_eq_true pf
+          exact pc <| of_decide_eq_true pf
         · exact Or.inl pacc
       · next l b heq =>
         simp only [confirmRupHint_fold_entails_hsat_motive]
@@ -652,7 +652,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           have pacc := h1 p pf
           have pc : p ⊨ c := by
             simp only [(· ⊨ ·), List.all_eq_true] at pf
-            exact of_decide_eq_true $ pf c c_in_f
+            exact of_decide_eq_true <| pf c c_in_f
           have plb := reducedToUnit_entails_limplies c acc.1 ⟨l, b⟩ heq p pacc pc
           simp only [(· ⊨ ·), Bool.not_eq_true]
           intro i
@@ -760,7 +760,7 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
         cases pv
       · simp only [Literal.negate, Bool.not_true, Prod.mk.injEq, and_false] at v'_eq_v
     · simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
-      exact p_unsat_c $ pf unsat_c unsat_c_in_f
+      exact p_unsat_c <| pf unsat_c unsat_c_in_f
 
 theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
     (c : DefaultClause n) (rupHints : Array Nat) :

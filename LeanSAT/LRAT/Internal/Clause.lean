@@ -228,7 +228,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n)))
         omega
       List.get c'.clause i = arr[idx + i]'idx_in_bounds
   have h_base : motive arr.size (some empty) := by
-    apply Exists.intro $ Nat.le_refl arr.size
+    apply Exists.intro <| Nat.le_refl arr.size
     intro c' heq
     simp only [Option.some.injEq] at heq
     have hsize : List.length c'.clause = arr.size- arr.size := by
@@ -244,7 +244,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n)))
   have h_inductive (idx : Fin arr.size) (acc : Option (DefaultClause n)) (ih : motive (idx.1 + 1) acc) :
     motive idx.1 (fold_fn arr[idx] acc) := by
     rcases ih with ⟨idx_add_one_le_arr_size, ih⟩
-    apply Exists.intro $ Nat.le_of_succ_le idx_add_one_le_arr_size
+    apply Exists.intro <| Nat.le_of_succ_le idx_add_one_le_arr_size
     intro c' heq
     simp only [Fin.getElem_fin, fold_fn] at heq
     split at heq
@@ -260,7 +260,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n)))
         · next h_dup =>
           exfalso -- h_dup contradicts arrNodup
           simp only [List.contains] at h_dup
-          rcases List.get_of_mem $ List.mem_of_elem_eq_true h_dup with ⟨j, hj⟩
+          rcases List.get_of_mem <| List.mem_of_elem_eq_true h_dup with ⟨j, hj⟩
           specialize ih j
           rw [hj] at ih
           have idx_add_one_add_j_in_bounds : idx.1 + 1 + j.1 < arr.size := by
@@ -309,10 +309,10 @@ def delete (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultClause n :=
     rcases c.nodupkey l' with ih | ih
     · apply Or.inl
       intro h
-      exact ih $ List.mem_of_mem_erase h
+      exact ih <| List.mem_of_mem_erase h
     · apply Or.inr
       intro h
-      exact ih $ List.mem_of_mem_erase h
+      exact ih <| List.mem_of_mem_erase h
   have nodup := by
     simp only [clause]
     exact List.Nodup.erase l c.nodup

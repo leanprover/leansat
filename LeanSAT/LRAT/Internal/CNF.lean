@@ -93,9 +93,9 @@ theorem entails_of_entails_delete [DecidableEq α] [Clause α β] {p : α → Bo
   simp only [(· ⊨ ·), eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
   rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
   · simp only [delete_iff, ne_eq] at h1
-    exact Exists.intro v $ Or.inl ⟨h1.2, h2⟩
+    exact Exists.intro v <| Or.inl ⟨h1.2, h2⟩
   · simp only [delete_iff, ne_eq] at h1
-    exact Exists.intro v $ Or.inr ⟨h1.2, h2⟩
+    exact Exists.intro v <| Or.inr ⟨h1.2, h2⟩
 
 end Clause
 

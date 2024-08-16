@@ -221,7 +221,7 @@ def performRatCheck {n : Nat} (f : DefaultFormula n) (negPivot : Literal (PosFin
   | ⟨clauses, rupUnits, ratUnits, assignments⟩, (id, rupHints) =>
     match clauses[id]! with
     | some c =>
-      let negC := negate $ c.delete negPivot
+      let negC := negate <| c.delete negPivot
       let (f, foundContradiction) := insertRatUnits ⟨clauses, rupUnits, ratUnits, assignments⟩ negC
       if foundContradiction then
         let f := clearRatUnits f

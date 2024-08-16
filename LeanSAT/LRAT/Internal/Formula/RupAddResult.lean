@@ -244,7 +244,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                   · exfalso
                     have k_property := k.2
                     simp only [insertUnit, h5, ite_false, Array.size_push] at k_property
-                    rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
+                    rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
                     · exact h k_lt_units_size
                     · simp only [← k_eq_units_size, not_true, mostRecentUnitIdx] at k_ne_l
                       exact k_ne_l rfl
@@ -338,7 +338,7 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
                 have k_eq_units_size : k.1 = units.size := by
                   have k_property := k.2
                   simp only [insertUnit, h, ite_false, Array.size_push] at k_property
-                  rcases Nat.lt_or_eq_of_le $ Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
+                  rcases Nat.lt_or_eq_of_le <| Nat.le_of_lt_succ k_property with k_lt_units_size | k_eq_units_size
                   · exfalso; exact k_not_lt_units_size k_lt_units_size
                   · exact k_eq_units_size
                 simp only [k_eq_units_size, Array.get_push_eq, ne_eq]
@@ -591,7 +591,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                   rw [← idx_eq_j1]
                   intro k_eq_idx
                   rw [k_eq_idx] at k_ge_idx_add_one
-                  exact Nat.lt_irrefl idx.1 $ Nat.lt_of_succ_le k_ge_idx_add_one
+                  exact Nat.lt_irrefl idx.1 <| Nat.lt_of_succ_le k_ge_idx_add_one
                 have h3 := units_nodup k j1 k_ne_j1
                 simp only [Fin.getElem_fin, ih1, ← h1, ← h2, ne_eq] at h3
                 exact h3 rfl
@@ -633,7 +633,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                     rw [← idx_eq_j2]
                     intro k_eq_idx
                     rw [k_eq_idx] at k_ge_idx_add_one
-                    exact Nat.lt_irrefl idx.1 $ Nat.lt_of_succ_le k_ge_idx_add_one
+                    exact Nat.lt_irrefl idx.1 <| Nat.lt_of_succ_le k_ge_idx_add_one
                   have h3 := units_nodup k j2 k_ne_j2
                   simp only [Bool.not_eq_true] at h2
                   simp only [Fin.getElem_fin, ih2, ← h1, ← h2, ne_eq] at h3
@@ -680,7 +680,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                 · constructor
                   · exact ih4
                   · intro k k_ge_idx_add_one
-                    exact ih5 k $ Nat.le_of_succ_le k_ge_idx_add_one
+                    exact ih5 k <| Nat.le_of_succ_le k_ge_idx_add_one
 
 theorem clear_insertRup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
   (units : CNF.Clause (PosFin n)) : clearRupUnits (f.insertRupUnits units).1 = f := by
@@ -802,7 +802,7 @@ theorem confirmRupHint_preserves_invariant_helper {n : Nat} (f : DefaultFormula 
             have k'_in_bounds : k' < acc.2.1.length := by
               simp only [List.length_cons, Nat.succ_eq_add_one] at k'_succ_in_bounds
               exact Nat.lt_of_succ_lt_succ k'_succ_in_bounds
-            exact h2 (acc.2.1.get ⟨k', k'_in_bounds⟩) $ List.get_mem acc.snd.fst k' k'_in_bounds
+            exact h2 (acc.2.1.get ⟨k', k'_in_bounds⟩) <| List.get_mem acc.snd.fst k' k'_in_bounds
     · next l_ne_i =>
       apply Or.inl
       constructor
@@ -1036,7 +1036,7 @@ theorem confirmRupHint_preserves_invariant {n : Nat} (f : DefaultFormula n) (f_a
       f.clauses[rupHints[i.1]]? = none ∨ f.clauses[rupHints[i.1]]? = some none ∨ ∃ c, f.clauses[rupHints[i.val]]? = some (some c) := by
       match f.clauses[rupHints[i.val]]? with
       | none => exact Or.inl rfl
-      | some none => exact Or.inr $ Or.inl rfl
+      | some none => exact Or.inr <| Or.inl rfl
       | some (some c) => exact (Or.inr ∘ Or.inr ∘ Exists.intro c) rfl
     rcases rupHint_clause_options with rupHint_clause_eq_none | rupHint_clause_eq_some_none | ⟨c, rupHint_clause_eq_c⟩
     · simp only [rupHint_clause_eq_none]
@@ -1113,7 +1113,7 @@ theorem derivedLits_nodup {n : Nat} (f : DefaultFormula n) (f_assignments_size :
       have j_ne_k : ⟨j.1, j_in_bounds⟩ ≠ k := by
         intro j_eq_k
         simp only [← j_eq_k] at k_eq_i
-        exact i_ne_j $ Fin.eq_of_val_eq (Eq.symm k_eq_i)
+        exact i_ne_j <| Fin.eq_of_val_eq (Eq.symm k_eq_i)
       specialize h3 ⟨j.1, j_in_bounds⟩ j_ne_k
       simp only [derivedLits_arr_def, Fin.getElem_fin] at li_eq_lj
       simp only [Fin.getElem_fin, derivedLits_arr_def, ne_eq, li, li_eq_lj] at h3
