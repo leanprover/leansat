@@ -12,8 +12,8 @@ namespace Internal
 For variables of type `α` and formulas of type `β`, `Entails.eval a f` is meant to determine whether
 a formula `f` is true under assignment `a`.
 -/
-class Entails (α : Type u) (β : Type v) :=
-  (eval : (α → Bool) → β → Prop)
+class Entails (α : Type u) (β : Type v) where
+  eval : (α → Bool) → β → Prop
 
 /--
 `a ⊨ f` reads formula `f` is true under assignment `a`.
@@ -21,120 +21,103 @@ class Entails (α : Type u) (β : Type v) :=
 scoped infix:25 " ⊨ " => Entails.eval
 
 /--
-`a ⊭ f` reads clause `f` is false under assignment `a`.
+`a ⊭ f` reads formula `f` is false under assignment `a`.
 -/
-scoped notation:25 p:25 " ⊭ " f:30 => ¬(Entails.eval p f)
+scoped notation:25 a:25 " ⊭ " f:30 => ¬(Entails.eval a f)
 
 /--
 `f` is not true under any assignment.
 -/
-def unsatisfiable (α : Type u) {σ : Type v} [Entails α σ] (f : σ) : Prop :=
-  ∀ (p : α → Bool), p ⊭ f
+def Unsatisfiable (α : Type u) {σ : Type v} [Entails α σ] (f : σ) : Prop :=
+  ∀ (a : α → Bool), a ⊭ f
 
 /-- `f1` and `f2` are logically equivalent -/
-def liff (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1) (f2 : σ2)
-    : Prop :=
-  ∀ (p : α → Bool), p ⊨ f1 ↔ p ⊨ f2
+def Liff (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1)
+    (f2 : σ2) : Prop :=
+  ∀ (a : α → Bool), a ⊨ f1 ↔ a ⊨ f2
 
 /-- `f1` logically implies `f2` -/
-def limplies (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1) (f2 : σ2)
-    : Prop :=
-  ∀ (p : α → Bool), p ⊨ f1 → p ⊨ f2
+def Limplies (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1)
+    (f2 : σ2) : Prop :=
+  ∀ (a : α → Bool), a ⊨ f1 → a ⊨ f2
 
 /-- `f1` is unsat iff `f2` is unsat -/
-def equisat (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1) (f2 : σ2)
-    : Prop :=
-  unsatisfiable α f1 ↔ unsatisfiable α f2
+def Equisat (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1)
+    (f2 : σ2) : Prop :=
+  Unsatisfiable α f1 ↔ Unsatisfiable α f2
 
 /--
 For any given assignment `f1` or `f2` is not true.
 -/
-def incompatible (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1)
+def Incompatible (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1)
     (f2 : σ2) : Prop :=
-  ∀ (p : α → Bool), (p ⊭ f1) ∨ (p ⊭ f2)
+  ∀ (a : α → Bool), (a ⊭ f1) ∨ (a ⊭ f2)
 
-protected theorem liff.refl {α : Type u} {σ : Type v} [Entails α σ] (f : σ) : liff α f f :=
+protected theorem Liff.refl {α : Type u} {σ : Type v} [Entails α σ] (f : σ) : Liff α f f :=
   (fun _ => Iff.rfl)
 
-protected theorem liff.symm {α : Type u} {σ1 : Type v} {σ2 : Type 2} [Entails α σ1] [Entails α σ2]
-    (f1 : σ1) (f2 : σ2)
-    : liff α f1 f2 → liff α f2 f1 := by
+protected theorem Liff.symm {α : Type u} {σ1 : Type v} {σ2 : Type 2} [Entails α σ1] [Entails α σ2]
+    (f1 : σ1) (f2 : σ2) :
+    Liff α f1 f2 → Liff α f2 f1 := by
   intros h p
   rw [h p]
 
-protected theorem liff.trans {α : Type u} {σ1 : Type v} {σ2 : Type w} {σ3 : Type x} [Entails α σ1]
-    [Entails α σ2] [Entails α σ3] (f1 : σ1) (f2 : σ2) (f3 : σ3)
-    : liff α f1 f2 → liff α f2 f3 → liff α f1 f3 := by
-  intros f1_eq_f2 f2_eq_f3 p
-  rw [f1_eq_f2 p, f2_eq_f3 p]
+protected theorem Liff.trans {α : Type u} {σ1 : Type v} {σ2 : Type w} {σ3 : Type x} [Entails α σ1]
+    [Entails α σ2] [Entails α σ3] (f1 : σ1) (f2 : σ2) (f3 : σ3) :
+    Liff α f1 f2 → Liff α f2 f3 → Liff α f1 f3 := by
+  intros f1_eq_f2 f2_eq_f3 a
+  rw [f1_eq_f2 a, f2_eq_f3 a]
 
-protected theorem limplies.refl {α : Type u} {σ : Type v} [Entails α σ] (f : σ) : limplies α f f :=
+protected theorem Limplies.refl {α : Type u} {σ : Type v} [Entails α σ] (f : σ) : Limplies α f f :=
   (fun _ => id)
 
-protected theorem limplies.trans {α : Type u} {σ1 : Type v} {σ2 : Type w} {σ3 : Type x} [Entails α σ1]
-    [Entails α σ2] [Entails α σ3] (f1 : σ1) (f2 : σ2) (f3 : σ3)
-    : limplies α f1 f2 → limplies α f2 f3 → limplies α f1 f3 := by
-  intros f1_implies_f2 f2_implies_f3 p p_entails_f1
-  exact f2_implies_f3 p <| f1_implies_f2 p p_entails_f1
+protected theorem Limplies.trans {α : Type u} {σ1 : Type v} {σ2 : Type w} {σ3 : Type x}
+    [Entails α σ1] [Entails α σ2] [Entails α σ3] (f1 : σ1) (f2 : σ2) (f3 : σ3) :
+    Limplies α f1 f2 → Limplies α f2 f3 → Limplies α f1 f3 := by
+  intros f1_implies_f2 f2_implies_f3 a a_entails_f1
+  exact f2_implies_f3 a <| f1_implies_f2 a a_entails_f1
 
 theorem liff_iff_limplies_and_limplies {α : Type u} {σ1 : Type v} {σ2 : Type w} [Entails α σ1]
-    [Entails α σ2] (f1 : σ1) (f2 : σ2)
-    : liff α f1 f2 ↔ limplies α f1 f2 ∧ limplies α f2 f1 := by
-  constructor
-  . intro h
-    constructor
-    . intro p
-      rw [h p]
-      exact id
-    . intro p
-      rw [h p]
-      exact id
-  . intros h p
-    constructor
-    . exact h.1 p
-    . exact h.2 p
+    [Entails α σ2] (f1 : σ1) (f2 : σ2) :
+    Liff α f1 f2 ↔ Limplies α f1 f2 ∧ Limplies α f2 f1 := by
+  simp [Liff, Limplies, iff_iff_implies_and_implies, forall_and]
 
 theorem liff_unsat {α : Type u} {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1)
-    (f2 : σ2) (h : liff α f1 f2)
-    : unsatisfiable α f1 ↔ unsatisfiable α f2 := by
-  constructor
-  . intros f1_unsat p p_entails_f2
-    rw [← h p] at p_entails_f2
-    exact f1_unsat p p_entails_f2
-  . intros f2_unsat p p_entails_f1
-    rw [h p] at p_entails_f1
-    exact f2_unsat p p_entails_f1
+    (f2 : σ2) (h : Liff α f1 f2) :
+    Unsatisfiable α f1 ↔ Unsatisfiable α f2 := by
+  simp only [Liff] at h
+  simp [Unsatisfiable, h]
 
-theorem limplies_unsat {α : Type u} {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2] (f1 : σ1)
-    (f2 : σ2) (h : limplies α f2 f1)
-    : unsatisfiable α f1 → unsatisfiable α f2 := by
-  intros f1_unsat p p_entails_f2
-  exact f1_unsat p <| h p p_entails_f2
+theorem limplies_unsat {α : Type u} {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2]
+    (f1 : σ1) (f2 : σ2) (h : Limplies α f2 f1) :
+    Unsatisfiable α f1 → Unsatisfiable α f2 := by
+  intros f1_unsat a a_entails_f2
+  exact f1_unsat a <| h a a_entails_f2
 
 theorem incompatible_of_unsat (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2]
-    (f1 : σ1) (f2 : σ2)
-    : unsatisfiable α f1 → incompatible α f1 f2 := by
-  intro h p
-  exact Or.inl <| h p
+    (f1 : σ1) (f2 : σ2) :
+    Unsatisfiable α f1 → Incompatible α f1 f2 := by
+  intro h a
+  exact Or.inl <| h a
 
 theorem unsat_of_limplies_and_incompatible (α : Type u) {σ1 : Type v} {σ2 : Type w} [Entails α σ1]
-    [Entails α σ2] (f1 : σ1) (f2 : σ2)
-    : limplies α f1 f2 → incompatible α f1 f2 → unsatisfiable α f1 := by
-  intro h1 h2 p pf1
-  cases h2 p
-  . next h2 =>
-    exact h2 pf1
-  . next h2 =>
-    exact h2 <| h1 p pf1
+    [Entails α σ2] (f1 : σ1) (f2 : σ2) :
+    Limplies α f1 f2 → Incompatible α f1 f2 → Unsatisfiable α f1 := by
+  intro h1 h2 a af1
+  cases h2 a
+  · next h2 =>
+    exact h2 af1
+  · next h2 =>
+    exact h2 <| h1 a af1
 
-protected theorem incompatible.symm {α : Type u} {σ1 : Type v} {σ2 : Type w} [Entails α σ1] [Entails α σ2]
-    (f1 : σ1) (f2 : σ2)
-    : incompatible α f1 f2 ↔ incompatible α f2 f1 := by
+protected theorem Incompatible.symm {α : Type u} {σ1 : Type v} {σ2 : Type w} [Entails α σ1]
+    [Entails α σ2] (f1 : σ1) (f2 : σ2) :
+    Incompatible α f1 f2 ↔ Incompatible α f2 f1 := by
   constructor
-  . intro h p
-    exact Or.symm <| h p
-  . intro h p
-    exact Or.symm <| h p
+  · intro h a
+    exact Or.symm <| h a
+  · intro h a
+    exact Or.symm <| h a
 
 end Internal
 end LRAT

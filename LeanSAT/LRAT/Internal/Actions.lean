@@ -31,8 +31,8 @@ predicate to indicate that the pivot provided by the `addRat` action is indeed i
 clause.
 -/
 def WellFormedAction [Clause α β] : Action β α → Prop
-  -- Note that `Sat.limplies α p c` is equivalent to `p ∈ toList c` by `limplies_iff_mem` in CNF.lean
-  | .addRat _ c p _ _ => limplies α p c
+  -- Note that `Limplies α p c` is equivalent to `p ∈ toList c` by `limplies_iff_mem` in CNF.lean
+  | .addRat _ c p _ _ => Limplies α p c
   | _ => True
 
 def natLiteralToPosFinLiteral {n : Nat} (x : Literal Nat) (x_ne_zero : x.1 ≠ 0) : Option (Literal (PosFin n)) := do
@@ -43,8 +43,10 @@ def natLiteralToPosFinLiteral {n : Nat} (x : Literal Nat) (x_ne_zero : x.1 ≠ 0
 
 def intToLiteralPure {n : Nat} (x : Int) (x_ne_zero : x ≠ 0) : Option (Literal (PosFin n)) := do
   if h : x.natAbs < n then
-    if x > 0 then some (⟨x.natAbs, ⟨by omega, h⟩⟩, true)
-    else some (⟨x.natAbs, ⟨by omega, h⟩⟩, false)
+    if x > 0 then
+      some (⟨x.natAbs, ⟨by omega, h⟩⟩, true)
+    else
+      some (⟨x.natAbs, ⟨by omega, h⟩⟩, false)
   else
     none
 
@@ -81,8 +83,8 @@ def intActionToDefaultClauseAction (n : Nat) : IntAction → Option (DefaultClau
       else
         let c := c.filterMap id
         match Clause.ofArray c with
-        | none => none
         | some c => some <| .addRat cId c pivot rupHints ratHints
+        | none => none
     else
       none
   | .del ids => some <| .del ids

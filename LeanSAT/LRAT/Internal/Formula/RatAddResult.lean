@@ -49,55 +49,55 @@ theorem insertRatUnits_nodup {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits =
   have h := insertRatUnits_postcondition f hf units ⟨li.1, li.2.2⟩
   simp only [ne_eq, Bool.not_eq_true, exists_and_right] at h
   rcases h with ⟨_, h2⟩ | ⟨k, b, _, _, _, h4⟩ | ⟨k1, k2, li_gt_zero, h1, h2, h3, h4, h5⟩
-  . specialize h2 j
+  · specialize h2 j
     rw [hj] at h2
     contradiction
-  . by_cases i = k
-    . next i_eq_k =>
+  · by_cases i = k
+    · next i_eq_k =>
       have j_ne_k : j ≠ k := by rw [← i_eq_k]; exact i_ne_j.symm
       specialize h4 j j_ne_k
       simp (config := { decide := true }) only [hj] at h4
-    . next i_ne_k =>
+    · next i_ne_k =>
       specialize h4 i i_ne_k
       simp (config := { decide := true }) only [hi] at h4
-  . by_cases bi
-    . next bi_eq_true =>
+  · by_cases bi
+    · next bi_eq_true =>
       by_cases i = k1
-      . next i_eq_k1 =>
+      · next i_eq_k1 =>
         have j_ne_k1 : j ≠ k1 := by rw [← i_eq_k1]; exact i_ne_j.symm
         by_cases j = k2
-        . next j_eq_k2 =>
+        · next j_eq_k2 =>
           rw [← j_eq_k2, hj, bi_eq_true] at h2
           simp at h2
-        . next j_ne_k2 =>
+        · next j_ne_k2 =>
           specialize h5 j j_ne_k1 j_ne_k2
           simp (config := { decide := true }) only [hj] at h5
-      . next i_ne_k1 =>
+      · next i_ne_k1 =>
         by_cases i = k2
-        . next i_eq_k2 =>
+        · next i_eq_k2 =>
           rw [← i_eq_k2, hi, bi_eq_true] at h2
           simp at h2
-        . next i_ne_k2 =>
+        · next i_ne_k2 =>
           specialize h5 i i_ne_k1 i_ne_k2
           simp only [hi, not_true] at h5
-    . next bi_eq_false =>
+    · next bi_eq_false =>
       simp only [Bool.not_eq_true] at bi_eq_false
       by_cases i = k2
-      . next i_eq_k2 =>
+      · next i_eq_k2 =>
         have j_ne_k2 : j ≠ k2 := by rw [← i_eq_k2]; exact i_ne_j.symm
         by_cases j = k1
-        . next j_eq_k1 =>
+        · next j_eq_k1 =>
           rw [← j_eq_k1, hj, bi_eq_false] at h1
           simp at h1
-        . next j_ne_k1 =>
+        · next j_ne_k1 =>
           specialize h5 j j_ne_k1 j_ne_k2
           simp (config := { decide := true }) only [hj] at h5
-      . next i_ne_k2 =>
+      · next i_ne_k2 =>
         by_cases i = k1
-        . next i_eq_k1 =>
+        · next i_eq_k1 =>
           rw [← i_eq_k1, hi, bi_eq_false] at h1
           simp at h1
-        . next i_ne_k1 =>
+        · next i_ne_k1 =>
           specialize h5 i i_ne_k1 i_ne_k2
           simp (config := { decide := true }) only [hi] at h5
 
@@ -116,10 +116,10 @@ theorem clear_insertRat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] 
     (units : CNF.Clause (PosFin n)) : clearRatUnits (f.insertRatUnits units).1 = f := by
   simp only [clearRatUnits]
   ext : 1
-  . simp only [insertRatUnits]
-  . simp only [insertRatUnits]
-  . rw [hf.1]
-  . simp only
+  · simp only [insertRatUnits]
+  · simp only [insertRatUnits]
+  · rw [hf.1]
+  · simp only
     let motive := clear_insert_induction_motive f hf.2 (insertRatUnits f units).1.ratUnits
     have h_base : motive 0 (insertRatUnits f units).1.assignments := clear_insertRat_base_case f hf units
     have h_inductive (idx : Fin (insertRatUnits f units).1.ratUnits.size) (assignments : Array Assignment)
@@ -128,23 +128,23 @@ theorem clear_insertRat {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] 
         (insertRatUnits_nodup f hf units) idx assignments ih
     rcases Array.foldl_induction motive h_base h_inductive with ⟨h_size, h⟩
     apply Array.ext
-    . rw [h_size, hf.2]
-    . intro i hi1 hi2
+    · rw [h_size, hf.2]
+    · intro i hi1 hi2
       have i_lt_n : i < n := by omega
       specialize h ⟨i, i_lt_n⟩
       rcases h with h | h | h
-      . exact h.1
-      . omega
-      . omega
+      · exact h.1
+      · omega
+      · omega
 
 theorem performRatCheck_preserves_formula {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
     (p : Literal (PosFin n)) (ratHint : Nat × Array Nat) : (performRatCheck f p ratHint).1 = f := by
   simp only [performRatCheck, Bool.or_eq_true, Bool.not_eq_true']
   split
-  . next c _ =>
+  · next c _ =>
     split
-    . rw [clear_insertRat f hf]
-    . let fc := (insertRatUnits f (negate (DefaultClause.delete c p))).1
+    · rw [clear_insertRat f hf]
+    · let fc := (insertRatUnits f (negate (DefaultClause.delete c p))).1
       have fc_assignments_size : fc.assignments.size = n := by rw [insertRatUnits_preserves_assignments_size, hf.2]
       have insertRatUnits_rw : (insertRatUnits f (negate (DefaultClause.delete c p))).1 =
         ⟨(insertRatUnits f (negate (DefaultClause.delete c p))).1.clauses,
@@ -155,7 +155,7 @@ theorem performRatCheck_preserves_formula {n : Nat} (f : DefaultFormula n) (hf :
       rw [restoreAssignments_performRupCheck fc fc_assignments_size ratHint.2, ← insertRatUnits_rw,
         clear_insertRat f hf (negate (DefaultClause.delete c p))]
       split <;> rfl
-  . rfl
+  · rfl
 
 theorem performRatCheck_fold_preserves_formula {n : Nat} (f : DefaultFormula n) (hf : f.ratUnits = #[] ∧ f.assignments.size = n)
     (p : Literal (PosFin n)) (ratHints : Array (Nat × Array Nat)) :
@@ -172,8 +172,8 @@ theorem performRatCheck_fold_preserves_formula {n : Nat} (f : DefaultFormula n) 
     intro ih
     rw [ih]
     split
-    . exact performRatCheck_preserves_formula f hf p ratHints[idx]
-    . rfl
+    · exact performRatCheck_preserves_formula f hf p ratHints[idx]
+    · rfl
   exact Array.foldl_induction motive h_base h_inductive
 
 theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p : Literal (PosFin n))
@@ -183,15 +183,15 @@ theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p 
   rw [performRatAdd] at ratAddSuccess
   simp at ratAddSuccess
   split at ratAddSuccess
-  . split at ratAddSuccess
-    . simp at ratAddSuccess
-    . split at ratAddSuccess
-      . simp at ratAddSuccess
-      . split at ratAddSuccess
-        . simp at ratAddSuccess
-        . split at ratAddSuccess
-          . simp at ratAddSuccess
-          . next performRatCheck_fold_success =>
+  · split at ratAddSuccess
+    · simp at ratAddSuccess
+    · split at ratAddSuccess
+      · simp at ratAddSuccess
+      · split at ratAddSuccess
+        · simp at ratAddSuccess
+        · split at ratAddSuccess
+          · simp at ratAddSuccess
+          · next performRatCheck_fold_success =>
             simp only [Bool.not_eq_false] at performRatCheck_fold_success
             let fc := (insertRupUnits f (negate c)).1
             have fc_assignments_size : (insertRupUnits f (negate c)).1.assignments.size = n := by
@@ -213,7 +213,7 @@ theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p 
               performRupCheck_preserves_clauses, performRupCheck_preserves_rupUnits, performRupCheck_preserves_ratUnits,
               restoreAssignments_performRupCheck fc fc_assignments_size, ← insertRupUnits_rw,
               clear_insertRup f f_readyForRatAdd.2 (negate c), fc, performRupCheck_res]
-  . simp at ratAddSuccess
+  · simp at ratAddSuccess
 
 end DefaultFormula
 

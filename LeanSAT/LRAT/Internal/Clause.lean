@@ -109,9 +109,9 @@ theorem not_tautology (c : DefaultClause n) (l : Literal (PosFin n)) :
   simp only [toList, Literal.negate]
   have h := c.nodupkey l.1
   by_cases hl : l.2
-  . simp only [hl, Bool.not_true]
+  · simp only [hl, Bool.not_true]
     rwa [← hl] at h
-  . simp only [Bool.not_eq_true] at hl
+  · simp only [Bool.not_eq_true] at hl
     simp only [hl, Bool.not_false]
     apply Or.symm
     rwa [← hl] at h
@@ -131,10 +131,10 @@ def unit (l : Literal (PosFin n)) : DefaultClause n :=
   have nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
     intro l'
     by_cases l.2
-    . apply Or.inr
+    · apply Or.inr
       cases l
       simp_all [clause]
-    . apply Or.inl
+    · apply Or.inl
       cases l
       simp_all [clause]
   have nodup : List.Nodup clause:= by simp [clause]
@@ -151,8 +151,8 @@ theorem isUnit_iff (c : DefaultClause n) (l : Literal (PosFin n)) :
     isUnit c = some l ↔ toList c = [l] := by
   simp only [isUnit, toList]
   split
-  . next l' heq => simp [heq]
-  . next hne =>
+  · next l' heq => simp [heq]
+  · next hne =>
     simp only [false_iff]
     apply hne
 
@@ -160,10 +160,15 @@ def negate (c : DefaultClause n) : CNF.Clause (PosFin n) := c.clause.map Literal
 
 theorem negate_eq (c : DefaultClause n) : negate c = (toList c).map Literal.negate := rfl
 
-/-- Attempts to add the literal (idx, b) to clause c. Returns none if doing so would make c a tautology -/
+/--
+Attempts to add the literal `(idx, b)` to clause `c`. Returns none if doing so would make `c` a
+tautology.
+-/
 def insert (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClause n) :=
-  if heq1 : c.clause.contains (l.1, not l.2) then none -- Adding l would make c a tautology
-  else if heq2 : c.clause.contains l then some c
+  if heq1 : c.clause.contains (l.1, not l.2) then
+    none -- Adding l would make c a tautology
+  else if heq2 : c.clause.contains l then
+    some c
   else
     let clause := l :: c.clause
     have nodupkey : ∀ (l : PosFin n), ¬(l, true) ∈ clause ∨ ¬(l, false) ∈ clause := by
@@ -171,32 +176,32 @@ def insert (c : DefaultClause n) (l : Literal (PosFin n)) : Option (DefaultClaus
       simp only [List.contains, Bool.not_eq_true] at heq1
       simp only [List.find?, List.mem_cons, not_or, clause]
       by_cases l' = l.1
-      . next l'_eq_l =>
+      · next l'_eq_l =>
         by_cases hl : l.2
-        . apply Or.inr
+        · apply Or.inr
           constructor
-          . intro heq
+          · intro heq
             simp only [← heq] at hl
-          . simpa [hl, ← l'_eq_l] using heq1
-        . simp only [Bool.not_eq_true] at hl
+          · simpa [hl, ← l'_eq_l] using heq1
+        · simp only [Bool.not_eq_true] at hl
           apply Or.inl
           constructor
-          . intro heq
+          · intro heq
             simp only [← heq] at hl
-          . simpa [hl, ← l'_eq_l] using heq1
-      . next l'_ne_l =>
+          · simpa [hl, ← l'_eq_l] using heq1
+      · next l'_ne_l =>
         have := c.nodupkey l'
         rcases c.nodupkey l' with h | h
-        . left
+        · left
           constructor
-          . intro heq
+          · intro heq
             simp [← heq] at l'_ne_l
-          . simp [h]
-        . right
+          · simp [h]
+        · right
           constructor
-          . intro heq
+          · intro heq
             simp [← heq] at l'_ne_l
-          . simp [h]
+          · simp [h]
     have nodup : List.Nodup clause := by
       simp only [List.elem_eq_mem, decide_eq_true_eq] at heq2
       simp [c.nodup, heq2, clause]
@@ -243,16 +248,16 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n)))
     intro c' heq
     simp only [Fin.getElem_fin, fold_fn] at heq
     split at heq
-    . simp only at heq
-    . next acc =>
+    · simp only at heq
+    · next acc =>
       specialize ih acc rfl
       rcases ih with ⟨hsize, ih⟩
       simp only at ih
       simp only [insert] at heq
       split at heq
-      . exact False.elim heq
-      . split at heq
-        . next h_dup =>
+      · exact False.elim heq
+      · split at heq
+        · next h_dup =>
           exfalso -- h_dup contradicts arrNodup
           simp only [List.contains] at h_dup
           rcases List.get_of_mem $ List.mem_of_elem_eq_true h_dup with ⟨j, hj⟩
@@ -263,7 +268,7 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n)))
           have idx_ne_idx_add_one_add_j_in_bounds : idx.1 ≠ idx.1 + 1 + j.1 := by
             omega
           exact arrNodup idx ⟨idx.1 + 1 + j.1, idx_add_one_add_j_in_bounds⟩ idx_ne_idx_add_one_add_j_in_bounds ih
-        . simp only [Option.some.injEq] at heq
+        · simp only [Option.some.injEq] at heq
           have hsize' : c'.clause.length = arr.size - idx.1 := by
             simp only [← heq, List.length_cons, hsize]
             omega
@@ -273,9 +278,9 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n)))
           have lhs_rw : c'.clause = arr[idx.1] :: acc.clause := by rw [← heq]
           simp only [List.get_of_eq lhs_rw]
           by_cases i.1 = 0
-          . next i_eq_zero =>
+          · next i_eq_zero =>
             simp only [List.length_cons, i_eq_zero, List.get, Nat.add_zero]
-          . next i_ne_zero =>
+          · next i_ne_zero =>
             rcases Nat.exists_eq_succ_of_ne_zero i_ne_zero with ⟨j, hj⟩
             simp only [List.length_cons, hj, List.get, Nat.succ_eq_add_one]
             simp only [Nat.add_comm j 1, ← Nat.add_assoc]
@@ -284,14 +289,14 @@ theorem ofArray_eq (arr : Array (Literal (PosFin n)))
   ext
   next i l =>
   by_cases i_in_bounds : i < c.clause.length
-  . specialize h ⟨i, i_in_bounds⟩
+  · specialize h ⟨i, i_in_bounds⟩
     have i_in_bounds' : i < arr.data.length := by
       dsimp; omega
     rw [List.getElem?_eq_getElem i_in_bounds, List.getElem?_eq_getElem i_in_bounds']
     simp only [List.get_eq_getElem, Nat.zero_add] at h
     rw [← Array.getElem_eq_data_getElem]
     simp [h]
-  . have arr_data_length_le_i : arr.data.length ≤ i := by
+  · have arr_data_length_le_i : arr.data.length ≤ i := by
       dsimp; omega
     simp only [Nat.not_lt, ← List.getElem?_eq_none_iff] at i_in_bounds arr_data_length_le_i
     rw [i_in_bounds, arr_data_length_le_i]
@@ -302,10 +307,10 @@ def delete (c : DefaultClause n) (l : Literal (PosFin n)) : DefaultClause n :=
     intro l'
     simp only [clause]
     rcases c.nodupkey l' with ih | ih
-    . apply Or.inl
+    · apply Or.inl
       intro h
       exact ih $ List.mem_of_mem_erase h
-    . apply Or.inr
+    · apply Or.inr
       intro h
       exact ih $ List.mem_of_mem_erase h
   have nodup := by
@@ -317,9 +322,9 @@ theorem delete_iff (c : DefaultClause n) (l l' : Literal (PosFin n)) :
     l' ∈ toList (delete c l) ↔ l' ≠ l ∧ l' ∈ toList c := by
   simp only [toList, delete, ne_eq]
   by_cases hl : l' = l
-  . simp only [hl, not_true, false_and, iff_false]
+  · simp only [hl, not_true, false_and, iff_false]
     exact List.Nodup.not_mem_erase c.nodup
-  . simp only [hl, not_false_eq_true, true_and]
+  · simp only [hl, not_false_eq_true, true_and]
     exact List.mem_erase_of_ne hl
 
 def contains (c : DefaultClause n) (l : Literal (PosFin n)) : Bool := c.clause.contains l
@@ -329,8 +334,8 @@ theorem contains_iff :
   intro c l
   simp only [contains, List.contains]
   constructor
-  . exact List.mem_of_elem_eq_true
-  . exact List.elem_eq_true_of_mem
+  · exact List.mem_of_elem_eq_true
+  · exact List.elem_eq_true_of_mem
 
 def reduce_fold_fn (assignments : Array Assignment) (acc : ReduceResult (PosFin n))
     (l : Literal (PosFin n)) :
@@ -340,21 +345,29 @@ def reduce_fold_fn (assignments : Array Assignment) (acc : ReduceResult (PosFin 
     | .reducedToEmpty =>
       match assignments[l.1.1]! with
       | .pos =>
-        if l.2 then .reducedToUnit l
-        else .reducedToEmpty
+        if l.2 then
+          .reducedToUnit l
+        else
+          .reducedToEmpty
       | .neg =>
-        if not l.2 then .reducedToUnit l
-        else .reducedToEmpty
+        if not l.2 then
+          .reducedToUnit l
+        else
+          .reducedToEmpty
       | .both => .encounteredBoth
       | .unassigned => .reducedToUnit l
     | .reducedToUnit l' =>
       match assignments[l.1.1]! with
       | .pos =>
-        if l.2 then .reducedToNonunit -- Assignment fails to refute both l and l'
-        else .reducedToUnit l'
+        if l.2 then
+          .reducedToNonunit -- Assignment fails to refute both l and l'
+        else
+          .reducedToUnit l'
       | .neg =>
-        if not l.2 then .reducedToNonunit -- Assignment fails to refute both l and l'
-        else .reducedToUnit l'
+        if not l.2 then
+          .reducedToNonunit -- Assignment fails to refute both l and l'
+        else
+          .reducedToUnit l'
       | .both => .encounteredBoth
       | .unassigned => .reducedToNonunit -- Assignments fails to refute both l and l'
     | .reducedToNonunit => .reducedToNonunit
@@ -373,8 +386,7 @@ eliminate every literal in the clause that is not compatible with the `assignmen
 - If `reduce` returns `reducedToNonunit`, then this means that there are multiple literals in `c`
   that are compatible with `assignments`. This is a failure condition for `confirmRupHint`
   (in `LRAT.Formula.Implementation.lean`) which calls `reduce`. -/
-def reduce (c : DefaultClause n) (assignments : Array Assignment) :
-    ReduceResult (PosFin n) :=
+def reduce (c : DefaultClause n) (assignments : Array Assignment) : ReduceResult (PosFin n) :=
   c.clause.foldl (reduce_fold_fn assignments) .reducedToEmpty
 
 instance : Clause (PosFin n) (DefaultClause n) where

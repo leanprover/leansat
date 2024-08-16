@@ -10,21 +10,23 @@ namespace LeanSAT
 namespace LRAT
 namespace Internal
 
-/-- The `Assignment` inductive datatype is used in the `assignments` field of default formulas (defined in
-    Formula.Implementation.lean) to store and quickly access information about whether unit literals are
-    contained in (or entailed by) a formula.
+/--
+The `Assignment` inductive datatype is used in the `assignments` field of default formulas (defined in
+Formula.Implementation.lean) to store and quickly access information about whether unit literals are
+contained in (or entailed by) a formula.
 
-    The elements of `Assignment` can be viewed as a lattice where `both` is top, satisfying both `hasPosAssignment`
-    and `hasNegAssignment`, `pos` satisfies only the former, `neg` satisfies only the latter, and `unassigned` is
-    bottom, satisfying neither. If one wanted to modify the default formula structure to use a BitArray rather than
-    an `Assignment Array` for the `assignments` field, a reasonable 2-bit representation of the `Assignment` type
-    would be:
-    - both: 11
-    - pos: 10
-    - neg: 01
-    - unassigned: 00
+The elements of `Assignment` can be viewed as a lattice where `both` is top, satisfying both `hasPosAssignment`
+and `hasNegAssignment`, `pos` satisfies only the former, `neg` satisfies only the latter, and `unassigned` is
+bottom, satisfying neither. If one wanted to modify the default formula structure to use a BitArray rather than
+an `Assignment Array` for the `assignments` field, a reasonable 2-bit representation of the `Assignment` type
+would be:
+- both: 11
+- pos: 10
+- neg: 01
+- unassigned: 00
 
-    Then `hasPosAssignment` could simply query the first bit and `hasNegAssignment` could simply query the second bit. -/
+Then `hasPosAssignment` could simply query the first bit and `hasNegAssignment` could simply query the second bit.
+-/
 inductive Assignment
   | pos
   | neg
@@ -56,7 +58,9 @@ def hasNegAssignment (assignment : Assignment) : Bool :=
   | both => true
   | unassigned => false
 
-/-- Updates the old assignment of l to reflect the fact that (l, true) is now part of the formula -/
+/--
+Updates the old assignment of `l` to reflect the fact that `(l, true)` is now part of the formula.
+-/
 def addPosAssignment (oldAssignment : Assignment) : Assignment :=
   match oldAssignment with
   | pos => pos
@@ -64,7 +68,10 @@ def addPosAssignment (oldAssignment : Assignment) : Assignment :=
   | both => both
   | unassigned => pos
 
-/-- Updates the old assignment of l to reflect the fact that (l, true) is no longer part of the formula -/
+/--
+Updates the old assignment of `l` to reflect the fact that `(l, true)` is no longer part of the
+formula.
+-/
 def removePosAssignment (oldAssignment : Assignment) : Assignment :=
   match oldAssignment with
   | pos => unassigned
@@ -72,7 +79,9 @@ def removePosAssignment (oldAssignment : Assignment) : Assignment :=
   | both => neg
   | unassigned => unassigned -- Note: this case should not occur
 
-/-- Updates the old assignment of l to reflect the fact that (l, false) is now part of the formula -/
+/--
+Updates the old assignment of `l` to reflect the fact that `(l, false)` is now part of the formula.
+-/
 def addNegAssignment (oldAssignment : Assignment) : Assignment :=
   match oldAssignment with
   | pos => both
@@ -80,7 +89,10 @@ def addNegAssignment (oldAssignment : Assignment) : Assignment :=
   | both => both
   | unassigned => neg
 
-/-- Updates the old assignment of l to reflect the fact that (l, false) is no longer part of the formula -/
+/--
+Updates the old assignment of `l` to reflect the fact that `(l, false)` is no longer part of the
+formula.
+-/
 def removeNegAssignment (oldAssignment : Assignment) : Assignment :=
   match oldAssignment with
   | pos => pos -- Note: This case should not occur
@@ -89,16 +101,22 @@ def removeNegAssignment (oldAssignment : Assignment) : Assignment :=
   | unassigned => unassigned -- Note: This case should not occur
 
 def addAssignment (b : Bool) : Assignment → Assignment :=
-  if b then addPosAssignment
-  else addNegAssignment
+  if b then
+    addPosAssignment
+  else
+    addNegAssignment
 
 def removeAssignment (b : Bool) : Assignment → Assignment :=
-  if b then removePosAssignment
-  else removeNegAssignment
+  if b then
+    removePosAssignment
+  else
+    removeNegAssignment
 
 def hasAssignment (b : Bool) : Assignment → Bool :=
-  if b then hasPosAssignment
-  else hasNegAssignment
+  if b then
+    hasPosAssignment
+  else
+    hasNegAssignment
 
 theorem removePos_addPos_cancel {assignment : Assignment} (h : ¬(hasPosAssignment assignment)) :
   removePosAssignment (addPosAssignment assignment) = assignment := by
@@ -115,10 +133,10 @@ theorem removeNeg_addNeg_cancel {assignment : Assignment} (h : ¬(hasNegAssignme
 theorem remove_add_cancel {assignment : Assignment} {b : Bool} (h : ¬(hasAssignment b assignment)) :
   removeAssignment b (addAssignment b assignment) = assignment := by
   by_cases hb : b
-  . simp only [removeAssignment, hb, addAssignment, ite_true]
+  · simp only [removeAssignment, hb, addAssignment, ite_true]
     simp only [hasAssignment, hb, ite_true] at h
     exact removePos_addPos_cancel h
-  . simp only [removeAssignment, hb, addAssignment, ite_true]
+  · simp only [removeAssignment, hb, addAssignment, ite_true]
     simp only [hasAssignment, hb, ite_false] at h
     exact removeNeg_addNeg_cancel h
 
@@ -130,60 +148,69 @@ theorem has_of_both (b : Bool) : hasAssignment b both = true := by
   rw [hasAssignment]
   split <;> decide
 
-theorem has_of_add (assignment : Assignment) (b : Bool) : hasAssignment b (addAssignment b assignment) := by
+theorem has_of_add (assignment : Assignment) (b : Bool) :
+    hasAssignment b (addAssignment b assignment) := by
   rw [addAssignment, hasAssignment]
   split
-  . rw [hasPosAssignment, addPosAssignment]
+  · rw [hasPosAssignment, addPosAssignment]
     cases assignment <;> simp
-  . rw [hasNegAssignment, addNegAssignment]
+  · rw [hasNegAssignment, addNegAssignment]
     cases assignment <;> simp
 
-theorem not_hasPos_of_removePos (assignment : Assignment) : ¬hasPosAssignment (removePosAssignment assignment) := by
+theorem not_hasPos_of_removePos (assignment : Assignment) :
+    ¬hasPosAssignment (removePosAssignment assignment) := by
   simp only [removePosAssignment, hasPosAssignment, Bool.not_eq_true]
   cases assignment <;> simp
 
-theorem not_hasNeg_of_removeNeg (assignment : Assignment) : ¬hasNegAssignment (removeNegAssignment assignment) := by
+theorem not_hasNeg_of_removeNeg (assignment : Assignment) :
+    ¬hasNegAssignment (removeNegAssignment assignment) := by
   simp only [removeNegAssignment, hasNegAssignment, Bool.not_eq_true]
   cases assignment <;> simp
 
-theorem not_has_of_remove (assignment : Assignment) (b : Bool) : ¬hasAssignment b (removeAssignment b assignment) := by
+theorem not_has_of_remove (assignment : Assignment) (b : Bool) :
+    ¬hasAssignment b (removeAssignment b assignment) := by
   by_cases hb : b
-  . have h := not_hasPos_of_removePos assignment
+  · have h := not_hasPos_of_removePos assignment
     simp [hb, h, removeAssignment, hasAssignment]
-  . have h := not_hasNeg_of_removeNeg assignment
+  · have h := not_hasNeg_of_removeNeg assignment
     simp [hb, h, removeAssignment, hasAssignment]
 
 theorem has_of_remove_irrelevant (assignment : Assignment) (b : Bool) :
-  hasAssignment b (removeAssignment (!b) assignment) → hasAssignment b assignment := by
+    hasAssignment b (removeAssignment (!b) assignment) → hasAssignment b assignment := by
   by_cases hb : b
-  . simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment, ite_true]
+  · simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment, ite_true]
     cases assignment <;> decide
-  . simp only [Bool.not_eq_true] at hb
+  · simp only [Bool.not_eq_true] at hb
     simp only [hb, removeAssignment, Bool.not_true, ite_false, hasAssignment, ite_true]
     cases assignment <;> decide
 
 theorem unassigned_of_has_neither (assignment : Assignment) (lacks_pos : ¬(hasPosAssignment assignment))
-  (lacks_neg : ¬(hasNegAssignment assignment)) : assignment = unassigned := by
+  (lacks_neg : ¬(hasNegAssignment assignment)) :
+  assignment = unassigned := by
   simp only [hasPosAssignment, Bool.not_eq_true] at lacks_pos
   split at lacks_pos <;> simp_all (config := { decide := true })
 
-theorem hasPos_of_addNeg (assignment : Assignment) : hasPosAssignment (addNegAssignment assignment) = hasPosAssignment assignment := by
+theorem hasPos_of_addNeg (assignment : Assignment) :
+    hasPosAssignment (addNegAssignment assignment) = hasPosAssignment assignment := by
   rw [hasPosAssignment, addNegAssignment]
   cases assignment <;> simp (config := { decide := true })
 
-theorem hasNeg_of_addPos (assignment : Assignment) : hasNegAssignment (addPosAssignment assignment) = hasNegAssignment assignment := by
+theorem hasNeg_of_addPos (assignment : Assignment) :
+    hasNegAssignment (addPosAssignment assignment) = hasNegAssignment assignment := by
   rw [hasNegAssignment, addPosAssignment]
   cases assignment <;> simp (config := { decide := true })
 
 theorem has_iff_has_of_add_complement (assignment : Assignment) (b : Bool) :
-  hasAssignment b assignment ↔ hasAssignment b (addAssignment (¬b) assignment) := by
+    hasAssignment b assignment ↔ hasAssignment b (addAssignment (¬b) assignment) := by
   by_cases hb : b <;> simp [hb, hasAssignment, addAssignment, hasPos_of_addNeg, hasNeg_of_addPos]
 
-theorem addPos_of_addNeg_eq_both (assignment : Assignment) : addPosAssignment (addNegAssignment assignment) = both := by
+theorem addPos_of_addNeg_eq_both (assignment : Assignment) :
+    addPosAssignment (addNegAssignment assignment) = both := by
   rw [addPosAssignment, addNegAssignment]
   cases assignment <;> simp
 
-theorem addNeg_of_addPos_eq_both (assignment : Assignment) : addNegAssignment (addPosAssignment assignment) = both := by
+theorem addNeg_of_addPos_eq_both (assignment : Assignment) :
+    addNegAssignment (addPosAssignment assignment) = both := by
   rw [addNegAssignment, addPosAssignment]
   cases assignment <;> simp
 

@@ -28,8 +28,7 @@ instance [ToString β] [ToString α] : ToString (Action β α) := ⟨Action.toSt
 
 /--
 `Action` where variables are (positive) `Nat`, clauses are arrays of `Int`, and ids are `Nat`.
-This Action type is meant to be a convenient target for parsing LRAT proofs
-. -/
+This Action type is meant to be a convenient target for parsing LRAT proofs. -/
 abbrev IntAction : Type := Action (Array Int) Nat
 
 

@@ -19,16 +19,16 @@ theorem sat_iff (p : α → Bool) (a : α) (b : Bool) : p ⊨ (a, b) ↔ (p a) =
 theorem sat_negate_iff_not_sat {p : α → Bool} {l : Literal α} : p ⊨ Literal.negate l ↔ p ⊭ l := by
   simp only [Literal.negate, sat_iff]
   constructor
-  . intro h pl
+  · intro h pl
     rw [sat_iff, h, not] at pl
     split at pl <;> simp_all
-  . intro h
+  · intro h
     rw [sat_iff] at h
     rw [not]
     split <;> simp_all
 
 theorem unsat_of_limplies_complement [Entails α t] (x : t) (l : Literal α) :
-    limplies α x l → limplies α x (Literal.negate l) → unsatisfiable α x := by
+    Limplies α x l → Limplies α x (Literal.negate l) → Unsatisfiable α x := by
   intro h1 h2 p px
   specialize h1 p px
   specialize h2 p px
@@ -44,43 +44,43 @@ theorem sat_iff_exists [Clause α β] (p : α → Bool) (c : β) : p ⊨ c ↔ �
   simp only [List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
 
 theorem limplies_iff_mem [DecidableEq α] [Clause α β] (l : Literal α) (c : β) :
-    limplies α l c ↔ l ∈ toList c := by
-  simp only [limplies, sat_iff_exists, Prod.exists, Bool.exists_bool]
+    Limplies α l c ↔ l ∈ toList c := by
+  simp only [Limplies, sat_iff_exists, Prod.exists, Bool.exists_bool]
   constructor
-  . intro h
+  · intro h
     -- Construct an assignment p such that p ⊨ l and p ⊭ c ∖ {l}
     let p := fun x : α => if x = l.1 then l.2 else (x, false) ∈ toList c
     have pl : p ⊨ l := by simp only [(· ⊨ ·), ite_true, p]
     specialize h p pl
     rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
-    . simp only [(· ⊨ ·), p] at h2
+    · simp only [(· ⊨ ·), p] at h2
       split at h2
-      . next v_eq_l =>
+      · next v_eq_l =>
         cases l
         simp_all
-      . next v_ne_l =>
+      · next v_ne_l =>
         simp only [decide_eq_false_iff_not] at h2
         exfalso
         exact h2 h1
-    . simp only [(· ⊨ ·), p] at h2
+    · simp only [(· ⊨ ·), p] at h2
       split at h2
-      . next v_eq_l =>
+      · next v_eq_l =>
         cases l
         simp_all
-      . next v_ne_l =>
+      · next v_ne_l =>
         simp only [decide_eq_true_eq] at h2
         exfalso
         rcases not_tautology c (v, true) with v_not_in_c | negv_not_in_c
-        . exact v_not_in_c h1
-        . simp only [Literal.negate, Bool.not_true] at negv_not_in_c
+        · exact v_not_in_c h1
+        · simp only [Literal.negate, Bool.not_true] at negv_not_in_c
           exact negv_not_in_c h2
-  . intro h p pl
+  · intro h p pl
     apply Exists.intro l.1
     by_cases hl : l.2
-    . apply Or.inr
+    · apply Or.inr
       rw [← hl]
       exact ⟨h, pl⟩
-    . apply Or.inl
+    · apply Or.inl
       simp only [Bool.not_eq_true] at hl
       rw [← hl]
       exact ⟨h, pl⟩
@@ -92,9 +92,9 @@ theorem entails_of_entails_delete [DecidableEq α] [Clause α β] {p : α → Bo
   simp only [(· ⊨ ·), eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool] at h
   simp only [(· ⊨ ·), eval, List.any_eq_true, decide_eq_true_eq, Prod.exists, Bool.exists_bool]
   rcases h with ⟨v, ⟨h1, h2⟩ | ⟨h1, h2⟩⟩
-  . simp only [delete_iff, ne_eq] at h1
+  · simp only [delete_iff, ne_eq] at h1
     exact Exists.intro v $ Or.inl ⟨h1.2, h2⟩
-  . simp only [delete_iff, ne_eq] at h1
+  · simp only [delete_iff, ne_eq] at h1
     exact Exists.intro v $ Or.inr ⟨h1.2, h2⟩
 
 end Clause
@@ -107,7 +107,7 @@ theorem sat_iff_forall [Clause α β] [Entails α σ] [Formula α β σ] (p : α
   simp only [List.all_eq_true, decide_eq_true_eq]
 
 theorem limplies_of_insert [Clause α β] [Entails α σ] [Formula α β σ] {c : β} {f : σ} :
-    limplies α (insert f c) f := by
+    Limplies α (insert f c) f := by
   intro p
   simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro h c' c'_in_f
@@ -117,7 +117,7 @@ theorem limplies_of_insert [Clause α β] [Entails α σ] [Formula α β σ] {c 
   exact h c' c'_in_fc
 
 theorem limplies_delete [Clause α β] [Entails α σ] [Formula α β σ] {f : σ} {arr : Array Nat} :
-    limplies α f (delete f arr) := by
+    Limplies α f (delete f arr) := by
   intro p
   simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq]
   intro h c c_in_f_del

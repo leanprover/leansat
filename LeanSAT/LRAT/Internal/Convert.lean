@@ -7,6 +7,7 @@ import Std.Sat.CNF.RelabelFin
 import LeanSAT.LRAT.Internal.Formula
 
 namespace LeanSAT
+
 namespace LRAT
 namespace Internal
 
@@ -59,7 +60,7 @@ theorem CNF.Clause.mem_lrat_of_mem (clause : CNF.Clause (PosFin n)) (h1 : l ∈ 
   | nil => cases h1
   | cons hd tl ih =>
     unfold DefaultClause.ofArray at h2
-    rw [Array.foldr_eq_foldr_data,Array.toArray_data] at h2
+    rw [Array.foldr_eq_foldr_data, Array.toArray_data] at h2
     dsimp only [List.foldr] at h2
     split at h2
     · cases h2
@@ -68,29 +69,30 @@ theorem CNF.Clause.mem_lrat_of_mem (clause : CNF.Clause (PosFin n)) (h1 : l ∈ 
       · cases h2
       · split at h2
         · rename_i h
-          rw [<-Option.some.inj h2] at *
+          rw [← Option.some.inj h2] at *
           cases h1
           · exact List.mem_of_elem_eq_true h
           · apply ih
             · assumption
             · next heq _ _ =>
               unfold DefaultClause.ofArray
-              rw [Array.foldr_eq_foldr_data,Array.toArray_data]
+              rw [Array.foldr_eq_foldr_data, Array.toArray_data]
               exact heq
         · cases h1
-          · simp only [<-Option.some.inj h2]
+          · simp only [← Option.some.inj h2]
             constructor
           · simp only at h2
-            simp only [<-Option.some.inj h2]
+            simp only [← Option.some.inj h2]
             rename_i heq _ _ _
             apply List.Mem.tail
             apply ih
             assumption
             unfold DefaultClause.ofArray
-            rw [Array.foldr_eq_foldr_data,Array.toArray_data]
+            rw [Array.foldr_eq_foldr_data, Array.toArray_data]
             exact heq
 
-theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n)) (h : Clause.convertLRAT' clause = some lratClause) :
+theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n))
+    (h : Clause.convertLRAT' clause = some lratClause) :
     clause.eval assign → assign ⊨ lratClause := by
   intro h2
   simp only [CNF.Clause.eval, List.any_eq_true, bne_iff_ne, ne_eq] at h2
@@ -98,38 +100,39 @@ theorem CNF.Clause.convertLRAT_sat_of_sat (clause : CNF.Clause (PosFin n)) (h : 
   rcases h2 with ⟨lit, ⟨hlit1, hlit2⟩⟩
   apply Exists.intro lit
   constructor
-  . simp only [Clause.toList, DefaultClause.toList]
+  · simp only [Clause.toList, DefaultClause.toList]
     simp only [convertLRAT'] at h
     exact CNF.Clause.mem_lrat_of_mem clause hlit1 h
-  . simp_all
+  · simp_all
 
 /--
 Convert a `CNF Nat` with a certain maximum variable number into the `DefaultFormula`
-format for usage with LeanSAT.
+format for usage with `bv_decide`'s `LRAT.Internal`.
 
 Notably this:
 1. Increments all variables as DIMACS variables start at 1 instead of 0
-2. Adds a leading `none` clause. This clause *must* be persistet as the LRAT proof
-   refers to the DIMACS file line by line and the DIMACS file begins with the
-  `p cnf x y` meta instruction.
+2. Adds a leading `none` clause. This clause *must* be persistet as the LRAT cecker wants to have
+  the DIMACS file line by line and the DIMACS file begins with the `p cnf x y` meta instruction.
 -/
 def CNF.convertLRAT (cnf : CNF Nat) : DefaultFormula (cnf.numLiterals + 1) :=
   let lifted := CNF.lift cnf
   let lratCnf := CNF.convertLRAT' lifted
   DefaultFormula.ofArray (none :: lratCnf).toArray
 
-theorem CNF.convertLRAT_readfyForRupAdd (cnf : CNF Nat) : DefaultFormula.readyForRupAdd (CNF.convertLRAT cnf) := by
+theorem CNF.convertLRAT_readfyForRupAdd (cnf : CNF Nat) :
+    DefaultFormula.readyForRupAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
   apply DefaultFormula.ofArray_readyForRupAdd
 
-theorem CNF.convertLRAT_readfyForRatAdd (cnf : CNF Nat) : DefaultFormula.readyForRatAdd (CNF.convertLRAT cnf) := by
+theorem CNF.convertLRAT_readfyForRatAdd (cnf : CNF Nat) :
+    DefaultFormula.readyForRatAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
   apply DefaultFormula.ofArray_readyForRatAdd
 
 theorem unsat_of_cons_none_unsat (clauses : List (Option (DefaultClause n))) :
-    unsatisfiable (PosFin n) (DefaultFormula.ofArray (none :: clauses).toArray)
+    Unsatisfiable (PosFin n) (DefaultFormula.ofArray (none :: clauses).toArray)
       →
-    unsatisfiable (PosFin n) (DefaultFormula.ofArray clauses.toArray) := by
+    Unsatisfiable (PosFin n) (DefaultFormula.ofArray clauses.toArray) := by
   intro h assign hassign
   apply h assign
   simp only [Formula.formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at *
@@ -137,7 +140,7 @@ theorem unsat_of_cons_none_unsat (clauses : List (Option (DefaultClause n))) :
   simp_all[DefaultFormula.ofArray, Formula.toList, DefaultFormula.toList]
 
 theorem CNF.unsat_of_convertLRAT_unsat (cnf : CNF Nat) :
-    unsatisfiable (PosFin (cnf.numLiterals + 1)) (CNF.convertLRAT cnf)
+    Unsatisfiable (PosFin (cnf.numLiterals + 1)) (CNF.convertLRAT cnf)
       →
     cnf.Unsat := by
   intro h1
@@ -156,11 +159,11 @@ theorem CNF.unsat_of_convertLRAT_unsat (cnf : CNF Nat) :
   rcases hlclause with ⟨reflectClause, ⟨hrclause1, hrclause2⟩⟩
   simp only [CNF.eval, List.all_eq_true] at h2
   split at hrclause2
-  . next heq =>
+  · next heq =>
     rw [← heq] at hrclause2
     simp only [Option.some.injEq] at hrclause2
     simp [CNF.Clause.convertLRAT_sat_of_sat reflectClause hrclause2, h2 reflectClause hrclause1]
-  . contradiction
+  · contradiction
 
 end Internal
 end LRAT
