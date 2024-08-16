@@ -3,7 +3,7 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.LRAT.Internal.Formula.Basic
+import LeanSAT.LRAT.Internal.Formula.Lemmas
 import LeanSAT.LRAT.Internal.Formula.Class
 import LeanSAT.LRAT.Internal.Formula.Implementation
 import LeanSAT.LRAT.Internal.Formula.Instance

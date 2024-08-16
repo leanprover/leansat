@@ -3,7 +3,7 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.LRAT.Internal.Formula.Basic
+import LeanSAT.LRAT.Internal.Formula.Lemmas
 
 /-!
 This module contains the implementation of RUP-based clause adding for the default LRAT checker
