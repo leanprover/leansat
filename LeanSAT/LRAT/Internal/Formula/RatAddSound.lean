@@ -197,9 +197,9 @@ theorem confirmRupHint_of_insertRat_fold_entails_hsat {n : Nat} (f : DefaultForm
     let confirmRupHint_fold_res := rupHints.foldl (confirmRupHint fc.1.clauses) (fc.1.assignments, [], false, false) 0 rupHints.size
     confirmRupHint_fold_res.2.2.1 = true → p ⊨ c := by
   intro fc confirmRupHint_fold_res confirmRupHint_success
-  let motive := confirmRupHint_fold_entails_hsat_motive fc.1
+  let motive := ConfirmRupHintFoldEntailsMotive fc.1
   have h_base : motive 0 (fc.fst.assignments, [], false, false) := by
-    simp only [confirmRupHint_fold_entails_hsat_motive, insertRatUnits_preserves_assignments_size, hf.2.1,
+    simp only [ConfirmRupHintFoldEntailsMotive, insertRatUnits_preserves_assignments_size, hf.2.1,
       false_implies, and_true, true_and, fc, motive]
     have fc_satisfies_AssignmentsInvariant : AssignmentsInvariant fc.1 :=
       insertRatUnits_preserves_AssignmentsInvariant f hf (negate c)
@@ -265,7 +265,7 @@ theorem insertRat_entails_hsat {n : Nat} (f : DefaultFormula n)
   rcases contradiction_of_insertUnit_fold_success f.assignments hf.2.1 f.ratUnits false (negate c) (by intro; contradiction)
     insertUnit_fold_success with ⟨i, hboth⟩
   have i_in_bounds : i.1 < f.assignments.size := by rw [hf.2.1]; exact i.2.2
-  have h0 : insertUnit_invariant f.assignments hf.2.1 f.ratUnits f.assignments hf.2.1 := by
+  have h0 : InsertUnitInvariant f.assignments hf.2.1 f.ratUnits f.assignments hf.2.1 := by
     intro i
     simp only [Fin.getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
     apply Or.inl
@@ -373,9 +373,9 @@ theorem performRupCheck_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFor
     (f_AssignmentsInvariant : AssignmentsInvariant f) (rupHints : Array Nat) :
     AssignmentsInvariant (performRupCheck f rupHints).1 := by
   simp only [performRupCheck]
-  let motive := confirmRupHint_fold_entails_hsat_motive f
+  let motive := ConfirmRupHintFoldEntailsMotive f
   have h_base : motive 0 (f.assignments, [], false, false) := by
-    simp only [confirmRupHint_fold_entails_hsat_motive, f_AssignmentsInvariant.1, false_implies, and_true, true_and,
+    simp only [ConfirmRupHintFoldEntailsMotive, f_AssignmentsInvariant.1, false_implies, and_true, true_and,
       AssignmentsInvariant_entails_limplies f f_AssignmentsInvariant, motive]
   have h_inductive (idx : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) (ih : motive idx.1 acc) :=
     confirmRupHint_preserves_motive f rupHints idx acc ih

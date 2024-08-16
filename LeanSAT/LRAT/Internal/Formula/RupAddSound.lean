@@ -129,7 +129,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
   rcases contradiction_of_insertUnit_fold_success f.assignments f_readyForRupAdd.2.1 f.rupUnits false (negate c) false_imp
     insertUnit_fold_success with ⟨i, hboth⟩
   have i_in_bounds : i.1 < f.assignments.size := by rw [f_readyForRupAdd.2.1]; exact i.2.2
-  have h0 : insertUnit_invariant f.assignments f_readyForRupAdd.2.1 f.rupUnits f.assignments f_readyForRupAdd.2.1 := by
+  have h0 : InsertUnitInvariant f.assignments f_readyForRupAdd.2.1 f.rupUnits f.assignments f_readyForRupAdd.2.1 := by
     intro i
     simp only [Fin.getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
     apply Or.inl
@@ -354,7 +354,7 @@ theorem insertRupUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultForm
     simp only [hp2.1, ← hp1.1, decide_eq_true_eq, true_and] at hp2
     simp only [hp1.2] at hp2
 
-def confirmRupHint_fold_entails_hsat_motive {n : Nat} (f : DefaultFormula n) (_idx : Nat)
+def ConfirmRupHintFoldEntailsMotive {n : Nat} (f : DefaultFormula n) (_idx : Nat)
     (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) :
     Prop :=
   acc.1.size = n ∧ Limplies (PosFin n) f acc.1 ∧ (acc.2.2.1 → Incompatible (PosFin n) acc.1 f)
@@ -392,7 +392,7 @@ theorem encounteredBoth_entails_unsat {n : Nat} (c : DefaultClause n)
     · simp at h
   exact List.foldlRecOn c.clause (reduce_fold_fn assignment) reducedToEmpty hb hl
 
-def reduce_postcondition_induction_motive (c_arr : Array (Literal (PosFin n)))
+def ReducePostconditionInductionMotive (c_arr : Array (Literal (PosFin n)))
     (assignment : Array Assignment) (idx : Nat) (res : ReduceResult (PosFin n)) :
     Prop :=
   (res = reducedToEmpty → ∀ (p : (PosFin n) → Bool), (∀ i : Fin c_arr.size, i.1 < idx → p ⊭ c_arr[i]) ∨ (p ⊭ assignment)) ∧
@@ -402,9 +402,9 @@ def reduce_postcondition_induction_motive (c_arr : Array (Literal (PosFin n)))
 theorem reduce_fold_fn_preserves_induction_motive {c_arr : Array (Literal (PosFin n))}
     {assignment : Array Assignment}
     (idx : Fin c_arr.size) (res : ReduceResult (PosFin n))
-    (ih : reduce_postcondition_induction_motive c_arr assignment idx.1 res) :
-  reduce_postcondition_induction_motive c_arr assignment (idx.1 + 1) (reduce_fold_fn assignment res c_arr[idx]) := by
-  simp only [reduce_postcondition_induction_motive, Fin.getElem_fin, forall_exists_index, and_imp, Prod.forall]
+    (ih : ReducePostconditionInductionMotive c_arr assignment idx.1 res) :
+  ReducePostconditionInductionMotive c_arr assignment (idx.1 + 1) (reduce_fold_fn assignment res c_arr[idx]) := by
+  simp only [ReducePostconditionInductionMotive, Fin.getElem_fin, forall_exists_index, and_imp, Prod.forall]
   constructor
   · intro h p
     rw [reduce_fold_fn] at h
@@ -547,9 +547,9 @@ theorem reduce_postcondition {n : Nat} (c : DefaultClause n) (assignment : Array
   let c_arr := Array.mk c.clause
   have c_clause_rw : c.clause = c_arr.data := rfl
   rw [reduce, c_clause_rw, ← Array.foldl_eq_foldl_data]
-  let motive := reduce_postcondition_induction_motive c_arr assignment
+  let motive := ReducePostconditionInductionMotive c_arr assignment
   have h_base : motive 0 reducedToEmpty := by
-    simp only [reduce_postcondition_induction_motive, Fin.getElem_fin, forall_exists_index, and_imp, Prod.forall,
+    simp only [ReducePostconditionInductionMotive, Fin.getElem_fin, forall_exists_index, and_imp, Prod.forall,
       forall_const, false_implies, implies_true, and_true, motive]
     intro p
     apply Or.inl
@@ -627,8 +627,8 @@ theorem reducedToUnit_entails_limplies {n : Nat} (c : DefaultClause n)
 
 theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHints : Array Nat)
     (idx : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool)
-    (ih : confirmRupHint_fold_entails_hsat_motive f idx.1 acc) :
-    confirmRupHint_fold_entails_hsat_motive f (idx.1 + 1) ((confirmRupHint f.clauses) acc rupHints[idx]) := by
+    (ih : ConfirmRupHintFoldEntailsMotive f idx.1 acc) :
+    ConfirmRupHintFoldEntailsMotive f (idx.1 + 1) ((confirmRupHint f.clauses) acc rupHints[idx]) := by
   rcases ih with ⟨hsize, h1, h2⟩
   simp only [confirmRupHint, Bool.or_eq_true, Fin.getElem_fin]
   split
@@ -649,10 +649,10 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
         · exact False.elim hc
       split
       · next heq =>
-        simp only [confirmRupHint_fold_entails_hsat_motive, h1, imp_self, and_self, hsize,
+        simp only [ConfirmRupHintFoldEntailsMotive, h1, imp_self, and_self, hsize,
           incompatible_of_unsat (PosFin n) acc.1 f (encounteredBoth_entails_unsat c acc.1 heq)]
       · next heq =>
-        simp only [confirmRupHint_fold_entails_hsat_motive, h1, hsize, forall_const, true_and]
+        simp only [ConfirmRupHintFoldEntailsMotive, h1, hsize, forall_const, true_and]
         intro p
         rcases reducedToEmpty_entails_incompatible c acc.1 heq p with pc | pacc
         · apply Or.inr
@@ -663,7 +663,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
           exact pc <| of_decide_eq_true pf
         · exact Or.inl pacc
       · next l b heq =>
-        simp only [confirmRupHint_fold_entails_hsat_motive]
+        simp only [ConfirmRupHintFoldEntailsMotive]
         split
         · simp only [h1, hsize, false_implies, and_self]
         · simp only [Array.size_modify, hsize, false_implies, and_true, true_and]
@@ -723,9 +723,9 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
     let confirmRupHint_fold_res := rupHints.foldl (confirmRupHint fc.1.clauses) (fc.1.assignments, [], false, false) 0 rupHints.size
     confirmRupHint_fold_res.2.2.1 = true → p ⊨ c := by
   intro fc confirmRupHint_fold_res confirmRupHint_success
-  let motive := confirmRupHint_fold_entails_hsat_motive fc.1
+  let motive := ConfirmRupHintFoldEntailsMotive fc.1
   have h_base : motive 0 (fc.fst.assignments, [], false, false) := by
-    simp only [confirmRupHint_fold_entails_hsat_motive, insertRupUnits_preserves_assignments_size, f_readyForRupAdd.2.1,
+    simp only [ConfirmRupHintFoldEntailsMotive, insertRupUnits_preserves_assignments_size, f_readyForRupAdd.2.1,
       false_implies, and_true, true_and, motive, fc]
     have fc_satisfies_AssignmentsInvariant :=
       insertRupUnits_preserves_AssignmentsInvariant f f_readyForRupAdd (negate c)

@@ -111,17 +111,17 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
         (ofArray_fold_fn acc cOpt).size = n := by rw [ofArray_fold_fn_preserves_assignments_size acc cOpt, ih]
       exact List.foldlRecOn arr.data ofArray_fold_fn (mkArray n unassigned) hb hl
     apply Exists.intro hsize
-    let modified_AssignmentsInvariant (assignments : Array Assignment) : Prop :=
+    let ModifiedAssignmentsInvariant (assignments : Array Assignment) : Prop :=
       ∃ hsize : assignments.size = n,
         ∀ i : PosFin n, ∀ b : Bool, hasAssignment b (assignments[i.1]'(by rw [hsize]; exact i.2.2)) →
         (unit (i, b)) ∈ toList (ofArray arr)
-    have hb : modified_AssignmentsInvariant (mkArray n unassigned) := by
+    have hb : ModifiedAssignmentsInvariant (mkArray n unassigned) := by
       have hsize : (mkArray n unassigned).size = n := by simp only [Array.size_mkArray]
       apply Exists.intro hsize
       intro i b h
       by_cases hb : b <;> simp [hasAssignment, hb, hasPosAssignment, hasNegAssignment] at h
-    have hl (acc : Array Assignment) (ih : modified_AssignmentsInvariant acc) (cOpt : Option (DefaultClause n))
-      (cOpt_in_arr : cOpt ∈ arr.data) : modified_AssignmentsInvariant (ofArray_fold_fn acc cOpt) := by
+    have hl (acc : Array Assignment) (ih : ModifiedAssignmentsInvariant acc) (cOpt : Option (DefaultClause n))
+      (cOpt_in_arr : cOpt ∈ arr.data) : ModifiedAssignmentsInvariant (ofArray_fold_fn acc cOpt) := by
       have hsize : (ofArray_fold_fn acc cOpt).size = n := by rw [ofArray_fold_fn_preserves_assignments_size, ih.1]
       apply Exists.intro hsize
       intro i b h

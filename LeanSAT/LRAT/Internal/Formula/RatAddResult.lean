@@ -33,10 +33,10 @@ theorem insertRatUnits_postcondition {n : Nat} (f : DefaultFormula n)
       rw [← hf.2]
       exact insertRatUnits_preserves_assignments_size f units
     let ratUnits := (insertRatUnits f units).1.ratUnits
-    insertUnit_invariant f.assignments hf.2 ratUnits assignments hsize := by
+    InsertUnitInvariant f.assignments hf.2 ratUnits assignments hsize := by
   simp only [insertRatUnits]
   have hsize : f.assignments.size = n := by rw [hf.2]
-  have h0 : insertUnit_invariant f.assignments hf.2 f.ratUnits f.assignments hsize := by
+  have h0 : InsertUnitInvariant f.assignments hf.2 f.ratUnits f.assignments hsize := by
     intro i
     apply Or.inl
     simp only [Fin.getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]

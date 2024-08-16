@@ -53,9 +53,10 @@ theorem insertRupUnits_preserves_ratUnits {n : Nat} (f : DefaultFormula n)
     (f.insertRupUnits units).1.ratUnits = f.ratUnits := by
   rw [insertRupUnits]
 
-def insertUnit_invariant {n : Nat} (original_assignments : Array Assignment)
-  (original_assignments_size : original_assignments.size = n) (units : Array (Literal (PosFin n)))
-  (assignments : Array Assignment) (assignments_size : assignments.size = n) : Prop := ∀ i : Fin n,
+def InsertUnitInvariant {n : Nat} (original_assignments : Array Assignment)
+    (original_assignments_size : original_assignments.size = n) (units : Array (Literal (PosFin n)))
+    (assignments : Array Assignment) (assignments_size : assignments.size = n) :
+    Prop := ∀ i : Fin n,
   let assignments_i := assignments[i.1]'(by rw [assignments_size]; exact i.2)
   let original_assignments_i := original_assignments[i.1]'(by rw [original_assignments_size] ; exact i.2)
   -- Case 1: i doesn't appear in units, so assignments_i and fassignments_i are equal
@@ -73,13 +74,13 @@ theorem insertUnit_preserves_invariant {n : Nat} (assignments0 : Array Assignmen
     (assignments0_size : assignments0.size = n) (units : Array (Literal (PosFin n)))
     (assignments : Array Assignment) (assignments_size : assignments.size = n)
     (foundContradiction : Bool) (l : Literal (PosFin n)) :
-    insertUnit_invariant assignments0 assignments0_size units assignments assignments_size →
+    InsertUnitInvariant assignments0 assignments0_size units assignments assignments_size →
     let update_res := insertUnit (units, assignments, foundContradiction) l
     have update_res_size : update_res.snd.fst.size = n := by rw [insertUnit_preserves_size]; exact assignments_size
-    insertUnit_invariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
+    InsertUnitInvariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
   intro h
-  simp only [insertUnit_invariant, Fin.getElem_fin, ne_eq, Bool.not_eq_true] at h
-  simp only [insertUnit_invariant, Fin.getElem_fin, ne_eq, Bool.not_eq_true]
+  simp only [InsertUnitInvariant, Fin.getElem_fin, ne_eq, Bool.not_eq_true] at h
+  simp only [InsertUnitInvariant, Fin.getElem_fin, ne_eq, Bool.not_eq_true]
   intro i
   specialize h i
   have i_in_bounds : i.1 < assignments.size := by omega
@@ -360,12 +361,12 @@ theorem insertUnit_fold_preserves_invariant {n : Nat} (assignments0 : Array Assi
     (assignments0_size : assignments0.size = n) (rupUnits : Array (Literal (PosFin n)))
     (assignments : Array Assignment) (assignments_size : assignments.size = n) (b : Bool)
     (units : CNF.Clause (PosFin n)) :
-    insertUnit_invariant assignments0 assignments0_size rupUnits assignments assignments_size →
+    InsertUnitInvariant assignments0 assignments0_size rupUnits assignments assignments_size →
     let update_res := List.foldl insertUnit (rupUnits, assignments, b) units
     have update_res_size : update_res.snd.fst.size = n := by
       rw [insertUnit_fold_preserves_size]
       exact assignments_size
-    insertUnit_invariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
+    InsertUnitInvariant assignments0 assignments0_size update_res.1 update_res.2.1 update_res_size := by
   induction units generalizing rupUnits assignments assignments_size b
   · simp only [List.foldl, imp_self]
   · next hd tl ih =>
@@ -383,10 +384,10 @@ theorem insertRupUnits_postcondition {n : Nat} (f : DefaultFormula n) (f_readyFo
       rw [← f_readyForRupAdd.2.1]
       exact insertRupUnits_preserves_assignments_size f units
     let rupUnits := (insertRupUnits f units).1.rupUnits
-    insertUnit_invariant f.assignments f_readyForRupAdd.2.1 rupUnits assignments hsize := by
+    InsertUnitInvariant f.assignments f_readyForRupAdd.2.1 rupUnits assignments hsize := by
   simp only [insertRupUnits]
   have hsize : f.assignments.size = n := by rw [f_readyForRupAdd.2.1]
-  have h0 : insertUnit_invariant f.assignments hsize f.rupUnits f.assignments hsize := by
+  have h0 : InsertUnitInvariant f.assignments hsize f.rupUnits f.assignments hsize := by
     intro i
     simp only [Fin.getElem_fin, ne_eq, true_and, Bool.not_eq_true, exists_and_right]
     apply Or.inl
