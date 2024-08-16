@@ -15,7 +15,7 @@ namespace LeanSAT
 namespace LRAT
 
 open LeanSAT.LRAT.Internal in
-def verify (lratProof : Array IntAction) (cnf : CNF Nat) : Bool :=
+def check (lratProof : Array IntAction) (cnf : CNF Nat) : Bool :=
   let internalFormula := CNF.convertLRAT cnf
   let lratProof := lratProof.toList
   let lratProof := lratProof.map (intActionToDefaultClauseAction _)
@@ -37,7 +37,6 @@ def verify (lratProof : Array IntAction) (cnf : CNF Nat) : Bool :=
               by simp [WellFormedAction, Clause.limplies_iff_mem, h]
             ⟩
           else
-            -- TODO: report this
             none
       )
   let lratProof := lratProof.map Subtype.val
@@ -45,9 +44,9 @@ def verify (lratProof : Array IntAction) (cnf : CNF Nat) : Bool :=
   checkerResult = .success
 
 open LeanSAT.LRAT.Internal in
-theorem verify_sound (proof : Array IntAction) (cnf : CNF Nat) : verify proof cnf → cnf.Unsat := by
+theorem check_sound (proof : Array IntAction) (cnf : CNF Nat) : check proof cnf → cnf.Unsat := by
   intro h1
-  unfold verify at h1
+  unfold check at h1
   simp only [decide_eq_true_eq] at h1
   have h2 :=
     lratCheckerSound

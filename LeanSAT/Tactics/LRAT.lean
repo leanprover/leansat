@@ -178,7 +178,7 @@ Verify that a proof certificate is valid for a given formula.
 -/
 def verifyCert (cnf : CNF Nat) (cert : LratCert) : Bool :=
   match LRAT.parseLRATProof cert.toUTF8 with
-  | some lratProof => LRAT.verify lratProof cnf
+  | some lratProof => LRAT.check lratProof cnf
   | none => false
 
 theorem verifyCert_correct
@@ -186,7 +186,7 @@ theorem verifyCert_correct
   intro c b h1
   unfold verifyCert at h1
   split at h1
-  . apply LRAT.verify_sound
+  . apply LRAT.check_sound
     assumption
   . contradiction
 
