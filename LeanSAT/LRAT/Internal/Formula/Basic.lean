@@ -6,6 +6,11 @@ Authors: Josh Clune
 import LeanSAT.LRAT.Internal.Formula.Implementation
 import LeanSAT.LRAT.Internal.CNF
 
+/-!
+This module contains basic statements about the invariants that are satisfied by the LRAT checker
+implementation in `Implementation`.
+-/
+
 namespace LeanSAT
 namespace LRAT
 namespace Internal

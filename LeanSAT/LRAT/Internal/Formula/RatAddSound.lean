@@ -5,6 +5,11 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.RatAddResult
 
+/-!
+This module contains the verification of RAT-based clause adding for the default LRAT checker
+implementation.
+-/
+
 namespace LeanSAT
 namespace LRAT
 namespace Internal

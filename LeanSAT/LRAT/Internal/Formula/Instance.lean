@@ -5,6 +5,10 @@ Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Internal.Formula.RatAddSound
 
+/-!
+This module couples the default LRAT implementation to the `Formula` typeclass.
+-/
+
 namespace LeanSAT
 namespace LRAT
 namespace Internal

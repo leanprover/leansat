@@ -11,3 +11,9 @@ import LeanSAT.LRAT.Internal.Formula.RatAddResult
 import LeanSAT.LRAT.Internal.Formula.RatAddSound
 import LeanSAT.LRAT.Internal.Formula.RupAddResult
 import LeanSAT.LRAT.Internal.Formula.RupAddSound
+
+/-!
+This directory contains the current implementation of the LRAT checker that is plugged into the
+generic LRAT checking loop from `LRATChecker` and then used in the surface level LRAT checker
+that is publicly exposed.
+-/

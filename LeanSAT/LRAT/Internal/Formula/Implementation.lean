@@ -7,6 +7,11 @@ import LeanSAT.LRAT.Internal.Formula.Class
 import LeanSAT.LRAT.Internal.Assignment
 import Std.Sat.CNF.Basic
 
+/-!
+This module contains the default implementation of the `Formula` typeclass that is used in the
+surface level LRAT checker.
+-/
+
 namespace LeanSAT
 namespace LRAT
 namespace Internal
