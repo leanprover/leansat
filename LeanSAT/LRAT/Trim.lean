@@ -48,37 +48,35 @@ structure State where
   -/
   mapped : Std.HashMap Nat Nat := {}
 
-abbrev M : Type → Type := ReaderT Context <| StateRefT State IO
+abbrev M : Type → Type := ReaderT Context <| ExceptT String <| StateM State
 
 namespace M
 
-partial def findInitialId (proof : Array IntAction) (curr : Nat := 0) : IO Nat :=
+partial def findInitialId (proof : Array IntAction) (curr : Nat := 0) : Except String Nat :=
   if h : curr < proof.size then
     match proof[curr] with
     | .addEmpty id .. | .addRup id .. | .addRat id .. => return id
     | .del .. => findInitialId proof (curr + 1)
   else
-    throw <| .userError "LRAT proof doesn't contain a proper first proof step."
+    throw "LRAT proof doesn't contain a proper first proof step."
 
-def findEmptyId (proof : Array IntAction) : IO Nat := do
+def findEmptyId (proof : Array IntAction) : Except String Nat := do
   if h : 0 < proof.size then
     match proof[proof.size - 1] with
     | .addEmpty id .. => pure id
-    | _ => throw <| .userError "Last proof step is not the empty clause"
+    | _ => throw "Last proof step is not the empty clause"
   else
-    throw <| .userError "The LRAT proof contains no steps."
+    throw "The LRAT proof contains no steps."
 
-def run (proof : Array IntAction) (x : M α) : IO α := do
+def run (proof : Array IntAction) (x : M α) : Except String α := do
   let initialId ← findInitialId proof
   let addEmptyId ← findEmptyId proof
-
   let folder acc a :=
     match a with
     | .addEmpty id .. | .addRup id .. | .addRat id .. => acc.insert id a
     | .del .. => acc
   let proof := proof.foldl (init := {}) folder
-
-  ReaderT.run x { proof, initialId, addEmptyId } |>.run' {}
+  ReaderT.run x { proof, initialId, addEmptyId } |>.run |>.run' {}
 
 @[inline]
 def getInitialId : M Nat := do
@@ -207,7 +205,7 @@ end trim
 Trim the LRAT `proof` by removing all steps that are not used in reaching the empty clause
 conclusion.
 -/
-def trim (proof : Array IntAction) : IO (Array IntAction) :=
+def trim (proof : Array IntAction) : Except String (Array IntAction) :=
   trim.go.run proof
 
 end LRAT

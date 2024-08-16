@@ -62,7 +62,7 @@ def evalBvTrace : Tactic := fun stx =>
       if sat.trimProofs.get (← getOptions) then
         let lratPath := (← LeanSAT.BVCheck.getSrcDir) / lratFile
         let proof ← LeanSAT.LRAT.loadLRATProof lratPath
-        let trimmed ← LeanSAT.LRAT.trim proof
+        let trimmed ← IO.ofExcept <| LeanSAT.LRAT.trim proof
         LeanSAT.LRAT.dumpLRATProof lratPath trimmed cfg.binaryProofs
       let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)

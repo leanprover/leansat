@@ -137,7 +137,9 @@ def LratCert.ofFile (lratPath : System.FilePath) (trimProofs : Bool) : MetaM Lra
   let proof ←
     if trimProofs then
       withTraceNode `sat (fun _ => return "Trimming LRAT proof") do
-        LRAT.trim proof
+        -- lazyPure to prevent compiler lifting
+        let trimmed ← IO.lazyPure (fun _ => LRAT.trim proof)
+        IO.ofExcept trimmed
     else
       pure proof
 
