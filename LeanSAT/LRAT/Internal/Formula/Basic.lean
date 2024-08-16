@@ -14,29 +14,33 @@ namespace DefaultFormula
 
 open Std Sat DefaultClause DefaultFormula Assignment
 
-/-- This invariant states that if the `assignments` field of a default formula `f` indicates that `f`
-    contains an assignment `b` at index `i`, then the unit literal `(i, b)` must be included in `f`.
-    Default formulas are expected to satisfy this invariant at all times except during intermediate
-    stages of unit propogation (during which, default formulas are only expected to satisfy the more
-    lenient `assignments_invariant` defined below). -/
-def strong_assignments_invariant {n : Nat} (f : DefaultFormula n) : Prop :=
+/--
+This invariant states that if the `assignments` field of a default formula `f` indicates that `f`
+contains an assignment `b` at index `i`, then the unit literal `(i, b)` must be included in `f`.
+Default formulas are expected to satisfy this invariant at all times except during intermediate
+stages of unit propogation (during which, default formulas are only expected to satisfy the more
+lenient `AssignmentsInvariant` defined below).
+-/
+def StrongAssignmentsInvariant {n : Nat} (f : DefaultFormula n) : Prop :=
   ∃ hsize : f.assignments.size = n, ∀ i : PosFin n, ∀ b : Bool,
     hasAssignment b (f.assignments[i.1]'(by rw [hsize]; exact i.2.2)) →
     (unit (i, b)) ∈ toList f
 
-/-- This invariant states that if the `assignments` field of a default formula `f` indicates that `f`
-    contains an assignment `b` at index `i`, then the unit literal `(i, b)` is entailed by `f`. This is
-    distinct from the `strong_assignments_invariant` defined above in that the entailment described here
-    does not require explicitly containing the literal `(i, b)`. For example, if `f` contains `(i, b) ∨ (j, b')`
-    as well as `(i, b) ∨ (j, ¬b')`, then the `assignments_invariant` would permit the `assignments` field of `f`
-    to contain assignment `b` at index `i`, but the `strong_assignments_invariant` would not.-/
-def assignments_invariant {n : Nat} (f : DefaultFormula n) : Prop :=
+/--
+This invariant states that if the `assignments` field of a default formula `f` indicates that `f`
+contains an assignment `b` at index `i`, then the unit literal `(i, b)` is entailed by `f`. This is
+distinct from the `StrongAssignmentsInvariant` defined above in that the entailment described here
+does not require explicitly containing the literal `(i, b)`. For example, if `f` contains `(i, b) ∨ (j, b')`
+as well as `(i, b) ∨ (j, ¬b')`, then the `AssignmentsInvariant` would permit the `assignments` field of `f`
+to contain assignment `b` at index `i`, but the `StrongAssignmentsInvariant` would not.
+-/
+def AssignmentsInvariant {n : Nat} (f : DefaultFormula n) : Prop :=
   ∃ hsize : f.assignments.size = n, ∀ i : PosFin n, ∀ b : Bool,
     hasAssignment b (f.assignments[i.1]'(by rw [hsize]; exact i.2.2)) →
     Limplies (PosFin n) f (i, b)
 
-theorem assignments_invariant_of_strong_assignments_invariant {n : Nat} (f : DefaultFormula n) :
-  strong_assignments_invariant f → assignments_invariant f := by
+theorem assignmentsInvariant_of_strongAssignmentsInvariant {n : Nat} (f : DefaultFormula n) :
+  StrongAssignmentsInvariant f → AssignmentsInvariant f := by
   intro ⟨hsize, h⟩
   apply Exists.intro hsize
   intro i b hb p pf
@@ -46,22 +50,22 @@ theorem assignments_invariant_of_strong_assignments_invariant {n : Nat} (f : Def
   specialize pf (unit (i, b)) h
   simpa [(· ⊨ ·), Clause.eval, unit_eq, Clause.toList] using pf
 
-theorem assignments_invariant_entails_limplies {n : Nat} (f : DefaultFormula n)
-  (f_assignments_invariant : assignments_invariant f) : Limplies (PosFin n) f f.assignments := by
+theorem AssignmentsInvariant_entails_limplies {n : Nat} (f : DefaultFormula n)
+  (f_AssignmentsInvariant : AssignmentsInvariant f) : Limplies (PosFin n) f f.assignments := by
   intro p pf
-  rcases f_assignments_invariant with ⟨hsize, f_assignments_invariant⟩
+  rcases f_AssignmentsInvariant with ⟨hsize, f_AssignmentsInvariant⟩
   simp only [(· ⊨ ·), Bool.not_eq_true]
   intro i
-  specialize f_assignments_invariant i (decide (p i = false))
+  specialize f_AssignmentsInvariant i (decide (p i = false))
   by_cases hasAssignment (decide (p i = false)) (f.assignments[i.1]'(by rw [hsize]; exact i.2.2))
   · next h =>
-    specialize f_assignments_invariant h p pf
-    by_cases hpi : p i <;> simp [hpi, Entails.eval] at f_assignments_invariant
+    specialize f_AssignmentsInvariant h p pf
+    by_cases hpi : p i <;> simp [hpi, Entails.eval] at f_AssignmentsInvariant
   · next h => simp_all [getElem!, i.2.2, decidableGetElem?]
 
 /-- performRupAdd adds to f.rupUnits and then clears f.rupUnits. If f begins with some units in f.rupUnits,
     then performRupAdd will clear more than it intended to which will break the correctness of rupAdd_result -/
-def readyForRupAdd {n : Nat} (f : DefaultFormula n) : Prop := f.rupUnits = #[] ∧ strong_assignments_invariant f
+def readyForRupAdd {n : Nat} (f : DefaultFormula n) : Prop := f.rupUnits = #[] ∧ StrongAssignmentsInvariant f
 
 /-- performRatAdd adds to f.rupUnits and f.ratUnits and then clears both. If f begins with some units in either,
     then performRatAdd will clear more than it intended to which will break the correctness of ratAdd_result -/
@@ -94,17 +98,17 @@ theorem ofArray_readyForRupAdd {n : Nat} (arr : Array (Option (DefaultClause n))
         (ofArray_fold_fn acc cOpt).size = n := by rw [ofArray_fold_fn_preserves_assignments_size acc cOpt, ih]
       exact List.foldlRecOn arr.data ofArray_fold_fn (mkArray n unassigned) hb hl
     apply Exists.intro hsize
-    let modified_assignments_invariant (assignments : Array Assignment) : Prop :=
+    let modified_AssignmentsInvariant (assignments : Array Assignment) : Prop :=
       ∃ hsize : assignments.size = n,
         ∀ i : PosFin n, ∀ b : Bool, hasAssignment b (assignments[i.1]'(by rw [hsize]; exact i.2.2)) →
         (unit (i, b)) ∈ toList (ofArray arr)
-    have hb : modified_assignments_invariant (mkArray n unassigned) := by
+    have hb : modified_AssignmentsInvariant (mkArray n unassigned) := by
       have hsize : (mkArray n unassigned).size = n := by simp only [Array.size_mkArray]
       apply Exists.intro hsize
       intro i b h
       by_cases hb : b <;> simp [hasAssignment, hb, hasPosAssignment, hasNegAssignment] at h
-    have hl (acc : Array Assignment) (ih : modified_assignments_invariant acc) (cOpt : Option (DefaultClause n))
-      (cOpt_in_arr : cOpt ∈ arr.data) : modified_assignments_invariant (ofArray_fold_fn acc cOpt) := by
+    have hl (acc : Array Assignment) (ih : modified_AssignmentsInvariant acc) (cOpt : Option (DefaultClause n))
+      (cOpt_in_arr : cOpt ∈ arr.data) : modified_AssignmentsInvariant (ofArray_fold_fn acc cOpt) := by
       have hsize : (ofArray_fold_fn acc cOpt).size = n := by rw [ofArray_fold_fn_preserves_assignments_size, ih.1]
       apply Exists.intro hsize
       intro i b h
@@ -424,8 +428,8 @@ theorem deleteOne_preserves_assignments_size {n : Nat} (f : DefaultFormula n) (i
   simp only [deleteOne]
   split <;> simp only [Array.size_modify]
 
-theorem deleteOne_preserves_strong_assignments_invariant {n : Nat} (f : DefaultFormula n) (id : Nat) :
-  strong_assignments_invariant f → strong_assignments_invariant (deleteOne f id) := by
+theorem deleteOne_preserves_strongAssignmentsInvariant {n : Nat} (f : DefaultFormula n) (id : Nat) :
+  StrongAssignmentsInvariant f → StrongAssignmentsInvariant (deleteOne f id) := by
   intro hf
   rcases hf with ⟨hsize, hf⟩
   have hsize' : (deleteOne f id).assignments.size = n := by
@@ -601,9 +605,9 @@ theorem delete_readyForRupAdd {n : Nat} (f : DefaultFormula n) (arr : Array Nat)
     have hl (acc : DefaultFormula n) (ih : acc.rupUnits = #[]) (id : Nat) (_id_in_arr : id ∈ arr.data) :
       (deleteOne acc id).rupUnits = #[] := by rw [deleteOne_preserves_rupUnits, ih]
     exact List.foldlRecOn arr.data deleteOne f hb hl
-  · have hb : strong_assignments_invariant f := h.2
-    have hl (acc : DefaultFormula n) (ih : strong_assignments_invariant acc) (id : Nat) (_id_in_arr : id ∈ arr.data) :
-      strong_assignments_invariant (deleteOne acc id) := deleteOne_preserves_strong_assignments_invariant acc id ih
+  · have hb : StrongAssignmentsInvariant f := h.2
+    have hl (acc : DefaultFormula n) (ih : StrongAssignmentsInvariant acc) (id : Nat) (_id_in_arr : id ∈ arr.data) :
+      StrongAssignmentsInvariant (deleteOne acc id) := deleteOne_preserves_strongAssignmentsInvariant acc id ih
     exact List.foldlRecOn arr.data deleteOne f hb hl
 
 theorem deleteOne_preserves_ratUnits {n : Nat} (f : DefaultFormula n) (id : Nat) : (deleteOne f id).ratUnits = f.ratUnits := by

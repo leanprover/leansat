@@ -42,8 +42,8 @@ open Assignment DefaultClause Std ReduceResult Std Sat
       of negative hints in said RAT addition (i.e. the number of clauses in the formula containing the RAT addition's negated pivot literal).
 
     - The `assignments` field is maintained to quickly look up which values (if any) are entailed for a variable by the formula. At most points in time,
-      (i.e. at all points in time except during a RUP or RAT addition), the `assignments` field must satisfy the `strong_assignments_invariant` defined
-      in Formula.Basic.lean. During RUP and RAT additions, the `assignments` field must satisfy the `assignments_invariant` defined in Formula.Basic.lean.
+      (i.e. at all points in time except during a RUP or RAT addition), the `assignments` field must satisfy the `StrongAssignmentsInvariant` defined
+      in Formula.Basic.lean. During RUP and RAT additions, the `assignments` field must satisfy the `AssignmentsInvariant` defined in Formula.Basic.lean.
       The reason that the `assignments` field is contained as an explicit part of the default formula (as opposed to simply being an Array that is passed
       through the helper functions concerning unit propogation), is so that the (potentially large) Array does not need to repeatedly be allocated and
       deallocated. By having the `assignments` Array be a field of the default formula, it is easier to ensure that the Array is used linearly. -/

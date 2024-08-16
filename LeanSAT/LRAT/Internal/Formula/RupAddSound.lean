@@ -136,8 +136,8 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
     simp only at hboth
     have hpos : hasAssignment true (f.assignments[i.1]'i_in_bounds) = true := by simp only [hboth]; decide
     have hneg : hasAssignment false (f.assignments[i.1]'i_in_bounds) = true := by simp only [hboth]; decide
-    have p_entails_i_true := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i true hpos p pf
-    have p_entails_i_false := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i false hneg p pf
+    have p_entails_i_true := (assignmentsInvariant_of_strongAssignmentsInvariant f f_readyForRupAdd.2).2 i true hpos p pf
+    have p_entails_i_false := (assignmentsInvariant_of_strongAssignmentsInvariant f f_readyForRupAdd.2).2 i false hneg p pf
     simp only [Entails.eval] at p_entails_i_true p_entails_i_false
     simp only [p_entails_i_true] at p_entails_i_false
   · simp only [(· ⊨ ·), Clause.eval, List.any_eq_true, Prod.exists, Bool.exists_bool, Bool.decide_coe]
@@ -162,7 +162,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
         have hasNegAssignment_fi : hasAssignment false (f.assignments[i.1]'i_in_bounds) := by
           simp only [hasAssignment, hasPosAssignment, heq, ite_false]
           decide
-        have p_entails_i := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i false hasNegAssignment_fi p pf
+        have p_entails_i := (assignmentsInvariant_of_strongAssignmentsInvariant f f_readyForRupAdd.2).2 i false hasNegAssignment_fi p pf
         simp only [(· ⊨ ·)] at p_entails_i
         simp only [p_entails_i, decide_True]
       · next heq =>
@@ -178,7 +178,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
       · next heq =>
         have hasPosAssignment_fi : hasAssignment true (f.assignments[i.1]'i_in_bounds) := by
           simp only [hasAssignment, hasPosAssignment, ite_true, heq]
-        have p_entails_i := (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i true hasPosAssignment_fi p pf
+        have p_entails_i := (assignmentsInvariant_of_strongAssignmentsInvariant f f_readyForRupAdd.2).2 i true hasPosAssignment_fi p pf
         simp only [(· ⊨ ·)] at p_entails_i
         exact p_entails_i
       · simp only at h2
@@ -223,8 +223,8 @@ theorem insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyF
   · simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
     exact pf c' c'_in_f
 
-theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
-    (units : CNF.Clause (PosFin n)) : assignments_invariant (insertRupUnits f units).1 := by
+theorem insertRupUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+    (units : CNF.Clause (PosFin n)) : AssignmentsInvariant (insertRupUnits f units).1 := by
   have h := insertRupUnits_postcondition f f_readyForRupAdd units
   have hsize : (insertRupUnits f units).1.assignments.size = n := by rw [insertRupUnits_preserves_assignments_size, f_readyForRupAdd.2.1]
   apply Exists.intro hsize
@@ -246,7 +246,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
       exact hp
   rcases h ⟨i.1, i.2.2⟩ with ⟨h1, h2⟩ | ⟨j, b', i_gt_zero, h1, h2, h3, h4⟩ | ⟨j1, j2, i_gt_zero, h1, h2, _, _, _⟩
   · rw [h1] at hb
-    exact (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i b hb p pf
+    exact (assignmentsInvariant_of_strongAssignmentsInvariant f f_readyForRupAdd.2).2 i b hb p pf
   · rw [h2] at hb
     by_cases b = b'
     · next b_eq_b' =>
@@ -296,7 +296,7 @@ theorem insertRupUnits_preserves_assignments_invariant {n : Nat} (f : DefaultFor
         rw [hp1.1] at hp2
         exact hp2
     · next b_ne_b' =>
-      apply (assignments_invariant_of_strong_assignments_invariant f f_readyForRupAdd.2).2 i b _ p pf
+      apply (assignmentsInvariant_of_strongAssignmentsInvariant f f_readyForRupAdd.2).2 i b _ p pf
       have b'_def : b' = (decide ¬b = true) := by
         cases b <;> cases b' <;> simp at *
       rw [has_iff_has_of_add_complement, ← b'_def, hb]
@@ -707,9 +707,9 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
   have h_base : motive 0 (fc.fst.assignments, [], false, false) := by
     simp only [confirmRupHint_fold_entails_hsat_motive, insertRupUnits_preserves_assignments_size, f_readyForRupAdd.2.1,
       false_implies, and_true, true_and, motive, fc]
-    have fc_satisfies_assignments_invariant :=
-      insertRupUnits_preserves_assignments_invariant f f_readyForRupAdd (negate c)
-    exact assignments_invariant_entails_limplies fc.1 fc_satisfies_assignments_invariant
+    have fc_satisfies_AssignmentsInvariant :=
+      insertRupUnits_preserves_AssignmentsInvariant f f_readyForRupAdd (negate c)
+    exact AssignmentsInvariant_entails_limplies fc.1 fc_satisfies_AssignmentsInvariant
   have h_inductive (idx : Fin rupHints.size) (acc : Array Assignment × CNF.Clause (PosFin n) × Bool × Bool) (ih : motive idx.1 acc) :=
     confirmRupHint_preserves_motive fc.1 rupHints idx acc ih
   rcases Array.foldl_induction motive h_base h_inductive with ⟨_, h1, h2⟩
