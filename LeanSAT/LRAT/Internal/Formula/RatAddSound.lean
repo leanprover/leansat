@@ -439,7 +439,7 @@ theorem performRatCheck_success_entails_c_without_negPivot {n : Nat} (f : Defaul
       exact of_decide_eq_true <| pfc (DefaultClause.delete c negPivot) c_negPivot_in_fc
 
 theorem existsRatHint_of_ratHintsExhaustive {n : Nat} (f : DefaultFormula n)
-    (f_readyForRatAdd : readyForRatAdd f) (pivot : Literal (PosFin n))
+    (f_readyForRatAdd : ReadyForRatAdd f) (pivot : Literal (PosFin n))
     (ratHints : Array (Nat × Array Nat))
     (ratHintsExhaustive_eq_true : ratHintsExhaustive f pivot ratHints = true) (c' : DefaultClause n)
     (c'_in_f : c' ∈ toList f) (negPivot_in_c' : Literal.negate pivot ∈ Clause.toList c') :
@@ -523,7 +523,7 @@ theorem performRatCheck_success_of_performRatCheck_fold_success {n : Nat} (f : D
   simpa [getElem!, i.2, dite_true, decidableGetElem?] using h
 
 theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultFormula n)
-    (f_readyForRatAdd : readyForRatAdd f) (c : DefaultClause n) (pivot : Literal (PosFin n))
+    (f_readyForRatAdd : ReadyForRatAdd f) (c : DefaultClause n) (pivot : Literal (PosFin n))
     (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat))
     (pivot_in_c : pivot ∈ Clause.toList c)
     (ratHintsExhaustive_eq_true : ratHintsExhaustive f pivot ratHints = true)
@@ -628,7 +628,7 @@ theorem performRatCheck_fold_success_entails_safe_insert {n : Nat} (f : DefaultF
 
 theorem ratAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n)
     (pivot : Literal (PosFin n)) (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat))
-    (f' : DefaultFormula n) (f_readyForRatAdd : readyForRatAdd f) (pivot_in_c : pivot ∈ Clause.toList c)
+    (f' : DefaultFormula n) (f_readyForRatAdd : ReadyForRatAdd f) (pivot_in_c : pivot ∈ Clause.toList c)
     (ratAddSuccess : performRatAdd f c pivot rupHints ratHints = (f', true)) :
     Equisat (PosFin n) f f' := by
   have f'_def := ratAdd_result f c pivot rupHints ratHints f' f_readyForRatAdd pivot_in_c ratAddSuccess

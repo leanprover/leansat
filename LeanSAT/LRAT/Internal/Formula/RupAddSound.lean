@@ -118,7 +118,7 @@ theorem mem_insertUnit_fold_units {n : Nat} (units : Array (Literal (PosFin n)))
     · exact h l' l'_in_acc
   exact List.foldlRecOn l insertUnit (units, assignments, foundContradiction) hb hl
 
-theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f) (c : DefaultClause n)
+theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f) (c : DefaultClause n)
     (p : PosFin n → Bool) (pf : p ⊨ f) :
     (insertRupUnits f (negate c)).2 = true → p ⊨ c := by
   simp only [insertRupUnits]
@@ -219,7 +219,7 @@ theorem insertRup_entails_hsat {n : Nat} (f : DefaultFormula n) (f_readyForRupAd
     · exact i_true_not_in_c i_false_in_insertUnit_fold
     · exact i_false_not_in_c i_true_in_insertUnit_fold
 
-theorem insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+theorem insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f)
     (c : DefaultClause n) :
     (insertRupUnits f (negate c)).2 = true → Limplies (PosFin n) f (f.insert c) := by
   intro h p pf
@@ -232,7 +232,7 @@ theorem insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n) (f_readyF
   · simp only [formulaEntails_def, List.all_eq_true, decide_eq_true_eq] at pf
     exact pf c' c'_in_f
 
-theorem insertRupUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+theorem insertRupUnits_preserves_AssignmentsInvariant {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f)
     (units : CNF.Clause (PosFin n)) :
     AssignmentsInvariant (insertRupUnits f units).1 := by
   have h := insertRupUnits_postcondition f f_readyForRupAdd units
@@ -717,7 +717,7 @@ theorem confirmRupHint_preserves_motive {n : Nat} (f : DefaultFormula n) (rupHin
       simp only [false_implies]
 
 theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultFormula n)
-    (f_readyForRupAdd : readyForRupAdd f) (c : DefaultClause n) (rupHints : Array Nat)
+    (f_readyForRupAdd : ReadyForRupAdd f) (c : DefaultClause n) (rupHints : Array Nat)
     (p : PosFin n → Bool) (pf : p ⊨ f) :
     let fc := insertRupUnits f (negate c)
     let confirmRupHint_fold_res := rupHints.foldl (confirmRupHint fc.1.clauses) (fc.1.assignments, [], false, false) 0 rupHints.size
@@ -783,7 +783,7 @@ theorem confirmRupHint_of_insertRup_fold_entails_hsat {n : Nat} (f : DefaultForm
       exact p_unsat_c <| pf unsat_c unsat_c_in_f
 
 theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultFormula n)
-    (f_readyForRupAdd : readyForRupAdd f) (c : DefaultClause n) (rupHints : Array Nat) :
+    (f_readyForRupAdd : ReadyForRupAdd f) (c : DefaultClause n) (rupHints : Array Nat) :
     (performRupCheck (insertRupUnits f (negate c)).1 rupHints).2.2.1 = true
       →
     Limplies (PosFin n) f (f.insert c) := by
@@ -799,7 +799,7 @@ theorem performRupCheck_of_insertRup_entails_safe_insert {n : Nat} (f : DefaultF
     exact pf c' c'_in_f
 
 theorem rupAdd_sound {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHints : Array Nat)
-    (f' : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+    (f' : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f)
     (rupAddSuccess : performRupAdd f c rupHints = (f', true)) :
     Liff (PosFin n) f f' := by
   have f'_def := rupAdd_result f c rupHints f' f_readyForRupAdd rupAddSuccess

@@ -17,8 +17,8 @@ namespace DefaultFormula
 
 instance {n : Nat} : Formula (PosFin n) (DefaultClause n) (DefaultFormula n) where
   toList := toList
-  readyForRupAdd := readyForRupAdd
-  readyForRatAdd := readyForRatAdd
+  ReadyForRupAdd := ReadyForRupAdd
+  ReadyForRatAdd := ReadyForRatAdd
   ofArray := ofArray
   ofArray_readyForRupAdd := ofArray_readyForRupAdd
   ofArray_readyForRatAdd := ofArray_readyForRatAdd

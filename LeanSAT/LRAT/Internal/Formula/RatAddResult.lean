@@ -192,7 +192,7 @@ theorem performRatCheck_fold_preserves_formula {n : Nat} (f : DefaultFormula n)
 
 theorem ratAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (p : Literal (PosFin n))
   (rupHints : Array Nat) (ratHints : Array (Nat × Array Nat)) (f' : DefaultFormula n)
-  (f_readyForRatAdd : readyForRatAdd f) (_pc : p ∈ Clause.toList c)
+  (f_readyForRatAdd : ReadyForRatAdd f) (_pc : p ∈ Clause.toList c)
   (ratAddSuccess : performRatAdd f c p rupHints ratHints = (f', true)) : f' = insert f c := by
   rw [performRatAdd] at ratAddSuccess
   simp at ratAddSuccess

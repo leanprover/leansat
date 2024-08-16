@@ -63,8 +63,8 @@ theorem check_sound (lratProof : Array IntAction) (cnf : CNF Nat) :
   have h2 :=
     lratCheckerSound
       _
-      (by apply CNF.convertLRAT_readfyForRupAdd)
-      (by apply CNF.convertLRAT_readfyForRatAdd)
+      (by apply CNF.convertLRAT_readyForRupAdd)
+      (by apply CNF.convertLRAT_readyForRatAdd)
       _
       (by
         intro action h

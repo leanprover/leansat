@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
 import LeanSAT.LRAT.Actions
-import LeanSAT.LRAT.Internal.Formula.Instance
+import LeanSAT.LRAT.Internal.Formula.Class
 
 namespace LeanSAT
 namespace LRAT

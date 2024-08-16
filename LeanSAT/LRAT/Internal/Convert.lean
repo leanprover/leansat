@@ -119,13 +119,13 @@ def CNF.convertLRAT (cnf : CNF Nat) : DefaultFormula (cnf.numLiterals + 1) :=
   let lratCnf := CNF.convertLRAT' lifted
   DefaultFormula.ofArray (none :: lratCnf).toArray
 
-theorem CNF.convertLRAT_readfyForRupAdd (cnf : CNF Nat) :
-    DefaultFormula.readyForRupAdd (CNF.convertLRAT cnf) := by
+theorem CNF.convertLRAT_readyForRupAdd (cnf : CNF Nat) :
+    DefaultFormula.ReadyForRupAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
   apply DefaultFormula.ofArray_readyForRupAdd
 
-theorem CNF.convertLRAT_readfyForRatAdd (cnf : CNF Nat) :
-    DefaultFormula.readyForRatAdd (CNF.convertLRAT cnf) := by
+theorem CNF.convertLRAT_readyForRatAdd (cnf : CNF Nat) :
+    DefaultFormula.ReadyForRatAdd (CNF.convertLRAT cnf) := by
   unfold CNF.convertLRAT
   apply DefaultFormula.ofArray_readyForRatAdd
 

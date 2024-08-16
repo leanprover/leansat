@@ -376,7 +376,7 @@ theorem insertUnit_fold_preserves_invariant {n : Nat} (assignments0 : Array Assi
     have h := insertUnit_preserves_invariant assignments0 assignments0_size rupUnits assignments assignments_size b hd h0
     exact ih update_res.1 update_res.2.1 update_res_size update_res.2.2 h
 
-theorem insertRupUnits_postcondition {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+theorem insertRupUnits_postcondition {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f)
     (units : CNF.Clause (PosFin n)) :
     let assignments := (insertRupUnits f units).fst.assignments
     have hsize : assignments.size = n := by
@@ -395,7 +395,7 @@ theorem insertRupUnits_postcondition {n : Nat} (f : DefaultFormula n) (f_readyFo
     exact Fin.elim0 j
   exact insertUnit_fold_preserves_invariant f.assignments hsize f.rupUnits f.assignments hsize false units h0
 
-theorem insertRupUnits_nodup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+theorem insertRupUnits_nodup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f)
     (units : CNF.Clause (PosFin n)) :
       ∀ i : Fin (f.insertRupUnits units).1.rupUnits.size, ∀ j : Fin (f.insertRupUnits units).1.rupUnits.size,
       i ≠ j → (f.insertRupUnits units).1.rupUnits[i] ≠ (f.insertRupUnits units).1.rupUnits[j] := by
@@ -500,7 +500,7 @@ def clear_insert_induction_motive {n : Nat} (f : DefaultFormula n) (assignments_
       j1 ≥ idx ∧ j2 ≥ idx ∧ units[j1] = ⟨⟨i.1, ⟨i_gt_zero, i.2⟩⟩, true⟩ ∧ units[j2] = ⟨⟨i.1, ⟨i_gt_zero, i.2⟩⟩, false⟩ ∧
       assignments_i = both ∧ fassignments_i = unassigned ∧ ∀ k : Fin units.size, k ≥ idx → k ≠ j1 → k ≠ j2 → units[k].1.1 ≠ i.1)
 
-theorem clear_insertRup_base_case {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+theorem clear_insertRup_base_case {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f)
   (units : CNF.Clause (PosFin n)) :
   clear_insert_induction_motive f f_readyForRupAdd.2.1 (insertRupUnits f units).1.rupUnits 0 (insertRupUnits f units).1.assignments := by
   have insertRupUnits_assignments_size := insertRupUnits_preserves_assignments_size f units
@@ -695,7 +695,7 @@ theorem clear_insert_inductive_case {n : Nat} (f : DefaultFormula n) (f_assignme
                   · intro k k_ge_idx_add_one
                     exact ih5 k <| Nat.le_of_succ_le k_ge_idx_add_one
 
-theorem clear_insertRup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : readyForRupAdd f)
+theorem clear_insertRup {n : Nat} (f : DefaultFormula n) (f_readyForRupAdd : ReadyForRupAdd f)
     (units : CNF.Clause (PosFin n)) :
     clearRupUnits (f.insertRupUnits units).1 = f := by
   simp only [clearRupUnits]
@@ -1322,7 +1322,7 @@ theorem restoreAssignments_performRupCheck {n : Nat} (f : DefaultFormula n) (f_a
       exact (Nat.not_lt_of_le j1_ge_derivedLits_size) j1.2
 
 theorem rupAdd_result {n : Nat} (f : DefaultFormula n) (c : DefaultClause n) (rupHints : Array Nat) (f' : DefaultFormula n)
-    (f_readyForRupAdd : readyForRupAdd f) (rupAddSuccess : performRupAdd f c rupHints = (f', true)) :
+    (f_readyForRupAdd : ReadyForRupAdd f) (rupAddSuccess : performRupAdd f c rupHints = (f', true)) :
     f' = insert f c := by
   rw [performRupAdd] at rupAddSuccess
   simp only [Bool.not_eq_true'] at rupAddSuccess
