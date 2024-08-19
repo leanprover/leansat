@@ -3,13 +3,18 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Josh Clune
 -/
-import LeanSAT.LRAT.Actions
+import Lean.Elab.Tactic.BVDecide.LRAT.Actions
 import Lean.Data.Parsec
+
+/-!
+This module implements parsers and serializers for both the binary and non-binary LRAT format.
+-/
 
 namespace LeanSAT
 namespace LRAT
 
 open Std.Sat
+open Lean.Elab.Tactic.BVDecide.LRAT (IntAction)
 
 def getPivot (clause : Array Int) : Literal Nat :=
   let pivotInt := clause[0]!
@@ -19,7 +24,7 @@ def getPivot (clause : Array Int) : Literal Nat :=
 namespace Parser
 
 open Lean Parsec ByteArray
-
+-- TODO: into Parsec
 def eof? : Parser Bool := fun it =>
   .success it (!Input.hasNext it)
 
@@ -29,9 +34,11 @@ This implements a (corrected) version of the grammar presented in:
 https://www.cs.cmu.edu/~mheule/publications/lrat.pdf
 -/
 
+-- TODO: into Parsec
 @[inline]
-def digitToNat (b : UInt8) : Nat := (b - '0'.toNat.toUInt8).toNat
+def digitToNat (b : UInt8) : Nat := (b - '0'.toUInt8).toNat
 
+-- TODO: into Parsec
 @[inline]
 partial def digitsCore (acc : Nat) : Parsec ByteArray.Iterator Nat := fun it =>
   /-
@@ -54,6 +61,7 @@ where
     else
       (acc, it)
 
+-- TODO: into Parsec
 @[inline]
 def digits : Parsec ByteArray.Iterator Nat := do
   let d ← digit
@@ -146,7 +154,7 @@ where
       let _ ← many (satisfy (· != '\n'.toUInt8))
       skipByteChar '\n'
       if ← eof? then
-        pure actions
+        return actions
       else
         go actions
     else
@@ -175,7 +183,7 @@ where
     if shift == 28 && ((uch &&& ~~~15) != 0) then
       fail "Excessive literal"
     else if uch == 0 then
-        fail "Invalid zero byte in literal"
+      fail "Invalid zero byte in literal"
     else
       let uidx := uidx ||| ((uch &&& 127).toUInt64 <<< shift)
       if uch &&& 128 == 0 then
@@ -289,7 +297,7 @@ where
 end Binary
 
 /--
-Based on the byte parses the input either as a binary or a clear text LRAT.
+Based on the first byte parses the input either as a binary or a clear text LRAT.
 -/
 def parseActions : Parser (Array IntAction) := do
   let byte ← peek!
@@ -394,17 +402,13 @@ where
     variableLengthEncode acc mapped 0
 
   variableLengthEncode (acc : ByteArray) (lit : UInt64) (idx : Nat) : ByteArray :=
-    -- the literal may never be zero in the first step already, that would be illegal
-    if lit == 0 then
-      acc
-    else
-      let chunk :=
-        if lit > 127 then
-          (lit.toUInt8 &&& 127) ||| 128
-        else
-          lit.toUInt8 &&& 127
-      let acc := acc.push chunk
-      variableLengthEncode acc (lit >>> 7) (idx + 1)
+    let chunk :=
+      if lit > 127 then
+        (lit.toUInt8 &&& 127) ||| 128
+      else
+        lit.toUInt8 &&& 127
+    let acc := acc.push chunk
+    variableLengthEncode acc (lit >>> 7) (idx + 1)
 
   @[inline]
   startAdd (acc : ByteArray) : ByteArray := acc.push 'a'.toUInt8
@@ -418,8 +422,8 @@ where
   @[inline]
   addNat (acc : ByteArray) (n : Nat) : ByteArray := addInt acc n
 
-def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) (binaryProofs : Bool)
-    : IO Unit := do
+def dumpLRATProof (path : System.FilePath) (proof : Array IntAction) (binaryProofs : Bool) :
+    IO Unit := do
   let out :=
     if binaryProofs then
       lratProofToBinary proof

@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import LeanSAT.Tactics.Attr
-import LeanSAT.LRAT.Checker
-import LeanSAT.LRAT.Trim
+import Lean.Elab.Tactic.BVDecide.LRAT.Checker
+import Lean.Elab.Tactic.BVDecide.LRAT.Trim
 import LeanSAT.External.Solver
 
 namespace Std
@@ -39,6 +39,8 @@ namespace LeanSAT
 namespace BVDecide
 
 open Lean Elab Meta Std Sat
+
+open Lean.Elab.Tactic.BVDecide
 
 /--
 The context for the `bv_decide` tactic.

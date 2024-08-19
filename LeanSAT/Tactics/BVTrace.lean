@@ -5,7 +5,7 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Tactics.BVDecide
 import LeanSAT.Tactics.BVCheck
-import LeanSAT.LRAT.Trim
+import Lean.Elab.Tactic.BVDecide.LRAT.Trim
 import Lean.Meta.Tactic.TryThis
 
 open Lean Elab Meta Tactic
@@ -62,7 +62,7 @@ def evalBvTrace : Tactic := fun stx =>
       if sat.trimProofs.get (← getOptions) then
         let lratPath := (← LeanSAT.BVCheck.getSrcDir) / lratFile
         let proof ← LeanSAT.LRAT.loadLRATProof lratPath
-        let trimmed ← IO.ofExcept <| LeanSAT.LRAT.trim proof
+        let trimmed ← IO.ofExcept <| Lean.Elab.Tactic.BVDecide.LRAT.trim proof
         LeanSAT.LRAT.dumpLRATProof lratPath trimmed cfg.binaryProofs
       let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)
