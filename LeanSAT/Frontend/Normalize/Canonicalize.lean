@@ -5,15 +5,16 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Frontend.Attr
 
+/-!
+This contains theorems responsible for turning both `Bool` and `BitVec` goals into the
+`x = true` normal form (where `x` consists of only `Bool` and `BitVec`) expected by `bv_decide`.
+-/
+
 namespace BVDecide
 namespace Normalize
 
-open Lean Meta
-
-/-
-This contains theorems responsible for turning both `Bool` and `BitVec` goals into the
-`x = true` normal form expected by `bv_unsat`.
--/
+open Lean
+open Lean.Meta
 
 @[bv_normalize]
 theorem BitVec.eq_to_beq (a b : BitVec w) : (a = b) = ((a == b) = true) := by

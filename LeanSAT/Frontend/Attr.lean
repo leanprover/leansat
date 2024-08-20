@@ -1,10 +1,14 @@
 /-
 Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Scott Morrison
+Authors: Kim Morrison, Henrik Böving
 -/
 import Lean.Util.Trace
 import Lean.Elab.Tactic.Simp
+
+/-!
+Provides environment extensions around the `bv_decide` tactic frontends.
+-/
 
 open Lean
 

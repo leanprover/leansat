@@ -3,14 +3,16 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
+import Std.Sat.AIG.CNF
+import Std.Sat.AIG.RelabelNat
 import LeanSAT.Frontend.Normalize
 import LeanSAT.Frontend.LRAT
 import LeanSAT.Frontend.BVDecide.SatAtBVLogical
 import Lean.Elab.Tactic.BVDecide.Bitblast
-import Std.Sat.AIG.CNF
-import Std.Sat.AIG.RelabelNat
 
-
+/-!
+This module provides the implementation of the `bv_decide` frontend itself.
+-/
 
 namespace LeanSAT
 namespace BVDecide
@@ -21,16 +23,14 @@ open Lean.Meta
 open Lean.Elab.Tactic.BVDecide
 
 /--
-Given a goal `g`, which should be `False`, returns
-* a `e : BVLogicalExpr` (representing the conjunction of all bitvec predicates in hypotheses of `g`)
-* a function which takes an expression representing a proof of `e.Unsat`,
-  and returns a proof of `False` valid in the context of `g`.
+Verify that `cert` is an UNSAT proof for the SAT problem obtained by bitblasting `bv`.
 -/
 def verifyBVExpr (bv : BVLogicalExpr) (cert : LratCert) : Bool :=
   verifyCert (AIG.toCNF bv.bitblast.relabelNat) cert
 
 theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : LratCert)
-    (h : verifyBVExpr bv c = true) : bv.Unsat := by
+    (h : verifyBVExpr bv c = true) :
+    bv.Unsat := by
   apply BVLogicalExpr.unsat_of_bitblast
   rw [← AIG.Entrypoint.relabelNat_unsat_iff]
   rw [← AIG.toCNF_equisat]
@@ -38,9 +38,19 @@ theorem unsat_of_verifyBVExpr_eq_true (bv : BVLogicalExpr) (c : LratCert)
   rw [verifyBVExpr] at h
   assumption
 
+/--
+Given:
+- `var2Cnf`: The mapping from AIG to CNF variables.
+- `assignments`: A model for the CNF as provided by a SAT solver.
+- `aigSize`: The amount of nodes in the AIG that was used to produce the CNF.
+- `atomsAssignment`: The mapping of the reflection monad from atom indices to `Expr`.
+
+Reconstruct bit by bit which value expression must have had which `BitVec` value and return all
+expression - pair values.
+-/
 def reconstructCounterExample (var2Cnf : Std.HashMap BVBit Nat) (assignment : Array (Bool × Nat))
-    (aigSize : Nat) (atomsAssignment : Std.HashMap Nat Expr)
-    : Array (Expr × BVExpr.PackedBitVec) := Id.run do
+    (aigSize : Nat) (atomsAssignment : Std.HashMap Nat Expr) :
+    Array (Expr × BVExpr.PackedBitVec) := Id.run do
   let mut sparseMap : Std.HashMap Nat (RBMap Nat Bool Ord.compare) := {}
   for (bitVar, cnfVar) in var2Cnf.toArray do
     /-
@@ -48,8 +58,8 @@ def reconstructCounterExample (var2Cnf : Std.HashMap BVBit Nat) (assignment : Ar
     1. One auxiliary variable for each node in the AIG
     2. The actual BitVec bitwise variables
     Hence we access the assignment array offset by the AIG size to obtain the value for a BitVec bit.
+    We assume that a variable can be found at its index as CaDiCal prints them in order.
     -/
-    -- We assume that a variable can be found at its index (off by one) as CaDiCal prints them in order.
     let (varSet, _) := assignment[cnfVar + aigSize]!
     let mut bitMap := sparseMap[bitVar.var]? |>.getD {}
     bitMap := bitMap.insert bitVar.idx varSet
@@ -75,7 +85,8 @@ structure UnsatProver.Result where
 abbrev UnsatProver := BVLogicalExpr → Std.HashMap Nat Expr → MetaM UnsatProver.Result
 
 def lratBitblaster (cfg : TacticContext) (bv : BVLogicalExpr)
-    (atomsAssignment : Std.HashMap Nat Expr) : MetaM UnsatProver.Result := do
+    (atomsAssignment : Std.HashMap Nat Expr) :
+    MetaM UnsatProver.Result := do
   let entry ←
     withTraceNode `bv (fun _ => return "Bitblasting BVLogicalExpr to AIG") do
       -- lazyPure to prevent compiler lifting
@@ -123,8 +134,8 @@ def reflectBV (g : MVarId) : M (BVLogicalExpr × (Expr → M Expr)) := g.withCon
   let sat := sats.foldl (init := SatAtBVLogical.trivial) SatAtBVLogical.and
   return (sat.bvExpr, sat.proveFalse)
 
-def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId)
-    (unsatProver : UnsatProver) : MetaM LratCert := M.run do
+def _root_.Lean.MVarId.closeWithBVReflection (g : MVarId) (unsatProver : UnsatProver) :
+    MetaM LratCert := M.run do
   g.withContext do
     let (bvLogicalExpr, f) ←
       withTraceNode `bv (fun _ => return "Reflecting goal into BVLogicalExpr") do

@@ -5,6 +5,10 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Frontend.BVDecide.ReifiedBVPred
 
+/-!
+Provides the logic for reifying `BitVec` problems with boolean substructure.
+-/
+
 namespace LeanSAT
 namespace BVDecide
 

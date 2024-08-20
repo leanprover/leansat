@@ -7,6 +7,11 @@ import Std.Data.HashMap
 import Lean.Meta.AppBuilder
 import Lean.Elab.Tactic.BVDecide.Bitblast.BVExpr.Basic
 
+/-!
+This module contains the implementation of the reflection monad, used by all other components of this
+directory.
+-/
+
 namespace LeanSAT
 namespace BVDecide
 

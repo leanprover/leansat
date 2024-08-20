@@ -5,6 +5,10 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Frontend.Attr
 
+/-!
+This module contains the `Bool` simplifying part of the `bv_normalize` simp set.
+-/
+
 namespace BVDecide
 namespace Normalize
 

@@ -8,6 +8,10 @@ import Lean.Elab.Tactic.BVDecide.LRAT.Checker
 import Lean.Elab.Tactic.BVDecide.LRAT.Trim
 import Lean.Elab.Tactic.BVDecide.External
 
+/-!
+This module contains the logic around writing proofs of UNSAT, using LRAT proofs, as meta code.
+-/
+
 namespace Std
 namespace Sat
 
@@ -38,8 +42,10 @@ end Std
 namespace LeanSAT
 namespace BVDecide
 
-open Lean Elab Meta Std Sat
+open Std.Sat
 
+open Lean
+open Lean.Meta
 open Lean.Elab.Tactic.BVDecide
 open Lean.Elab.Tactic.BVDecide.External
 

@@ -7,6 +7,10 @@ import LeanSAT.Frontend.Attr
 import LeanSAT.Frontend.Normalize.Bool
 import LeanSAT.Frontend.Normalize.Canonicalize
 
+/-!
+This module contains the `BitVec` simplifying part of the `bv_normalize` simp set.
+-/
+
 namespace BVDecide
 namespace Normalize
 

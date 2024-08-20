@@ -5,12 +5,16 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Frontend.BVDecide
 
-open Lean Elab Meta
-
-open Lean.Elab.Tactic.BVDecide
+/-!
+This modules provides the implementation of `bv_check`.
+-/
 
 namespace LeanSAT
 namespace BVCheck
+
+open Lean
+open Lean.Elab
+open Lean.Elab.Tactic.BVDecide
 
 /--
 Get the directory that contains the Lean file which is currently being elaborated.
@@ -31,11 +35,7 @@ Prepare an `Expr` that proofs `bvExpr.unsat` using `ofReduceBool`.
 -/
 def lratChecker (cfg : BVDecide.TacticContext) (bvExpr : BVLogicalExpr) : MetaM Expr := do
   let cert ← BVDecide.LratCert.ofFile cfg.lratPath cfg.trimProofs
-  cert.toReflectionProof
-    cfg
-    bvExpr
-    ``BVDecide.verifyBVExpr
-    ``BVDecide.unsat_of_verifyBVExpr_eq_true
+  cert.toReflectionProof cfg bvExpr ``BVDecide.verifyBVExpr ``BVDecide.unsat_of_verifyBVExpr_eq_true
 
 /--
 Close a goal by:
@@ -53,7 +53,6 @@ def _root_.Lean.MVarId.bvCheck (g : MVarId) (cfg : BVDecide.TacticContext) : Met
   let unsatProver : BVDecide.UnsatProver := fun bvExpr _ => do
     withTraceNode `sat (fun _ => return "Preparing LRAT reflection term") do
       let proof ← lratChecker cfg bvExpr
-      -- We just return a fake cert as nobody cares about it
       return ⟨proof, ""⟩
   let _ ← g.closeWithBVReflection unsatProver
   return ()
@@ -64,11 +63,12 @@ syntax (name := bvCheckSyntax) "bv_check " str : tactic
 end BVCheck
 end LeanSAT
 
-open Elab.Tactic
+open Lean.Elab.Tactic in
 elab_rules : tactic
   | `(tactic| bv_check $path:str) => do
     let cfg ← LeanSAT.BVCheck.mkContext path.getString
     liftMetaFinishingTactic fun g => do
+      -- TODO: code action to replace
       -- We still leave the option open for the normalizer to solve the goal on its own.
       let res ← g.bvNormalize
       match res.goal with

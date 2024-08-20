@@ -5,6 +5,13 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Frontend.BVDecide.ReifiedBVLogical
 
+/-!
+This module is the main entry point for reifying `BitVec` problems with boolean substructure.
+Given some proof `h : exp = true` where `exp` is a `BitVec` problem with boolean substructure, it
+returns a `SatAtBVLogical`, containing the reified version as well as a proof that the reified
+version must be equal to true.
+-/
+
 namespace LeanSAT
 namespace BVDecide
 

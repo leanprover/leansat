@@ -9,3 +9,10 @@ import LeanSAT.Frontend.BVDecide
 import LeanSAT.Frontend.BVTrace
 import LeanSAT.Frontend.LRAT
 import LeanSAT.Frontend.Normalize
+
+/-!
+This module provides the tactic frontends, consisting of:
+- `bv_decide`, the bitblasting based `BitVec` decision procedure itself.
+- `bv_check`, like `bv_decide` but the LRAT proof is provided as a file so no need to call a SAT solver.
+- `bv_decide?`, converts `bv_decide?` into `bv_check` calls.
+-/

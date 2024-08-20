@@ -8,11 +8,16 @@ import LeanSAT.Frontend.BVCheck
 import Lean.Elab.Tactic.BVDecide.LRAT.Trim
 import Lean.Meta.Tactic.TryThis
 
+/-!
+This module contains the implementation of `bv_decide?`.
+-/
+
 open Lean Elab Meta Tactic
 open Lean.Elab.Tactic.BVDecide.LRAT
 
 namespace LeanSAT
 namespace BVTrace
+
 
 -- TODO: think of a more maintainable file pattern for this stuff.
 /--

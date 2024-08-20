@@ -5,6 +5,10 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Frontend.BVDecide.ReifiedBVExpr
 
+/-!
+Provides the logic for reifying expressions consisting of predicates over `BitVec`s.
+-/
+
 namespace LeanSAT
 namespace BVDecide
 

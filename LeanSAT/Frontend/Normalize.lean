@@ -14,10 +14,21 @@ import LeanSAT.Frontend.Normalize.Bool
 import LeanSAT.Frontend.Normalize.BitVec
 import LeanSAT.Frontend.Normalize.Equal
 
+/-!
+This module contains the implementation of `bv_normalize` which is effectively a custom `bv_normalize`
+simp set that is called like this: `simp only [seval, bv_normalize]`. The rules in `bv_normalize`
+fulfill two goals:
+1. Turn all hypothesis involving `Bool` and `BitVec` into the form `x = true` where `x` only consists
+   of a operations on `Bool` and `BitVec`. In particular no `Prop` should be contained. This makes
+   the reflection procedure further down the pipeline much easier to implement.
+2. Apply simplification rules from the Bitwuzla SMT solver.
+-/
+
 namespace BVDecide
 namespace Normalize
 
-open Lean Elab Meta Tactic
+open Lean
+open Lean.Meta
 
 structure Result where
   goal : Option MVarId
@@ -40,7 +51,6 @@ def _root_.Lean.MVarId.bvNormalize (g : MVarId) : MetaM Result := do
     }
 
     let hyps ← g.getNondepPropHyps
-    -- TODO: Think about whether having a discharger might be interesting
     let ⟨result?, stats⟩ ← simpGoal g
       (ctx := simpCtx)
       (simprocs := #[bvSimprocs, sevalSimprocs])
@@ -54,7 +64,6 @@ end BVDecide
 syntax (name := bvNormalizeSyntax) "bv_normalize" : tactic
 
 open Lean.Elab.Tactic
-
 elab_rules : tactic
 | `(tactic| bv_normalize) => do
   liftMetaFinishingTactic fun g => do

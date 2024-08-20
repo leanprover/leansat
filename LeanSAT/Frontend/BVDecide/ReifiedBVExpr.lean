@@ -5,6 +5,10 @@ Authors: Henrik Böving
 -/
 import LeanSAT.Frontend.BVDecide.Reflect
 
+/-!
+Provides the logic for reifying `BitVec` expressions.
+-/
+
 namespace LeanSAT
 namespace BVDecide
 
