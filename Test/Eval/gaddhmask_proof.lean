@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 
 theorem add_mask_ashr28_i32_thm (x : _root_.BitVec 32) :

@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 theorem bitvec_InstCombineShift__497''' :
  ∀ (X C C2 : BitVec 32), (X + C2) <<< C = X <<< C + C2 <<< C

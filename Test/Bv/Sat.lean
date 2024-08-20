@@ -1,5 +1,5 @@
-import LeanSAT.Frontend.BVDecide
-import LeanSAT.Frontend.BVTrace
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVTrace
 
 example (h : true = false) : False := by bv_decide
 example {x y z : Bool} (_ : (x && y) = z) (_ : x = !y) (_ : z = true) : False := by bv_decide

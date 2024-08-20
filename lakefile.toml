@@ -1,5 +1,5 @@
 name = "LeanSAT"
-defaultTargets = ["LeanSAT", "defaultExe"]
+defaultTargets = ["defaultExe"]
 testRunner = "Test"
 
 [[lean_lib]]
@@ -7,10 +7,6 @@ name = "Test"
 
 [[lean_lib]]
 name = "Eval"
-
-[[lean_lib]]
-name = "LeanSAT"
-precompileModules = true
 
 [[lean_exe]]
 name = "defaultExe"

@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 
 theorem add_const_const_sub_thm (x : _root_.BitVec 32) :

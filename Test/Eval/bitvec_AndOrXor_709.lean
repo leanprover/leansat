@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 theorem bitvec_AndOrXor_709 :
  ∀ (a b d : BitVec 64), ((a &&& b == b) && (a &&& d == d)) = (a &&& (b ||| d) == b ||| d)

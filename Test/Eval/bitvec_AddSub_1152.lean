@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 theorem bitvec_AddSub_1152 :
  ∀ (y x : BitVec 1), x + y = x ^^^ y

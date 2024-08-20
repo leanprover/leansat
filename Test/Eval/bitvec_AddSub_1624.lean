@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 theorem bitvec_AddSub_1624 :
  ∀ (A B : BitVec 64), (A ||| B) - (A ^^^ B) = A &&& B

@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 
 theorem gshlbo_lshr_add_thm (x x_1 : _root_.BitVec 8) :

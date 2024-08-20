@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 theorem bitvec_AndOrXor_1733 :
  ∀ (A B : BitVec 64), (A != 0) ∨ (B != 0) = (A ||| B != 0)

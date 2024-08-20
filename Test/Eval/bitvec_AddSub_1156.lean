@@ -1,4 +1,4 @@
-import LeanSAT.Frontend.BVDecide
+import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
 
 theorem bitvec_AddSub_1156 :
  ∀ (b : BitVec 64), b + b = b <<< 1
