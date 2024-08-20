@@ -12,33 +12,6 @@ import Lean.Elab.Tactic.BVDecide.External
 This module contains the logic around writing proofs of UNSAT, using LRAT proofs, as meta code.
 -/
 
-namespace Std
-namespace Sat
-
-def Literal.dimacs' (lit : Literal Nat) : String :=
-  let ⟨id, pol⟩ := lit
-  let id := id + 1 -- DIMACS does not allow 0 as identifier
-
-  if pol then
-    s!"{id}"
-  else
-    s!"-{id}"
-
-namespace CNF
-
-def Clause.dimacs (clause : Clause Nat) : String :=
-  clause.foldl (init := "") (· ++ ·.dimacs' ++ " ") ++ "0"
-
-def dimacs (cnf : CNF Nat) : String :=
-  let numClauses := cnf.length
-  let maxIdentifier := (cnf.maxLiteral |>.getD 0) + 1
-  let base := s!"p cnf {maxIdentifier} {numClauses}\n"
-  cnf.foldl (init := base) (· ++ ·.dimacs ++ "\n")
-
-end CNF
-end Sat
-end Std
-
 namespace LeanSAT
 namespace BVDecide
 
