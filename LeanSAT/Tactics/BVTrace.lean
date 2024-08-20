@@ -9,6 +9,7 @@ import Lean.Elab.Tactic.BVDecide.LRAT.Trim
 import Lean.Meta.Tactic.TryThis
 
 open Lean Elab Meta Tactic
+open Lean.Elab.Tactic.BVDecide.LRAT
 
 namespace LeanSAT
 namespace BVTrace
@@ -61,9 +62,9 @@ def evalBvTrace : Tactic := fun stx =>
     | some .. =>
       if sat.trimProofs.get (← getOptions) then
         let lratPath := (← LeanSAT.BVCheck.getSrcDir) / lratFile
-        let proof ← LeanSAT.LRAT.loadLRATProof lratPath
-        let trimmed ← IO.ofExcept <| Lean.Elab.Tactic.BVDecide.LRAT.trim proof
-        LeanSAT.LRAT.dumpLRATProof lratPath trimmed cfg.binaryProofs
+        let proof ← loadLRATProof lratPath
+        let trimmed ← IO.ofExcept <| trim proof
+        dumpLRATProof lratPath trimmed cfg.binaryProofs
       let bvCheckStx ← `(tactic| bv_check $(quote lratFile.toString))
       TryThis.addSuggestion tk bvCheckStx (origSpan? := ← getRef)
   | _ => throwUnsupportedSyntax

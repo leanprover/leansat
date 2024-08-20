@@ -1,6 +1,6 @@
-import LeanSAT.Tactics.LRAT
+import Lean.Elab.Tactic.BVDecide.LRAT.Parser
 
-open LeanSAT.LRAT
+open Lean.Elab.Tactic.BVDecide.LRAT
 
 def main : List String → IO Unit := fun args => do
   let prfFile := args[0]!

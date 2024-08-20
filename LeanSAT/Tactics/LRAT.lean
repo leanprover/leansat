@@ -6,7 +6,7 @@ Authors: Henrik Böving
 import LeanSAT.Tactics.Attr
 import Lean.Elab.Tactic.BVDecide.LRAT.Checker
 import Lean.Elab.Tactic.BVDecide.LRAT.Trim
-import LeanSAT.External.Solver
+import Lean.Elab.Tactic.BVDecide.External
 
 namespace Std
 namespace Sat
@@ -41,6 +41,7 @@ namespace BVDecide
 open Lean Elab Meta Std Sat
 
 open Lean.Elab.Tactic.BVDecide
+open Lean.Elab.Tactic.BVDecide.External
 
 /--
 The context for the `bv_decide` tactic.
