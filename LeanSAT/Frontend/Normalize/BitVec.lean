@@ -3,9 +3,9 @@ Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
-import LeanSAT.Tactics.Attr
-import LeanSAT.Tactics.Normalize.Bool
-import LeanSAT.Tactics.Normalize.Canonicalize
+import LeanSAT.Frontend.Attr
+import LeanSAT.Frontend.Normalize.Bool
+import LeanSAT.Frontend.Normalize.Canonicalize
 
 namespace BVDecide
 namespace Normalize
@@ -18,8 +18,8 @@ attribute [bv_normalize] BitVec.neg_eq_not_add
 attribute [bv_normalize] BitVec.sub_toAdd
 
 @[bv_normalize]
-theorem BitVec.le_ult (x y : BitVec w) : (x ≤ y) = ¬(x > y) := by
-  simp only [(· ≤ ·), (· > ·), (· < ·)]
+theorem BitVec.le_ult (x y : BitVec w) : (x ≤ y) = ¬(y < x) := by
+  simp only [(· ≤ ·), (· < ·)]
   simp
 attribute [bv_normalize] BitVec.ule_eq_not_ult
 
@@ -202,7 +202,7 @@ theorem BitVec.max_ult (a : BitVec w) : ¬ ((-1#w) < a) := by
 rcases w with rfl | w
 · simp [bv_toNat]
 · simp only [BitVec.lt_def, BitVec.toNat_neg, BitVec.toNat_ofNat, Nat.not_lt]
-  rw[Nat.mod_eq_of_lt (a := 1) (by simp)];
+  rw [Nat.mod_eq_of_lt (a := 1) (by simp)];
   rw [Nat.mod_eq_of_lt]
   · omega
   · apply Nat.sub_one_lt_of_le (Nat.pow_pos (by omega)) (Nat.le_refl ..)

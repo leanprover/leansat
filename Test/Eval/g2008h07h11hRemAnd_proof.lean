@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem remAnd_a_thm (x : _root_.BitVec 32) :

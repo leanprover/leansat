@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 open Std (BitVec)
 theorem srem2_ashr_mask_thm (x : _root_.BitVec 32) :

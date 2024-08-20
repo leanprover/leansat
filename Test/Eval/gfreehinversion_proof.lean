@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem lshr_not_nneg2_thm (x : _root_.BitVec 8) :

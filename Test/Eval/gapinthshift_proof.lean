@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem test6_thm (x : _root_.BitVec 55) :

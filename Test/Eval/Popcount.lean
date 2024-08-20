@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 /-
 This is based on: https://saw.galois.com/intro/IntroToSAW.html#the-code

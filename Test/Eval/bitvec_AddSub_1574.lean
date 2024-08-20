@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 theorem bitvec_AddSub_1574 :
  ∀ (X C C2 : BitVec 64), C - (X + C2) = C - C2 - X

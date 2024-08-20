@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem shrink_nsw_foo_thm (x : _root_.BitVec 32) :

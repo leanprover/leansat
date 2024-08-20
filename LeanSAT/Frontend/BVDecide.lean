@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Henrik Böving
 -/
 import Lean.Elab.Tactic.BVDecide.Bitblast.BVExpr
-import LeanSAT.Tactics.Normalize
-import LeanSAT.Tactics.LRAT
+import LeanSAT.Frontend.Normalize
+import LeanSAT.Frontend.LRAT
 import Std.Sat.AIG.CNF
 import Std.Sat.AIG.RelabelNat
 
@@ -18,109 +18,18 @@ open Std.Sat
 
 open Lean.Elab.Tactic.BVDecide
 
-
-structure UnsatProver.Result where
-  proof : Expr
-  lratCert : LratCert
-
-abbrev UnsatProver := BVLogicalExpr → Std.HashMap Nat Expr → MetaM UnsatProver.Result
-
-instance : ToExpr BVBinPred where
-  toExpr x :=
-    match x with
-    | .eq => mkConst ``BVBinPred.eq
-    | .ult => mkConst ``BVBinPred.ult
-  toTypeExpr := mkConst ``BVBinPred
-
-instance : ToExpr BVUnOp where
-  toExpr x :=
-    match x with
-    | .not => mkConst ``BVUnOp.not
-    | .shiftLeftConst n => mkApp (mkConst ``BVUnOp.shiftLeftConst) (toExpr n)
-    | .shiftRightConst n => mkApp (mkConst ``BVUnOp.shiftRightConst) (toExpr n)
-    | .rotateLeft n => mkApp (mkConst ``BVUnOp.rotateLeft) (toExpr n)
-    | .rotateRight n => mkApp (mkConst ``BVUnOp.rotateRight) (toExpr n)
-    | .arithShiftRightConst n => mkApp (mkConst ``BVUnOp.arithShiftRightConst) (toExpr n)
-  toTypeExpr := mkConst ``BVUnOp
-
-instance : ToExpr BVBinOp where
-  toExpr x :=
-    match x with
-    | .and => mkConst ``BVBinOp.and
-    | .or => mkConst ``BVBinOp.or
-    | .xor => mkConst ``BVBinOp.xor
-    | .add => mkConst ``BVBinOp.add
-    | .mul => mkConst ``BVBinOp.mul
-  toTypeExpr := mkConst ``BVBinOp
-
-instance : ToExpr (BVExpr w) where
-  toExpr x := go x
-  toTypeExpr := mkApp (mkConst ``BVExpr) (toExpr w)
-where
-  go {w : Nat} : BVExpr w → Expr
-  | .var idx => mkApp2 (mkConst ``BVExpr.var) (toExpr w) (toExpr idx)
-  | .const val => mkApp2 (mkConst ``BVExpr.const) (toExpr w) (toExpr val)
-  | .zeroExtend (w := oldWidth) val inner =>
-    mkApp3 (mkConst ``BVExpr.zeroExtend) (toExpr oldWidth) (toExpr val) (go inner)
-  | .signExtend (w := oldWidth) val inner =>
-    mkApp3 (mkConst ``BVExpr.signExtend) (toExpr oldWidth) (toExpr val) (go inner)
-  | .bin lhs op rhs => mkApp4 (mkConst ``BVExpr.bin) (toExpr w) (go lhs) (toExpr op) (go rhs)
-  | .un op operand => mkApp3 (mkConst ``BVExpr.un) (toExpr w) (toExpr op) (go operand)
-  | .append (l := l) (r := r) lhs rhs =>
-    mkApp4 (mkConst ``BVExpr.append) (toExpr l) (toExpr r) (go lhs) (go rhs)
-  | .replicate (w := oldWidth) w inner =>
-    mkApp3 (mkConst ``BVExpr.replicate) (toExpr oldWidth) (toExpr w) (go inner)
-  | .extract (w := oldWidth) hi lo expr =>
-    mkApp4 (mkConst ``BVExpr.extract) (toExpr oldWidth) (toExpr hi) (toExpr lo) (go expr)
-  | .shiftLeft (m := m) (n := n) lhs rhs =>
-    mkApp4 (mkConst ``BVExpr.shiftLeft) (toExpr m) (toExpr n) (go lhs) (go rhs)
-  | .shiftRight (m := m) (n := n) lhs rhs =>
-    mkApp4 (mkConst ``BVExpr.shiftRight) (toExpr m) (toExpr n) (go lhs) (go rhs)
-
-instance : ToExpr BVPred where
-  toExpr x := go x
-  toTypeExpr := mkConst ``BVPred
-where
-  go : BVPred → Expr
-  | .bin (w := w) lhs op rhs =>
-    mkApp4 (mkConst ``BVPred.bin) (toExpr w) (toExpr lhs) (toExpr op) (toExpr rhs)
-  | .getLsb (w := w) expr idx =>
-    mkApp3 (mkConst ``BVPred.getLsb) (toExpr w) (toExpr expr) (toExpr idx)
-
-instance : ToExpr Gate where
-  toExpr x :=
-    match x with
-    | .and => mkConst ``Gate.and
-    | .or => mkConst ``Gate.or
-    | .xor => mkConst ``Gate.xor
-    | .imp => mkConst ``Gate.imp
-    | .beq => mkConst ``Gate.beq
-  toTypeExpr := mkConst ``Gate
-
-instance : ToExpr BVLogicalExpr where
-  toExpr x := go x
-  toTypeExpr := mkConst ``BVLogicalExpr
-where
-  go : BVLogicalExpr → Expr
-  | .literal pred => mkApp2 (mkConst ``BoolExpr.literal) (toTypeExpr BVPred) (toExpr pred)
-  | .const b => mkApp2 (mkConst ``BoolExpr.const) (toTypeExpr BVPred) (toExpr b)
-  | .not x => mkApp2 (mkConst ``BoolExpr.not) (toTypeExpr BVPred) (go x)
-  | .gate g x y => mkApp4 (mkConst ``BoolExpr.gate) (toTypeExpr BVPred) (toExpr g) (go x) (go y)
-
-
 /--
 The state of the reflection monad
 -/
 structure State where
   /--
-  The atoms encountered so far. Saved as a map from `BitVec` expressions to a
-  width × atomNumber pair.
+  The atoms encountered so far. Saved as a map from `BitVec` expressions to a width × atomNumber
+  pair.
   -/
   atoms : Std.HashMap Expr (Nat × Nat) := {}
 
 /--
-The reflection monad, used to track `BitVec` variables that we see as we traverse
-the context.
+The reflection monad, used to track `BitVec` variables that we see as we traverse the context.
 -/
 abbrev M := StateRefT State MetaM
 
@@ -926,6 +835,12 @@ def reconstructCounterExample (var2Cnf : Std.HashMap BVBit Nat) (assignment : Ar
     let atomExpr := atomsAssignment.get! bitVecVar
     finalMap := finalMap.push (atomExpr, ⟨BitVec.ofNat currentBit value⟩)
   return finalMap
+
+structure UnsatProver.Result where
+  proof : Expr
+  lratCert : LratCert
+
+abbrev UnsatProver := BVLogicalExpr → Std.HashMap Nat Expr → MetaM UnsatProver.Result
 
 def lratBitblaster (cfg : TacticContext) (bv : BVLogicalExpr)
     (atomsAssignment : Std.HashMap Nat Expr) : MetaM UnsatProver.Result := do

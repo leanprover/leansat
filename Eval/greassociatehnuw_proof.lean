@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 open Std (BitVec)
 theorem reassoc_x2_add_nuw_thm (x x_1 : _root_.BitVec 32) :

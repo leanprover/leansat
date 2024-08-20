@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 theorem bitvec_AndOrXor_1704 :
  ∀ (A B : BitVec 64), ((B == 0) || (A < B)) = (A ≤ B + -1)

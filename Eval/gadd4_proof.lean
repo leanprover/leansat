@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 open Std (BitVec)
 theorem match_andAsRem_lshrAsDiv_shlAsMul_thm (x : _root_.BitVec 64) :

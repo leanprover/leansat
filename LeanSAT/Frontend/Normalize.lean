@@ -7,12 +7,12 @@ import Lean.Meta.AppBuilder
 import Lean.Elab.Tactic.Simp
 import Lean.Elab.Tactic.FalseOrByContra
 
-import LeanSAT.Tactics.Attr
-import LeanSAT.Tactics.Normalize.Canonicalize
-import LeanSAT.Tactics.Normalize.Prop
-import LeanSAT.Tactics.Normalize.Bool
-import LeanSAT.Tactics.Normalize.BitVec
-import LeanSAT.Tactics.Normalize.Equal
+import LeanSAT.Frontend.Attr
+import LeanSAT.Frontend.Normalize.Canonicalize
+import LeanSAT.Frontend.Normalize.Prop
+import LeanSAT.Frontend.Normalize.Bool
+import LeanSAT.Frontend.Normalize.BitVec
+import LeanSAT.Frontend.Normalize.Equal
 
 namespace BVDecide
 namespace Normalize

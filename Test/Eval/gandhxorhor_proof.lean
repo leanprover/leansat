@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem and_xor_not_common_op_thm (x x_1 : _root_.BitVec 32) :

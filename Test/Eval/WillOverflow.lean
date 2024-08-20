@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 /-
 This file is based on: https://grack.com/blog/2022/12/20/deriving-a-bit-twiddling-hack/

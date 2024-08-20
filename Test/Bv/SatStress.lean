@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 import Std.Data.HashMap
 import Std.Data.HashSet
 

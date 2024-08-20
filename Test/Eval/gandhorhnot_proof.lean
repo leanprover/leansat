@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem and_to_xor1_thm (x x_1 : _root_.BitVec 32) :

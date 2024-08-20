@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 theorem bitvec_AndOrXor_2486 :
  ∀ (x C : BitVec 64), x + C ^^^ -1 = -1 - C - x

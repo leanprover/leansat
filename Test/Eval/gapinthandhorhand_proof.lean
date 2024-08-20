@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem horand_test1_thm (x x_1 : _root_.BitVec 17) :

@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem gcanonicalize_shrshlhtomasking_positive_sameconst_thm (x : _root_.BitVec 32) :

@@ -1,4 +1,4 @@
-import LeanSAT.Tactics.BVDecide
+import LeanSAT.Frontend.BVDecide
 
 
 theorem mul_of_pow2s_thm (x x_1 : _root_.BitVec 32) :
