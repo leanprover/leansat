@@ -17,3 +17,12 @@ theorem trace_unit_1' (x y : BitVec 64) : x + y = y + x := by
 
 theorem trace_unit_2' (x : BitVec 64) : x = x := by
   bv_normalize
+
+/--
+info: Try this: bv_normalize
+---
+error: This goal can be closed by only applying bv_normalize, no need to keep the LRAT proof around.
+-/
+#guard_msgs in
+theorem trace_unit_3 (x : BitVec 64) : x = x := by
+  bv_check "foo.lrat"
