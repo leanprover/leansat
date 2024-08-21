@@ -19,7 +19,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - uses: leanprover/lean-action@v1.0.0
+      - uses: leanprover/lean-action@v1.0.1
         with:
           test: true
           use-mathlib-cache: false
