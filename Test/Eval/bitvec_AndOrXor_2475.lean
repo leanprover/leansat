@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 theorem bitvec_AndOrXor_2475 :
  ∀ (x C : BitVec 64), C - x ^^^ -1 = x + (-1 - C)

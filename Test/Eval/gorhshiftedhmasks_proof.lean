@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 
 theorem or_and_shifts1_thm (x : _root_.BitVec 32) :

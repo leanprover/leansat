@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 
 theorem gapinthand_test2_thm (x : _root_.BitVec 15) :

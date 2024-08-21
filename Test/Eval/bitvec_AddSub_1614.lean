@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 theorem bitvec_AddSub_1614 :
  ∀ (Y X : BitVec 64), X - (X + Y) = 0 - Y

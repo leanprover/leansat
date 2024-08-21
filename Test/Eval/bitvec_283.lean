@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 theorem bitvec_283 :
  ∀ (Y X : BitVec 1), X * Y = X &&& Y

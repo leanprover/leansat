@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 
 theorem inthor_test1_thm (x : _root_.BitVec 23) :

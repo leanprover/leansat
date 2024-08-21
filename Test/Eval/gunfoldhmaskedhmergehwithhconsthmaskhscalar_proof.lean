@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 
 theorem gunfoldhmaskedhmergewithhconsthmaskhscalar_scalar0_thm (x x_1 : _root_.BitVec 4) :

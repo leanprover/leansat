@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 
 theorem gcanonicalize_shrshlhtomasking_positive_sameconst_thm (x : _root_.BitVec 32) :

@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 
 theorem mul_of_pow2s_thm (x x_1 : _root_.BitVec 32) :

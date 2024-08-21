@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 theorem bitvec_160 :
  ∀ (x C1 C2 : BitVec 7), x <<< C2 * C1 = x * C1 <<< C2

@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 theorem bitvec_AndOrXor_698 :
  ∀ (a b d : BitVec 64), ((a &&& b == 0) && (a &&& d == 0)) = (a &&& (b ||| d) == 0)

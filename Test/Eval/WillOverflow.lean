@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 /-
 This file is based on: https://grack.com/blog/2022/12/20/deriving-a-bit-twiddling-hack/

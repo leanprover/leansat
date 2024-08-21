@@ -1,4 +1,4 @@
-import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
+import Std.Tactic.BVDecide
 
 theorem bitvec_InstCombineShift__239 :
  ∀ (X C : BitVec 32), X <<< C >>> C = X &&& (-1 : BitVec _) >>> C
