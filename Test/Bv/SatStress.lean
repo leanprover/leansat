@@ -1,6 +1,4 @@
 import Lean.Elab.Tactic.BVDecide.Frontend.BVDecide
-import Std.Data.HashMap
-import Std.Data.HashSet
 
 open Lean
 
