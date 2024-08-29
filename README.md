@@ -1,4 +1,7 @@
-# LeanSAT
+# LeanSAT (deprecated)
+## Deprecation
+This package has been merged into Lean 4 core as `Std.Tactic.BVDecide` with the
+`leanprover/lean4:nightly-2024-08-29` nightly release.
 
 ## Description
 The LeanSAT package is meant to provide an interface and foundation for verified SAT reasoning.
